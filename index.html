@@ -29,6 +29,7 @@
 
 <body>
 <div id="info">
+<button onclick="saveImage()">📸 Save Screenshot</button>
   <h2>🏰 Bobwarts Build World</h2>
 <p><b>Mission:</b> Build a Wizard Castle!</p>
 
@@ -143,6 +144,13 @@ document.addEventListener('click', (event)=>{
   renderer.render(scene,camera);
 }
 
+function saveImage(){
+  const link = document.createElement('a');
+  link.download = 'bobwarts-build.png';
+  link.href = renderer.domElement.toDataURL('image/png');
+  link.click();
+}
+
 animate();
 
 window.addEventListener('resize', ()=>{
@@ -153,9 +161,3 @@ window.addEventListener('resize', ()=>{
 </script>
 </body>
 </html>
-camera.position.set(0,8,15);
-camera.lookAt(0,0,0);
-
-let angle = 0;
-let mouseX = 0;
-let mouseY = 0;
