@@ -54,6 +54,7 @@ select {
 <button onclick="resetWorld()">🔄 Reset World</button>
 <button onclick="addTree()">🌲 Add Tree</button>
 <button onclick="buildCastle()">🏰 Build Castle</button>
+<p>Use W A S D keys to move.</p>
 
 <h2>🏰 Bobwarts Build World</h2>
 <p><b>Mission:</b> Build a Wizard Castle!</p>
@@ -140,6 +141,55 @@ camera.position.set(0,8,15);
 let angle = 0;
 let mouseX = 0;
 let mouseY = 0;
+let moveForward = false;
+let moveBackward = false;
+let moveLeft = false;
+let moveRight = false;
+document.addEventListener('keydown', (event)=>{
+
+  switch(event.key.toLowerCase()){
+
+    case 'w':
+      moveForward = true;
+      break;
+
+    case 's':
+      moveBackward = true;
+      break;
+
+    case 'a':
+      moveLeft = true;
+      break;
+
+    case 'd':
+      moveRight = true;
+      break;
+  }
+
+});
+
+document.addEventListener('keyup', (event)=>{
+
+  switch(event.key.toLowerCase()){
+
+    case 'w':
+      moveForward = false;
+      break;
+
+    case 's':
+      moveBackward = false;
+      break;
+
+    case 'a':
+      moveLeft = false;
+      break;
+
+    case 'd':
+      moveRight = false;
+      break;
+  }
+
+});
 
 document.addEventListener('mousemove', (event)=>{
 
@@ -215,8 +265,17 @@ checkBadge();
   }
 
 });
-  function animate(){
+function animate(){
+
   requestAnimationFrame(animate);
+
+  if(moveForward) camera.position.z -= 0.2;
+  if(moveBackward) camera.position.z += 0.2;
+  if(moveLeft) camera.position.x -= 0.2;
+  if(moveRight) camera.position.x += 0.2;
+
+  camera.lookAt(0,0,0);
+
   renderer.render(scene,camera);
 }
 
