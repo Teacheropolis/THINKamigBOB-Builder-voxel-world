@@ -31,34 +31,8 @@
 <div id="info">
 <button onclick="saveImage()">📸 Save Screenshot</button>
 <button onclick="resetWorld()">🔄 Reset World</button>
-function saveImage(){
-function resetWorld(){
 
-  for(let i = blocks.length - 1; i >= 0; i--){
-
-    scene.remove(blocks[i]);
-
-  }
-
-  blocks.length = 0;
-
-  for(let x=-5;x<=5;x+=2){
-    for(let z=-5;z<=5;z+=2){
-
-      const cube = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:0xcccccc})
-      );
-
-      cube.position.set(x,0,z);
-
-      scene.add(cube);
-      blocks.push(cube);
-    }
-  }
-
-}
-  <h2>🏰 Bobwarts Build World</h2>
+<h2>🏰 Bobwarts Build World</h2>
 <p><b>Mission:</b> Build a Wizard Castle!</p>
 
 <p>⭐ Challenge:</p>
@@ -68,11 +42,13 @@ function resetWorld(){
   <li>Create a grand entrance</li>
   <li>Build a dragon perch</li>
 </ul>
+  
 <p>Move mouse to look around.</p>
 <p>Left-click a block to build.</p>
 <p>Right-click a block to remove it.</p>
                                       
 <p><b>Block Color:</b></p>
+  
 <select id="blockColor">
   <option value="0xcccccc">Stone Gray</option>
   <option value="0x8B4513">Wood Brown</option>
@@ -217,7 +193,31 @@ function saveImage(){
   link.href = renderer.domElement.toDataURL('image/png');
   link.click();
 }
+  
+function resetWorld(){
 
+  for(let i = blocks.length - 1; i >= 0; i--){
+    scene.remove(blocks[i]);
+  }
+
+  blocks.length = 0;
+
+  for(let x=-5;x<=5;x+=2){
+    for(let z=-5;z<=5;z+=2){
+
+      const cube = new THREE.Mesh(
+        new THREE.BoxGeometry(),
+        new THREE.MeshLambertMaterial({color:0xcccccc})
+      );
+
+      cube.position.set(x,0,z);
+
+      scene.add(cube);
+      blocks.push(cube);
+    }
+  }
+}
+  
 animate();
 
 window.addEventListener('resize', ()=>{
