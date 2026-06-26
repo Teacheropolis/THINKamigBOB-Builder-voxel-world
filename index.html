@@ -76,10 +76,19 @@ const ambient = new THREE.AmbientLight(0xffffff,0.6);
 scene.add(ambient);
 
 camera.position.set(0,8,15);
+  let angle = 0;
 
 function animate(){
+
   requestAnimationFrame(animate);
-  scene.rotation.y += 0.002;
+
+  angle += 0.003;
+
+  camera.position.x = Math.sin(angle) * 20;
+  camera.position.z = Math.cos(angle) * 20;
+
+  camera.lookAt(0,0,0);
+
   renderer.render(scene,camera);
 }
 
