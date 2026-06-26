@@ -53,6 +53,7 @@ select {
 <button onclick="saveImage()">📸 Save Screenshot</button>
 <button onclick="resetWorld()">🔄 Reset World</button>
 <button onclick="addTree()">🌲 Add Tree</button>
+<button onclick="buildCastle()">🏰 Build Castle</button>
 
 <h2>🏰 Bobwarts Build World</h2>
 <p><b>Mission:</b> Build a Wizard Castle!</p>
@@ -261,6 +262,51 @@ function addTree(){
   leaves.position.set(8, 4, 0);
   scene.add(leaves);
   blocks.push(leaves);
+}
+function buildCastle(){
+
+  // Four towers
+  const towerPositions = [
+    [-8, -8],
+    [8, -8],
+    [-8, 8],
+    [8, 8]
+  ];
+
+  towerPositions.forEach(pos => {
+
+    for(let y = 0; y < 6; y++){
+
+      const block = new THREE.Mesh(
+        new THREE.BoxGeometry(),
+        new THREE.MeshLambertMaterial({color:0xcccccc})
+      );
+
+      block.position.set(pos[0], y, pos[1]);
+
+      scene.add(block);
+      blocks.push(block);
+    }
+
+  });
+
+  // Main castle building
+  for(let x = -4; x <= 4; x += 2){
+    for(let z = -4; z <= 4; z += 2){
+      for(let y = 0; y < 3; y++){
+
+        const block = new THREE.Mesh(
+          new THREE.BoxGeometry(),
+          new THREE.MeshLambertMaterial({color:0xaaaaaa})
+        );
+
+        block.position.set(x, y, z);
+
+        scene.add(block);
+        blocks.push(block);
+      }
+    }
+  }
 }
   
 animate();
