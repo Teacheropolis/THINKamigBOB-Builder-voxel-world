@@ -44,7 +44,16 @@
 <p>Left-click a block to build.</p>
 <p>Right-click a block to remove it.</p>
 </div>
-
+<p><b>Block Color:</b></p>
+<select id="blockColor">
+  <option value="0xcccccc">Stone Gray</option>
+  <option value="0x8B4513">Wood Brown</option>
+  <option value="0xFFD700">Gold</option>
+  <option value="0xB22222">Brick Red</option>
+  <option value="0x228B22">Forest Green</option>
+  <option value="0x6A0DAD">Wizard Purple</option>
+</select>
+  
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 
 <script>
@@ -127,9 +136,9 @@ document.addEventListener('click', (event)=>{
 
     const newBlock = new THREE.Mesh(
       new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({
-        color: Math.random() * 0xffffff
-      })
+   new THREE.MeshLambertMaterial({
+  color: Number(document.getElementById("blockColor").value)
+})
     );
 
     newBlock.position.set(
