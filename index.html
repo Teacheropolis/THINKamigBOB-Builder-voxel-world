@@ -54,6 +54,10 @@ select {
 <button onclick="resetWorld()">🔄 Reset World</button>
 <button onclick="addTree()">🌲 Add Tree</button>
 <button onclick="buildCastle()">🏰 Build Castle</button>
+<button onclick="saveWorld()">💾 Save World</button>
+<button onclick="document.getElementById('loadFile').click()">📂 Load World</button>
+
+<input type="file" id="loadFile" style="display:none" accept=".json">
 <p>Use W A S D keys to move.</p>
 
 <h2>🏰 Bobwarts Build World</h2>
@@ -437,6 +441,60 @@ document.getElementById('loadFile').addEventListener('change', function(event){
 
   reader.readAsText(file);
 
+});
+
+ function saveWorld(){
+
+  const worldData = [];
+
+  blocks.forEach(block => {
+    worldData.push({
+      x: block.position.x,
+      y: block.position.y,
+      z: block.position.z,
+      color: block.material.color.getHex()
+    });
+  });
+
+  const dataStr = JSON.stringify(worldData);
+  const blob = new Blob([dataStr], {type:'application/json'});
+
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'bobwarts-world.json';
+  link.click();
+}
+
+document.getElementById('loadFile').addEventListener('change', function(event){
+
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+
+    resetWorld();
+
+    const worldData = JSON.parse(e.target.result);
+
+    worldData.forEach(data => {
+
+      const block = new THREE.Mesh(
+        new THREE.BoxGeometry(),
+        new THREE.MeshLambertMaterial({color:data.color})
+      );
+
+      block.position.set(data.x, data.y, data.z);
+
+      scene.add(block);
+      blocks.push(block);
+    });
+
+    checkBadge();
+  };
+
+  reader.readAsText(file);
 });
   
 function checkBadge(){
