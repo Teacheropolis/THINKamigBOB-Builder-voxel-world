@@ -181,8 +181,10 @@ document.addEventListener('click', (event)=>{
       hit.position.z
     );
 
-    scene.add(newBlock);
-    blocks.push(newBlock);
+scene.add(newBlock);
+blocks.push(newBlock);
+
+checkBadge();
   }
 
 });
@@ -203,10 +205,13 @@ document.addEventListener('contextmenu', (event)=>{
 
     scene.remove(blockToRemove);
 
-    const index = blocks.indexOf(blockToRemove);
-    if(index > -1){
-      blocks.splice(index, 1);
-    }
+const index = blocks.indexOf(blockToRemove);
+
+if(index > -1){
+  blocks.splice(index, 1);
+}
+
+checkBadge();
   }
 
 });
@@ -244,7 +249,10 @@ function resetWorld(){
       blocks.push(cube);
     }
   }
+
+  checkBadge();
 }
+  
 function addTree(){
 
   const trunk = new THREE.Mesh(
@@ -264,6 +272,7 @@ function addTree(){
   leaves.position.set(8, 4, 0);
   scene.add(leaves);
   blocks.push(leaves);
+  checkBadge(); 
 }
 function buildCastle(){
 
@@ -306,6 +315,7 @@ function buildCastle(){
 
         scene.add(block);
         blocks.push(block);
+        checkBadge();
       }
     }
   }
@@ -327,8 +337,9 @@ function checkBadge(){
       "<b>Badge:</b> Keep building!";
   }
 }
-  
-animate();
+
+checkBadge();
+animate(); 
 
 window.addEventListener('resize', ()=>{
   camera.aspect = window.innerWidth/window.innerHeight;
