@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bobwarts Build World</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #87CEEB;
+      font-family: Arial, sans-serif;
+    }
+
+    #message {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,.85);
+      padding: 10px;
+      border-radius: 10px;
+      z-index: 100;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="message">
+  <h2>🏰 Bobwarts Build World</h2>
+  <p>Loading world...</p>
+</div>
+
+<script src="https://unpkg.com/voxel-engine@0.20.0/build/voxel-engine.js"></script>
+
+<script>
+
+var game = createGame({
+  generate: function(x, y, z) {
+
+    // flat grass world
+    if (y === 0) return 1;
+
+    return 0;
+  },
+
+  chunkDistance: 2
+});
+
+game.appendTo(document.body);
+
+document.getElementById("message").innerHTML =
+"<h2>🏰 Bobwarts Build World</h2><p>Use WASD to move.</p>";
+
+</script>
+
+</body>
+</html>
