@@ -64,15 +64,20 @@ const groundMaterial = new THREE.MeshLambertMaterial({color:0x55aa55});
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.position.y = -1;
 scene.add(ground);
+const blocks = [];  
 
 for(let x=-5;x<=5;x+=2){
   for(let z=-5;z<=5;z+=2){
+
     const cube = new THREE.Mesh(
       new THREE.BoxGeometry(),
       new THREE.MeshLambertMaterial({color:0xcccccc})
     );
+
     cube.position.set(x,0,z);
+
     scene.add(cube);
+    blocks.push(cube);
   }
 }
 
@@ -99,7 +104,41 @@ document.addEventListener('mousemove', (event)=>{
   camera.lookAt(0,0,0);
 
 });
-function animate(){
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+document.addEventListener('click', (event)=>{
+
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(blocks);
+
+  if(intersects.length > 0){
+
+    const hit = intersects[0].object;
+
+    const newBlock = new THREE.Mesh(
+      new THREE.BoxGeometry(),
+      new THREE.MeshLambertMaterial({
+        color: Math.random() * 0xffffff
+      })
+    );
+
+    newBlock.position.set(
+      hit.position.x,
+      hit.position.y + 1,
+      hit.position.z
+    );
+
+    scene.add(newBlock);
+    blocks.push(newBlock);
+  }
+
+});
+  function animate(){
   requestAnimationFrame(animate);
   renderer.render(scene,camera);
 }
