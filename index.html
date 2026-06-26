@@ -66,6 +66,8 @@ select {
   <li>Build a dragon perch</li>
 </ul>
   
+<p id="badgeMessage"><b>Badge:</b> Keep building!</p>
+  
 <p>Move mouse to look around.</p>
 <p>Left-click a block to build.</p>
 <p>Right-click a block to remove it.</p>
@@ -306,6 +308,23 @@ function buildCastle(){
         blocks.push(block);
       }
     }
+  }
+}
+  
+function checkBadge(){
+
+  if(blocks.length >= 80){
+    document.getElementById("badgeMessage").innerHTML =
+      "<b>Badge Earned:</b> 🏆 Master Builder!";
+  } else if(blocks.length >= 50){
+    document.getElementById("badgeMessage").innerHTML =
+      "<b>Badge Earned:</b> 🧙 Castle Creator!";
+  } else if(blocks.length >= 30){
+    document.getElementById("badgeMessage").innerHTML =
+      "<b>Badge Earned:</b> ⭐ Builder Apprentice!";
+  } else {
+    document.getElementById("badgeMessage").innerHTML =
+      "<b>Badge:</b> Keep building!";
   }
 }
   
