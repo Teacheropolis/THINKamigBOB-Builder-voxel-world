@@ -947,50 +947,64 @@ animate();
 function setView(view){
 
   if(view === "home"){
-    camera.position.set(0, 8, 15);
+    cameraAngle = 0;
+    cameraDistance = 18;
+    cameraHeight = 8;
   }
 
   if(view === "top"){
-    camera.position.set(0, 30, 0.1);
+    cameraAngle = 0;
+    cameraDistance = 0.1;
+    cameraHeight = 30;
   }
 
   if(view === "front"){
-    camera.position.set(0, 8, 20);
+    cameraAngle = 0;
+    cameraDistance = 20;
+    cameraHeight = 8;
   }
 
   if(view === "back"){
-    camera.position.set(0, 8, -20);
+    cameraAngle = Math.PI;
+    cameraDistance = 20;
+    cameraHeight = 8;
   }
 
   if(view === "left"){
-    camera.position.set(-20, 8, 0);
+    cameraAngle = -Math.PI / 2;
+    cameraDistance = 20;
+    cameraHeight = 8;
   }
 
   if(view === "right"){
-    camera.position.set(20, 8, 0);
+    cameraAngle = Math.PI / 2;
+    cameraDistance = 20;
+    cameraHeight = 8;
   }
 
-  camera.lookAt(0,0,0);
+  updateCamera();
 }
 
 function zoomIn(){
 
-  camera.position.z -= 2;
+  cameraDistance -= 2;
 
-  if(camera.position.z < 5){
-    camera.position.z = 5;
+  if(cameraDistance < 6){
+    cameraDistance = 6;
   }
 
+  updateCamera();
 }
 
 function zoomOut(){
 
-  camera.position.z += 2;
+  cameraDistance += 2;
 
-  if(camera.position.z > 50){
-    camera.position.z = 50;
+  if(cameraDistance > 50){
+    cameraDistance = 50;
   }
 
+  updateCamera();
 }
   
 window.addEventListener('resize', ()=>{
