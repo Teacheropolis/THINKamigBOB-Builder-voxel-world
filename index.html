@@ -750,7 +750,7 @@ function buildHabitat(){
     "<b>Mission:</b> Create a magical creature habitat!";
 
   document.getElementById("challenge1").innerHTML =
-    "Template includes: Trees, water, and a shelter";
+    "Template includes: Trees, water, shelter, rocks, and food area";
 
   document.getElementById("challenge2").innerHTML =
     "Build additional homes and creature areas";
@@ -764,24 +764,35 @@ function buildHabitat(){
   document.getElementById("moreChallenge").innerHTML =
     "Create different habitat zones, add bridges, caves, waterfalls, or design a habitat for a magical creature.";
 
-  addTree();
-  addTree();
+  // Pond with border
+  addBlock(-5, 0.7, 5, 0x1E90FF, new THREE.BoxGeometry(4, 0.4, 4));
+  addBlock(-7, 1, 5, 0x777777, new THREE.BoxGeometry(0.5, 0.7, 4));
+  addBlock(-3, 1, 5, 0x777777, new THREE.BoxGeometry(0.5, 0.7, 4));
+  addBlock(-5, 1, 3, 0x777777, new THREE.BoxGeometry(4, 0.7, 0.5));
+  addBlock(-5, 1, 7, 0x777777, new THREE.BoxGeometry(4, 0.7, 0.5));
 
-  for(let x = -4; x <= 0; x += 1){
-    for(let z = 4; z <= 8; z += 1){
-      addBlock(x, 1, z, 0x1E90FF);
-    }
-  }
+  // Creature shelter
+  addBlock(5, 1.5, 4, 0x8B4513, new THREE.BoxGeometry(4, 2, 3));
+  addBlock(5, 3, 4, 0x228B22, new THREE.BoxGeometry(5, 0.7, 4));
+  addBlock(5, 1.5, 2.3, 0x654321, new THREE.BoxGeometry(1, 1.4, 0.3));
 
-  for(let x = 4; x <= 8; x += 1){
-    for(let z = 2; z <= 6; z += 1){
-      addBlock(x, 1, z, 0x8B4513);
-    }
-  }
+  // Trees
+  addBlock(-8, 2, -4, 0x8B4513, new THREE.BoxGeometry(1, 3, 1));
+  addBlock(-8, 4.5, -4, 0x228B22, new THREE.BoxGeometry(3, 3, 3));
+
+  addBlock(8, 2, -5, 0x8B4513, new THREE.BoxGeometry(1, 3, 1));
+  addBlock(8, 4.5, -5, 0x228B22, new THREE.BoxGeometry(3, 3, 3));
+
+  // Rocks
+  addBlock(-1, 1, -6, 0x777777, new THREE.BoxGeometry(1.5, 1, 1));
+  addBlock(1, 0.8, -6, 0x777777, new THREE.BoxGeometry(1, 0.8, 1));
+
+  // Food area
+  addBlock(2, 0.8, 7, 0xADFF2F, new THREE.BoxGeometry(2, 0.4, 2));
 
   checkBadge();
 }
-
+  
 function buildDragonLair(){
 
   resetWorld();
