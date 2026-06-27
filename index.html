@@ -842,6 +842,37 @@ function buildFutureCity(){
   checkBadge();
 }
   
+document.getElementById('loadFile').addEventListener('change', function(event){
+
+  const file = event.target.files[0];
+
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+
+    resetWorld();
+
+    const worldData = JSON.parse(e.target.result);
+
+    worldData.forEach(data => {
+      addBlock(
+        data.x,
+        data.y,
+        data.z,
+        data.color,
+        new THREE.BoxGeometry(
+          data.sx || 1,
+          data.sy || 1,
+          data.sz || 1
+        )
+      );
+    });
+
+    checkBadge();
+  };
+
   reader.readAsText(file);
 });
 
