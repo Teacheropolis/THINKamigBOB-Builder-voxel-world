@@ -682,7 +682,7 @@ function buildPlayground(){
     "<b>Mission:</b> Design an amazing playground!";
 
   document.getElementById("challenge1").innerHTML =
-    "Template includes: A slide and swing set";
+    "Template includes: A small slide, swing set, sandbox, and sign";
 
   document.getElementById("challenge2").innerHTML =
     "Build monkey bars and add a bigger, fancier slide";
@@ -694,42 +694,51 @@ function buildPlayground(){
     "Reset the world and design a completely new playground";
 
   document.getElementById("moreChallenge").innerHTML =
-    "Add safety features, signs, lights, colors, and a special Bobwarts magical area.";
+    "Add safety features, benches, lights, colors, and a special Bobwarts magical area.";
 
-  // Slide tower
-  for(let y = 1; y < 5; y++){
-    addBlock(-6, y, -4, 0xFFD700);
-  }
+  // Slide platform
+  addBlock(-6, 1, -4, 0xFFD700);
+  addBlock(-6, 2, -4, 0xFFD700);
+  addBlock(-6, 3, -4, 0xFFD700);
 
-  // Slide ramp
-  for(let i = 0; i < 4; i++){
-    addBlock(
-      -5 + i,
-      4 - i,
-      -3,
-      0x1E90FF,
-      new THREE.BoxGeometry(1.2, 0.5, 1.2)
-    );
-  }
+  // Slide ramp pieces
+  addBlock(-5, 3, -4, 0x1E90FF);
+  addBlock(-4, 2, -4, 0x1E90FF);
+  addBlock(-3, 1, -4, 0x1E90FF);
 
-  // Swing poles
-  for(let y = 1; y < 6; y++){
-    addBlock(6, y, -4, 0x8B4513, new THREE.BoxGeometry(0.5, 1, 0.5));
-    addBlock(10, y, -4, 0x8B4513, new THREE.BoxGeometry(0.5, 1, 0.5));
-  }
+  // Slide ladder
+  addBlock(-7, 1, -4, 0x8B4513, new THREE.BoxGeometry(0.4, 1, 0.4));
+  addBlock(-7, 2, -4, 0x8B4513, new THREE.BoxGeometry(0.4, 1, 0.4));
+  addBlock(-7, 3, -4, 0x8B4513, new THREE.BoxGeometry(0.4, 1, 0.4));
 
-  addBlock(8, 5.5, -4, 0x8B4513, new THREE.BoxGeometry(5, 0.5, 0.5));
+  // Swing set posts
+  addBlock(5, 1, -4, 0x8B4513, new THREE.BoxGeometry(0.4, 2, 0.4));
+  addBlock(5, 3, -4, 0x8B4513, new THREE.BoxGeometry(0.4, 2, 0.4));
+  addBlock(10, 1, -4, 0x8B4513, new THREE.BoxGeometry(0.4, 2, 0.4));
+  addBlock(10, 3, -4, 0x8B4513, new THREE.BoxGeometry(0.4, 2, 0.4));
 
-  for(let y = 3; y < 5.5; y += 1){
-    addBlock(7.25, y, -4, 0xcccccc, new THREE.BoxGeometry(0.2, 1, 0.2));
-    addBlock(8.75, y, -4, 0xcccccc, new THREE.BoxGeometry(0.2, 1, 0.2));
-  }
+  // Swing top bar
+  addBlock(7.5, 5, -4, 0x8B4513, new THREE.BoxGeometry(5.5, 0.4, 0.4));
 
-  addBlock(8, 2.3, -4, 0x222222, new THREE.BoxGeometry(2, 0.4, 1));
+  // Swing chains and seat
+  addBlock(7, 3.5, -4, 0xcccccc, new THREE.BoxGeometry(0.2, 2.5, 0.2));
+  addBlock(8, 3.5, -4, 0xcccccc, new THREE.BoxGeometry(0.2, 2.5, 0.2));
+  addBlock(7.5, 2, -4, 0x222222, new THREE.BoxGeometry(2, 0.3, 1));
+
+  // Sandbox
+  addBlock(0, 0.7, 5, 0xFFD700, new THREE.BoxGeometry(4, 0.4, 4));
+  addBlock(-2, 1, 5, 0x8B4513, new THREE.BoxGeometry(0.4, 0.8, 4));
+  addBlock(2, 1, 5, 0x8B4513, new THREE.BoxGeometry(0.4, 0.8, 4));
+  addBlock(0, 1, 3, 0x8B4513, new THREE.BoxGeometry(4, 0.8, 0.4));
+  addBlock(0, 1, 7, 0x8B4513, new THREE.BoxGeometry(4, 0.8, 0.4));
+
+  // Playground sign
+  addBlock(-8, 1, 5, 0x8B4513, new THREE.BoxGeometry(0.3, 2, 0.3));
+  addBlock(-8, 2.5, 5, 0xFFFFFF, new THREE.BoxGeometry(2.5, 1, 0.3));
 
   checkBadge();
 }
-
+  
 function buildHabitat(){
 
   resetWorld();
