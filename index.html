@@ -119,6 +119,10 @@
 <button onclick="zoomIn()">🔍+</button>
 <button onclick="zoomOut()">🔍-</button>
 
+<button onclick="showDirections()">
+❓ How to Play
+</button>  
+
   <p style="font-size:12px; margin-top:0;">
     Choose a world to begin your adventure.
   </p>
@@ -1092,6 +1096,34 @@ function zoomOut(){
   }
 
   updateCamera();
+}
+
+function showDirections(){
+
+  alert(
+`🏰 BOBWARTS BUILD WORLD
+
+1. Choose a Starter World.
+
+2. Click and drag to rotate the world.
+
+3. Use 🔍+ and 🔍- to zoom.
+
+4. Left-click on a block or the ground to build.
+
+5. Right-click a block to remove it.
+
+6. Choose different block colors from the Block Type menu.
+
+7. Use the Builder Toolbox to add trees, ponds, portals, and more.
+
+8. Complete the Challenge and earn badges!
+
+9. Save your world or take a screenshot when finished.
+
+Have fun building!`
+  );
+
 }
   
 window.addEventListener('resize', ()=>{
