@@ -116,6 +116,9 @@
 <button onclick="setView('left')">Left</button>
 <button onclick="setView('right')">Right</button>
 
+<button onclick="zoomIn()">🔍+</button>
+<button onclick="zoomOut()">🔍-</button>
+
   <p style="font-size:12px; margin-top:0;">
     Choose a world to begin your adventure.
   </p>
@@ -996,6 +999,26 @@ function setView(view){
   }
 
   camera.lookAt(0,0,0);
+}
+
+function zoomIn(){
+
+  camera.position.z -= 2;
+
+  if(camera.position.z < 5){
+    camera.position.z = 5;
+  }
+
+}
+
+function zoomOut(){
+
+  camera.position.z += 2;
+
+  if(camera.position.z > 50){
+    camera.position.z = 50;
+  }
+
 }
   
 window.addEventListener('resize', ()=>{
