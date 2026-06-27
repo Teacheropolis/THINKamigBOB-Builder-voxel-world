@@ -254,6 +254,9 @@ scene.add(ground);
 
 const blocks = [];
 
+const stars = [];
+let moon = null;  
+
 function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
   const block = new THREE.Mesh(
     geometry,
@@ -275,6 +278,25 @@ function setSkyColor(color){
   scene.background = new THREE.Color(color);
 }
 
+function addMoon(){
+
+  if(moon){
+    scene.remove(moon);
+  }
+
+  moon = new THREE.Mesh(
+    new THREE.SphereGeometry(2, 20, 20),
+    new THREE.MeshLambertMaterial({
+      color: 0xF5F5DC,
+      emissive: 0x444444
+    })
+  );
+
+  moon.position.set(15, 18, -20);
+
+  scene.add(moon);
+}
+
 const atmosphereObjects = [];
 
 function addAtmosphereObject(object){
@@ -288,6 +310,7 @@ function clearAtmosphere(){
     scene.remove(atmosphereObjects[i]);
   }
   atmosphereObjects.length = 0;
+  stars.length = 0;
 }
 
 function createCloud(x, y, z){
@@ -324,12 +347,17 @@ function addMovingClouds(){
 }
 
 function addStars(){
-  const starMaterial = new THREE.MeshBasicMaterial({color:0xFFFFAA});
 
   for(let i = 0; i < 35; i++){
+
     const star = new THREE.Mesh(
       new THREE.BoxGeometry(0.25, 0.25, 0.25),
-      starMaterial
+
+      new THREE.MeshBasicMaterial({
+        color:0xFFFFAA,
+        transparent:true,
+        opacity:1
+      })
     );
 
     star.position.set(
@@ -339,6 +367,9 @@ function addStars(){
     );
 
     star.userData.type = "star";
+
+    stars.push(star);
+
     addAtmosphereObject(star);
   }
 }
@@ -516,6 +547,12 @@ document.addEventListener('contextmenu', (event)=>{
 
 function animate(){
   requestAnimationFrame(animate);
+
+  stars.forEach(star => {
+
+  star.material.opacity =
+    0.3 + Math.random() * 0.7;
+});
 
   atmosphereObjects.forEach(object => {
     if(object.userData.type === "cloud"){
@@ -1033,7 +1070,9 @@ function buildFutureCity(){
 resetWorld();
 setGroundColor(0x777777);
 setSkyColor(0x191970);
+
 addStars();
+addMoon();
 
   document.getElementById("worldTitle").innerHTML =
     "🏙️ Bobwarts Future City Builder 🏙️";
