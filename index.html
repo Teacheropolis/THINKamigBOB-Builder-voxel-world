@@ -107,6 +107,15 @@
          placeholder="Enter your name"
          style="width:100%; padding:5px; border-radius:6px;">
 
+<p><b>View:</b></p>
+
+<button onclick="setView('home')">🏠 Home</button>
+<button onclick="setView('top')">⬆️ Top</button>
+<button onclick="setView('front')">Front</button>
+<button onclick="setView('back')">Back</button>
+<button onclick="setView('left')">Left</button>
+<button onclick="setView('right')">Right</button>
+
   <p style="font-size:12px; margin-top:0;">
     Choose a world to begin your adventure.
   </p>
@@ -960,6 +969,35 @@ function toggleToolbox(){
 checkBadge();
 animate();
 
+function setView(view){
+
+  if(view === "home"){
+    camera.position.set(0, 8, 15);
+  }
+
+  if(view === "top"){
+    camera.position.set(0, 30, 0.1);
+  }
+
+  if(view === "front"){
+    camera.position.set(0, 8, 20);
+  }
+
+  if(view === "back"){
+    camera.position.set(0, 8, -20);
+  }
+
+  if(view === "left"){
+    camera.position.set(-20, 8, 0);
+  }
+
+  if(view === "right"){
+    camera.position.set(20, 8, 0);
+  }
+
+  camera.lookAt(0,0,0);
+}
+  
 window.addEventListener('resize', ()=>{
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
