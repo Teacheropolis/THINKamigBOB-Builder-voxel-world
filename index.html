@@ -92,15 +92,18 @@ select {
 <input type="file" id="loadFile" style="display:none" accept=".json">
 <p>Use W A S D keys to move.</p>
 
-<h2>🏰 Bobwarts Build World</h2>
-<p><b>Mission:</b> Build a Wizard Castle!</p>
+<h2>🏰 Bobwarts Build World</h2
+                            
+<p id="missionText">
+  <b>Mission:</b> Build a Wizard Castle!
+</p>
 
-<p>⭐ Challenge:</p>
+<p id="challengeTitle">⭐ Challenge:</p>
 
 <ul>
-  <li>Add 4 towers</li>
-  <li>Create a grand entrance</li>
-  <li>Build a dragon perch</li>
+  <li id="challenge1">Add 4 towers</li>
+  <li id="challenge2">Create a grand entrance</li>
+  <li id="challenge3">Build a dragon perch</li>
 </ul>
   
 <p id="badgeMessage"><b>Badge:</b> Keep building!</p>
@@ -408,31 +411,32 @@ function buildCastle(){
 
 document.getElementById("worldTitle").innerHTML =
   "🏰 Bobwarts Castle Builder 🏰";
+
+document.getElementById("challenge1").innerHTML =
+  "Build 4 castle towers";
+
+document.getElementById("challenge2").innerHTML =
+  "Create walls and a grand entrance";
+
+document.getElementById("challenge3").innerHTML =
+  "Add a dragon perch or magical feature";
+
+// Castle foundation only
+for(let x = -4; x <= 4; x += 2){
+  for(let z = -4; z <= 4; z += 2){
+
+    const block = new THREE.Mesh(
+      new THREE.BoxGeometry(),
+      new THREE.MeshLambertMaterial({color:0xaaaaaa})
+    );
+
+    block.position.set(x, 0, z);
+
+    scene.add(block);
+    blocks.push(block);
+  }
+}
   
-  const towerPositions = [
-    [-8, -8],
-    [8, -8],
-    [-8, 8],
-    [8, 8]
-  ];
-
-  towerPositions.forEach(pos => {
-
-    for(let y = 0; y < 6; y++){
-
-      const block = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:0xcccccc})
-      );
-
-      block.position.set(pos[0], y, pos[1]);
-
-      scene.add(block);
-      blocks.push(block);
-    }
-
-  });
-
   for(let x = -4; x <= 4; x += 2){
     for(let z = -4; z <= 4; z += 2){
       for(let y = 0; y < 3; y++){
@@ -459,6 +463,18 @@ function buildPlayground(){
 document.getElementById("worldTitle").innerHTML =
   "🛝 Bobwarts Playground Builder 🛝";
 
+document.getElementById("missionText").innerHTML =
+  "<b>Mission:</b> Design an amazing playground!";
+
+document.getElementById("challenge1").innerHTML =
+  "Build a tall slide";
+
+document.getElementById("challenge2").innerHTML =
+  "Create a swing set";
+
+document.getElementById("challenge3").innerHTML =
+  "Add a fun feature";
+  
   // Slide tower
   for(let y = 0; y < 4; y++){
     const block = new THREE.Mesh(
