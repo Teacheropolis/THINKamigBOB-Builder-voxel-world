@@ -240,8 +240,8 @@ scene.add(ground);
 const blocks = [];
 blocks.push(ground);
 
-for(let x=-5;x<=5;x+=2){
-  for(let z=-5;z<=5;z+=2){
+for(let x=-5;x<=5;x+=1){
+  for(let z=-5;z<=5;z+=1){
 
     const cube = new THREE.Mesh(
       new THREE.BoxGeometry(),
@@ -455,8 +455,8 @@ document.getElementById("worldTitle").innerHTML =
 
   blocks.length = 0;
 
-  for(let x=-5;x<=5;x+=2){
-    for(let z=-5;z<=5;z+=2){
+  for(let x=-5;x<=5;x+=1){
+    for(let z=-5;z<=5;z+=1){
 
       const cube = new THREE.Mesh(
         new THREE.BoxGeometry(),
