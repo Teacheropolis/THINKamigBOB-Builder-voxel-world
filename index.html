@@ -480,11 +480,10 @@ function resetWorld(){
     scene.remove(blocks[i]);
   }
 
- blocks.length = 0;
+blocks.length = 0;
 
 setGroundColor(0x55aa55); // default grass
-
-setSkyColor(0x87CEEB); // daytime blue sky
+setSkyColor(0x87CEEB);    // default blue sky
 
 buildStarterGrid();
 
@@ -674,9 +673,8 @@ function expandWorld(){
 function buildCastle(){
 
 resetWorld();
-setGroundColor(0x999999); 
-
-setSkyColor(0x87CEEB); // bright daytime
+setGroundColor(0x999999);
+setSkyColor(0x87CEEB);
   
   document.getElementById("worldTitle").innerHTML =
     "🏰 Bobwarts Castle Builder 🏰";
@@ -734,8 +732,7 @@ function buildPlayground(){
 
 resetWorld();
 setGroundColor(0xDEB887);
-  
-setSkyColor(0xB0E2FF); // cheerful playground sky
+setSkyColor(0xB0E2FF);
   
   document.getElementById("worldTitle").innerHTML =
     "🛝 Bobwarts Playground Builder 🛝";
@@ -805,8 +802,7 @@ function buildHabitat(){
 
 resetWorld();
 setGroundColor(0x55aa55);
-
-setSkyColor(0x98FB98); // forest green sky tint
+setSkyColor(0x87CEEB);
 
   document.getElementById("worldTitle").innerHTML =
     "🌳 Bobwarts Habitat Builder 🌳";
@@ -862,8 +858,7 @@ function buildDragonLair(){
 
 resetWorld();
 setGroundColor(0x333333);
-
-setSkyColor(0xFF8C00); // fiery orange sunset
+setSkyColor(0xFF8C00);
 
   document.getElementById("worldTitle").innerHTML =
     "🐉 Bobwarts Dragon Sanctuary 🐉";
