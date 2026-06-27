@@ -504,15 +504,46 @@ document.getElementById("worldTitle").innerHTML =
     blocks.push(rightPole);
   }
 
-  // Swing seat
-  const seat = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 0.5, 1),
-    new THREE.MeshLambertMaterial({color:0x222222})
+// Swing top bar
+const topBar = new THREE.Mesh(
+  new THREE.BoxGeometry(6, 0.5, 1),
+  new THREE.MeshLambertMaterial({color:0x8B4513})
+);
+
+topBar.position.set(8, 5, -4);
+scene.add(topBar);
+blocks.push(topBar);
+
+// Swing chains
+for(let y = 2; y < 5; y++){
+  const leftChain = new THREE.Mesh(
+    new THREE.BoxGeometry(0.25, 1, 0.25),
+    new THREE.MeshLambertMaterial({color:0xcccccc})
   );
 
-  seat.position.set(8, 3, -4);
-  scene.add(seat);
-  blocks.push(seat);
+  leftChain.position.set(7, y, -4);
+  scene.add(leftChain);
+  blocks.push(leftChain);
+
+  const rightChain = new THREE.Mesh(
+    new THREE.BoxGeometry(0.25, 1, 0.25),
+    new THREE.MeshLambertMaterial({color:0xcccccc})
+  );
+
+  rightChain.position.set(9, y, -4);
+  scene.add(rightChain);
+  blocks.push(rightChain);
+}
+
+// Swing seat
+const swingSeat = new THREE.Mesh(
+  new THREE.BoxGeometry(3, 0.5, 1),
+  new THREE.MeshLambertMaterial({color:0x222222})
+);
+
+swingSeat.position.set(8, 1.5, -4);
+scene.add(swingSeat);
+blocks.push(swingSeat);
 
   checkBadge();
 }
