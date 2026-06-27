@@ -92,6 +92,7 @@ select {
 <button onclick="buildFutureCity()">🏙️ Future City</button>
 <button onclick="addTree()">🌲 Add Tree</button>
 <button onclick="addPond()">🌊 Add Pond</button>
+<button onclick="addRocks()">🪨 Add Rocks</button>
   
 <input type="file" id="loadFile" style="display:none" accept=".json">
 <p>Use W A S D keys to move.</p>
@@ -431,6 +432,32 @@ function addPond(){
       scene.add(water);
       blocks.push(water);
     }
+  }
+
+  checkBadge();
+}
+
+function addRocks(){
+
+  for(let i = 0; i < 6; i++){
+
+    const rock = new THREE.Mesh(
+      new THREE.BoxGeometry(
+        1 + Math.random(),
+        1 + Math.random(),
+        1 + Math.random()
+      ),
+      new THREE.MeshLambertMaterial({color:0x777777})
+    );
+
+    rock.position.set(
+      -8 + Math.random() * 16,
+      0,
+      -8 + Math.random() * 16
+    );
+
+    scene.add(rock);
+    blocks.push(rock);
   }
 
   checkBadge();
