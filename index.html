@@ -149,21 +149,6 @@ for(let x=-12;x<=12;x+=2){
   }
 }
 
-      const cube = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({
-          color: y === 0 ? 0x55aa55 : 0x8B4513
-        })
-      );
-
-      cube.position.set(x,y,z);
-
-      scene.add(cube);
-      blocks.push(cube);
-    }
-  }
-}
-
 const light = new THREE.DirectionalLight(0xffffff,1);
 light.position.set(5,10,7);
 scene.add(light);
