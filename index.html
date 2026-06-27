@@ -81,8 +81,16 @@
 }
 
 .viewButton:hover {
-  background: #63B8FF;
-}
+.blockHeader {
+  background: #6A0DAD;
+  color: white;
+  border: 2px solid gold;
+  border-radius: 8px;
+  padding: 8px;
+  margin-top: 12px;
+  font-weight: bold;
+  text-align: center;
+} 
 
     #worldTitle {
       position: absolute;
@@ -172,7 +180,9 @@
   <button onclick="addCrystalCluster()">🔮 Add Crystal Cluster</button>
 </div>
 
-<p><b>🎨 Choose Your Building Block:</b></p>
+<div class="blockHeader">
+  🎨 Choose Your Building Block
+</div>
 
 <select id="blockColor">
   <option value="0x654321">🟫 Door Brown</option>
@@ -236,30 +246,6 @@
   <p>Left-click a block to build.</p>
   <p>Right-click a block to remove it.</p>
 
-  <p><b>Block Type:</b></p>
-
-  <select id="blockColor">
-    <option value="0x654321">🟫 Door Brown</option>
-    <option value="0x87CEFA">🟦 Window Blue</option>
-    <option value="0x222222">⬛ Roof Black</option>
-    <option value="0xcccccc">⬜ Stone Gray</option>
-    <option value="0x8B4513">🟫 Wood Brown</option>
-    <option value="0xFFD700">🟨 Gold</option>
-    <option value="0xB22222">🟥 Brick Red</option>
-    <option value="0x228B22">🟩 Forest Green</option>
-    <option value="0x6A0DAD">🟪 Wizard Purple</option>
-    <option value="0xFFFFFF">⬜ Snow</option>
-    <option value="0x000000">⬛ Obsidian</option>
-    <option value="0x1E90FF">🟦 Water</option>
-    <option value="0xFFA500">🟧 Lava</option>
-    <option value="0x808080">⬜ Stone Brick</option>
-    <option value="0x00FFFF">🩵 Crystal Cyan</option>
-    <option value="0xFF00FF">😈 Magic Magenta</option>
-    <option value="0x7FFFD4">🧃 Glow Crystal</option>
-    <option value="0x9400D3">🔮 Dark Magic</option>
-    <option value="0xF5F5DC">🌕 Moonstone</option>
-    <option value="0xADFF2F">🍋‍🟩 Potion Green</option>
-  </select>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
