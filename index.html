@@ -12,7 +12,9 @@
       background: #87CEEB;
     }
 
-    canvas { display: block; }
+    canvas {
+      display: block;
+    }
 
     #info {
       position: absolute;
@@ -23,86 +25,73 @@
       border-radius: 10px;
       z-index: 100;
       max-width: 300px;
-
-       max-height: 85vh;
-  overflow-y: auto;
+      max-height: 85vh;
+      overflow-y: auto;
     }
-button {
-  background: #d4af37;
-  color: black;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin: 4px;
-  cursor: pointer;
-  font-weight: bold;
-}
 
-button:hover {
-  background: #f1d46a;
-}
+    button {
+      background: #d4af37;
+      color: black;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
 
-#starterButton,
-#toolboxButton {
+    button:hover {
+      background: #f1d46a;
+    }
 
-  background: black;
-  color: gold;
+    #starterButton,
+    #toolboxButton {
+      background: black;
+      color: gold;
+      border: 2px solid gold;
+      width: 100%;
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
 
-  border: 2px solid gold;
+    #starterButton:hover,
+    #toolboxButton:hover {
+      background: #222222;
+      color: #FFD700;
+    }
 
-  width: 100%;
+    select {
+      padding: 5px;
+      border-radius: 6px;
+      width: 100%;
+    }
 
-  font-size: 18px;
-  font-weight: bold;
+    #worldTitle {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: gold;
+      padding: 10px 25px;
+      border-radius: 15px;
+      font-size: 28px;
+      font-weight: bold;
+      border: 3px solid gold;
+      z-index: 150;
+      box-shadow: 0 0 15px gold;
+    }
 
-  margin-top: 10px;
-}
+    #starterWorlds {
+      display: block;
+      margin-top: 8px;
+    }
 
-#starterButton:hover,
-#toolboxButton:hover {
-
-  background: #222222;
-  color: #FFD700;
-}
-    
-select {
-  padding: 5px;
-  border-radius: 6px;
-  width: 100%;
-}
-
- #worldTitle {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-
-  background: rgba(0,0,0,0.7);
-  color: gold;
-
-  padding: 10px 25px;
-  border-radius: 15px;
-
-  font-size: 28px;
-  font-weight: bold;
-
-  border: 3px solid gold;
-
-  z-index: 150;
-
-  box-shadow: 0 0 15px gold;
-}   
-
-#starterWorlds{
-  display:block;
-  margin-top:8px;
-}
-
-#toolbox{
-  display:none;
-  margin-top:8px;
-}
-    
+    #toolbox {
+      display: none;
+      margin-top: 8px;
+    }
   </style>
 </head>
 
@@ -111,107 +100,102 @@ select {
 <div id="worldTitle">
   🏰 Bobwarts Build World 🏰
 </div>
-  
+
 <div id="info">
-<p><b>Student Name:</b></p>
-<input id="studentName"
-       placeholder="Enter your name"
-       style="width:100%; padding:5px; border-radius:6px;">  
+  <p><b>Student Name:</b></p>
+  <input id="studentName"
+         placeholder="Enter your name"
+         style="width:100%; padding:5px; border-radius:6px;">
 
   <p style="font-size:12px; margin-top:0;">
-Choose a world to begin your adventure.
-</p>
-  
-<button onclick="saveWorld()">💾 Save World</button>
-<button onclick="saveImage()">📸 Save Screenshot</button>
-<button onclick="document.getElementById('loadFile').click()">📂 Load World</button>
-<button onclick="resetWorld()">🔄 Reset World</button>
+    Choose a world to begin your adventure.
+  </p>
 
-<button id="starterButton"
-        onclick="toggleStarterWorlds()">
-🌍 Bobwarts Starter Worlds ▼
-</button>
+  <button onclick="saveWorld()">💾 Save World</button>
+  <button onclick="saveImage()">📸 Save Screenshot</button>
+  <button onclick="document.getElementById('loadFile').click()">📂 Load World</button>
+  <button onclick="resetWorld()">🔄 Reset World</button>
 
-<div id="starterWorlds">  
-  
-<button onclick="buildCastle()">🏰 Build Castle</button>
-<button onclick="buildPlayground()">🛝 Build Playground</button>  
-<button onclick="buildHabitat()">🌳 Build Habitat</button>
-<button onclick="buildDragonLair()">🐉 Dragon Lair</button>
-<button onclick="buildFutureCity()">🏙️ Future City</button>
-  
-</div>  
+  <button id="starterButton" onclick="toggleStarterWorlds()">
+    🌍 Bobwarts Starter Worlds ▼
+  </button>
 
-<button id="toolboxButton"
-        onclick="toggleToolbox()">
-🧰 Builder Toolbox ▶
-</button>
+  <div id="starterWorlds">
+    <button onclick="buildCastle()">🏰 Build Castle</button>
+    <button onclick="buildPlayground()">🛝 Build Playground</button>
+    <button onclick="buildHabitat()">🌳 Build Habitat</button>
+    <button onclick="buildDragonLair()">🐉 Dragon Lair</button>
+    <button onclick="buildFutureCity()">🏙️ Future City</button>
+  </div>
 
-<div id="toolbox">
-<button onclick="expandWorld()">🌎 Expand Building Space</button>  
-<button onclick="addTree()">🌲 Add Tree</button>
-<button onclick="addPond()">🌊 Add Pond</button>
-<button onclick="addRocks()">🪨 Add Rocks</button>
-<button onclick="addBuilding()">🏢 Add Building</button>
-<button onclick="addPortal()">✨ Add Magic Portal</button>
-<button onclick="addVolcano()">🌋 Add Volcano</button>  
-<button onclick="addRainbowBridge()">🌈 Add Rainbow Bridge</button>
-<button onclick="addCrystalCluster()">🔮 Add Crystal Cluster</button>
-</div>
-  
-<input type="file" id="loadFile" style="display:none" accept=".json">
+  <button id="toolboxButton" onclick="toggleToolbox()">
+    🧰 Builder Toolbox ▶
+  </button>
 
-<h2>🏰 Bobwarts Build World</h2>
-                            
-<p id="missionText">
-  <b>Mission:</b> Build a Wizard Castle!
-</p>
+  <div id="toolbox">
+    <button onclick="expandWorld()">🌎 Expand Building Space</button>
+    <button onclick="addTree()">🌲 Add Tree</button>
+    <button onclick="addPond()">🌊 Add Pond</button>
+    <button onclick="addRocks()">🪨 Add Rocks</button>
+    <button onclick="addBuilding()">🏢 Add Building</button>
+    <button onclick="addPortal()">✨ Add Magic Portal</button>
+    <button onclick="addVolcano()">🌋 Add Volcano</button>
+    <button onclick="addRainbowBridge()">🌈 Add Rainbow Bridge</button>
+    <button onclick="addCrystalCluster()">🔮 Add Crystal Cluster</button>
+  </div>
 
-<p id="challengeTitle">⭐ Challenge:</p>
+  <input type="file" id="loadFile" style="display:none" accept=".json">
 
-<ul>
-  <li id="challenge1">Add 4 towers</li>
-  <li id="challenge2">Create a grand entrance</li>
-  <li id="challenge3">Build a dragon perch</li>
-  <li id="challenge4">Reset the world and try a brand-new design</li>
-</ul>
+  <h2>🏰 Bobwarts Build World</h2>
 
-<p><b>Want More Challenge?</b></p>
-<p id="moreChallenge">Add details, decorations, and a magical feature.</p>
-  
-<p id="badgeMessage"><b>Badge:</b> Keep building!</p>
-  
-<p>Move mouse to look around.</p>
-<p>Left-click a block to build.</p>
-<p>Right-click a block to remove it.</p>
-                                      
-<p><b>Block Type:</b></p>
-  
-<select id="blockColor">
-<option value="0x654321">🟫 Door Brown</option>
-<option value="0x87CEFA">🟦 Window Blue</option>
-<option value="0x222222">⬛ Roof Black</option>
-<option value="0xcccccc">⬜ Stone Gray</option>
-<option value="0x8B4513">🟫 Wood Brown</option>
-<option value="0xFFD700">🟨 Gold</option>
-<option value="0xB22222">🟥 Brick Red</option>
-<option value="0x228B22">🟩 Forest Green</option>
-<option value="0x6A0DAD">🟪 Wizard Purple</option>
-<option value="0xFFFFFF">⬜ Snow</option>
-<option value="0x000000">⬛ Obsidian</option>
-<option value="0x1E90FF">🟦 Water</option>
-<option value="0xFFA500">🟧 Lava</option>
-<option value="0x808080">⬜ Stone Brick</option>
-<option value="0x00FFFF">🩵 Crystal Cyan</option>
-<option value="0xFF00FF">😈 Magic Magenta</option>
-<option value="0x7FFFD4">🧃 Glow Crystal</option>
-<option value="0x9400D3">🔮 Dark Magic</option>
-<option value="0xF5F5DC">🌕 Moonstone</option>
-<option value="0xADFF2F">🍋‍🟩 Potion Green</option>
-</select>
+  <p id="missionText">
+    <b>Mission:</b> Build a Wizard Castle!
+  </p>
+
+  <p id="challengeTitle">⭐ Challenge:</p>
+
+  <ul>
+    <li id="challenge1">Add 4 towers</li>
+    <li id="challenge2">Create a grand entrance</li>
+    <li id="challenge3">Build a dragon perch</li>
+    <li id="challenge4">Reset the world and try a brand-new design</li>
+  </ul>
+
+  <p><b>Want More Challenge?</b></p>
+  <p id="moreChallenge">Add details, decorations, and a magical feature.</p>
+
+  <p id="badgeMessage"><b>Badge:</b> Keep building!</p>
+
+  <p>Move mouse to look around.</p>
+  <p>Left-click a block to build.</p>
+  <p>Right-click a block to remove it.</p>
+
+  <p><b>Block Type:</b></p>
+
+  <select id="blockColor">
+    <option value="0x654321">🟫 Door Brown</option>
+    <option value="0x87CEFA">🟦 Window Blue</option>
+    <option value="0x222222">⬛ Roof Black</option>
+    <option value="0xcccccc">⬜ Stone Gray</option>
+    <option value="0x8B4513">🟫 Wood Brown</option>
+    <option value="0xFFD700">🟨 Gold</option>
+    <option value="0xB22222">🟥 Brick Red</option>
+    <option value="0x228B22">🟩 Forest Green</option>
+    <option value="0x6A0DAD">🟪 Wizard Purple</option>
+    <option value="0xFFFFFF">⬜ Snow</option>
+    <option value="0x000000">⬛ Obsidian</option>
+    <option value="0x1E90FF">🟦 Water</option>
+    <option value="0xFFA500">🟧 Lava</option>
+    <option value="0x808080">⬜ Stone Brick</option>
+    <option value="0x00FFFF">🩵 Crystal Cyan</option>
+    <option value="0xFF00FF">😈 Magic Magenta</option>
+    <option value="0x7FFFD4">🧃 Glow Crystal</option>
+    <option value="0x9400D3">🔮 Dark Magic</option>
+    <option value="0xF5F5DC">🌕 Moonstone</option>
+    <option value="0xADFF2F">🍋‍🟩 Potion Green</option>
+  </select>
 </div>
 
-  
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 
 <script>
@@ -220,7 +204,7 @@ scene.background = new THREE.Color(0x87CEEB);
 
 const camera = new THREE.PerspectiveCamera(
   75,
-  window.innerWidth/window.innerHeight,
+  window.innerWidth / window.innerHeight,
   0.1,
   1000
 );
@@ -228,92 +212,53 @@ const camera = new THREE.PerspectiveCamera(
 const renderer = new THREE.WebGLRenderer({
   preserveDrawingBuffer: true
 });
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const groundGeometry = new THREE.BoxGeometry(50,1,50);
+const groundGeometry = new THREE.BoxGeometry(50, 1, 50);
 const groundMaterial = new THREE.MeshLambertMaterial({color:0x55aa55});
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.position.y = -1;
 scene.add(ground);
+
 const blocks = [];
-blocks.push(ground);
 
-for(let x=-5;x<=5;x+=1){
-  for(let z=-5;z<=5;z+=1){
+function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
+  const block = new THREE.Mesh(
+    geometry,
+    new THREE.MeshLambertMaterial({color: color})
+  );
 
-    const cube = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0xcccccc})
-    );
+  block.position.set(x, y, z);
+  scene.add(block);
+  blocks.push(block);
 
-    cube.position.set(x,0,z);
+  return block;
+}
 
-    scene.add(cube);
-    blocks.push(cube);
+function buildStarterGrid(){
+  for(let x = -5; x <= 5; x += 1){
+    for(let z = -5; z <= 5; z += 1){
+      addBlock(x, 0, z, 0xcccccc);
+    }
   }
 }
 
-const light = new THREE.DirectionalLight(0xffffff,1);
-light.position.set(5,10,7);
+buildStarterGrid();
+
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(5, 10, 7);
 scene.add(light);
 
-const ambient = new THREE.AmbientLight(0xffffff,0.6);
+const ambient = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambient);
 
-camera.position.set(0,8,15);
-let angle = 0;
+camera.position.set(0, 8, 15);
+camera.lookAt(0, 0, 0);
+
 let mouseX = 0;
 let mouseY = 0;
-let moveForward = false;
-let moveBackward = false;
-let moveLeft = false;
-let moveRight = false;
-document.addEventListener('keydown', (event)=>{
-
-  switch(event.key.toLowerCase()){
-
-    case 'w':
-      moveForward = true;
-      break;
-
-    case 's':
-      moveBackward = true;
-      break;
-
-    case 'a':
-      moveLeft = true;
-      break;
-
-    case 'd':
-      moveRight = true;
-      break;
-  }
-
-});
-
-document.addEventListener('keyup', (event)=>{
-
-  switch(event.key.toLowerCase()){
-
-    case 'w':
-      moveForward = false;
-      break;
-
-    case 's':
-      moveBackward = false;
-      break;
-
-    case 'a':
-      moveLeft = false;
-      break;
-
-    case 'd':
-      moveRight = false;
-      break;
-  }
-
-});
 
 document.addEventListener('mousemove', (event)=>{
 
@@ -323,20 +268,21 @@ document.addEventListener('mousemove', (event)=>{
   camera.position.x = mouseX;
   camera.position.y = 8 - mouseY;
 
-  camera.lookAt(0,0,0);
-
+  camera.lookAt(0, 0, 0);
 });
+
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 document.addEventListener('click', (event)=>{
 
-  mouse.x = (event.clientX / window.innerWidth) * 1 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 1 + 1;
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
 
-  const intersects = raycaster.intersectObjects(blocks);
+  const clickableObjects = [ground, ...blocks];
+  const intersects = raycaster.intersectObjects(clickableObjects);
 
   if(intersects.length > 0){
 
@@ -344,42 +290,40 @@ document.addEventListener('click', (event)=>{
 
     const newBlock = new THREE.Mesh(
       new THREE.BoxGeometry(),
-   new THREE.MeshLambertMaterial({
-  color: Number(document.getElementById("blockColor").value)
-})
+      new THREE.MeshLambertMaterial({
+        color: Number(document.getElementById("blockColor").value)
+      })
     );
 
-if(hit === ground){
+    if(hit === ground){
 
-  newBlock.position.set(
-    Math.round(intersects[0].point.x / 1) * 1,
-    0,
-    Math.round(intersects[0].point.z / 1) * 1
-  );
+      newBlock.position.set(
+        Math.round(intersects[0].point.x),
+        0,
+        Math.round(intersects[0].point.z)
+      );
 
-} else {
+    } else {
 
-  newBlock.position.set(
-    hit.position.x,
-    hit.position.y + 1,
-    hit.position.z
-  );
+      newBlock.position.set(
+        hit.position.x,
+        hit.position.y + 1,
+        hit.position.z
+      );
+    }
 
-}
-
-scene.add(newBlock);
-blocks.push(newBlock);
-
-checkBadge();
+    scene.add(newBlock);
+    blocks.push(newBlock);
+    checkBadge();
   }
-
 });
+
 document.addEventListener('contextmenu', (event)=>{
 
   event.preventDefault();
 
-  mouse.x = (event.clientX / window.innerWidth) * 1 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 1 + 1;
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
 
@@ -391,23 +335,20 @@ document.addEventListener('contextmenu', (event)=>{
 
     scene.remove(blockToRemove);
 
-const index = blocks.indexOf(blockToRemove);
+    const index = blocks.indexOf(blockToRemove);
 
-if(index > -1){
-  blocks.splice(index, 1);
-}
+    if(index > -1){
+      blocks.splice(index, 1);
+    }
 
-checkBadge();
+    checkBadge();
   }
-
 });
+
 function animate(){
-
   requestAnimationFrame(animate);
-
-  camera.lookAt(0,0,0);
-
-  renderer.render(scene,camera);
+  camera.lookAt(0, 0, 0);
+  renderer.render(scene, camera);
 }
 
 function saveImage(){
@@ -437,72 +378,54 @@ function saveImage(){
   link.href = canvas.toDataURL("image/png");
   link.click();
 }
-  
+
 function resetWorld(){
 
-document.getElementById("worldTitle").innerHTML =
-  "🏰 Bobwarts Build World 🏰";
-  
+  document.getElementById("worldTitle").innerHTML =
+    "🏰 Bobwarts Build World 🏰";
+
+  document.getElementById("missionText").innerHTML =
+    "<b>Mission:</b> Build a Wizard Castle!";
+
+  document.getElementById("challenge1").innerHTML =
+    "Add 4 towers";
+
+  document.getElementById("challenge2").innerHTML =
+    "Create a grand entrance";
+
+  document.getElementById("challenge3").innerHTML =
+    "Build a dragon perch";
+
+  document.getElementById("challenge4").innerHTML =
+    "Reset the world and try a brand-new design";
+
+  document.getElementById("moreChallenge").innerHTML =
+    "Add details, decorations, and a magical feature.";
+
   for(let i = blocks.length - 1; i >= 0; i--){
     scene.remove(blocks[i]);
   }
 
   blocks.length = 0;
 
-  for(let x=-5;x<=5;x+=1){
-    for(let z=-5;z<=5;z+=1){
-
-      const cube = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:0xcccccc})
-      );
-
-      cube.position.set(x,0,z);
-
-      scene.add(cube);
-      blocks.push(cube);
-    }
-  }
+  buildStarterGrid();
 
   checkBadge();
 }
-  
+
 function addTree(){
 
-  const trunk = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 3, 1),
-    new THREE.MeshLambertMaterial({color:0x8B4513})
-  );
+  addBlock(8, 1, 0, 0x8B4513, new THREE.BoxGeometry(1, 3, 1));
+  addBlock(8, 4, 0, 0x228B22, new THREE.BoxGeometry(3, 3, 3));
 
-  trunk.position.set(8, 1, 0);
-  scene.add(trunk);
-  blocks.push(trunk);
-
-  const leaves = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 3, 3),
-    new THREE.MeshLambertMaterial({color:0x228B22})
-  );
-
-  leaves.position.set(8, 4, 0);
-  scene.add(leaves);
-  blocks.push(leaves);
-  checkBadge(); 
+  checkBadge();
 }
 
 function addPond(){
 
   for(let x = -4; x <= 0; x += 1){
     for(let z = 4; z <= 8; z += 1){
-
-      const water = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:0x1E90FF})
-      );
-
-      water.position.set(x, 0, z);
-
-      scene.add(water);
-      blocks.push(water);
+      addBlock(x, 0, z, 0x1E90FF);
     }
   }
 
@@ -537,26 +460,16 @@ function addRocks(){
 
 function addBuilding(){
 
-  const x = -8 + Math.random() * 16;
-  const z = -8 + Math.random() * 16;
-
+  const x = Math.round(-8 + Math.random() * 16);
+  const z = Math.round(-8 + Math.random() * 16);
   const height = 4 + Math.floor(Math.random() * 4);
 
   for(let y = 0; y < height; y++){
-
-    const building = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0x808080})
-    );
-
-    building.position.set(x, y, z);
-
-    scene.add(building);
-    blocks.push(building);
+    addBlock(x, y, z, 0x808080);
   }
 
   checkBadge();
-}  
+}
 
 function addPortal(){
 
@@ -566,62 +479,23 @@ function addPortal(){
     0xFF00FF
   ];
 
-  // Left side
   for(let y = 0; y < 5; y++){
-
-    const block = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0x222222})
-    );
-
-    block.position.set(-2, y, 8);
-
-    scene.add(block);
-    blocks.push(block);
+    addBlock(-2, y, 8, 0x222222);
+    addBlock(2, y, 8, 0x222222);
   }
 
-  // Right side
-  for(let y = 0; y < 5; y++){
-
-    const block = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0x222222})
-    );
-
-    block.position.set(2, y, 8);
-
-    scene.add(block);
-    blocks.push(block);
-  }
-
-  // Top
   for(let x = -2; x <= 2; x += 2){
-
-    const block = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0x222222})
-    );
-
-    block.position.set(x, 5, 8);
-
-    scene.add(block);
-    blocks.push(block);
+    addBlock(x, 5, 8, 0x222222);
   }
 
-  // Portal center
   for(let y = 1; y < 5; y++){
-
-    const magic = new THREE.Mesh(
-      new THREE.BoxGeometry(1.5,1.5,0.3),
-      new THREE.MeshLambertMaterial({
-        color: portalColors[Math.floor(Math.random()*3)]
-      })
+    addBlock(
+      0,
+      y,
+      8,
+      portalColors[Math.floor(Math.random() * 3)],
+      new THREE.BoxGeometry(1.5, 1.5, 0.3)
     );
-
-    magic.position.set(0, y, 8);
-
-    scene.add(magic);
-    blocks.push(magic);
   }
 
   checkBadge();
@@ -629,42 +503,25 @@ function addPortal(){
 
 function addVolcano(){
 
-  const centerX = -6 + Math.random() * 12;
-  const centerZ = -6 + Math.random() * 12;
+  const centerX = Math.round(-6 + Math.random() * 12);
+  const centerZ = Math.round(-6 + Math.random() * 12);
 
-  // Volcano base
   for(let y = 0; y < 4; y++){
 
     for(let x = -2; x <= 2; x += 2){
       for(let z = -2; z <= 2; z += 2){
 
-        const rock = new THREE.Mesh(
-          new THREE.BoxGeometry(),
-          new THREE.MeshLambertMaterial({color:0x555555})
-        );
-
-        rock.position.set(
+        addBlock(
           centerX + x * (1 - y * 0.2),
           y,
-          centerZ + z * (1 - y * 0.2)
+          centerZ + z * (1 - y * 0.2),
+          0x555555
         );
-
-        scene.add(rock);
-        blocks.push(rock);
       }
     }
   }
 
-  // Lava opening at top
-  const lava = new THREE.Mesh(
-    new THREE.BoxGeometry(2, 1, 2),
-    new THREE.MeshLambertMaterial({color:0xFF4500})
-  );
-
-  lava.position.set(centerX, 4, centerZ);
-
-  scene.add(lava);
-  blocks.push(lava);
+  addBlock(centerX, 4, centerZ, 0xFF4500, new THREE.BoxGeometry(2, 1, 2));
 
   checkBadge();
 }
@@ -681,16 +538,13 @@ function addRainbowBridge(){
   ];
 
   for(let i = 0; i < colors.length; i++){
-
-    const bridge = new THREE.Mesh(
-      new THREE.BoxGeometry(2, 0.5, 1),
-      new THREE.MeshLambertMaterial({color:colors[i]})
+    addBlock(
+      -6 + i * 2,
+      2 + Math.sin(i) * 1.5,
+      6,
+      colors[i],
+      new THREE.BoxGeometry(2, 0.5, 1)
     );
-
-    bridge.position.set(-6 + i * 2, 2 + Math.sin(i) * 1.5, 6);
-
-    scene.add(bridge);
-    blocks.push(bridge);
   }
 
   checkBadge();
@@ -707,22 +561,13 @@ function addCrystalCluster(){
   ];
 
   for(let i = 0; i < 8; i++){
-
-    const crystal = new THREE.Mesh(
-      new THREE.BoxGeometry(0.8, 1.5 + Math.random() * 2, 0.8),
-      new THREE.MeshLambertMaterial({
-        color: crystalColors[i % crystalColors.length]
-      })
-    );
-
-    crystal.position.set(
+    addBlock(
       -4 + Math.random() * 8,
       1,
-      -4 + Math.random() * 8
+      -4 + Math.random() * 8,
+      crystalColors[i % crystalColors.length],
+      new THREE.BoxGeometry(0.8, 1.5 + Math.random() * 2, 0.8)
     );
-
-    scene.add(crystal);
-    blocks.push(crystal);
   }
 
   checkBadge();
@@ -730,264 +575,116 @@ function addCrystalCluster(){
 
 function expandWorld(){
 
-  for(let x = -12; x <= 12; x += 2){
-    for(let z = -12; z <= 12; z += 2){
+  for(let x = -12; x <= 12; x += 1){
+    for(let z = -12; z <= 12; z += 1){
 
       const alreadyExists = blocks.some(block =>
-        block.position.x === x &&
-        block.position.z === z &&
-        block.position.y === 0
+        Math.round(block.position.x) === x &&
+        Math.round(block.position.z) === z &&
+        Math.round(block.position.y) === 0
       );
 
       if(!alreadyExists){
-        const cube = new THREE.Mesh(
-          new THREE.BoxGeometry(),
-          new THREE.MeshLambertMaterial({color:0xcccccc})
-        );
-
-        cube.position.set(x, 0, z);
-
-        scene.add(cube);
-        blocks.push(cube);
+        addBlock(x, 0, z, 0xcccccc);
       }
     }
   }
 
   checkBadge();
-}  
-  
+}
+
 function buildCastle(){
-
-document.getElementById("worldTitle").innerHTML =
-  "🏰 Bobwarts Castle Builder 🏰";
-
-document.getElementById("missionText").innerHTML =
-  "<b>Mission:</b> Build a Wizard Castle!";
-  
-document.getElementById("challenge1").innerHTML =
-  "Template includes: A castle foundation";
-
-document.getElementById("challenge2").innerHTML =
-  "Build 4 towers and castle walls";
-
-document.getElementById("challenge3").innerHTML =
-  "Add a grand entrance and magical features";
-
-document.getElementById("challenge4").innerHTML =
-  "Reset the world and create a completely new castle";
-
-document.getElementById("moreChallenge").innerHTML =
-  "Add windows, roof blocks, crystals, and a magical hidden room.";
-
-// Castle foundation only
-for(let x = -4; x <= 4; x += 2){
-  for(let z = -4; z <= 4; z += 2){
-
-    const block = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0xaaaaaa})
-    );
-
-    block.position.set(x, 0, z);
-
-    scene.add(block);
-    blocks.push(block);
-  }
-}
-  
-  for(let x = -4; x <= 4; x += 2){
-    for(let z = -4; z <= 4; z += 2){
-      for(let y = 0; y < 3; y++){
-
-        const block = new THREE.Mesh(
-          new THREE.BoxGeometry(),
-          new THREE.MeshLambertMaterial({color:0xaaaaaa})
-        );
-
-        block.position.set(x, y, z);
-
-        scene.add(block);
-        blocks.push(block);
-      }
-    }
-  }
-
-  checkBadge();
-}
-
-  function buildPlayground(){
 
   resetWorld();
 
-document.getElementById("worldTitle").innerHTML =
-  "🛝 Bobwarts Playground Builder 🛝";
+  document.getElementById("worldTitle").innerHTML =
+    "🏰 Bobwarts Castle Builder 🏰";
 
-document.getElementById("missionText").innerHTML =
-  "<b>Mission:</b> Design an amazing playground!";    
+  document.getElementById("missionText").innerHTML =
+    "<b>Mission:</b> Build a Wizard Castle!";
 
-document.getElementById("challenge1").innerHTML =
-  "Template includes: A slide and swing set";
+  document.getElementById("challenge1").innerHTML =
+    "Template includes: A castle foundation";
 
-document.getElementById("challenge2").innerHTML =
-  "Build monkey bars and add a bigger, fancier slide";
+  document.getElementById("challenge2").innerHTML =
+    "Build 4 towers and castle walls";
 
-document.getElementById("challenge3").innerHTML =
-  "Add at least one new playground feature";
+  document.getElementById("challenge3").innerHTML =
+    "Add a grand entrance and magical features";
 
-document.getElementById("challenge4").innerHTML =
-  "Reset the world and design a completely new playground";
+  document.getElementById("challenge4").innerHTML =
+    "Reset the world and create a completely new castle";
 
-document.getElementById("moreChallenge").innerHTML =
-  "Add safety features, signs, lights, colors, and a special Bobwarts magical area.";
-  
+  document.getElementById("moreChallenge").innerHTML =
+    "Add windows, roof blocks, crystals, and a magical hidden room.";
+
+  for(let x = -4; x <= 4; x += 1){
+    for(let z = -4; z <= 4; z += 1){
+      addBlock(x, 1, z, 0xaaaaaa);
+    }
+  }
+
+  checkBadge();
+}
+
+function buildPlayground(){
+
+  resetWorld();
+
+  document.getElementById("worldTitle").innerHTML =
+    "🛝 Bobwarts Playground Builder 🛝";
+
+  document.getElementById("missionText").innerHTML =
+    "<b>Mission:</b> Design an amazing playground!";
+
+  document.getElementById("challenge1").innerHTML =
+    "Template includes: A slide and swing set";
+
+  document.getElementById("challenge2").innerHTML =
+    "Build monkey bars and add a bigger, fancier slide";
+
+  document.getElementById("challenge3").innerHTML =
+    "Add at least one new playground feature";
+
+  document.getElementById("challenge4").innerHTML =
+    "Reset the world and design a completely new playground";
+
+  document.getElementById("moreChallenge").innerHTML =
+    "Add safety features, signs, lights, colors, and a special Bobwarts magical area.";
+
   // Slide tower
-  for(let y = 0; y < 4; y++){
-    const block = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0xFFD700})
-    );
-
-    block.position.set(-6, y, -4);
-    scene.add(block);
-    blocks.push(block);
+  for(let y = 1; y < 5; y++){
+    addBlock(-6, y, -4, 0xFFD700);
   }
 
   // Slide ramp
   for(let i = 0; i < 4; i++){
-    const block = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0x1E90FF})
+    addBlock(
+      -5 + i,
+      4 - i,
+      -3,
+      0x1E90FF,
+      new THREE.BoxGeometry(1.2, 0.5, 1.2)
     );
-
-    block.position.set(-6 + i, 3 - i, -2);
-    scene.add(block);
-    blocks.push(block);
   }
 
   // Swing poles
-  for(let y = 0; y < 4; y++){
-    const leftPole = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0x8B4513})
-    );
-
-    leftPole.position.set(6, y, -4);
-    scene.add(leftPole);
-    blocks.push(leftPole);
-
-    const rightPole = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0x8B4513})
-    );
-
-    rightPole.position.set(10, y, -4);
-    scene.add(rightPole);
-    blocks.push(rightPole);
+  for(let y = 1; y < 6; y++){
+    addBlock(6, y, -4, 0x8B4513, new THREE.BoxGeometry(0.5, 1, 0.5));
+    addBlock(10, y, -4, 0x8B4513, new THREE.BoxGeometry(0.5, 1, 0.5));
   }
 
-// Swing top bar
-const topBar = new THREE.Mesh(
-  new THREE.BoxGeometry(6, 1, 1),
-  new THREE.MeshLambertMaterial({color:0x8B4513})
-);
+  addBlock(8, 5.5, -4, 0x8B4513, new THREE.BoxGeometry(5, 0.5, 0.5));
 
-topBar.position.set(8, 5, -4);
-scene.add(topBar);
-blocks.push(topBar);
+  for(let y = 3; y < 5.5; y += 1){
+    addBlock(7.25, y, -4, 0xcccccc, new THREE.BoxGeometry(0.2, 1, 0.2));
+    addBlock(8.75, y, -4, 0xcccccc, new THREE.BoxGeometry(0.2, 1, 0.2));
+  }
 
-// Swing chains
-for(let y = 2; y < 5; y++){
-  const leftChain = new THREE.Mesh(
-    new THREE.BoxGeometry(0.25, 1, 0.25),
-    new THREE.MeshLambertMaterial({color:0xcccccc})
-  );
-
-  leftChain.position.set(7, y, -4);
-  scene.add(leftChain);
-  blocks.push(leftChain);
-
-  const rightChain = new THREE.Mesh(
-    new THREE.BoxGeometry(0.25, 1, 0.25),
-    new THREE.MeshLambertMaterial({color:0xcccccc})
-  );
-
-  rightChain.position.set(9, y, -4);
-  scene.add(rightChain);
-  blocks.push(rightChain);
-}
-
-// Swing seat
-const swingSeat = new THREE.Mesh(
-  new THREE.BoxGeometry(3, 0.5, 1),
-  new THREE.MeshLambertMaterial({color:0x222222})
-);
-
-swingSeat.position.set(8, 1.5, -4);
-scene.add(swingSeat);
-blocks.push(swingSeat);
+  addBlock(8, 2.3, -4, 0x222222, new THREE.BoxGeometry(2, 0.4, 1));
 
   checkBadge();
 }
-  
-function saveWorld(){
-
-  const worldData = [];
-
-  blocks.forEach(block => {
-
-    worldData.push({
-      x: block.position.x,
-      y: block.position.y,
-      z: block.position.z,
-      color: block.material.color.getHex()
-    });
-
-  });
-
-  const dataStr = JSON.stringify(worldData);
-
-  const blob = new Blob([dataStr], {type:'application/json'});
-
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'bobwarts-world.json';
-  link.click();
-}
-
-document.getElementById('loadFile').addEventListener('change', function(event){
-
-  const file = event.target.files[0];
-
-  if(!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = function(e){
-
-    resetWorld();
-
-    const worldData = JSON.parse(e.target.result);
-
-    worldData.forEach(data => {
-
-      const block = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:data.color})
-      );
-
-      block.position.set(data.x, data.y, data.z);
-
-      scene.add(block);
-      blocks.push(block);
-
-    });
-
-    checkBadge();
-  };
-
-  reader.readAsText(file);
-
-});
 
 function buildHabitat(){
 
@@ -999,50 +696,33 @@ function buildHabitat(){
   document.getElementById("missionText").innerHTML =
     "<b>Mission:</b> Create a magical creature habitat!";
 
-document.getElementById("challenge1").innerHTML =
-  "Template includes: Trees, water, and a shelter";
+  document.getElementById("challenge1").innerHTML =
+    "Template includes: Trees, water, and a shelter";
 
-document.getElementById("challenge2").innerHTML =
-  "Build additional homes and creature areas";
+  document.getElementById("challenge2").innerHTML =
+    "Build additional homes and creature areas";
 
-document.getElementById("challenge3").innerHTML =
-  "Add magical features and decorations";
+  document.getElementById("challenge3").innerHTML =
+    "Add magical features and decorations";
 
-document.getElementById("challenge4").innerHTML =
-  "Reset the world and create a new habitat";
+  document.getElementById("challenge4").innerHTML =
+    "Reset the world and create a new habitat";
 
-document.getElementById("moreChallenge").innerHTML =
-  "Create different habitat zones, add bridges, caves, waterfalls, or design a habitat for a magical creature.";
-  
-  // Trees
+  document.getElementById("moreChallenge").innerHTML =
+    "Create different habitat zones, add bridges, caves, waterfalls, or design a habitat for a magical creature.";
+
   addTree();
   addTree();
 
-  // Water pond
-  for(let x = -4; x <= 0; x += 2){
-    for(let z = 4; z <= 8; z += 2){
-      const water = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:0x1E90FF})
-      );
-
-      water.position.set(x, 0, z);
-      scene.add(water);
-      blocks.push(water);
+  for(let x = -4; x <= 0; x += 1){
+    for(let z = 4; z <= 8; z += 1){
+      addBlock(x, 1, z, 0x1E90FF);
     }
   }
 
-  // Small shelter
-  for(let x = 4; x <= 8; x += 2){
-    for(let z = 2; z <= 6; z += 2){
-      const shelter = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:0x8B4513})
-      );
-
-      shelter.position.set(x, 0, z);
-      scene.add(shelter);
-      blocks.push(shelter);
+  for(let x = 4; x <= 8; x += 1){
+    for(let z = 2; z <= 6; z += 1){
+      addBlock(x, 1, z, 0x8B4513);
     }
   }
 
@@ -1059,38 +739,27 @@ function buildDragonLair(){
   document.getElementById("missionText").innerHTML =
     "<b>Mission:</b> Design a home for a magical dragon!";
 
-document.getElementById("challenge1").innerHTML =
-  "Template includes: Lava, crystals, and a cave starter";
+  document.getElementById("challenge1").innerHTML =
+    "Template includes: Lava, crystals, and a cave starter";
 
-document.getElementById("challenge2").innerHTML =
-  "Build a dragon nest and resting area";
+  document.getElementById("challenge2").innerHTML =
+    "Build a dragon nest and resting area";
 
-document.getElementById("challenge3").innerHTML =
-  "Add treasure and magical dragon features";
+  document.getElementById("challenge3").innerHTML =
+    "Add treasure and magical dragon features";
 
-document.getElementById("challenge4").innerHTML =
-  "Reset the world and create a new dragon sanctuary";
+  document.getElementById("challenge4").innerHTML =
+    "Reset the world and create a new dragon sanctuary";
 
-document.getElementById("moreChallenge").innerHTML =
-  "Add waterfalls, bridges, towers, flying platforms, or create homes for multiple dragons.";
+  document.getElementById("moreChallenge").innerHTML =
+    "Add waterfalls, bridges, towers, flying platforms, or create homes for multiple dragons.";
 
-  // Lava pool
-  for(let x = -4; x <= 0; x += 2){
-    for(let z = -4; z <= 0; z += 2){
-
-      const lava = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:0xFF4500})
-      );
-
-      lava.position.set(x, 0, z);
-
-      scene.add(lava);
-      blocks.push(lava);
+  for(let x = -4; x <= 0; x += 1){
+    for(let z = -4; z <= 0; z += 1){
+      addBlock(x, 1, z, 0xFF4500);
     }
   }
 
-  // Crystal area
   const crystalColors = [
     0x00FFFF,
     0xFF00FF,
@@ -1098,37 +767,17 @@ document.getElementById("moreChallenge").innerHTML =
   ];
 
   for(let i = 0; i < 6; i++){
-
-    const crystal = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({
-        color: crystalColors[i % 3]
-      })
-    );
-
-    crystal.position.set(
-      4 + Math.random()*6,
+    addBlock(
+      4 + Math.random() * 6,
       1,
-      -2 + Math.random()*6
+      -2 + Math.random() * 6,
+      crystalColors[i % 3]
     );
-
-    scene.add(crystal);
-    blocks.push(crystal);
   }
 
-  // Stone cave starter
-  for(let x = 4; x <= 8; x += 2){
-    for(let y = 0; y < 3; y++){
-
-      const stone = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:0x777777})
-      );
-
-      stone.position.set(x, y, 6);
-
-      scene.add(stone);
-      blocks.push(stone);
+  for(let x = 4; x <= 8; x += 1){
+    for(let y = 1; y < 4; y++){
+      addBlock(x, y, 6, 0x777777);
     }
   }
 
@@ -1145,22 +794,21 @@ function buildFutureCity(){
   document.getElementById("missionText").innerHTML =
     "<b>Mission:</b> Design a city of the future!";
 
-document.getElementById("challenge1").innerHTML =
-  "Template includes: Buildings, roads, a park, and solar panels";
+  document.getElementById("challenge1").innerHTML =
+    "Template includes: Buildings, roads, a park, and solar panels";
 
-document.getElementById("challenge2").innerHTML =
-  "Build additional skyscrapers and transportation";
+  document.getElementById("challenge2").innerHTML =
+    "Build additional skyscrapers and transportation";
 
-document.getElementById("challenge3").innerHTML =
-  "Add clean energy and smart city features";
+  document.getElementById("challenge3").innerHTML =
+    "Add clean energy and smart city features";
 
-document.getElementById("challenge4").innerHTML =
-  "Reset the world and create a new future city";
+  document.getElementById("challenge4").innerHTML =
+    "Reset the world and create a new future city";
 
-document.getElementById("moreChallenge").innerHTML =
-  "Add bridges, trains, electric vehicles, parks, lights, or create a futuristic Bobwarts technology center.";
+  document.getElementById("moreChallenge").innerHTML =
+    "Add bridges, trains, electric vehicles, parks, lights, or create a futuristic Bobwarts technology center.";
 
-  // Tall buildings
   const buildingSpots = [
     [-6, -4],
     [0, -4],
@@ -1168,58 +816,27 @@ document.getElementById("moreChallenge").innerHTML =
   ];
 
   buildingSpots.forEach(spot => {
-    for(let y = 0; y < 6; y++){
-      const building = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:0x808080})
-      );
-
-      building.position.set(spot[0], y, spot[1]);
-      scene.add(building);
-      blocks.push(building);
+    for(let y = 1; y < 7; y++){
+      addBlock(spot[0], y, spot[1], 0x808080);
     }
   });
 
-  // Road
-  for(let x = -10; x <= 10; x += 2){
-    const road = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0x222222})
-    );
-
-    road.position.set(x, 0, 4);
-    scene.add(road);
-    blocks.push(road);
+  for(let x = -10; x <= 10; x += 1){
+    addBlock(x, 1, 4, 0x222222);
   }
 
-  // Park
-  for(let x = -8; x <= -4; x += 2){
-    for(let z = 6; z <= 10; z += 2){
-      const grass = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:0x228B22})
-      );
-
-      grass.position.set(x, 0, z);
-      scene.add(grass);
-      blocks.push(grass);
+  for(let x = -8; x <= -4; x += 1){
+    for(let z = 6; z <= 10; z += 1){
+      addBlock(x, 1, z, 0x228B22);
     }
   }
 
-  // Solar energy feature
-  const solar = new THREE.Mesh(
-    new THREE.BoxGeometry(4, 0.3, 2),
-    new THREE.MeshLambertMaterial({color:0x1E90FF})
-  );
-
-  solar.position.set(6, 1, 8);
-  scene.add(solar);
-  blocks.push(solar);
+  addBlock(6, 2, 8, 0x1E90FF, new THREE.BoxGeometry(4, 0.3, 2));
 
   checkBadge();
 }
-  
- function saveWorld(){
+
+function saveWorld(){
 
   const worldData = [];
 
@@ -1228,11 +845,15 @@ document.getElementById("moreChallenge").innerHTML =
       x: block.position.x,
       y: block.position.y,
       z: block.position.z,
-      color: block.material.color.getHex()
+      color: block.material.color.getHex(),
+      sx: block.geometry.parameters.width || 1,
+      sy: block.geometry.parameters.height || 1,
+      sz: block.geometry.parameters.depth || 1
     });
   });
 
   const dataStr = JSON.stringify(worldData);
+
   const blob = new Blob([dataStr], {type:'application/json'});
 
   const link = document.createElement('a');
@@ -1244,6 +865,7 @@ document.getElementById("moreChallenge").innerHTML =
 document.getElementById('loadFile').addEventListener('change', function(event){
 
   const file = event.target.files[0];
+
   if(!file) return;
 
   const reader = new FileReader();
@@ -1255,16 +877,13 @@ document.getElementById('loadFile').addEventListener('change', function(event){
     const worldData = JSON.parse(e.target.result);
 
     worldData.forEach(data => {
-
-      const block = new THREE.Mesh(
-        new THREE.BoxGeometry(),
-        new THREE.MeshLambertMaterial({color:data.color})
+      addBlock(
+        data.x,
+        data.y,
+        data.z,
+        data.color,
+        new THREE.BoxGeometry(data.sx || 1, data.sy || 1, data.sz || 1)
       );
-
-      block.position.set(data.x, data.y, data.z);
-
-      scene.add(block);
-      blocks.push(block);
     });
 
     checkBadge();
@@ -1272,7 +891,7 @@ document.getElementById('loadFile').addEventListener('change', function(event){
 
   reader.readAsText(file);
 });
-  
+
 function checkBadge(){
 
   if(blocks.length >= 80){
@@ -1289,9 +908,6 @@ function checkBadge(){
       "<b>Badge:</b> Keep building!";
   }
 }
-
-checkBadge();
-animate(); 
 
 function toggleStarterWorlds(){
 
@@ -1315,7 +931,6 @@ function toggleStarterWorlds(){
     button.innerHTML =
       "🌍 Bobwarts Starter Worlds ▶";
   }
-
 }
 
 function toggleToolbox(){
@@ -1340,11 +955,13 @@ function toggleToolbox(){
     button.innerHTML =
       "🧰 Builder Toolbox ▶";
   }
-
 }
-  
+
+checkBadge();
+animate();
+
 window.addEventListener('resize', ()=>{
-  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
