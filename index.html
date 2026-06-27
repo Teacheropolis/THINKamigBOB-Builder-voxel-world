@@ -288,9 +288,17 @@ function animate(){
 }
 
 function saveImage(){
+
   const link = document.createElement('a');
-  link.download = 'bobwarts-build.png';
+
+  const studentName =
+    document.getElementById("studentName").value || "student";
+
+  link.download =
+    studentName + "-bobwarts-build.png";
+
   link.href = renderer.domElement.toDataURL('image/png');
+
   link.click();
 }
   
