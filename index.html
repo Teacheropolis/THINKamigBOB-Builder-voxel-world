@@ -241,17 +241,20 @@ if(intersects.length > 0){
   // If dig mode is on, remove the block
   if(digMode){
 
-    scene.remove(hit);
+  // Never remove the bottom bedrock layer
+  if(hit.position.y <= -4) return;
 
-    const index = blocks.indexOf(hit);
+  scene.remove(hit);
 
-    if(index > -1){
-      blocks.splice(index, 1);
-    }
+  const index = blocks.indexOf(hit);
 
-    checkBadge();
-    return;
+  if(index > -1){
+    blocks.splice(index, 1);
   }
+
+  checkBadge();
+  return;
+}
 
   // Otherwise build a new block
   const newBlock = new THREE.Mesh(
