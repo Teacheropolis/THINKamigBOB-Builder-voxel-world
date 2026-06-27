@@ -85,13 +85,14 @@ select {
 <button onclick="saveImage()">📸 Save Screenshot</button>
 <button onclick="document.getElementById('loadFile').click()">📂 Load World</button>
 <button onclick="resetWorld()">🔄 Reset World</button>
-<button onclick="addTree()">🌲 Add Tree</button>
 <button onclick="buildCastle()">🏰 Build Castle</button>
 <button onclick="buildPlayground()">🛝 Build Playground</button>  
 <button onclick="buildHabitat()">🌳 Build Habitat</button>
 <button onclick="buildDragonLair()">🐉 Dragon Lair</button>
 <button onclick="buildFutureCity()">🏙️ Future City</button>
-
+<button onclick="addTree()">🌲 Add Tree</button>
+<button onclick="addPond()">🌊 Add Pond</button>
+  
 <input type="file" id="loadFile" style="display:none" accept=".json">
 <p>Use W A S D keys to move.</p>
 
@@ -414,6 +415,27 @@ function addTree(){
   blocks.push(leaves);
   checkBadge(); 
 }
+
+function addPond(){
+
+  for(let x = -4; x <= 0; x += 2){
+    for(let z = 4; z <= 8; z += 2){
+
+      const water = new THREE.Mesh(
+        new THREE.BoxGeometry(),
+        new THREE.MeshLambertMaterial({color:0x1E90FF})
+      );
+
+      water.position.set(x, 0, z);
+
+      scene.add(water);
+      blocks.push(water);
+    }
+  }
+
+  checkBadge();
+}
+  
 function buildCastle(){
 
 document.getElementById("worldTitle").innerHTML =
