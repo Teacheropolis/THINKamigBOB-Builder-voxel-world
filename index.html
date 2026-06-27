@@ -275,12 +275,103 @@ function setSkyColor(color){
   scene.background = new THREE.Color(color);
 }
 
-function buildStarterGrid(){
-  for(let x = -5; x <= 5; x += 1){
-    for(let z = -5; z <= 5; z += 1){
-      addBlock(x, 0, z, 0xcccccc);
-    }
+const atmosphereObjects = [];
+
+function addAtmosphereObject(object){
+  scene.add(object);
+  atmosphereObjects.push(object);
+  return object;
+}
+
+function clearAtmosphere(){
+  for(let i = atmosphereObjects.length - 1; i >= 0; i--){
+    scene.remove(atmosphereObjects[i]);
   }
+  atmosphereObjects.length = 0;
+}
+
+function createCloud(x, y, z){
+  const cloud = new THREE.Group();
+
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.85
+  });
+
+  const puff1 = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 1), material);
+  puff1.position.set(0, 0, 0);
+  cloud.add(puff1);
+
+  const puff2 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1), material);
+  puff2.position.set(-1, 0.4, 0);
+  cloud.add(puff2);
+
+  const puff3 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1), material);
+  puff3.position.set(1, 0.4, 0);
+  cloud.add(puff3);
+
+  cloud.position.set(x, y, z);
+  cloud.userData.type = "cloud";
+
+  addAtmosphereObject(cloud);
+}
+
+function addMovingClouds(){
+  createCloud(-12, 13, -8);
+  createCloud(0, 15, -12);
+  createCloud(12, 14, -6);
+}
+
+function addStars(){
+  const starMaterial = new THREE.MeshBasicMaterial({color:0xFFFFAA});
+
+  for(let i = 0; i < 35; i++){
+    const star = new THREE.Mesh(
+      new THREE.BoxGeometry(0.25, 0.25, 0.25),
+      starMaterial
+    );
+
+    star.position.set(
+      -20 + Math.random() * 40,
+      10 + Math.random() * 18,
+      -18 + Math.random() * 8
+    );
+
+    star.userData.type = "star";
+    addAtmosphereObject(star);
+  }
+}
+
+function addDragonSmoke(){
+  const smokeMaterial = new THREE.MeshBasicMaterial({
+    color: 0x888888,
+    transparent: true,
+    opacity: 0.45
+  });
+
+  for(let i = 0; i < 8; i++){
+    const smoke = new THREE.Mesh(
+      new THREE.SphereGeometry(0.6 + Math.random() * 0.5, 12, 12),
+      smokeMaterial
+    );
+
+    smoke.position.set(
+      -5 + Math.random() * 2,
+      3 + Math.random() * 4,
+      -4 + Math.random() * 2
+    );
+
+    smoke.userData.type = "smoke";
+    smoke.userData.floatSpeed = 0.005 + Math.random() * 0.01;
+
+    addAtmosphereObject(smoke);
+  }
+}
+
+function buildStarterGrid(){
+  // No white starter blocks needed.
+  // Students can build directly on the colored ground.
 }
 
 buildStarterGrid();
@@ -425,6 +516,25 @@ document.addEventListener('contextmenu', (event)=>{
 
 function animate(){
   requestAnimationFrame(animate);
+
+  atmosphereObjects.forEach(object => {
+    if(object.userData.type === "cloud"){
+      object.position.x += 0.01;
+
+      if(object.position.x > 25){
+        object.position.x = -25;
+      }
+    }
+
+    if(object.userData.type === "smoke"){
+      object.position.y += object.userData.floatSpeed;
+
+      if(object.position.y > 10){
+        object.position.y = 3;
+      }
+    }
+  });
+
   camera.lookAt(0, 0, 0);
   renderer.render(scene, camera);
 }
@@ -485,6 +595,7 @@ function resetWorld(){
   }
 
  blocks.length = 0;
+clearAtmosphere();
 
 setGroundColor(0x55aa55); // default grass
 setSkyColor(0x87CEEB);    // default blue sky
@@ -678,7 +789,8 @@ function buildCastle(){
 
 resetWorld();
 setGroundColor(0x999999);
-setSkyColor(0x87CEEB); 
+setSkyColor(0x87CEEB);
+addMovingClouds(); 
 
   document.getElementById("worldTitle").innerHTML =
     "🏰 Bobwarts Castle Builder 🏰";
@@ -737,6 +849,7 @@ function buildPlayground(){
 resetWorld();
 setGroundColor(0xDEB887);
 setSkyColor(0xB0E2FF);
+addMovingClouds();
   
 
   document.getElementById("worldTitle").innerHTML =
@@ -808,6 +921,7 @@ function buildHabitat(){
 resetWorld();
 setGroundColor(0x55aa55);
 setSkyColor(0x87CEEB);
+addMovingClouds();
 
   document.getElementById("worldTitle").innerHTML =
     "🌳 Bobwarts Habitat Builder 🌳";
@@ -864,6 +978,7 @@ function buildDragonLair(){
 resetWorld();
 setGroundColor(0x333333);
 setSkyColor(0xFF8C00);
+addDragonSmoke();
 
   document.getElementById("worldTitle").innerHTML =
     "🐉 Bobwarts Dragon Sanctuary 🐉";
@@ -918,6 +1033,7 @@ function buildFutureCity(){
 resetWorld();
 setGroundColor(0x777777);
 setSkyColor(0x191970);
+addStars();
 
   document.getElementById("worldTitle").innerHTML =
     "🏙️ Bobwarts Future City Builder 🏙️";
