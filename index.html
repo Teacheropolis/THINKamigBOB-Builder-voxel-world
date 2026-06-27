@@ -55,10 +55,12 @@ select {
        placeholder="Enter your name"
        style="width:100%; padding:5px; border-radius:6px;">  
 <button onclick="saveImage()">📸 Save Screenshot</button>
+<button onclick="saveWorld()">💾 Save World</button>  
 <button onclick="resetWorld()">🔄 Reset World</button>
 <button onclick="addTree()">🌲 Add Tree</button>
 <button onclick="buildCastle()">🏰 Build Castle</button>
-<button onclick="saveWorld()">💾 Save World</button>
+<button id="digButton" onclick="toggleDigMode()">⛏️ Dig Mode: OFF</button>
+  
 <button onclick="document.getElementById('loadFile').click()">📂 Load World</button>
 
 <input type="file" id="loadFile" style="display:none" accept=".json">
@@ -128,18 +130,37 @@ ground.position.y = -1;
 scene.add(ground);
 const blocks = [];  
 
-for(let x=-5;x<=5;x+=2){
-  for(let z=-5;z<=5;z+=2){
+for(let x=-12;x<=12;x+=2){
+  for(let z=-12;z<=12;z+=2){
+    for(let y=-4;y<=0;y++){
 
-    const cube = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({color:0xcccccc})
-    );
+      const cube = new THREE.Mesh(
+        new THREE.BoxGeometry(),
+        new THREE.MeshLambertMaterial({
+          color: y === 0 ? 0x55aa55 : 0x8B4513
+        })
+      );
 
-    cube.position.set(x,0,z);
+      cube.position.set(x,y,z);
 
-    scene.add(cube);
-    blocks.push(cube);
+      scene.add(cube);
+      blocks.push(cube);
+    }
+  }
+}
+
+      const cube = new THREE.Mesh(
+        new THREE.BoxGeometry(),
+        new THREE.MeshLambertMaterial({
+          color: y === 0 ? 0x55aa55 : 0x8B4513
+        })
+      );
+
+      cube.position.set(x,y,z);
+
+      scene.add(cube);
+      blocks.push(cube);
+    }
   }
 }
 
@@ -158,6 +179,7 @@ let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
+let digMode = false;
 document.addEventListener('keydown', (event)=>{
 
   switch(event.key.toLowerCase()){
@@ -227,28 +249,44 @@ document.addEventListener('click', (event)=>{
 
   const intersects = raycaster.intersectObjects(blocks);
 
-  if(intersects.length > 0){
+if(intersects.length > 0){
 
-    const hit = intersects[0].object;
+  const hit = intersects[0].object;
 
-    const newBlock = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-   new THREE.MeshLambertMaterial({
-  color: Number(document.getElementById("blockColor").value)
-})
-    );
+  // If dig mode is on, remove the block
+  if(digMode){
 
-    newBlock.position.set(
-      hit.position.x,
-      hit.position.y + 1,
-      hit.position.z
-    );
+    scene.remove(hit);
 
-scene.add(newBlock);
-blocks.push(newBlock);
+    const index = blocks.indexOf(hit);
 
-checkBadge();
+    if(index > -1){
+      blocks.splice(index, 1);
+    }
+
+    checkBadge();
+    return;
   }
+
+  // Otherwise build a new block
+  const newBlock = new THREE.Mesh(
+    new THREE.BoxGeometry(),
+    new THREE.MeshLambertMaterial({
+      color: Number(document.getElementById("blockColor").value)
+    })
+  );
+
+  newBlock.position.set(
+    hit.position.x,
+    hit.position.y + 1,
+    hit.position.z
+  );
+
+  scene.add(newBlock);
+  blocks.push(newBlock);
+
+  checkBadge();
+}
 
 });
 document.addEventListener('contextmenu', (event)=>{
@@ -526,6 +564,16 @@ document.getElementById('loadFile').addEventListener('change', function(event){
 
   reader.readAsText(file);
 });
+
+function toggleDigMode(){
+
+  digMode = !digMode;
+
+  document.getElementById("digButton").innerHTML =
+    digMode
+      ? "⛏️ Dig Mode: ON"
+      : "⛏️ Dig Mode: OFF";
+}
   
 function checkBadge(){
 
