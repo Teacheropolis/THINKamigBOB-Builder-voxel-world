@@ -269,20 +269,6 @@ scene.add(ambient);
 camera.position.set(0, 8, 15);
 camera.lookAt(0, 0, 0);
 
-let mouseX = 0;
-let mouseY = 0;
-
-document.addEventListener('mousemove', (event)=>{
-
-  mouseX = (event.clientX / window.innerWidth - 0.5) * 30;
-  mouseY = (event.clientY / window.innerHeight - 0.5) * 10;
-
-  camera.position.x = mouseX;
-  camera.position.y = 8 - mouseY;
-
-  camera.lookAt(0, 0, 0);
-});
-
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
