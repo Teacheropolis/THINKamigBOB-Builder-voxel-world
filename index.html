@@ -108,6 +108,8 @@ Choose a world to begin your adventure.
 <button onclick="addBuilding()">🏢 Add Building</button>
 <button onclick="addPortal()">✨ Add Magic Portal</button>
 <button onclick="addVolcano()">🌋 Add Volcano</button>  
+<button onclick="addRainbowBridge()">🌈 Add Rainbow Bridge</button>
+<button onclick="addCrystalCluster()">🔮 Add Crystal Cluster</button>
  
 <input type="file" id="loadFile" style="display:none" accept=".json">
 <p>Use W A S D keys to move.</p>
@@ -608,6 +610,65 @@ function addVolcano(){
 
   scene.add(lava);
   blocks.push(lava);
+
+  checkBadge();
+}
+
+function addRainbowBridge(){
+
+  const colors = [
+    0xFF0000,
+    0xFFA500,
+    0xFFFF00,
+    0x00FF00,
+    0x0000FF,
+    0x6A0DAD
+  ];
+
+  for(let i = 0; i < colors.length; i++){
+
+    const bridge = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 0.5, 1),
+      new THREE.MeshLambertMaterial({color:colors[i]})
+    );
+
+    bridge.position.set(-6 + i * 2, 2 + Math.sin(i) * 1.5, 6);
+
+    scene.add(bridge);
+    blocks.push(bridge);
+  }
+
+  checkBadge();
+}
+
+function addCrystalCluster(){
+
+  const crystalColors = [
+    0x00FFFF,
+    0xFF00FF,
+    0x7FFFD4,
+    0x9400D3,
+    0xADFF2F
+  ];
+
+  for(let i = 0; i < 8; i++){
+
+    const crystal = new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, 1.5 + Math.random() * 2, 0.8),
+      new THREE.MeshLambertMaterial({
+        color: crystalColors[i % crystalColors.length]
+      })
+    );
+
+    crystal.position.set(
+      -4 + Math.random() * 8,
+      1,
+      -4 + Math.random() * 8
+    );
+
+    scene.add(crystal);
+    blocks.push(crystal);
+  }
 
   checkBadge();
 }
