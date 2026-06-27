@@ -87,6 +87,7 @@ select {
 <button onclick="addTree()">🌲 Add Tree</button>
 <button onclick="buildCastle()">🏰 Build Castle</button>
 <button onclick="buildPlayground()">🛝 Build Playground</button>  
+<button onclick="buildHabitat()">🌳 Build Habitat</button>
 <button onclick="document.getElementById('loadFile').click()">📂 Load World</button>
 
 <input type="file" id="loadFile" style="display:none" accept=".json">
@@ -635,6 +636,66 @@ document.getElementById('loadFile').addEventListener('change', function(event){
 
 });
 
+function buildHabitat(){
+
+  resetWorld();
+
+  document.getElementById("worldTitle").innerHTML =
+    "🌳 Bobwarts Habitat Builder 🌳";
+
+  document.getElementById("missionText").innerHTML =
+    "<b>Mission:</b> Create a magical creature habitat!";
+
+  document.getElementById("challenge1").innerHTML =
+    "Build a safe shelter";
+
+  document.getElementById("challenge2").innerHTML =
+    "Add trees, water, and food areas";
+
+  document.getElementById("challenge3").innerHTML =
+    "Create a special magical feature";
+
+  document.getElementById("challenge4").innerHTML =
+    "Reset the world and try a brand-new habitat design";
+
+  document.getElementById("moreChallenge").innerHTML =
+    "Add paths, hiding places, crystals, signs, and different zones for your creature.";
+
+  // Trees
+  addTree();
+  addTree();
+
+  // Water pond
+  for(let x = -4; x <= 0; x += 2){
+    for(let z = 4; z <= 8; z += 2){
+      const water = new THREE.Mesh(
+        new THREE.BoxGeometry(),
+        new THREE.MeshLambertMaterial({color:0x1E90FF})
+      );
+
+      water.position.set(x, 0, z);
+      scene.add(water);
+      blocks.push(water);
+    }
+  }
+
+  // Small shelter
+  for(let x = 4; x <= 8; x += 2){
+    for(let z = 2; z <= 6; z += 2){
+      const shelter = new THREE.Mesh(
+        new THREE.BoxGeometry(),
+        new THREE.MeshLambertMaterial({color:0x8B4513})
+      );
+
+      shelter.position.set(x, 0, z);
+      scene.add(shelter);
+      blocks.push(shelter);
+    }
+  }
+
+  checkBadge();
+}
+  
  function saveWorld(){
 
   const worldData = [];
