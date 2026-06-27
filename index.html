@@ -267,6 +267,10 @@ function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
   return block;
 }
 
+ function setGroundColor(color){
+  ground.material.color.set(color);
+} 
+
 function buildStarterGrid(){
   for(let x = -5; x <= 5; x += 1){
     for(let z = -5; z <= 5; z += 1){
@@ -476,12 +480,13 @@ function resetWorld(){
     scene.remove(blocks[i]);
   }
 
-  blocks.length = 0;
+ blocks.length = 0;
 
-  buildStarterGrid();
+setGroundColor(0x55aa55); // default grass
 
-  checkBadge();
-}
+buildStarterGrid();
+
+checkBadge();
 
 function addTree(){
 
@@ -665,7 +670,8 @@ function expandWorld(){
 
 function buildCastle(){
 
-  resetWorld();
+resetWorld();
+setGroundColor(0x999999); 
 
   document.getElementById("worldTitle").innerHTML =
     "🏰 Bobwarts Castle Builder 🏰";
@@ -721,7 +727,9 @@ function buildCastle(){
 
 function buildPlayground(){
 
-  resetWorld();
+resetWorld();
+setGroundColor(0xDEB887);
+  
 
   document.getElementById("worldTitle").innerHTML =
     "🛝 Bobwarts Playground Builder 🛝";
@@ -789,7 +797,8 @@ function buildPlayground(){
   
 function buildHabitat(){
 
-  resetWorld();
+resetWorld();
+setGroundColor(0x55aa55);
 
   document.getElementById("worldTitle").innerHTML =
     "🌳 Bobwarts Habitat Builder 🌳";
@@ -843,7 +852,8 @@ function buildHabitat(){
   
 function buildDragonLair(){
 
-  resetWorld();
+resetWorld();
+setGroundColor(0x333333);
 
   document.getElementById("worldTitle").innerHTML =
     "🐉 Bobwarts Dragon Sanctuary 🐉";
@@ -895,7 +905,8 @@ function buildDragonLair(){
   
 function buildFutureCity(){
 
-  resetWorld();
+resetWorld();
+setGroundColor(0x777777);
 
   document.getElementById("worldTitle").innerHTML =
     "🏙️ Bobwarts Future City Builder 🏙️";
