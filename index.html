@@ -92,7 +92,7 @@ select {
 <input type="file" id="loadFile" style="display:none" accept=".json">
 <p>Use W A S D keys to move.</p>
 
-<h2>🏰 Bobwarts Build World</h2
+<h2>🏰 Bobwarts Build World</h2>
                             
 <p id="missionText">
   <b>Mission:</b> Build a Wizard Castle!
@@ -456,24 +456,25 @@ for(let x = -4; x <= 4; x += 2){
 
   checkBadge();
 }
-function buildPlayground(){
+
+  function buildPlayground(){
 
   resetWorld();
-  
-document.getElementById("worldTitle").innerHTML =
-  "🛝 Bobwarts Playground Builder 🛝";
 
-document.getElementById("missionText").innerHTML =
-  "<b>Mission:</b> Design an amazing playground!";
+  document.getElementById("worldTitle").innerHTML =
+    "🛝 Bobwarts Playground Builder 🛝";
 
-document.getElementById("challenge1").innerHTML =
-  "Build a tall slide";
+  document.getElementById("missionText").innerHTML =
+    "<b>Mission:</b> Design an amazing playground!";
 
-document.getElementById("challenge2").innerHTML =
-  "Create a swing set";
+  document.getElementById("challenge1").innerHTML =
+    "Build a tall slide";
 
-document.getElementById("challenge3").innerHTML =
-  "Add a fun feature";
+  document.getElementById("challenge2").innerHTML =
+    "Create a swing set";
+
+  document.getElementById("challenge3").innerHTML =
+    "Add a fun feature";
   
   // Slide tower
   for(let y = 0; y < 4; y++){
