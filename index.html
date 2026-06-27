@@ -466,13 +466,9 @@ document.addEventListener('mousemove', (event)=>{
 
 updateCamera();
 
-// STOP ADDING HERE
-
-// Two-finger touchpad zoom (Chromebooks)
-
+// Two-finger touchpad zoom on Chromebook
 document.addEventListener('wheel', (event) => {
 
-  // Prevent page scrolling
   event.preventDefault();
 
   // Scroll up = zoom in
@@ -497,7 +493,7 @@ document.addEventListener('wheel', (event) => {
   updateCamera();
 
 }, { passive: false });
-  
+
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
