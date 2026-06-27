@@ -103,8 +103,9 @@ Choose a world to begin your adventure.
 <button onclick="buildDragonLair()">🐉 Dragon Lair</button>
 <button onclick="buildFutureCity()">🏙️ Future City</button>
 
-<h3 style="color:gold;">🧰 Builder Toolbox</h3>
-  
+<button onclick="toggleToolbox()">🧰 Builder Toolbox</button>
+
+<div id="toolboxSection">  
 <button onclick="addTree()">🌲 Add Tree</button>
 <button onclick="addPond()">🌊 Add Pond</button>
 <button onclick="addRocks()">🪨 Add Rocks</button>
@@ -113,7 +114,8 @@ Choose a world to begin your adventure.
 <button onclick="addVolcano()">🌋 Add Volcano</button>  
 <button onclick="addRainbowBridge()">🌈 Add Rainbow Bridge</button>
 <button onclick="addCrystalCluster()">🔮 Add Crystal Cluster</button>
- 
+</div>
+  
 <input type="file" id="loadFile" style="display:none" accept=".json">
 <p>Use W A S D keys to move.</p>
 
