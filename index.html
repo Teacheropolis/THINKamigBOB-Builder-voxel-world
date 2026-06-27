@@ -331,8 +331,8 @@ const mouse = new THREE.Vector2();
 
 document.addEventListener('click', (event)=>{
 
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  mouse.x = (event.clientX / window.innerWidth) * 1 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 1 + 1;
 
   raycaster.setFromCamera(mouse, camera);
 
@@ -352,9 +352,9 @@ document.addEventListener('click', (event)=>{
 if(hit === ground){
 
   newBlock.position.set(
-    Math.round(intersects[0].point.x / 2) * 2,
+    Math.round(intersects[0].point.x / 1) * 1,
     0,
-    Math.round(intersects[0].point.z / 2) * 2
+    Math.round(intersects[0].point.z / 1) * 1
   );
 
 } else {
@@ -378,8 +378,8 @@ document.addEventListener('contextmenu', (event)=>{
 
   event.preventDefault();
 
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  mouse.x = (event.clientX / window.innerWidth) * 1 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 1 + 1;
 
   raycaster.setFromCamera(mouse, camera);
 
@@ -491,8 +491,8 @@ function addTree(){
 
 function addPond(){
 
-  for(let x = -4; x <= 0; x += 2){
-    for(let z = 4; z <= 8; z += 2){
+  for(let x = -4; x <= 0; x += 1){
+    for(let z = 4; z <= 8; z += 1){
 
       const water = new THREE.Mesh(
         new THREE.BoxGeometry(),
