@@ -106,6 +106,7 @@ Choose a world to begin your adventure.
 <button onclick="addPond()">🌊 Add Pond</button>
 <button onclick="addRocks()">🪨 Add Rocks</button>
 <button onclick="addBuilding()">🏢 Add Building</button>
+<button onclick="addPortal()">✨ Add Magic Portal</button>
  
 <input type="file" id="loadFile" style="display:none" accept=".json">
 <p>Use W A S D keys to move.</p>
@@ -498,6 +499,75 @@ function addBuilding(){
 
   checkBadge();
 }  
+
+function addPortal(){
+
+  const portalColors = [
+    0x9400D3,
+    0x00FFFF,
+    0xFF00FF
+  ];
+
+  // Left side
+  for(let y = 0; y < 5; y++){
+
+    const block = new THREE.Mesh(
+      new THREE.BoxGeometry(),
+      new THREE.MeshLambertMaterial({color:0x222222})
+    );
+
+    block.position.set(-2, y, 8);
+
+    scene.add(block);
+    blocks.push(block);
+  }
+
+  // Right side
+  for(let y = 0; y < 5; y++){
+
+    const block = new THREE.Mesh(
+      new THREE.BoxGeometry(),
+      new THREE.MeshLambertMaterial({color:0x222222})
+    );
+
+    block.position.set(2, y, 8);
+
+    scene.add(block);
+    blocks.push(block);
+  }
+
+  // Top
+  for(let x = -2; x <= 2; x += 2){
+
+    const block = new THREE.Mesh(
+      new THREE.BoxGeometry(),
+      new THREE.MeshLambertMaterial({color:0x222222})
+    );
+
+    block.position.set(x, 5, 8);
+
+    scene.add(block);
+    blocks.push(block);
+  }
+
+  // Portal center
+  for(let y = 1; y < 5; y++){
+
+    const magic = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5,1.5,0.3),
+      new THREE.MeshLambertMaterial({
+        color: portalColors[Math.floor(Math.random()*3)]
+      })
+    );
+
+    magic.position.set(0, y, 8);
+
+    scene.add(magic);
+    blocks.push(magic);
+  }
+
+  checkBadge();
+}
   
 function buildCastle(){
 
