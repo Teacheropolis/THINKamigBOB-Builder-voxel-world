@@ -237,7 +237,8 @@ const groundMaterial = new THREE.MeshLambertMaterial({color:0x55aa55});
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.position.y = -1;
 scene.add(ground);
-const blocks = [];  
+const blocks = [];
+blocks.push(ground);
 
 for(let x=-5;x<=5;x+=2){
   for(let z=-5;z<=5;z+=2){
@@ -349,11 +350,23 @@ document.addEventListener('click', (event)=>{
 })
     );
 
-    newBlock.position.set(
-      hit.position.x,
-      hit.position.y + 1,
-      hit.position.z
-    );
+if(hit === ground){
+
+  newBlock.position.set(
+    Math.round(intersects[0].point.x / 2) * 2,
+    0,
+    Math.round(intersects[0].point.z / 2) * 2
+  );
+
+} else {
+
+  newBlock.position.set(
+    hit.position.x,
+    hit.position.y + 1,
+    hit.position.z
+  );
+
+}
 
 scene.add(newBlock);
 blocks.push(newBlock);
