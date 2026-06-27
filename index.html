@@ -356,6 +356,9 @@ function saveImage(){
   
 function resetWorld(){
 
+document.getElementById("worldTitle").innerHTML =
+  "🏰 Bobwarts Build World 🏰";
+  
   for(let i = blocks.length - 1; i >= 0; i--){
     scene.remove(blocks[i]);
   }
@@ -403,6 +406,9 @@ function addTree(){
 }
 function buildCastle(){
 
+document.getElementById("worldTitle").innerHTML =
+  "🏰 Bobwarts Castle Builder 🏰";
+  
   const towerPositions = [
     [-8, -8],
     [8, -8],
@@ -448,6 +454,9 @@ function buildCastle(){
 }
 function buildPlayground(){
 
+document.getElementById("worldTitle").innerHTML =
+  "🛝 Bobwarts Playground Builder 🛝";
+  
   resetWorld();
 
   // Slide tower
