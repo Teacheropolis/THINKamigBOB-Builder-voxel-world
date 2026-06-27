@@ -76,7 +76,7 @@ select {
 }
 
 #toolbox{
-  display:block;
+  display:none;
   margin-top:8px;
 }
     
@@ -94,10 +94,6 @@ select {
 <input id="studentName"
        placeholder="Enter your name"
        style="width:100%; padding:5px; border-radius:6px;">  
-
-<h3 style="color:gold; margin-bottom:5px;">
-🌍 Starter Worlds
-</h3>
 
   <p style="font-size:12px; margin-top:0;">
 Choose a world to begin your adventure.
@@ -134,19 +130,6 @@ Choose a world to begin your adventure.
 <button onclick="addRainbowBridge()">🌈 Add Rainbow Bridge</button>
 <button onclick="addCrystalCluster()">🔮 Add Crystal Cluster</button>
 </div>
-
-function toggleToolbox(){
-
-  const section =
-    document.getElementById("toolbox");
-
-  if(section.style.display === "none"){
-    section.style.display = "block";
-  } else {
-    section.style.display = "none";
-  }
-
-}
   
 <input type="file" id="loadFile" style="display:none" accept=".json">
 <p>Use W A S D keys to move.</p>
@@ -1251,6 +1234,19 @@ function toggleStarterWorlds(){
 
   const section =
     document.getElementById("starterWorlds");
+
+  if(section.style.display === "none"){
+    section.style.display = "block";
+  } else {
+    section.style.display = "none";
+  }
+
+}
+
+function toggleToolbox(){
+
+  const section =
+    document.getElementById("toolbox");
 
   if(section.style.display === "none"){
     section.style.display = "block";
