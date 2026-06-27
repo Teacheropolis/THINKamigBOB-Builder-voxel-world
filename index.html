@@ -254,18 +254,22 @@ if(intersects.length > 0){
   const hit = intersects[0].object;
 
   // If dig mode is on, remove the block
-  if(digMode){
+ if(digMode){
 
-  // Never remove the bottom bedrock layer
-  if(hit.position.y <= -4) return;
+  const blocksToRemove = blocks.filter(block =>
+    block.position.x === hit.position.x &&
+    block.position.z === hit.position.z &&
+    block.position.y > -4
+  );
 
-  scene.remove(hit);
+  blocksToRemove.forEach(block => {
+    scene.remove(block);
 
-  const index = blocks.indexOf(hit);
-
-  if(index > -1){
-    blocks.splice(index, 1);
-  }
+    const index = blocks.indexOf(block);
+    if(index > -1){
+      blocks.splice(index, 1);
+    }
+  });
 
   checkBadge();
   return;
