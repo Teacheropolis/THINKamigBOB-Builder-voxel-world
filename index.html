@@ -3,7 +3,8 @@
 <head>
   <title>Bobwarts Build World</title>
 
-  #crosshair {
+  <style>
+      #crosshair {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -15,8 +16,6 @@
   pointer-events: none;
   text-shadow: 1px 1px 4px black;
 }
-  
-  <style>
     html, body {
       margin: 0;
       width: 100%;
@@ -228,8 +227,8 @@ document.addEventListener('keyup', (event)=>{
 
 document.addEventListener('mousemove', (event)=>{
 
-mouse.x = 0;
-mouse.y = 0;
+  mouseX = (event.clientX / window.innerWidth - 0.5) * 30;
+  mouseY = (event.clientY / window.innerHeight - 0.5) * 10;
 
   camera.position.x = mouseX;
   camera.position.y = 8 - mouseY;
@@ -237,6 +236,7 @@ mouse.y = 0;
   camera.lookAt(0,0,0);
 
 });
+  
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
