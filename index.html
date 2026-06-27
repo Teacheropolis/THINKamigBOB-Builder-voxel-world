@@ -289,15 +289,29 @@ function animate(){
 
 function saveImage(){
 
-  const link = document.createElement('a');
-
   const studentName =
-    document.getElementById("studentName").value || "student";
+    document.getElementById("studentName").value || "Student";
 
-link.download = "TEST123.png";
+  renderer.render(scene, camera);
 
-  link.href = renderer.domElement.toDataURL('image/png');
+  const canvas = document.createElement("canvas");
+  canvas.width = renderer.domElement.width;
+  canvas.height = renderer.domElement.height;
 
+  const ctx = canvas.getContext("2d");
+
+  ctx.drawImage(renderer.domElement, 0, 0);
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(20, 20, 320, 50);
+
+  ctx.fillStyle = "black";
+  ctx.font = "24px Arial";
+  ctx.fillText("Builder: " + studentName, 35, 55);
+
+  const link = document.createElement("a");
+  link.download = studentName + "-bobwarts-build.png";
+  link.href = canvas.toDataURL("image/png");
   link.click();
 }
   
