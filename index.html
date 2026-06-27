@@ -104,8 +104,9 @@ Choose a world to begin your adventure.
 <button onclick="document.getElementById('loadFile').click()">📂 Load World</button>
 <button onclick="resetWorld()">🔄 Reset World</button>
 
-<button onclick="toggleStarterWorlds()">
-🌍 Bobwarts Starter Worlds
+<button id="starterButton"
+        onclick="toggleStarterWorlds()">
+🌍 Bobwarts Starter Worlds ▼
 </button>
 
 <div id="starterWorlds">  
@@ -118,7 +119,10 @@ Choose a world to begin your adventure.
   
 </div>  
 
-<button onclick="toggleToolbox()">🧰 Builder Toolbox</button>
+<button id="toolboxButton"
+        onclick="toggleToolbox()">
+🧰 Builder Toolbox ▶
+</button>
 
 <div id="toolbox">
 <button onclick="addTree()">🌲 Add Tree</button>
@@ -1235,10 +1239,22 @@ function toggleStarterWorlds(){
   const section =
     document.getElementById("starterWorlds");
 
+  const button =
+    document.getElementById("starterButton");
+
   if(section.style.display === "none"){
+
     section.style.display = "block";
+
+    button.innerHTML =
+      "🌍 Bobwarts Starter Worlds ▼";
+
   } else {
+
     section.style.display = "none";
+
+    button.innerHTML =
+      "🌍 Bobwarts Starter Worlds ▶";
   }
 
 }
@@ -1248,10 +1264,22 @@ function toggleToolbox(){
   const section =
     document.getElementById("toolbox");
 
+  const button =
+    document.getElementById("toolboxButton");
+
   if(section.style.display === "none"){
+
     section.style.display = "block";
+
+    button.innerHTML =
+      "🧰 Builder Toolbox ▼";
+
   } else {
+
     section.style.display = "none";
+
+    button.innerHTML =
+      "🧰 Builder Toolbox ▶";
   }
 
 }
