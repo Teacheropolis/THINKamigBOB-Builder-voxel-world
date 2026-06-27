@@ -83,12 +83,13 @@ select {
        style="width:100%; padding:5px; border-radius:6px;">  
 <button onclick="saveWorld()">💾 Save World</button>
 <button onclick="saveImage()">📸 Save Screenshot</button>
+<button onclick="document.getElementById('loadFile').click()">📂 Load World</button>
 <button onclick="resetWorld()">🔄 Reset World</button>
 <button onclick="addTree()">🌲 Add Tree</button>
 <button onclick="buildCastle()">🏰 Build Castle</button>
 <button onclick="buildPlayground()">🛝 Build Playground</button>  
 <button onclick="buildHabitat()">🌳 Build Habitat</button>
-<button onclick="document.getElementById('loadFile').click()">📂 Load World</button>
+  <button onclick="buildDragonLair()">🐉 Dragon Lair</button>
 
 <input type="file" id="loadFile" style="display:none" accept=".json">
 <p>Use W A S D keys to move.</p>
@@ -690,6 +691,92 @@ function buildHabitat(){
       shelter.position.set(x, 0, z);
       scene.add(shelter);
       blocks.push(shelter);
+    }
+  }
+
+  checkBadge();
+}
+
+function buildDragonLair(){
+
+  resetWorld();
+
+  document.getElementById("worldTitle").innerHTML =
+    "🐉 Bobwarts Dragon Sanctuary 🐉";
+
+  document.getElementById("missionText").innerHTML =
+    "<b>Mission:</b> Design a home for a magical dragon!";
+
+  document.getElementById("challenge1").innerHTML =
+    "Build a dragon cave or nest";
+
+  document.getElementById("challenge2").innerHTML =
+    "Add treasure or magical crystals";
+
+  document.getElementById("challenge3").innerHTML =
+    "Create a place for dragons to fly and rest";
+
+  document.getElementById("challenge4").innerHTML =
+    "Reset the world and design a different dragon sanctuary";
+
+  document.getElementById("moreChallenge").innerHTML =
+    "Add lava, waterfalls, towers, bridges, or a dragon training arena.";
+
+  // Lava pool
+  for(let x = -4; x <= 0; x += 2){
+    for(let z = -4; z <= 0; z += 2){
+
+      const lava = new THREE.Mesh(
+        new THREE.BoxGeometry(),
+        new THREE.MeshLambertMaterial({color:0xFF4500})
+      );
+
+      lava.position.set(x, 0, z);
+
+      scene.add(lava);
+      blocks.push(lava);
+    }
+  }
+
+  // Crystal area
+  const crystalColors = [
+    0x00FFFF,
+    0xFF00FF,
+    0xADFF2F
+  ];
+
+  for(let i = 0; i < 6; i++){
+
+    const crystal = new THREE.Mesh(
+      new THREE.BoxGeometry(),
+      new THREE.MeshLambertMaterial({
+        color: crystalColors[i % 3]
+      })
+    );
+
+    crystal.position.set(
+      4 + Math.random()*6,
+      1,
+      -2 + Math.random()*6
+    );
+
+    scene.add(crystal);
+    blocks.push(crystal);
+  }
+
+  // Stone cave starter
+  for(let x = 4; x <= 8; x += 2){
+    for(let y = 0; y < 3; y++){
+
+      const stone = new THREE.Mesh(
+        new THREE.BoxGeometry(),
+        new THREE.MeshLambertMaterial({color:0x777777})
+      );
+
+      stone.position.set(x, y, 6);
+
+      scene.add(stone);
+      blocks.push(stone);
     }
   }
 
