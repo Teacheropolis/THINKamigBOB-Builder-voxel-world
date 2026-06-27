@@ -484,6 +484,10 @@ document.addEventListener('mousedown', (event)=>{
 
 document.addEventListener('mouseup', ()=>{
   isDragging = false;
+
+  setTimeout(()=>{
+    mouseMoved = false;
+  }, 50);
 });
 
 document.addEventListener('mousemove', (event)=>{
