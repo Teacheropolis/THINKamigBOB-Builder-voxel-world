@@ -423,8 +423,8 @@ let isDragging = false;
 let previousMouseX = 0;
 let mouseMoved = false;
 let cameraAngle = 0;
-let cameraDistance = 24;
-let cameraHeight = 10;
+let cameraDistance = 22;
+let cameraHeight = 9;
 
 function updateCamera(){
 
@@ -825,6 +825,11 @@ function expandWorld(){
 function buildCastle(){
 
 resetWorld();
+
+  cameraDistance = 22;
+  cameraHeight = 9;
+  updateCamera();  
+  
 setGroundColor(0x999999);
 setSkyColor(0x87CEEB);
 addMovingClouds(); 
@@ -884,6 +889,11 @@ addMovingClouds();
 function buildPlayground(){
 
 resetWorld();
+
+  cameraDistance = 22;
+  cameraHeight = 9;
+  updateCamera();
+  
 setGroundColor(0xDEB887);
 setSkyColor(0xB0E2FF);
 addMovingClouds();
@@ -956,6 +966,11 @@ addMovingClouds();
 function buildHabitat(){
 
 resetWorld();
+
+  cameraDistance = 22;
+  cameraHeight = 9;
+  updateCamera();
+  
 setGroundColor(0x55aa55);
 setSkyColor(0x87CEEB);
 addMovingClouds();
@@ -1013,6 +1028,11 @@ addMovingClouds();
 function buildDragonLair(){
 
 resetWorld();
+
+  cameraDistance = 22;
+  cameraHeight = 9;
+  updateCamera();
+  
 setGroundColor(0x333333);
 setSkyColor(0xFF8C00);
 addDragonSmoke();
@@ -1074,6 +1094,10 @@ setSkyColor(0x191970);
 addStars();
 addMoon();
 
+cameraDistance = 24;
+cameraHeight = 10;
+updateCamera();
+  
   document.getElementById("worldTitle").innerHTML =
     "🏙️ Bobwarts Future City Builder 🏙️";
 
