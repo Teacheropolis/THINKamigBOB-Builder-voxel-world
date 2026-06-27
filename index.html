@@ -272,11 +272,7 @@ function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
 } 
 
 function buildStarterGrid(){
-  for(let x = -5; x <= 5; x += 1){
-    for(let z = -5; z <= 5; z += 1){
-      addBlock(x, 0, z, 0xcccccc);
-    }
-  }
+  // no starter blocks needed
 }
 
 buildStarterGrid();
