@@ -104,7 +104,11 @@ select {
   <li id="challenge1">Add 4 towers</li>
   <li id="challenge2">Create a grand entrance</li>
   <li id="challenge3">Build a dragon perch</li>
+  <li id="challenge4">Reset the world and try a brand-new design</li>
 </ul>
+
+<p><b>Want More Challenge?</b></p>
+<p id="moreChallenge">Add details, decorations, and a magical feature.</p>
   
 <p id="badgeMessage"><b>Badge:</b> Keep building!</p>
   
@@ -421,6 +425,12 @@ document.getElementById("challenge2").innerHTML =
 document.getElementById("challenge3").innerHTML =
   "Add a dragon perch or magical feature";
 
+  document.getElementById("challenge4").innerHTML =
+  "Reset the world and try a brand-new castle design";
+
+document.getElementById("moreChallenge").innerHTML =
+  "Add windows, roof blocks, crystals, and a magical hidden room.";
+
 // Castle foundation only
 for(let x = -4; x <= 4; x += 2){
   for(let z = -4; z <= 4; z += 2){
@@ -461,20 +471,20 @@ for(let x = -4; x <= 4; x += 2){
 
   resetWorld();
 
-  document.getElementById("worldTitle").innerHTML =
-    "🛝 Bobwarts Playground Builder 🛝";
+document.getElementById("challenge1").innerHTML =
+  "Build monkey bars";
 
-  document.getElementById("missionText").innerHTML =
-    "<b>Mission:</b> Design an amazing playground!";
+document.getElementById("challenge2").innerHTML =
+  "Add a bigger, fancier slide";
 
-  document.getElementById("challenge1").innerHTML =
-    "Build a tall slide";
+document.getElementById("challenge3").innerHTML =
+  "Create one new playground feature";
 
-  document.getElementById("challenge2").innerHTML =
-    "Create a swing set";
+document.getElementById("challenge4").innerHTML =
+  "Reset the world and try a brand-new playground design";
 
-  document.getElementById("challenge3").innerHTML =
-    "Add a fun feature";
+document.getElementById("moreChallenge").innerHTML =
+  "Add safety features, signs, lights, colors, and a special Bobwarts magical area.";
   
   // Slide tower
   for(let y = 0; y < 4; y++){
