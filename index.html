@@ -16,19 +16,19 @@
       display: block;
     }
 
-    #info {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(255,255,255,.9);
-      padding: 15px;
-      border-radius: 10px;
-      z-index: 100;
-      max-width: 300px;
-      max-height: 85vh;
-      overflow-y: auto;
-      touch-action: pan-y;
-    }
+#info {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(255,255,255,.9);
+  padding: 15px;
+  border-radius: 10px;
+  z-index: 100;
+  max-width: 300px;
+  max-height: 85vh;
+  overflow-y: auto;
+  touch-action: pan-y;
+}
 
     button {
       background: #d4af37;
@@ -470,31 +470,10 @@ updateCamera();
 // Two-finger touchpad zoom on Chromebook
 document.addEventListener('wheel', (event) => {
 
-  event.preventDefault();
-
-  // Scroll up = zoom in
-  if(event.deltaY < 0){
-    cameraDistance -= 0.5;
+  // Allow scrolling inside the menu panel
+  if(event.target.closest("#info")){
+    return;
   }
-
-  // Scroll down = zoom out
-  if(event.deltaY > 0){
-    cameraDistance += 0.5;
-  }
-
-  // Limit zoom range
-  if(cameraDistance < 6){
-    cameraDistance = 6;
-  }
-
-  if(cameraDistance > 50){
-    cameraDistance = 50;
-  }
-
-  updateCamera();
-
-// Two-finger touchpad zoom on Chromebook
-document.addEventListener('wheel', (event) => {
 
   event.preventDefault();
 
@@ -518,8 +497,6 @@ document.addEventListener('wheel', (event) => {
 
 }, { passive: false });
   
-}, { passive: false });
-
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
