@@ -271,6 +271,10 @@ function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
   ground.material.color.set(color);
 } 
 
+function setSkyColor(color){
+  scene.background = new THREE.Color(color);
+}
+  
 function buildStarterGrid(){
   // no starter blocks needed
 }
@@ -480,6 +484,8 @@ function resetWorld(){
 
 setGroundColor(0x55aa55); // default grass
 
+setSkyColor(0x87CEEB); // daytime blue sky
+
 buildStarterGrid();
 
 checkBadge();
@@ -670,6 +676,8 @@ function buildCastle(){
 resetWorld();
 setGroundColor(0x999999); 
 
+setSkyColor(0x87CEEB); // bright daytime
+  
   document.getElementById("worldTitle").innerHTML =
     "🏰 Bobwarts Castle Builder 🏰";
 
@@ -727,7 +735,8 @@ function buildPlayground(){
 resetWorld();
 setGroundColor(0xDEB887);
   
-
+setSkyColor(0xB0E2FF); // cheerful playground sky
+  
   document.getElementById("worldTitle").innerHTML =
     "🛝 Bobwarts Playground Builder 🛝";
 
@@ -797,6 +806,8 @@ function buildHabitat(){
 resetWorld();
 setGroundColor(0x55aa55);
 
+setSkyColor(0x98FB98); // forest green sky tint
+
   document.getElementById("worldTitle").innerHTML =
     "🌳 Bobwarts Habitat Builder 🌳";
 
@@ -852,6 +863,8 @@ function buildDragonLair(){
 resetWorld();
 setGroundColor(0x333333);
 
+setSkyColor(0xFF8C00); // fiery orange sunset
+
   document.getElementById("worldTitle").innerHTML =
     "🐉 Bobwarts Dragon Sanctuary 🐉";
 
@@ -904,6 +917,8 @@ function buildFutureCity(){
 
 resetWorld();
 setGroundColor(0x777777);
+
+setSkyColor(0x191970); // futuristic night sky
 
   document.getElementById("worldTitle").innerHTML =
     "🏙️ Bobwarts Future City Builder 🏙️";
