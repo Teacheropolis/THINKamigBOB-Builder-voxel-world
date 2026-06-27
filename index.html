@@ -856,7 +856,7 @@ function buildFutureCity(){
     "<b>Mission:</b> Design a city of the future!";
 
   document.getElementById("challenge1").innerHTML =
-    "Template includes: Buildings, roads, a park, and solar panels";
+    "Template includes: Buildings, roads, a park, solar panels, and water";
 
   document.getElementById("challenge2").innerHTML =
     "Build additional skyscrapers and transportation";
@@ -870,13 +870,31 @@ function buildFutureCity(){
   document.getElementById("moreChallenge").innerHTML =
     "Add bridges, trains, electric vehicles, parks, lights, or create a futuristic Bobwarts technology center.";
 
-  addBlock(-6, 3, -4, 0x808080, new THREE.BoxGeometry(2, 6, 2));
-  addBlock(0, 4, -4, 0x808080, new THREE.BoxGeometry(2, 8, 2));
-  addBlock(6, 3, -4, 0x808080, new THREE.BoxGeometry(2, 6, 2));
+  // Skyscrapers
+  addBlock(-7, 3, -4, 0x808080, new THREE.BoxGeometry(2, 6, 2));
+  addBlock(-2, 4, -4, 0x808080, new THREE.BoxGeometry(2, 8, 2));
+  addBlock(3, 5, -4, 0x87CEFA, new THREE.BoxGeometry(2, 10, 2));
+  addBlock(8, 3, -4, 0x808080, new THREE.BoxGeometry(2, 6, 2));
 
-  addBlock(0, 1, 4, 0x222222, new THREE.BoxGeometry(18, 0.5, 2));
-  addBlock(-6, 1, 8, 0x228B22, new THREE.BoxGeometry(5, 0.5, 5));
-  addBlock(6, 1.3, 8, 0x1E90FF, new THREE.BoxGeometry(4, 0.3, 2));
+  // Main road
+  addBlock(0, 0.5, 3, 0x222222, new THREE.BoxGeometry(18, 0.3, 3));
+
+  // Side road
+  addBlock(-3, 0.5, 8, 0x222222, new THREE.BoxGeometry(3, 0.3, 10));
+
+  // Park
+  addBlock(-8, 0.7, 8, 0x228B22, new THREE.BoxGeometry(5, 0.4, 5));
+
+  // Fountain
+  addBlock(-8, 1.2, 8, 0x1E90FF, new THREE.BoxGeometry(2, 1, 2));
+
+  // Solar panels
+  addBlock(7, 1.5, 8, 0x1E90FF, new THREE.BoxGeometry(4, 0.2, 2));
+  addBlock(7, 1, 8, 0x777777, new THREE.BoxGeometry(0.4, 1, 0.4));
+
+  // Transit station
+  addBlock(3, 1.5, 8, 0xFFD700, new THREE.BoxGeometry(4, 2, 3));
+  addBlock(3, 3, 8, 0x222222, new THREE.BoxGeometry(5, 0.4, 4));
 
   checkBadge();
 }
