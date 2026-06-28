@@ -1160,10 +1160,19 @@ function addGreenhouse(){
   checkBadge();
 }
 
+function randomSpot(){
+  return {
+    x: Math.round(-9 + Math.random() * 18),
+    z: Math.round(-9 + Math.random() * 18)
+  };
+}
+  
 function addWindTurbine(){
 
+  const spot = randomSpot();
+
   // Wind turbine tower
-  addBlock(7, 2.5, -3,
+  addBlock(spot.x, 2.5, spot.z,
     0xEEEEEE,
     new THREE.BoxGeometry(0.5, 5, 0.5)
   );
@@ -1206,7 +1215,7 @@ function addWindTurbine(){
   bladePivot3.add(blade3);
   turbineSpinner.add(bladePivot3);
 
-  turbineSpinner.position.set(7, 5.5, -3);
+  turbineSpinner.position.set(spot.x, 5.5, spot.z);
 
   scene.add(turbineSpinner);
   spinningTurbines.push(turbineSpinner);
