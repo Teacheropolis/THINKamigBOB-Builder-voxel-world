@@ -1129,7 +1129,9 @@ function addSatellite(){
 
 function addRover(){
 
-  addBlock(0,1,0,0x777777,
+const spot = randomSpot();
+  
+  addBlock(spot.x,1,spot.z,0x777777,
     new THREE.BoxGeometry(3,1,2));
 
   addBlock(-1,0.5,1,0x222222);
