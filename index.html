@@ -230,6 +230,8 @@
   <button onclick="buildEnergyCity()">⚡ Grade 4: Energy City</button>
   <button onclick="buildSpaceColony()">🚀 Grade 5: Moon Colony</button>
   <button onclick="buildEngineeringWorld()">🏗️ Grade 6: Engineering Challenge</button>
+  <button onclick="buildCellWorld()">🧬 Grade 6: Cell Builder Lab</button>
+  
 </div>
 
 <button id="toolboxButton" onclick="toggleToolbox()">
@@ -293,6 +295,24 @@
 <button onclick="addSupportColumn()">🏛️ Add Support Column</button>
 <button onclick="addRamp()">📐 Add Ramp</button>
 <button onclick="addTestTower()">🗼 Add Test Tower</button>
+
+<p><b>🧬 Cell Tools</b></p>
+
+<button onclick="buildPlantCell()">🌱 Start Plant Cell</button>
+<button onclick="buildAnimalCell()">🐾 Start Animal Cell</button>
+
+<button onclick="addCellWall()">🧱 Add Cell Wall</button>
+<button onclick="addCellMembrane()">⭕ Add Cell Membrane</button>
+<button onclick="addNucleus()">🔵 Add Nucleus</button>
+<button onclick="addDNA()">🧬 Add DNA</button>
+<button onclick="addMitochondria()">⚡ Add Mitochondria</button>
+<button onclick="addChloroplast()">🟢 Add Chloroplast</button>
+<button onclick="addVacuoleSmall()">💧 Add Small Vacuole</button>
+<button onclick="addVacuoleLarge()">💦 Add Large Vacuole</button>
+<button onclick="addER()">〰️ Add Endoplasmic Reticulum</button>
+<button onclick="addRibosomes()">⚫ Add Ribosomes</button>
+<button onclick="addGolgi()">📦 Add Golgi Body</button>
+<button onclick="addLysosome()">🟣 Add Lysosome</button>
 
 </div>
   
@@ -1470,6 +1490,35 @@ function addTestTower(){
 
   checkBadge();
 }
+
+function buildPlantCell(){
+
+  currentCellType = "plant";
+  buildCellWorld();
+
+  document.getElementById("worldTitle").innerHTML =
+    "🌱 Grade 6: Plant Cell Builder 🌱";
+
+  addCellWall();
+  addCellMembrane();
+
+  document.getElementById("toolMessage").innerHTML =
+    "🌱 Plant cell started. Add plant cell organelles.";
+}
+
+function buildAnimalCell(){
+
+  currentCellType = "animal";
+  buildCellWorld();
+
+  document.getElementById("worldTitle").innerHTML =
+    "🐾 Grade 6: Animal Cell Builder 🐾";
+
+  addCellMembrane();
+
+  document.getElementById("toolMessage").innerHTML =
+    "🐾 Animal cell started. Add animal cell organelles.";
+}
   
 function expandWorld(){
 
@@ -2122,6 +2171,46 @@ function buildEngineeringWorld(){
   addBlock(0, 1, 5, 0xB22222, new THREE.BoxGeometry(1, 2, 1));
   addBlock(2, 1, 5, 0xB22222, new THREE.BoxGeometry(1, 2, 1));
   addBlock(-2, 1, 5, 0xB22222, new THREE.BoxGeometry(1, 2, 1));
+
+  checkBadge();
+}
+
+let currentCellType = "animal";
+
+function buildCellWorld(){
+
+  resetWorld();
+
+  cameraDistance = 28;
+  cameraHeight = 12;
+  updateCamera();
+
+  setGroundColor(0xeeeeee);
+  setSkyColor(0xDDEEFF);
+
+  document.getElementById("worldTitle").innerHTML =
+    "🧬 Grade 6: Cell Builder Lab 🧬";
+
+  document.getElementById("missionText").innerHTML =
+    "<b>Mission:</b> Build and label a plant or animal cell.";
+
+  document.getElementById("challenge1").innerHTML =
+    "Choose Plant Cell or Animal Cell.";
+
+  document.getElementById("challenge2").innerHTML =
+    "Add the cell membrane and cytoplasm.";
+
+  document.getElementById("challenge3").innerHTML =
+    "Add at least 8 correct organelles.";
+
+  document.getElementById("challenge4").innerHTML =
+    "Compare how plant and animal cells are different.";
+
+  document.getElementById("moreChallenge").innerHTML =
+    "Build both cells and explain which organelles are found in each.";
+
+  document.getElementById("toolMessage").innerHTML =
+    "🧬 Choose 🌱 Plant Cell or 🐾 Animal Cell from Cell Tools.";
 
   checkBadge();
 }
