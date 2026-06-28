@@ -236,46 +236,45 @@
 
 <div id="toolbox">
 
- <button class="moveButton"
-        onclick="startSelectMode()">
-  🖱️ Select Structure
-</button>
+<p><b>🔴 Move Tools</b></p>
+<button class="moveButton" onclick="startSelectMode()">🖱️ Select Structure</button>
+<button class="moveButton" onclick="startMoveSelected()">↔️ Move Selected</button>
 
-<button class="moveButton"
-        onclick="startMoveSelected()">
-  ↔️ Move Selected
-</button>
-
-  <p id="toolMessage" style="font-size:12px; font-weight:bold; color:#6A0DAD;">
+<p id="toolMessage" style="font-size:12px; font-weight:bold; color:#6A0DAD;">
   Tool message will show here.
 </p>
 
- <button onclick="expandWorld()">⬜ Create Foundation</button>
-  
-  <button onclick="addTree()">🌲 Add Tree</button>
-  <button onclick="addPond()">🌊 Add Pond</button>
-  <button onclick="addRocks()">🪨 Add Rocks</button>
-  <button onclick="addBuilding()">🏢 Add Building</button>
-  <button onclick="addPortal()">✨ Add Magic Portal</button>
-  <button onclick="addVolcano()">🌋 Add Volcano</button>
-  <button onclick="addRainbowBridge()">🌈 Add Rainbow Bridge</button>
-  <button onclick="addCrystalCluster()">🔮 Add Crystal Cluster</button>
-  <button onclick="addRocket()">🚀 Add Rocket</button>
+<p><b>⬜ Build Base</b></p>
+<button onclick="expandWorld()">⬜ Create Foundation</button>
+
+<p><b>🌿 Nature</b></p>
+<button onclick="addTree()">🌲 Add Tree</button>
+<button onclick="addPond()">🌊 Add Pond</button>
+<button onclick="addRocks()">🪨 Add Rocks</button>
+
+<p><b>🏗️ Buildings & Magic</b></p>
+<button onclick="addBuilding()">🏢 Add Building</button>
+<button onclick="addPortal()">✨ Add Magic Portal</button>
+<button onclick="addVolcano()">🌋 Add Volcano</button>
+<button onclick="addRainbowBridge()">🌈 Add Rainbow Bridge</button>
+<button onclick="addCrystalCluster()">🔮 Add Crystal Cluster</button>
+
+<p><b>⚡ Energy Tools</b></p>
+<button onclick="addWindTurbine()">🌬️ Add Wind Turbine</button>
+<button onclick="addSolarPanels()">☀️ Add Solar Panels</button>
+<button onclick="addPowerLine()">⚡ Add Power Line</button>
+<button onclick="addBattery()">🔋 Add Battery</button>
+<button onclick="addElectricCar()">🚗 Add Electric Car</button>
+
+<p><b>🚀 Space Tools</b></p>
+<button onclick="addRocket()">🚀 Add Rocket</button>
 <button onclick="addSatellite()">🛰️ Add Satellite</button>
 <button onclick="addRover()">🤖 Add Rover</button>
 <button onclick="addSolarArray()">🔋 Add Solar Array</button>
 <button onclick="addGreenhouse()">🌱 Add Space Greenhouse</button>
-  <button onclick="addWindTurbine()">🌬️ Add Wind Turbine</button>
-  <button onclick="addSolarPanels()">☀️ Add Solar Panels</button>
-<button onclick="addPowerLine()">⚡ Add Power Line</button>
-<button onclick="addBattery()">🔋 Add Battery</button>
-<button onclick="addElectricCar()">🚗 Add Electric Car</button>
-<button onclick="setMoonEnvironment()">🌕 Moon Mode</button>
-<button onclick="setMarsEnvironment()">🔴 Mars Mode</button>
-<button onclick="setAsteroidEnvironment()">🪨 Asteroid Base Mode</button>
-<button onclick="setSpaceStationEnvironment()">🛰️ Space Station Mode</button>
-</div>
 
+</div>
+  
 <input type="file" id="loadFile"
        style="display:none"
        accept=".json">
@@ -1258,7 +1257,7 @@ const spot = randomSpot();
     0x8B4513,
     new THREE.BoxGeometry(0.4,5,0.4));
 
-  addBlock(spot.z,2.5,spot.z,
+  addBlock(spot.x,2.5,spot.z,
     0x8B4513,
     new THREE.BoxGeometry(0.4,5,0.4));
 
