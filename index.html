@@ -373,6 +373,8 @@ ground.position.y = -1;
 scene.add(ground);
 
 const blocks = [];
+let lastNucleus = null;
+  
 const spinningTurbines = [];
 
 let selectedBlocks = [];
@@ -1602,37 +1604,87 @@ function cellSpot(){
 }
 
 function addNucleus(){
+
   const spot = cellSpot();
 
-  addBlock(spot.x, 1, spot.z,
-    0x4169E1,
-    new THREE.SphereGeometry(1.4, 20, 20));
+  const nucleus = new THREE.Mesh(
+    new THREE.SphereGeometry(1.4, 20, 20),
+    new THREE.MeshLambertMaterial({
+      color:0x4169E1
+    })
+  );
+
+  nucleus.position.set(spot.x, 1, spot.z);
+
+  scene.add(nucleus);
+  blocks.push(nucleus);
+
+  // Remember where the nucleus is
+  lastNucleus = nucleus;
 
   checkBadge();
 }
 
 function addDNA(){
-  const spot = cellSpot();
 
-  addBlock(spot.x, 1.4, spot.z,
+  // If no nucleus exists yet
+  if(!lastNucleus){
+
+    document.getElementById("toolMessage").innerHTML =
+      "⚠️ Add a nucleus first!";
+
+    return;
+  }
+
+  const x = lastNucleus.position.x;
+  const z = lastNucleus.position.z;
+
+  // DNA strand 1
+  addBlock(
+    x - 0.2,
+    1.7,
+    z,
     0xFFD700,
-    new THREE.BoxGeometry(0.3, 2.5, 0.3));
+    new THREE.BoxGeometry(0.2,1.6,0.2)
+  );
 
-  addBlock(spot.x + 0.6, 1.4, spot.z,
+  // DNA strand 2
+  addBlock(
+    x + 0.2,
+    1.7,
+    z,
     0xFF00FF,
-    new THREE.BoxGeometry(0.3, 2.5, 0.3));
+    new THREE.BoxGeometry(0.2,1.6,0.2)
+  );
 
-  addBlock(spot.x + 0.3, 2.1, spot.z,
+  // DNA rungs
+  addBlock(
+    x,
+    1.2,
+    z,
     0xFFFFFF,
-    new THREE.BoxGeometry(1, 0.2, 0.2));
+    new THREE.BoxGeometry(0.5,0.1,0.1)
+  );
 
-  addBlock(spot.x + 0.3, 1.4, spot.z,
+  addBlock(
+    x,
+    1.7,
+    z,
     0xFFFFFF,
-    new THREE.BoxGeometry(1, 0.2, 0.2));
+    new THREE.BoxGeometry(0.5,0.1,0.1)
+  );
+
+  addBlock(
+    x,
+    2.2,
+    z,
+    0xFFFFFF,
+    new THREE.BoxGeometry(0.5,0.1,0.1)
+  );
 
   checkBadge();
 }
-
+  
 function addMitochondria(){
   const spot = cellSpot();
 
