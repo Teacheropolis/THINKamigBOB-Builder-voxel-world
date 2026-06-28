@@ -266,6 +266,8 @@
 <button onclick="addGreenhouse()">🌱 Add Space Greenhouse</button>
 <button onclick="setMoonEnvironment()">🌕 Moon Mode</button>
 <button onclick="setMarsEnvironment()">🔴 Mars Mode</button>
+<button onclick="setAsteroidEnvironment()">🪨 Asteroid Base Mode</button>
+<button onclick="setSpaceStationEnvironment()">🛰️ Space Station Mode</button>
 </div>
 
 <input type="file" id="loadFile"
@@ -1658,6 +1660,64 @@ function setMarsEnvironment(){
     earth = null;
   }
 
+function setAsteroidEnvironment(){
+
+  setGroundColor(0x4A4A4A);
+  setSkyColor(0x000010);
+
+  clearAtmosphere();
+
+  addStars();
+
+  if(earth){
+    scene.remove(earth);
+    earth = null;
+  }
+
+  // Add asteroid rocks
+  addBlock(-6, 0.8, -5, 0x555555, new THREE.BoxGeometry(3, 0.5, 2));
+  addBlock(5, 0.8, -6, 0x666666, new THREE.BoxGeometry(2, 0.6, 3));
+  addBlock(6, 0.8, 5, 0x444444, new THREE.BoxGeometry(3, 0.4, 3));
+  addBlock(-4, 0.8, 6, 0x777777, new THREE.BoxGeometry(2, 0.5, 2));
+
+  document.getElementById("worldTitle").innerHTML =
+    "🪨 Bobwarts Asteroid Base 🪨";
+
+  document.getElementById("missionText").innerHTML =
+    "<b>Mission:</b> Build a research base on an asteroid!";
+
+  document.getElementById("toolMessage").innerHTML =
+    "🪨 Asteroid Base Mode Activated!";
+}
+
+function setSpaceStationEnvironment(){
+
+  setGroundColor(0x000000);
+  setSkyColor(0x000000);
+
+  clearAtmosphere();
+
+  addStars();
+  addEarth();
+
+  // Create a metal space station platform
+  addBlock(0, 0.5, 0, 0x999999, new THREE.BoxGeometry(16, 0.4, 6));
+  addBlock(0, 0.8, 0, 0xcccccc, new THREE.BoxGeometry(4, 1, 4));
+
+  // Solar wings
+  addBlock(-8, 1, 0, 0x1E90FF, new THREE.BoxGeometry(6, 0.2, 3));
+  addBlock(8, 1, 0, 0x1E90FF, new THREE.BoxGeometry(6, 0.2, 3));
+
+  document.getElementById("worldTitle").innerHTML =
+    "🛰️ Bobwarts Space Station 🛰️";
+
+  document.getElementById("missionText").innerHTML =
+    "<b>Mission:</b> Build and improve an orbiting space station!";
+
+  document.getElementById("toolMessage").innerHTML =
+    "🛰️ Space Station Mode Activated!";
+}
+  
   document.getElementById("toolMessage").innerHTML =
     "🔴 Mars Mode Activated!";
 }
