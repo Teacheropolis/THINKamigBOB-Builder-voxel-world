@@ -507,6 +507,22 @@ document.addEventListener('mousemove', (event)=>{
       event.clientX - previousMouseX;
 
     cameraAngle += changeX * 0.01;
+
+    // Move mouse up/down to change camera height
+    const mousePercent =
+      event.clientY / window.innerHeight;
+
+    cameraHeight = 2 + (1 - mousePercent) * 18;
+
+    // Prevent extreme views
+    if(cameraHeight < 2){
+      cameraHeight = 2;
+    }
+
+    if(cameraHeight > 20){
+      cameraHeight = 20;
+    }
+
     mouseMoved = true;
 
     previousMouseX = event.clientX;
@@ -514,8 +530,6 @@ document.addEventListener('mousemove', (event)=>{
     updateCamera();
   }
 });
-
-updateCamera();
 
 // Two-finger touchpad zoom on Chromebook
 document.addEventListener('wheel', (event) => {
