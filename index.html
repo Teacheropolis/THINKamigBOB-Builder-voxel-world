@@ -84,6 +84,19 @@
   background: #4169E1;
 }
 
+.moveButton {
+  background: #B22222;
+  color: #FFD700;
+  border: 2px solid gold;
+  width: 100%;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.moveButton:hover {
+  background: #DC143C;
+}
+    
 .blockHeader {
   background: #6A0DAD;
   color: white;
@@ -221,8 +234,15 @@
 
 <div id="toolbox">
   <button onclick="expandWorld()">🌎 Expand Building Space</button>
-  <button onclick="startSelectMode()">🖱️ Select Structure</button>
-  <button onclick="startMoveSelected()">↔️ Move Selected</button>
+ <button class="moveButton"
+        onclick="startSelectMode()">
+  🖱️ Select Structure
+</button>
+
+<button class="moveButton"
+        onclick="startMoveSelected()">
+  ↔️ Move Selected
+</button>
   
   <p id="toolMessage" style="font-size:12px; font-weight:bold; color:#6A0DAD;">
   Tool message will show here.
