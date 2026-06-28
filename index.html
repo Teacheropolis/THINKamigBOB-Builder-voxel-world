@@ -221,6 +221,8 @@
 
 <div id="toolbox">
   <button onclick="expandWorld()">🌎 Expand Building Space</button>
+  <button onclick="startSelectMode()">🖱️ Select Structure</button>
+  <button onclick="startMoveSelected()">↔️ Move Selected</button>
   <button onclick="addTree()">🌲 Add Tree</button>
   <button onclick="addPond()">🌊 Add Pond</button>
   <button onclick="addRocks()">🪨 Add Rocks</button>
@@ -289,6 +291,10 @@ scene.add(ground);
 
 const blocks = [];
 
+let selectedBlocks = [];
+let selectMode = false;
+let moveSelectedMode = false;
+  
 const stars = [];
 let moon = null;  
 
@@ -551,10 +557,38 @@ document.addEventListener('click', (event)=>{
   const clickableObjects = [ground, ...blocks];
   const intersects = raycaster.intersectObjects(clickableObjects);
 
-  if(intersects.length > 0){
+if(intersects.length > 0){
 
-    const hit = intersects[0].object;
+  const hit = intersects[0].object;
 
+  if(selectMode && hit !== ground){
+    selectConnectedBlocks(hit);
+    return;
+  }
+
+if(moveSelectedMode && hit === ground){
+
+  const targetX = Math.round(intersects[0].point.x);
+  const targetZ = Math.round(intersects[0].point.z);
+
+  const firstBlock = selectedBlocks[0];
+
+  const changeX = targetX - Math.round(firstBlock.position.x);
+  const changeZ = targetZ - Math.round(firstBlock.position.z);
+
+  selectedBlocks.forEach(block => {
+    block.position.x += changeX;
+    block.position.z += changeZ;
+    block.material.emissive = new THREE.Color(0x000000);
+  });
+
+  selectedBlocks = [];
+  moveSelectedMode = false;
+
+  checkBadge();
+  return;
+}
+  
     const newBlock = new THREE.Mesh(
       new THREE.BoxGeometry(),
       new THREE.MeshLambertMaterial({
@@ -709,6 +743,55 @@ buildStarterGrid();
 checkBadge();
 }
 
+function startSelectMode(){
+
+  selectMode = true;
+  moveSelectedMode = false;
+
+  selectedBlocks = [];
+
+  alert("Click one block in the structure you want to select.");
+}
+
+function selectConnectedBlocks(startBlock){
+
+  selectedBlocks = [];
+
+  const startX = Math.round(startBlock.position.x);
+  const startY = Math.round(startBlock.position.y);
+  const startZ = Math.round(startBlock.position.z);
+
+  blocks.forEach(block => {
+
+    const dx = Math.abs(Math.round(block.position.x) - startX);
+    const dy = Math.abs(Math.round(block.position.y) - startY);
+    const dz = Math.abs(Math.round(block.position.z) - startZ);
+
+    if(dx <= 3 && dy <= 5 && dz <= 3){
+      selectedBlocks.push(block);
+      block.material.emissive = new THREE.Color(0x5511ff);
+    }
+
+  });
+
+  selectMode = false;
+
+  alert("Structure selected! Now click ↔️ Move Selected.");
+}
+
+function startMoveSelected(){
+
+  if(selectedBlocks.length === 0){
+    alert("Select a structure first.");
+    return;
+  }
+
+  moveSelectedMode = true;
+  selectMode = false;
+
+  alert("Click the ground where you want to move the selected structure.");
+}
+  
 function addTree(){
 
   addBlock(8, 1, 0, 0x8B4513, new THREE.BoxGeometry(1, 3, 1));
