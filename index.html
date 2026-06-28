@@ -1139,11 +1139,11 @@ function addRover(){
 
   checkBadge();
 }
-
-  const spot = randomSpot();
   
 function addSolarArray(){
 
+  const spot = randomSpot();
+  
   addBlock(spot.x,1,spot.z,0x1E90FF,
     new THREE.BoxGeometry(6,0.2,3));
 
