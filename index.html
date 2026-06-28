@@ -732,8 +732,13 @@ function resetWorld(){
     scene.remove(blocks[i]);
   }
 
- blocks.length = 0;
+blocks.length = 0;
+selectedBlocks = [];
+selectMode = false;
+moveSelectedMode = false;
+
 clearAtmosphere();
+``
 
 setGroundColor(0x55aa55); // default grass
 setSkyColor(0x87CEEB);    // default blue sky
@@ -747,6 +752,11 @@ function startSelectMode(){
 
   selectMode = true;
   moveSelectedMode = false;
+
+  // Remove highlight from previously selected blocks
+  selectedBlocks.forEach(block => {
+    block.material.emissive = new THREE.Color(0x000000);
+  });
 
   selectedBlocks = [];
 
