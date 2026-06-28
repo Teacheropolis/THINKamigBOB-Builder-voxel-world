@@ -610,6 +610,11 @@ const mouse = new THREE.Vector2();
 
 document.addEventListener('click', (event)=>{
 
+  // Do not place blocks when clicking the menu
+  if(event.target.closest("#info")){
+    return;
+  }
+
   if(mouseMoved) return;
 
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
