@@ -264,6 +264,8 @@
 <button onclick="addRover()">🤖 Add Rover</button>
 <button onclick="addSolarArray()">🔋 Add Solar Array</button>
 <button onclick="addGreenhouse()">🌱 Add Space Greenhouse</button>
+<button onclick="setMoonEnvironment()">🌕 Moon Mode</button>
+<button onclick="setMarsEnvironment()">🔴 Mars Mode</button>
 </div>
 
 <input type="file" id="loadFile"
@@ -1503,11 +1505,10 @@ function buildSpaceColony(){
   setSkyColor(0x000022);
 
 addStars();
-addMoon();
 addEarth();
 
   document.getElementById("worldTitle").innerHTML =
-    "🚀 Bobwarts Space Colony 🚀";
+    "🌕 Bobwarts Moon Colony 🌕";
 
   document.getElementById("missionText").innerHTML =
     "<b>Mission:</b> Design a colony on the Moon or Mars!";
@@ -1626,6 +1627,40 @@ document.getElementById('loadFile')
 
   reader.readAsText(file);
 }); 
+
+function setMoonEnvironment(){
+
+  setGroundColor(0x777777);
+  setSkyColor(0x000022);
+
+  clearAtmosphere();
+
+  addStars();
+  addEarth();
+
+  document.getElementById("toolMessage").innerHTML =
+    "🌕 Moon Mode Activated!";
+}
+
+function setMarsEnvironment(){
+
+  setGroundColor(0xB22222); // Mars red
+
+  setSkyColor(0x552200); // dusty sky
+
+  clearAtmosphere();
+
+  addStars();
+
+  // Remove Earth if it exists
+  if(earth){
+    scene.remove(earth);
+    earth = null;
+  }
+
+  document.getElementById("toolMessage").innerHTML =
+    "🔴 Mars Mode Activated!";
+}
   
 function checkBadge(){
 
