@@ -265,6 +265,7 @@
 <button onclick="addRover()">🤖 Add Rover</button>
 <button onclick="addSolarArray()">🔋 Add Solar Array</button>
 <button onclick="addGreenhouse()">🌱 Add Space Greenhouse</button>
+  <button onclick="addWindTurbine()">🌬️ Add Wind Turbine</button>
 <button onclick="setMoonEnvironment()">🌕 Moon Mode</button>
 <button onclick="setMarsEnvironment()">🔴 Mars Mode</button>
 <button onclick="setAsteroidEnvironment()">🪨 Asteroid Base Mode</button>
@@ -1151,6 +1152,60 @@ function addGreenhouse(){
 
   addBlock(0,2.5,0,0x228B22,
     new THREE.BoxGeometry(4,0.5,4));
+
+  checkBadge();
+}
+
+function addWindTurbine(){
+
+  // Wind turbine tower
+  addBlock(7, 2.5, -3,
+    0xEEEEEE,
+    new THREE.BoxGeometry(0.5, 5, 0.5)
+  );
+
+  // Blade spinner centered on the hub
+  const turbineSpinner = new THREE.Group();
+
+  const hub = new THREE.Mesh(
+    new THREE.BoxGeometry(0.7, 0.7, 0.7),
+    new THREE.MeshLambertMaterial({color:0x999999})
+  );
+  turbineSpinner.add(hub);
+
+  const bladePivot1 = new THREE.Group();
+  const blade1 = new THREE.Mesh(
+    new THREE.BoxGeometry(2.8, 0.2, 0.2),
+    new THREE.MeshLambertMaterial({color:0xFFFFFF})
+  );
+  blade1.position.x = 1.4;
+  bladePivot1.add(blade1);
+  turbineSpinner.add(bladePivot1);
+
+  const bladePivot2 = new THREE.Group();
+  bladePivot2.rotation.z = Math.PI * 2 / 3;
+  const blade2 = new THREE.Mesh(
+    new THREE.BoxGeometry(2.8, 0.2, 0.2),
+    new THREE.MeshLambertMaterial({color:0xFFFFFF})
+  );
+  blade2.position.x = 1.4;
+  bladePivot2.add(blade2);
+  turbineSpinner.add(bladePivot2);
+
+  const bladePivot3 = new THREE.Group();
+  bladePivot3.rotation.z = Math.PI * 4 / 3;
+  const blade3 = new THREE.Mesh(
+    new THREE.BoxGeometry(2.8, 0.2, 0.2),
+    new THREE.MeshLambertMaterial({color:0xFFFFFF})
+  );
+  blade3.position.x = 1.4;
+  bladePivot3.add(blade3);
+  turbineSpinner.add(bladePivot3);
+
+  turbineSpinner.position.set(7, 5.5, -3);
+
+  scene.add(turbineSpinner);
+  spinningTurbines.push(turbineSpinner);
 
   checkBadge();
 }
