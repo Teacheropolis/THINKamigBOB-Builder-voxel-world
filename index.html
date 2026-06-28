@@ -226,6 +226,7 @@
   <button onclick="buildHabitat()">🌳 Build Habitat</button>
   <button onclick="buildDragonLair()">🐉 Dragon Lair</button>
   <button onclick="buildFutureCity()">🏙️ Future City</button>
+  <button onclick="buildSpaceColony()">🚀 Space Colony</button>
 </div>
 
 <button id="toolboxButton" onclick="toggleToolbox()">
@@ -1406,7 +1407,55 @@ updateCamera();
   checkBadge();
 }
   
+function buildSpaceColony(){
 
+  clearWorld();
+
+  document.getElementById("worldTitle").innerHTML =
+    "🚀 Bobwarts Space Colony";
+
+  document.getElementById("mission").innerHTML =
+    "Build a colony on the Moon or Mars!";
+
+  document.getElementById("challenge").innerHTML = `
+    <li>Build a space habitat</li>
+    <li>Create a rocket launch area</li>
+    <li>Add a research station</li>
+    <li>Design a solar power system</li>
+  `;
+
+  // Moon surface platform
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(14,1,14),
+    new THREE.MeshLambertMaterial({color:0xBBBBBB})
+  );
+
+  base.position.set(0,0,0);
+
+  scene.add(base);
+  blocks.push(base);
+
+  // Launch pad
+  const pad = new THREE.Mesh(
+    new THREE.BoxGeometry(4,0.5,4),
+    new THREE.MeshLambertMaterial({color:0x444444})
+  );
+
+  pad.position.set(0,1,0);
+
+  scene.add(pad);
+  blocks.push(pad);
+
+  // Dark space sky
+  scene.background =
+    new THREE.Color(0x000022);
+
+  cameraDistance = 24;
+  cameraHeight = 5;
+
+  updateCamera();
+}
+  
 function saveWorld(){
 
   const worldData = [];
