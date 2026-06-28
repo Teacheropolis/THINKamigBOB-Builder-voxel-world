@@ -223,6 +223,11 @@
   <button onclick="expandWorld()">🌎 Expand Building Space</button>
   <button onclick="startSelectMode()">🖱️ Select Structure</button>
   <button onclick="startMoveSelected()">↔️ Move Selected</button>
+  
+  <p id="toolMessage" style="font-size:12px; font-weight:bold; color:#6A0DAD;">
+  Tool message will show here.
+</p>
+  
   <button onclick="addTree()">🌲 Add Tree</button>
   <button onclick="addPond()">🌊 Add Pond</button>
   <button onclick="addRocks()">🪨 Add Rocks</button>
@@ -571,10 +576,11 @@ if(moveSelectedMode && hit === ground){
   const targetX = Math.round(intersects[0].point.x);
   const targetZ = Math.round(intersects[0].point.z);
 
-  const firstBlock = selectedBlocks[0];
+  let minX = Math.min(...selectedBlocks.map(block => Math.round(block.position.x)));
+  let minZ = Math.min(...selectedBlocks.map(block => Math.round(block.position.z)));
 
-  const changeX = targetX - Math.round(firstBlock.position.x);
-  const changeZ = targetZ - Math.round(firstBlock.position.z);
+  const changeX = targetX - minX;
+  const changeZ = targetZ - minZ;
 
   selectedBlocks.forEach(block => {
     block.position.x += changeX;
@@ -584,6 +590,9 @@ if(moveSelectedMode && hit === ground){
 
   selectedBlocks = [];
   moveSelectedMode = false;
+
+  document.getElementById("toolMessage").innerHTML =
+    "✅ Structure moved!";
 
   checkBadge();
   return;
@@ -760,7 +769,8 @@ function startSelectMode(){
 
   selectedBlocks = [];
 
-  alert("Click one block in the structure you want to select.");
+document.getElementById("toolMessage").innerHTML =
+  "🖱️ Click one block in the structure you want to select.";
 }
 
 function selectConnectedBlocks(startBlock){
@@ -786,20 +796,23 @@ function selectConnectedBlocks(startBlock){
 
   selectMode = false;
 
-  alert("Structure selected! Now click ↔️ Move Selected.");
+document.getElementById("toolMessage").innerHTML =
+  "✅ Structure selected! Now click ↔️ Move Selected.";
 }
 
 function startMoveSelected(){
 
   if(selectedBlocks.length === 0){
-    alert("Select a structure first.");
+    adocument.getElementById("toolMessage").innerHTML =
+  "⚠️ Select a structure first.";
     return;
   }
 
   moveSelectedMode = true;
   selectMode = false;
 
-  alert("Click the ground where you want to move the selected structure.");
+document.getElementById("toolMessage").innerHTML =
+  "↔️ Click the ground where you want to move the selected structure.";
 }
   
 function addTree(){
