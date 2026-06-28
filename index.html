@@ -221,12 +221,13 @@
 </button>
 
 <div id="starterWorlds">
-  <button onclick="buildCastle()">🏰 Build Castle</button>
-  <button onclick="buildPlayground()">🛝 Build Playground</button>
-  <button onclick="buildHabitat()">🌳 Build Habitat</button>
+  <button onclick="buildCastle()">🏰 Castle Builder</button>
+  <button onclick="buildPlayground()">🛝 Playground Builder</button>
+  <button onclick="buildHabitat()">🌳 Habitat Builder</button>
   <button onclick="buildDragonLair()">🐉 Dragon Lair</button>
   <button onclick="buildFutureCity()">🏙️ Future City</button>
-  <button onclick="buildSpaceColony()">🚀 Space Colony</button>
+  <button onclick="buildSpaceColony()">🚀 Grade 5: Moon Colony</button>
+  <button onclick="buildEnergyCity()">⚡ Grade 4: Energy City</button>
 </div>
 
 <button id="toolboxButton" onclick="toggleToolbox()">
@@ -1557,6 +1558,67 @@ addEarth();
   checkBadge();
 }
 
+function buildEnergyCity(){
+
+  resetWorld();
+
+  cameraDistance = 26;
+  cameraHeight = 5;
+  updateCamera();
+
+  setGroundColor(0x55aa55);
+  setSkyColor(0x87CEEB);
+  addMovingClouds();
+
+  document.getElementById("worldTitle").innerHTML =
+    "⚡ Grade 4: Bobwarts Energy City ⚡";
+
+  document.getElementById("missionText").innerHTML =
+    "<b>Mission:</b> Design a city that uses different types of energy!";
+
+  document.getElementById("challenge1").innerHTML =
+    "Starter world includes: solar panels, wind turbines, power station, wires, and homes";
+
+  document.getElementById("challenge2").innerHTML =
+    "Show how energy moves from one place to another";
+
+  document.getElementById("challenge3").innerHTML =
+    "Add renewable energy sources like solar, wind, or water power";
+
+  document.getElementById("challenge4").innerHTML =
+    "Reset the world and design a new energy system";
+
+  document.getElementById("moreChallenge").innerHTML =
+    "Add streetlights, batteries, power lines, electric vehicles, or an energy-saving invention.";
+
+  // Power station
+  addBlock(-6, 1.5, -4, 0x808080, new THREE.BoxGeometry(4, 3, 4));
+  addBlock(-6, 3.5, -4, 0xFFD700, new THREE.BoxGeometry(3, 0.5, 3));
+
+  // Solar panels
+  addBlock(2, 1, -5, 0x1E90FF, new THREE.BoxGeometry(5, 0.2, 3));
+  addBlock(2, 0.5, -5, 0x777777, new THREE.BoxGeometry(0.4, 1, 0.4));
+
+  // Wind turbine
+  addBlock(7, 2.5, -3, 0xFFFFFF, new THREE.BoxGeometry(0.4, 5, 0.4));
+  addBlock(7, 5.2, -3, 0xCCCCCC, new THREE.BoxGeometry(3, 0.3, 0.3));
+  addBlock(7, 5.2, -3, 0xCCCCCC, new THREE.BoxGeometry(0.3, 3, 0.3));
+
+  // Homes
+  addBlock(-2, 1.2, 5, 0xB22222, new THREE.BoxGeometry(3, 2, 3));
+  addBlock(-2, 2.5, 5, 0x222222, new THREE.BoxGeometry(3.5, 0.5, 3.5));
+
+  addBlock(3, 1.2, 5, 0x87CEFA, new THREE.BoxGeometry(3, 2, 3));
+  addBlock(3, 2.5, 5, 0x222222, new THREE.BoxGeometry(3.5, 0.5, 3.5));
+
+  // Power lines
+  addBlock(-5, 2.5, 1, 0x8B4513, new THREE.BoxGeometry(0.4, 5, 0.4));
+  addBlock(1, 2.5, 1, 0x8B4513, new THREE.BoxGeometry(0.4, 5, 0.4));
+  addBlock(-2, 5, 1, 0x000000, new THREE.BoxGeometry(6, 0.2, 0.2));
+
+  checkBadge();
+}
+  
  function saveWorld(){
 
   const worldData = [];
