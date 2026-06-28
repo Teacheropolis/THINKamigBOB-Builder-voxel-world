@@ -1151,10 +1151,12 @@ function addSolarArray(){
 
 function addGreenhouse(){
 
-  addBlock(0,1,0,0x87CEFA,
+    const spot = randomSpot();
+  
+  addBlock(spot.x,1,spot.z,0x87CEFA,
     new THREE.BoxGeometry(5,3,5));
 
-  addBlock(0,2.5,0,0x228B22,
+  addBlock(spot.x,2.5,spot.z,0x228B22,
     new THREE.BoxGeometry(4,0.5,4));
 
   checkBadge();
