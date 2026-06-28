@@ -1519,6 +1519,40 @@ function buildAnimalCell(){
   document.getElementById("toolMessage").innerHTML =
     "🐾 Animal cell started. Add animal cell organelles.";
 }
+
+function addCellWall(){
+
+  // Plant cell wall - outer green rectangle
+  addBlock(0, 0.8, -7, 0x228B22, new THREE.BoxGeometry(16, 0.5, 1));
+  addBlock(0, 0.8, 7, 0x228B22, new THREE.BoxGeometry(16, 0.5, 1));
+  addBlock(-8, 0.8, 0, 0x228B22, new THREE.BoxGeometry(1, 0.5, 14));
+  addBlock(8, 0.8, 0, 0x228B22, new THREE.BoxGeometry(1, 0.5, 14));
+
+  checkBadge();
+}
+
+function addCellMembrane(){
+
+  let cytoplasmColor = 0xFFD6E7; // light pink for animal
+
+  if(currentCellType === "plant"){
+    cytoplasmColor = 0xCCFFCC; // light green for plant
+  }
+
+  // Cytoplasm fills inside automatically
+  addBlock(0, 0.3, 0,
+    cytoplasmColor,
+    new THREE.BoxGeometry(14, 0.2, 12)
+  );
+
+  // Cell membrane - thin outline
+  addBlock(0, 0.9, -6, 0xFF69B4, new THREE.BoxGeometry(14, 0.5, 0.5));
+  addBlock(0, 0.9, 6, 0xFF69B4, new THREE.BoxGeometry(14, 0.5, 0.5));
+  addBlock(-7, 0.9, 0, 0xFF69B4, new THREE.BoxGeometry(0.5, 0.5, 12));
+  addBlock(7, 0.9, 0, 0xFF69B4, new THREE.BoxGeometry(0.5, 0.5, 12));
+
+  checkBadge();
+}
   
 function expandWorld(){
 
