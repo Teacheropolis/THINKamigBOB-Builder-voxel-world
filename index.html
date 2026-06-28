@@ -1607,49 +1607,51 @@ function buildEnergyCity(){
 // Wind turbine tower
 addBlock(7, 2.5, -3,
   0xEEEEEE,
-  new THREE.BoxGeometry(0.5, 5, 0.5));
+  new THREE.BoxGeometry(0.5, 5, 0.5)
+);
 
-// Turbine blades group
-const turbine = new THREE.Group();
+// Turbine blade group centered on the hub
+const turbineBlades = new THREE.Group();
 
+// Hub
 const hub = new THREE.Mesh(
   new THREE.BoxGeometry(0.7, 0.7, 0.7),
   new THREE.MeshLambertMaterial({color:0x999999})
 );
-
-turbine.add(hub);
+turbineBlades.add(hub);
 
 // Blade 1
 const blade1 = new THREE.Mesh(
-  new THREE.BoxGeometry(3, 0.2, 0.2),
+  new THREE.BoxGeometry(2.8, 0.2, 0.2),
   new THREE.MeshLambertMaterial({color:0xFFFFFF})
 );
-blade1.position.x = 1.5;
-turbine.add(blade1);
+blade1.position.x = 1.4;
+turbineBlades.add(blade1);
 
 // Blade 2
 const blade2 = new THREE.Mesh(
-  new THREE.BoxGeometry(3, 0.2, 0.2),
+  new THREE.BoxGeometry(2.8, 0.2, 0.2),
   new THREE.MeshLambertMaterial({color:0xFFFFFF})
 );
-blade2.position.x = 1.5;
+blade2.position.x = 1.4;
 blade2.rotation.z = Math.PI * 2 / 3;
-turbine.add(blade2);
+turbineBlades.add(blade2);
 
 // Blade 3
 const blade3 = new THREE.Mesh(
-  new THREE.BoxGeometry(3, 0.2, 0.2),
+  new THREE.BoxGeometry(2.8, 0.2, 0.2),
   new THREE.MeshLambertMaterial({color:0xFFFFFF})
 );
-blade3.position.x = 1.5;
+blade3.position.x = 1.4;
 blade3.rotation.z = Math.PI * 4 / 3;
-turbine.add(blade3);
+turbineBlades.add(blade3);
 
-turbine.position.set(7, 5.5, -3);
+// Place blade group at the top of the tower
+turbineBlades.position.set(7, 5.5, -3);
 
-scene.add(turbine);
-spinningTurbines.push(turbine);
-
+scene.add(turbineBlades);
+spinningTurbines.push(turbineBlades);
+  
   // Homes
   addBlock(-2, 1.2, 5, 0xB22222, new THREE.BoxGeometry(3, 2, 3));
   addBlock(-2, 2.5, 5, 0x222222, new THREE.BoxGeometry(3.5, 0.5, 3.5));
