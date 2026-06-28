@@ -266,6 +266,10 @@
 <button onclick="addSolarArray()">🔋 Add Solar Array</button>
 <button onclick="addGreenhouse()">🌱 Add Space Greenhouse</button>
   <button onclick="addWindTurbine()">🌬️ Add Wind Turbine</button>
+  <button onclick="addSolarPanels()">☀️ Add Solar Panels</button>
+<button onclick="addPowerLine()">⚡ Add Power Line</button>
+<button onclick="addBattery()">🔋 Add Battery</button>
+<button onclick="addElectricCar()">🚗 Add Electric Car</button>
 <button onclick="setMoonEnvironment()">🌕 Moon Mode</button>
 <button onclick="setMarsEnvironment()">🔴 Mars Mode</button>
 <button onclick="setAsteroidEnvironment()">🪨 Asteroid Base Mode</button>
@@ -1206,6 +1210,67 @@ function addWindTurbine(){
 
   scene.add(turbineSpinner);
   spinningTurbines.push(turbineSpinner);
+
+  checkBadge();
+}
+
+function addSolarPanels(){
+
+  addBlock(0, 1, 0,
+    0x1E90FF,
+    new THREE.BoxGeometry(6,0.2,3));
+
+  addBlock(0,0.5,0,
+    0x777777,
+    new THREE.BoxGeometry(0.4,1,0.4));
+
+  checkBadge();
+}
+
+function addPowerLine(){
+
+  addBlock(-2,2.5,0,
+    0x8B4513,
+    new THREE.BoxGeometry(0.4,5,0.4));
+
+  addBlock(2,2.5,0,
+    0x8B4513,
+    new THREE.BoxGeometry(0.4,5,0.4));
+
+  addBlock(0,5,0,
+    0x000000,
+    new THREE.BoxGeometry(5,0.2,0.2));
+
+  checkBadge();
+}
+
+function addBattery(){
+
+  addBlock(0,1.5,0,
+    0x228B22,
+    new THREE.BoxGeometry(2,3,1));
+
+  addBlock(0,3.2,0,
+    0xFFD700,
+    new THREE.BoxGeometry(1,0.3,1));
+
+  checkBadge();
+}
+
+function addElectricCar(){
+
+  addBlock(0,1,0,
+    0xB22222,
+    new THREE.BoxGeometry(3,1,2));
+
+  addBlock(0,1.8,0,
+    0x87CEFA,
+    new THREE.BoxGeometry(2,0.8,1.5));
+
+  addBlock(-1,0.5,1,0x222222);
+  addBlock(1,0.5,1,0x222222);
+  addBlock(-1,0.5,-1,0x222222);
+  addBlock(1,0.5,-1,0x222222);
 
   checkBadge();
 }
