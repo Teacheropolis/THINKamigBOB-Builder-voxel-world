@@ -562,10 +562,24 @@ document.addEventListener('wheel', (event) => {
 
 }, { passive: false });
 
-// Up/Down arrow camera controls
+// Arrow key camera controls
 document.addEventListener('keydown', (event)=>{
 
-  // Up arrow = higher view
+  // Rotate left
+  if(event.key === "ArrowLeft"){
+
+    cameraAngle -= 0.2;
+    updateCamera();
+  }
+
+  // Rotate right
+  if(event.key === "ArrowRight"){
+
+    cameraAngle += 0.2;
+    updateCamera();
+  }
+
+  // Raise camera
   if(event.key === "ArrowUp"){
 
     cameraHeight += 2;
@@ -577,7 +591,7 @@ document.addEventListener('keydown', (event)=>{
     updateCamera();
   }
 
-  // Down arrow = lower view
+  // Lower camera
   if(event.key === "ArrowDown"){
 
     cameraHeight -= 2;
@@ -1587,11 +1601,11 @@ function showDirections(){
 
 1. Choose a Starter World.
 
-2. Click and drag to rotate the world.
+2. Click and drag or use ⬅️ ➡️ arrow keys to rotate the world.
 
-3. Use 🔍+ and 🔍- or two-finger scroll to zoom. 
+3. Use ⬆️ and ⬇️ arrow keys to change your view.
 
-4  Use ⬆️ and ⬇️ arrow keys to change your view.
+4.  Use 🔍+ and 🔍- or two-finger scroll to zoom. 
 
 5. Left-click on a block or the ground to build.
 
