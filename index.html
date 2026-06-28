@@ -1533,23 +1533,63 @@ function addCellWall(){
 
 function addCellMembrane(){
 
-  let cytoplasmColor = 0xFFD6E7; // light pink for animal
+  // ANIMAL CELL
+  if(currentCellType === "animal"){
 
-  if(currentCellType === "plant"){
-    cytoplasmColor = 0xCCFFCC; // light green for plant
+    // Cytoplasm
+    const cytoplasm = new THREE.Mesh(
+      new THREE.CylinderGeometry(7, 7, 0.2, 40),
+      new THREE.MeshLambertMaterial({
+        color:0xFFD6E7
+      })
+    );
+
+    cytoplasm.position.set(0, 0.3, 0);
+
+    scene.add(cytoplasm);
+    blocks.push(cytoplasm);
+
+    // Circular membrane
+    for(let i = 0; i < 40; i++){
+
+      const angle = i * (Math.PI * 2 / 40);
+
+      const x = Math.cos(angle) * 7;
+      const z = Math.sin(angle) * 7;
+
+      addBlock(
+        x,
+        0.9,
+        z,
+        0xFF69B4,
+        new THREE.BoxGeometry(0.8,0.5,0.8)
+      );
+    }
   }
 
-  // Cytoplasm fills inside automatically
-  addBlock(0, 0.3, 0,
-    cytoplasmColor,
-    new THREE.BoxGeometry(14, 0.2, 12)
-  );
+  // PLANT CELL
+  else{
 
-  // Cell membrane - thin outline
-  addBlock(0, 0.9, -6, 0xFF69B4, new THREE.BoxGeometry(14, 0.5, 0.5));
-  addBlock(0, 0.9, 6, 0xFF69B4, new THREE.BoxGeometry(14, 0.5, 0.5));
-  addBlock(-7, 0.9, 0, 0xFF69B4, new THREE.BoxGeometry(0.5, 0.5, 12));
-  addBlock(7, 0.9, 0, 0xFF69B4, new THREE.BoxGeometry(0.5, 0.5, 12));
+    // Cytoplasm
+    addBlock(
+      0, 0.3, 0,
+      0xCCFFCC,
+      new THREE.BoxGeometry(14,0.2,12)
+    );
+
+    // Membrane
+    addBlock(0,0.9,-6,0xFF69B4,
+      new THREE.BoxGeometry(14,0.5,0.5));
+
+    addBlock(0,0.9,6,0xFF69B4,
+      new THREE.BoxGeometry(14,0.5,0.5));
+
+    addBlock(-7,0.9,0,0xFF69B4,
+      new THREE.BoxGeometry(0.5,0.5,12));
+
+    addBlock(7,0.9,0,0xFF69B4,
+      new THREE.BoxGeometry(0.5,0.5,12));
+  }
 
   checkBadge();
 }
