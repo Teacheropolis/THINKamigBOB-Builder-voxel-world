@@ -275,6 +275,12 @@
 <button onclick="addBattery()">🔋 Add Battery</button>
 <button onclick="addElectricCar()">🚗 Add Electric Car</button>
 
+<p><b>🏗️ Engineering Tools</b></p>
+<button onclick="addBridgeBeam()">🌉 Add Bridge Beam</button>
+<button onclick="addSupportColumn()">🏛️ Add Support Column</button>
+<button onclick="addRamp()">📐 Add Ramp</button>
+<button onclick="addTestTower()">🗼 Add Test Tower</button>
+
 <p><b>🚀 Space Tools</b></p>
 <button onclick="addRocket()">🚀 Add Rocket</button>
 <button onclick="addSatellite()">🛰️ Add Satellite</button>
@@ -1401,6 +1407,66 @@ function addThermometer(){
   addBlock(spot.x, 2, spot.z,
     0xFF0000,
     new THREE.BoxGeometry(0.2, 3, 0.2));
+
+  checkBadge();
+}
+
+function addBridgeBeam(){
+
+  const spot = randomSpot();
+
+  addBlock(spot.x, 2, spot.z,
+    0x8B4513,
+    new THREE.BoxGeometry(6, 0.5, 1));
+
+  checkBadge();
+}
+
+function addSupportColumn(){
+
+  const spot = randomSpot();
+
+  addBlock(spot.x, 2, spot.z,
+    0xCCCCCC,
+    new THREE.BoxGeometry(1, 4, 1));
+
+  checkBadge();
+}
+
+function addRamp(){
+
+  const spot = randomSpot();
+
+  addBlock(spot.x, 0.7, spot.z,
+    0x8B4513,
+    new THREE.BoxGeometry(4, 0.4, 2));
+
+  addBlock(spot.x + 1, 1.2, spot.z,
+    0x8B4513,
+    new THREE.BoxGeometry(3, 0.4, 2));
+
+  addBlock(spot.x + 2, 1.7, spot.z,
+    0x8B4513,
+    new THREE.BoxGeometry(2, 0.4, 2));
+
+  checkBadge();
+}
+
+function addTestTower(){
+
+  const spot = randomSpot();
+
+  addBlock(spot.x, 1, spot.z,
+    0xFFD700,
+    new THREE.BoxGeometry(2, 2, 2));
+
+  addBlock(spot.x, 3, spot.z,
+    0xCCCCCC,
+    new THREE.BoxGeometry(1.5, 2, 1.5));
+
+  addBlock(spot.x, 5, spot.z,
+    0x87CEFA,
+    new THREE.BoxGeometry(1, 2, 1));
 
   checkBadge();
 }
