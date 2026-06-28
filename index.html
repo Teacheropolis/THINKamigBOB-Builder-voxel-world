@@ -833,7 +833,6 @@ selectMode = false;
 moveSelectedMode = false;
 
 clearAtmosphere();
-``
 
 setGroundColor(0x55aa55); // default grass
 setSkyColor(0x87CEEB);    // default blue sky
@@ -888,11 +887,11 @@ document.getElementById("toolMessage").innerHTML =
 
 function startMoveSelected(){
 
-  if(selectedBlocks.length === 0){
-    adocument.getElementById("toolMessage").innerHTML =
-  "⚠️ Select a structure first.";
-    return;
-  }
+ if(selectedBlocks.length === 0){
+  document.getElementById("toolMessage").innerHTML =
+    "⚠️ Select a structure first.";
+  return;
+}
 
   moveSelectedMode = true;
   selectMode = false;
@@ -1409,109 +1408,66 @@ updateCamera();
   
 function buildSpaceColony(){
 
-  clearWorld();
+  resetWorld();
+
+  cameraDistance = 26;
+  cameraHeight = 5;
+  updateCamera();
+
+  setGroundColor(0x777777);
+  setSkyColor(0x000022);
+
+  addStars();
+  addMoon();
 
   document.getElementById("worldTitle").innerHTML =
-    "🚀 Bobwarts Space Colony";
+    "🚀 Bobwarts Space Colony 🚀";
 
-  document.getElementById("mission").innerHTML =
-    "Build a colony on the Moon or Mars!";
+  document.getElementById("missionText").innerHTML =
+    "<b>Mission:</b> Design a colony on the Moon or Mars!";
 
-  document.getElementById("challenge").innerHTML = `
-    <li>Build a space habitat</li>
-    <li>Create a rocket launch area</li>
-    <li>Add a research station</li>
-    <li>Design a solar power system</li>
-  `;
+  document.getElementById("challenge1").innerHTML =
+    "Starter world includes: Moon surface, launch pad, habitat, solar panels, and research station";
 
-  // Moon surface platform
-  const base = new THREE.Mesh(
-    new THREE.BoxGeometry(14,1,14),
-    new THREE.MeshLambertMaterial({color:0xBBBBBB})
-  );
+  document.getElementById("challenge2").innerHTML =
+    "Build a space habitat where astronauts can live";
 
-  base.position.set(0,0,0);
+  document.getElementById("challenge3").innerHTML =
+    "Add power, transportation, and science tools";
 
-  scene.add(base);
-  blocks.push(base);
+  document.getElementById("challenge4").innerHTML =
+    "Reset the world and design a brand-new space colony";
 
-  // Launch pad
-  const pad = new THREE.Mesh(
-    new THREE.BoxGeometry(4,0.5,4),
-    new THREE.MeshLambertMaterial({color:0x444444})
-  );
+  document.getElementById("moreChallenge").innerHTML =
+    "Add rovers, satellites, communication towers, greenhouses, craters, or a landing zone.";
 
-  pad.position.set(0,1,0);
+  // Moon surface base
+  addBlock(0, 0.5, 0, 0x999999, new THREE.BoxGeometry(14, 0.4, 14));
 
-  scene.add(pad);
-  blocks.push(pad);
+  // Rocket launch pad
+  addBlock(-5, 0.9, -4, 0x222222, new THREE.BoxGeometry(4, 0.4, 4));
+  addBlock(-5, 2, -4, 0xFFFFFF, new THREE.BoxGeometry(1.2, 2.5, 1.2));
+  addBlock(-5, 3.5, -4, 0xB22222, new THREE.BoxGeometry(1.5, 1, 1.5));
 
-  // Dark space sky
-  scene.background =
-    new THREE.Color(0x000022);
+  // Space habitat dome
+  addBlock(3, 1.2, -3, 0x87CEFA, new THREE.SphereGeometry(2, 16, 16));
+  addBlock(3, 0.8, -3, 0xcccccc, new THREE.BoxGeometry(4, 0.5, 4));
 
-  cameraDistance = 24;
-  cameraHeight = 5;
+  // Research station
+  addBlock(4, 1.4, 4, 0xcccccc, new THREE.BoxGeometry(4, 2, 3));
+  addBlock(4, 2.8, 4, 0x1E90FF, new THREE.BoxGeometry(3, 0.4, 2));
 
-  updateCamera();
+  // Solar panels
+  addBlock(-2, 1, 5, 0x1E90FF, new THREE.BoxGeometry(4, 0.2, 2));
+  addBlock(-2, 0.5, 5, 0x777777, new THREE.BoxGeometry(0.4, 1, 0.4));
+
+  // Craters
+  addBlock(-1, 0.8, -1, 0x555555, new THREE.BoxGeometry(2, 0.2, 2));
+  addBlock(6, 0.8, -6, 0x555555, new THREE.BoxGeometry(2.5, 0.2, 2.5));
+
+  checkBadge();
 }
   
-function saveWorld(){
-
-  const worldData = [];
-
-  blocks.forEach(block => {
-    worldData.push({
-      x: block.position.x,
-      y: block.position.y,
-      z: block.position.z,
-      color: block.material.color.getHex(),
-      sx: block.geometry.parameters.width || 1,
-      sy: block.geometry.parameters.height || 1,
-      sz: block.geometry.parameters.depth || 1
-    });
-  });
-
-  const dataStr = JSON.stringify(worldData);
-  const blob = new Blob([dataStr], {type:'application/json'});
-
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'bobwarts-world.json';
-  link.click();
-}
-
-document.getElementById('loadFile').addEventListener('change', function(event){
-
-  const file = event.target.files[0];
-
-  if(!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = function(e){
-
-    resetWorld();
-
-    const worldData = JSON.parse(e.target.result);
-
-    worldData.forEach(data => {
-      addBlock(
-        data.x,
-        data.y,
-        data.z,
-        data.color,
-        new THREE.BoxGeometry(
-          data.sx || 1,
-          data.sy || 1,
-          data.sz || 1
-        )
-      );
-    });
-
-    checkBadge();
-  };
-
   reader.readAsText(file);
 });
 
