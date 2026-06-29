@@ -1002,7 +1002,10 @@ document.querySelectorAll("#challengeChecklist label")
   document.getElementById("evidenceChecklist").innerHTML =
     checklistHTML;
 
-document.getElementById("info").style.display = "none";
+const infoPanel = document.getElementById("info");
+
+infoPanel.style.visibility = "hidden";
+infoPanel.style.opacity = "0";
 document.getElementById("worldTitle").style.display = "none";
 
 document.getElementById("evidenceTitle").innerHTML =
@@ -1018,10 +1021,12 @@ document.getElementById("evidencePanel").style.display =
       scrollY: -window.scrollY
     }).then(canvas => {
 
-      document.getElementById("evidencePanel").style.display =
-        "none";
+document.getElementById("evidencePanel").style.display =
+  "none";
 
-document.getElementById("info").style.display = "block";
+infoPanel.style.visibility = "visible";
+infoPanel.style.opacity = "1";
+
 document.getElementById("worldTitle").style.display = "block";
 
 document.getElementById("evidenceTitle").innerHTML =
