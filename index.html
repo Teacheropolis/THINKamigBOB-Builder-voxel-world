@@ -1021,10 +1021,18 @@ document.getElementById("evidencePanel").style.display =
 
   setTimeout(() => {
 
-    html2canvas(document.body, {
-      useCORS: true,
-      scrollY: -window.scrollY
-    }).then(canvas => {
+html2canvas(document.body, {
+  useCORS: true,
+  scrollY: -window.scrollY,
+
+  ignoreElements: (element) => {
+    return (
+      element.id === "info" ||
+      element.id === "worldTitle"
+    );
+  }
+
+}).then(canvas => {
 
 document.getElementById("evidencePanel").style.display =
   "none";
