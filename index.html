@@ -16,6 +16,22 @@
       display: block;
     }
 
+#evidencePanel {
+  display: none;
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 360px;
+  background: white;
+  border: 4px solid gold;
+  border-radius: 16px;
+  padding: 15px;
+  z-index: 600;
+  color: black;
+  box-shadow: 0 0 20px gold;
+  font-size: 16px;
+}
+    
 #challengeChecklist {
   background: #fff8dc;
   border: 2px solid gold;
@@ -193,6 +209,15 @@
 
 <body>
 
+<div id="evidencePanel">
+  <h2 id="evidenceTitle">THINKamigBOB Builder Evidence</h2>
+  <p id="evidenceStudent"></p>
+  <p id="evidenceDate"></p>
+  <p id="evidenceBadge"></p>
+  <h3>✅ Completed Challenges</h3>
+  <div id="evidenceChecklist"></div>
+</div>
+  
 <div id="missionPopup" style="display:none;">
   <div id="missionPopupBox">
     <button id="closeMissionPopup" onclick="closeMissionPopup()">✖</button>
@@ -938,50 +963,57 @@ function saveImage(){
   const studentName =
     document.getElementById("studentName").value || "Student";
 
-  // Get today's date
   const today = new Date().toLocaleDateString();
 
-  // Get badge text
   const badge =
     document.getElementById("badgeMessage").innerText;
 
-  html2canvas(document.body).then(canvas => {
+  document.getElementById("evidenceStudent").innerHTML =
+    "<b>Builder:</b> " + studentName;
 
-    const ctx = canvas.getContext("2d");
+  document.getElementById("evidenceDate").innerHTML =
+    "<b>Date:</b> " + today;
 
-    // White evidence banner
-    ctx.fillStyle = "white";
-    ctx.fillRect(20, 20, 450, 110);
+  document.getElementById("evidenceBadge").innerHTML =
+    badge;
 
-    ctx.strokeStyle = "gold";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(20, 20, 450, 110);
+  let checklistHTML = "";
 
-    // Text styling
-    ctx.fillStyle = "black";
-    ctx.font = "bold 24px Arial";
-    ctx.fillText("Builder: " + studentName, 35, 55);
+  document.querySelectorAll("#challengeChecklist label")
+    .forEach(label => {
+      checklistHTML += "<p>" + label.innerText + "</p>";
+    });
 
-    ctx.font = "20px Arial";
-    ctx.fillText("Date: " + today, 35, 85);
+  document.getElementById("evidenceChecklist").innerHTML =
+    checklistHTML;
 
-    ctx.font = "18px Arial";
-    ctx.fillText(badge, 35, 112);
+  document.getElementById("evidencePanel").style.display =
+    "block";
 
-    // Download image
-    const link = document.createElement("a");
+  setTimeout(() => {
 
-    link.download =
-      studentName + "-thinkamigbob-builder.png";
+    html2canvas(document.body, {
+      useCORS: true,
+      scrollY: -window.scrollY
+    }).then(canvas => {
 
-    link.href = canvas.toDataURL("image/png");
+      document.getElementById("evidencePanel").style.display =
+        "none";
 
-    link.click();
+      const link = document.createElement("a");
 
-  });
+      link.download =
+        studentName + "-thinkamigbob-builder.png";
 
+      link.href = canvas.toDataURL("image/png");
+
+      link.click();
+
+    });
+
+  }, 300);
 }
-
+  
 function undoLast(){
 
   if(blocks.length === 0){
