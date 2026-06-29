@@ -16,6 +16,19 @@
       display: block;
     }
 
+#challengeChecklist {
+  background: #fff8dc;
+  border: 2px solid gold;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 14px;
+}
+
+#challengeChecklist label {
+  display: block;
+  margin: 6px 0;
+}
+    
 #info {
   position: absolute;
   top: 10px;
@@ -380,12 +393,12 @@
 
   <p id="challengeTitle">⭐ Challenge:</p>
 
-  <ul>
-    <li id="challenge1">Add 4 towers</li>
-    <li id="challenge2">Create a grand entrance</li>
-    <li id="challenge3">Build a dragon perch</li>
-    <li id="challenge4">Reset the world and try a brand-new design</li>
-  </ul>
+<div id="challengeChecklist">
+  <label><input type="checkbox"> <span id="challenge1">Add 4 towers</span></label><br>
+  <label><input type="checkbox"> <span id="challenge2">Create a grand entrance</span></label><br>
+  <label><input type="checkbox"> <span id="challenge3">Build a dragon perch</span></label><br>
+  <label><input type="checkbox"> <span id="challenge4">Reset the world and try a brand-new design</span></label>
+</div>
 
   <p><b>Want More Challenge?</b></p>
   <p id="moreChallenge">Add details, decorations, and a magical feature.</p>
@@ -1983,10 +1996,21 @@ function showMissionPopup(){
 function closeMissionPopup(){
   document.getElementById("missionPopup").style.display = "none";
 }
+
+function resetChecklist(){
+
+  const boxes =
+    document.querySelectorAll("#challengeChecklist input");
+
+  boxes.forEach(box => {
+    box.checked = false;
+  });
+}
   
 function buildCastle(){
 
 resetWorld();
+resetChecklist();
 
 cameraDistance = 24;
 cameraHeight = 5;
@@ -2052,6 +2076,7 @@ checkBadge();
 function buildPlayground(){
 
 resetWorld();
+resetChecklist();
 
 cameraDistance = 24;
 cameraHeight = 5;
@@ -2130,6 +2155,7 @@ checkBadge();
 function buildHabitat(){
 
 resetWorld();
+resetChecklist();
   
 cameraDistance = 24;
 cameraHeight = 5;
@@ -2193,6 +2219,7 @@ checkBadge();
 function buildDragonLair(){
 
 resetWorld();
+resetChecklist();
 
 cameraDistance = 24;
 cameraHeight = 5;
@@ -2254,6 +2281,7 @@ checkBadge();
 function buildFutureCity(){
 
 resetWorld();
+resetChecklist();
 setGroundColor(0x777777);
 setSkyColor(0x191970);
 
@@ -2318,6 +2346,7 @@ checkBadge();
 function buildSpaceColony(){
 
   resetWorld();
+  resetChecklist();
 
   cameraDistance = 26;
   cameraHeight = 5;
@@ -2381,6 +2410,7 @@ checkBadge();
 function buildEnergyCity(){
 
   resetWorld();
+  resetChecklist();
 
   cameraDistance = 26;
   cameraHeight = 5;
@@ -2494,6 +2524,7 @@ checkBadge();
 function buildWeatherWorld(){
 
   resetWorld();
+  resetChecklist();
 
   cameraDistance = 24;
   cameraHeight = 5;
@@ -2573,6 +2604,7 @@ checkBadge();
 function buildEngineeringWorld(){
 
   resetWorld();
+  resetChecklist();
 
   cameraDistance = 26;
   cameraHeight = 5;
@@ -2635,6 +2667,7 @@ let cellCount = 0;
 function buildCellWorld(){
 
   resetWorld();
+  resetChecklist();
 
   cameraDistance = 28;
   cameraHeight = 12;
