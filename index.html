@@ -1540,16 +1540,32 @@ function buildAnimalCell(){
 
 function addCellWall(){
 
-  // Plant cell wall - outer green rectangle
-  addBlock(0, 0.8, -7, 0x228B22, new THREE.BoxGeometry(16, 0.5, 1));
-  addBlock(0, 0.8, 7, 0x228B22, new THREE.BoxGeometry(16, 0.5, 1));
-  addBlock(-8, 0.8, 0, 0x228B22, new THREE.BoxGeometry(1, 0.5, 14));
-  addBlock(8, 0.8, 0, 0x228B22, new THREE.BoxGeometry(1, 0.5, 14));
+  const cx = currentCellCenter.x;
+  const cz = currentCellCenter.z;
+
+  addBlock(cx, 0.8, cz - 7,
+    0x228B22,
+    new THREE.BoxGeometry(16, 0.5, 1));
+
+  addBlock(cx, 0.8, cz + 7,
+    0x228B22,
+    new THREE.BoxGeometry(16, 0.5, 1));
+
+  addBlock(cx - 8, 0.8, cz,
+    0x228B22,
+    new THREE.BoxGeometry(1, 0.5, 14));
+
+  addBlock(cx + 8, 0.8, cz,
+    0x228B22,
+    new THREE.BoxGeometry(1, 0.5, 14));
 
   checkBadge();
 }
 
 function addCellMembrane(){
+
+const cx = currentCellCenter.x;
+const cz = currentCellCenter.z;  
 
   // ANIMAL CELL
   if(currentCellType === "animal"){
@@ -1562,7 +1578,7 @@ function addCellMembrane(){
       })
     );
 
-    cytoplasm.position.set(0, 0.3, 0);
+    cytoplasm.position.set(cx, 0.3, cz);
 
     scene.add(cytoplasm);
     blocks.push(cytoplasm);
@@ -1572,8 +1588,8 @@ function addCellMembrane(){
 
       const angle = i * (Math.PI * 2 / 40);
 
-      const x = Math.cos(angle) * 7;
-      const z = Math.sin(angle) * 7;
+const x = cx + Math.cos(angle) * 7;
+const z = cz + Math.sin(angle) * 7;
 
       addBlock(
         x,
@@ -1589,14 +1605,27 @@ function addCellMembrane(){
   else{
 
     // Cytoplasm
-    addBlock(
-      0, 0.3, 0,
-      0xCCFFCC,
-      new THREE.BoxGeometry(14,0.2,12)
-    );
+addBlock(
+  cx, 0.3, cz,
+  0xCCFFCC,
+  new THREE.BoxGeometry(14,0.2,12)
+);
 
-    // Membrane
-    addBlock(0,0.9,-6,0xFF69B4,
+addBlock(cx,0.9,cz-6,
+  0xFF69B4,
+  new THREE.BoxGeometry(14,0.5,0.5));
+
+addBlock(cx,0.9,cz+6,
+  0xFF69B4,
+  new THREE.BoxGeometry(14,0.5,0.5));
+
+addBlock(cx-7,0.9,cz,
+  0xFF69B4,
+  new THREE.BoxGeometry(0.5,0.5,12));
+
+addBlock(cx+7,0.9,cz,
+  0xFF69B4,
+  new THREE.BoxGeometry(0.5,0.5,12));
       new THREE.BoxGeometry(14,0.5,0.5));
 
     addBlock(0,0.9,6,0xFF69B4,
