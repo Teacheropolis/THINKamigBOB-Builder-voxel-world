@@ -938,27 +938,48 @@ function saveImage(){
   const studentName =
     document.getElementById("studentName").value || "Student";
 
-  renderer.render(scene, camera);
+  // Get today's date
+  const today = new Date().toLocaleDateString();
 
-  const canvas = document.createElement("canvas");
-  canvas.width = renderer.domElement.width;
-  canvas.height = renderer.domElement.height;
+  // Get badge text
+  const badge =
+    document.getElementById("badgeMessage").innerText;
 
-  const ctx = canvas.getContext("2d");
+  html2canvas(document.body).then(canvas => {
 
-  ctx.drawImage(renderer.domElement, 0, 0);
+    const ctx = canvas.getContext("2d");
 
-  ctx.fillStyle = "white";
-  ctx.fillRect(20, 20, 320, 50);
+    // White evidence banner
+    ctx.fillStyle = "white";
+    ctx.fillRect(20, 20, 450, 110);
 
-  ctx.fillStyle = "black";
-  ctx.font = "24px Arial";
-  ctx.fillText("Builder: " + studentName, 35, 55);
+    ctx.strokeStyle = "gold";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(20, 20, 450, 110);
 
-  const link = document.createElement("a");
-  link.download = studentName + "-bobwarts-build.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+    // Text styling
+    ctx.fillStyle = "black";
+    ctx.font = "bold 24px Arial";
+    ctx.fillText("Builder: " + studentName, 35, 55);
+
+    ctx.font = "20px Arial";
+    ctx.fillText("Date: " + today, 35, 85);
+
+    ctx.font = "18px Arial";
+    ctx.fillText(badge, 35, 112);
+
+    // Download image
+    const link = document.createElement("a");
+
+    link.download =
+      studentName + "-bobwarts-evidence.png";
+
+    link.href = canvas.toDataURL("image/png");
+
+    link.click();
+
+  });
+
 }
 
 function undoLast(){
@@ -3113,6 +3134,6 @@ window.addEventListener('resize', ()=>{
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
-</script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </body>
 </html>
