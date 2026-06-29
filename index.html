@@ -1005,8 +1005,7 @@ document.querySelectorAll("#challengeChecklist label")
 const infoPanel = document.getElementById("info");
 
 // Hide menu
-infoPanel.style.visibility = "hidden";
-infoPanel.style.opacity = "0";
+infoPanel.style.display = "none";
 
 // Remove menu shadow
 infoPanel.style.boxShadow = "none";
@@ -1038,6 +1037,7 @@ document.getElementById("evidencePanel").style.display =
   "none";
 
 // Restore menu
+infoPanel.style.display = "block";  
 infoPanel.style.visibility = "visible";
 infoPanel.style.opacity = "1";
 
