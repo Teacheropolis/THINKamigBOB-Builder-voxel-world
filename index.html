@@ -167,6 +167,7 @@
 </button>
 
 <div id="buildingTools" style="display:none;">
+  <button onclick="undoLast()">↩️ Undo Last Add</button>
   <button onclick="saveWorld()">💾 Save World</button>
   <button onclick="saveImage()">📸 Save Screenshot</button>
   <button onclick="document.getElementById('loadFile').click()">📂 Load World</button>
@@ -878,6 +879,24 @@ function saveImage(){
   link.click();
 }
 
+function undoLast(){
+
+  if(blocks.length === 0){
+    document.getElementById("toolMessage").innerHTML =
+      "Nothing to undo.";
+    return;
+  }
+
+  const lastBlock = blocks.pop();
+
+  scene.remove(lastBlock);
+
+  document.getElementById("toolMessage").innerHTML =
+    "↩️ Last block removed.";
+
+  checkBadge();
+}
+  
 function resetWorld(){
 
   document.getElementById("worldTitle").innerHTML =
