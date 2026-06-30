@@ -16,6 +16,32 @@
       display: block;
     }
 
+.categoryButton{
+
+    width:100%;
+
+    margin-top:8px;
+
+    background:#2E8B57;
+
+    color:white;
+
+    font-size:16px;
+
+    font-weight:bold;
+
+    border-radius:10px;
+
+}
+
+.toolCategory{
+
+    display:none;
+
+    margin-left:12px;
+
+}
+    
 #floatingToolbox{
   position:fixed;
 
@@ -446,10 +472,28 @@
 <p><b>⬜ Build Base</b></p>
 <button onclick="expandWorld()">⬜ Create Foundation</button>
 
-<p><b>🌿 Nature</b></p>
-<button onclick="addTree()">🌲 Add Tree</button>
-<button onclick="addPond()">🌊 Add Pond</button>
-<button onclick="addRocks()">🪨 Add Rocks</button>
+<button class="categoryButton"
+        onclick="toggleCategory('natureTools')">
+
+🌿 Nature ▶
+
+</button>
+
+<div id="natureTools" class="toolCategory">
+
+<button onclick="addTree();showTreeVocab();">
+🌲 Add Tree
+</button>
+
+<button onclick="addPond()">
+🌊 Add Pond
+</button>
+
+<button onclick="addRocks()">
+🪨 Add Rocks
+</button>
+
+</div>
 
 <p><b>🌦️ Weather Tools</b></p>
 <button onclick="addRainGauge()">🌧️ Add Rain Gauge</button>
@@ -503,6 +547,16 @@
 <button onclick="addGolgi()">📦 Add Golgi Body</button>
 <button onclick="addLysosome()">🟣 Add Lysosome</button>
 
+  <hr>
+
+<h3>📖 STEM Vocabulary</h3>
+
+<div id="vocabPanel">
+
+Click a building tool to learn.
+
+</div>
+  
 </div>
 
 </div>
@@ -656,6 +710,55 @@ function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
   return block;
 }
 
+function toggleCategory(id){
+
+    const section =
+      document.getElementById(id);
+
+    if(section.style.display==="block"){
+
+        section.style.display="none";
+
+    }else{
+
+        section.style.display="block";
+
+    }
+
+}
+
+function showTreeVocab(){
+
+document.getElementById("vocabPanel").innerHTML=`
+
+<h3>🌲 Tree</h3>
+
+<b>Vocabulary</b><br>
+
+Producer<br>
+
+Photosynthesis<br>
+
+Habitat<br>
+
+Roots<br>
+
+Leaves<br><br>
+
+💡 <b>Did You Know?</b><br>
+
+Trees make oxygen for people and animals.
+
+<br><br>
+
+⭐ <b>Challenge</b><br>
+
+Can you build a forest with at least five trees?
+
+`;
+
+}
+  
  function setGroundColor(color){
   ground.material.color.set(color);
 }
