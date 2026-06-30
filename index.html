@@ -16,6 +16,37 @@
       display: block;
     }
 
+#missionCard {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  width: 280px;
+  background: rgba(255,255,255,0.95);
+  border: 3px solid gold;
+  border-radius: 14px;
+  padding: 10px;
+  z-index: 250;
+  color: black;
+  font-size: 14px;
+}
+
+#missionToggle {
+  width: 100%;
+  background: black;
+  color: gold;
+  border: 2px solid gold;
+}
+
+#floatingChecklist label {
+  display: block;
+  margin: 6px 0;
+}
+
+#floatingBadge {
+  font-weight: bold;
+  color: #6A0DAD;
+}
+    
 #evidencePanel {
   ...
   box-shadow: none;
@@ -198,6 +229,30 @@
 
 <body>
 
+<div id="missionCard">
+
+  <button id="missionToggle"
+          onclick="toggleMissionCard()">
+    ⭐ Mission Tracker ▼
+  </button>
+
+  <div id="missionContent">
+
+    <div id="floatingChecklist">
+      <label><input type="checkbox"> <span id="floatChallenge1">Add 4 towers</span></label>
+      <label><input type="checkbox"> <span id="floatChallenge2">Create a grand entrance</span></label>
+      <label><input type="checkbox"> <span id="floatChallenge3">Build a dragon perch</span></label>
+      <label><input type="checkbox"> <span id="floatChallenge4">Reset and try a new design</span></label>
+    </div>
+
+    <p id="floatingBadge">
+      🏅 Badge: Keep building!
+    </p>
+
+  </div>
+
+</div>
+  
 <div id="evidencePanel">
   <h2 id="evidenceTitle">THINKamigBOB Builder Evidence</h2>
   <p id="evidenceStudent"></p>
@@ -2079,6 +2134,44 @@ function closeMissionPopup(){
   document.getElementById("missionPopup").style.display = "none";
 }
 
+function updateFloatingChecklist(){
+
+  document.getElementById("floatChallenge1").innerHTML =
+    document.getElementById("challenge1").innerHTML;
+
+  document.getElementById("floatChallenge2").innerHTML =
+    document.getElementById("challenge2").innerHTML;
+
+  document.getElementById("floatChallenge3").innerHTML =
+    document.getElementById("challenge3").innerHTML;
+
+  document.getElementById("floatChallenge4").innerHTML =
+    document.getElementById("challenge4").innerHTML;
+
+  document.getElementById("floatingBadge").innerHTML =
+    document.getElementById("badgeMessage").innerHTML;
+}
+
+function toggleMissionCard(){
+
+  const content =
+    document.getElementById("missionContent");
+
+  const button =
+    document.getElementById("missionToggle");
+
+  if(content.style.display === "none"){
+
+    content.style.display = "block";
+    button.innerHTML = "⭐ Mission Tracker ▼";
+
+  } else {
+
+    content.style.display = "none";
+    button.innerHTML = "⭐ Mission Tracker ▶";
+  }
+}
+  
 function resetChecklist(){
 
   const boxes =
@@ -2295,7 +2388,7 @@ addMovingClouds();
   addBlock(2, 0.8, 7, 0xADFF2F, new THREE.BoxGeometry(2, 0.4, 2));
 
 showMissionPopup();
-checkBadge();
+;
 }
   
 function buildDragonLair(){
@@ -2357,7 +2450,7 @@ addDragonSmoke();
   addBlock(4, 1, -4, 0xADFF2F);
 
 showMissionPopup();
-checkBadge();
+;
 }
   
 function buildFutureCity(){
@@ -3018,6 +3111,9 @@ function checkBadge(){
     document.getElementById("badgeMessage").innerHTML =
       "<b>Badge:</b> Keep building!";
   }
+
+  // Update floating mission tracker
+  updateFloatingChecklist();
 }
 
 function toggleStarterWorlds(){
