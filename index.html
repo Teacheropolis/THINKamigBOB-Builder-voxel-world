@@ -239,10 +239,10 @@
   <div id="missionContent">
 
     <div id="floatingChecklist">
-      <label><input type="checkbox"> <span id="floatChallenge1">Add 4 towers</span></label>
-      <label><input type="checkbox"> <span id="floatChallenge2">Create a grand entrance</span></label>
-      <label><input type="checkbox"> <span id="floatChallenge3">Build a dragon perch</span></label>
-      <label><input type="checkbox"> <span id="floatChallenge4">Reset and try a new design</span></label>
+      <label><input type="checkbox" onchange="syncChecklists()"> <span id="floatChallenge1">Add 4 towers</span></label>
+      <label><input type="checkbox" onchange="syncChecklists()"> <span id="floatChallenge2">Create a grand entrance</span></label>
+      <label><input type="checkbox" onchange="syncChecklists()"> <span id="floatChallenge3">Build a dragon perch</span></label>
+      <label><input type="checkbox" onchange="syncChecklists()"> <span id="floatChallenge4">Reset and try a new design</span></label>
     </div>
 
     <p id="floatingBadge">
@@ -2170,6 +2170,19 @@ function toggleMissionCard(){
     content.style.display = "none";
     button.innerHTML = "⭐ Mission Tracker ▶";
   }
+}
+
+function syncChecklists(){
+
+  const mainBoxes =
+    document.querySelectorAll("#challengeChecklist input");
+
+  const floatBoxes =
+    document.querySelectorAll("#floatingChecklist input");
+
+  mainBoxes.forEach((box, index) => {
+    box.checked = floatBoxes[index].checked;
+  });
 }
   
 function resetChecklist(){
