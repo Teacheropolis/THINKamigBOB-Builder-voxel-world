@@ -491,64 +491,24 @@
        oninput="searchTools()"
        style="width:95%; padding:8px; border-radius:8px; margin:6px 0;">
 
-<button class="categoryButton"
-        onclick="toggleCategory('moveTools', this)">
-  🔴 Move Tools ▶
-</button>
+<hr>
 
-<div id="moveTools" class="toolCategory">
+<p><b>🛠️ Builder Tools</b></p>
 
-  <button class="moveButton"
-          onclick="startSelectMode()">
-    🖱️ Select Structure
-  </button>
-
-  <button class="moveButton"
-          onclick="startMoveSelected()">
-    ↔️ Move Selected
-  </button>
-
-  <button class="moveButton"
-          onclick="deleteSelectedStructure()">
-    🗑️ Delete Structure
-  </button>
-
-  <p id="toolMessage"
-     style="font-size:12px; font-weight:bold; color:#6A0DAD;">
-    Tool message will show here.
-  </p>
-
-</div>
-  
-<button class="categoryButton"
-        onclick="toggleCategory('favoriteTools', this)">
-  ⭐ Favorites ▶
-</button>
-
-<div id="favoriteTools" class="toolCategory">
-
-  <button onclick="addTree()">🌲 Add Tree</button>
-  <button onclick="addBuilding()">🏢 Add Building</button>
-  <button onclick="addSolarPanels()">☀️ Add Solar Panels</button>
-  <button onclick="addNucleus()">🔵 Add Nucleus</button>
-
-</div>
-  
-<p><b>🔴 Move Tools</b></p>
-
-<button class="moveButton"
-        onclick="startSelectMode()">
+<button class="moveButton" onclick="startSelectMode()">
   🖱️ Select Structure
 </button>
 
-<button class="moveButton"
-        onclick="startMoveSelected()">
+<button class="moveButton" onclick="startMoveSelected()">
   ↔️ Move Selected
 </button>
 
-<button class="moveButton"
-        onclick="deleteSelectedStructure()">
+<button class="moveButton" onclick="deleteSelectedStructure()">
   🗑️ Delete Structure
+</button>
+
+<button onclick="expandWorld()">
+  🏗️ Build Platform
 </button>
 
 <p id="toolMessage"
@@ -556,7 +516,12 @@
   Tool message will show here.
 </p>
 
-<p><b>⬜ Build Base</b></p>
+<hr>
+
+<p><b>➕ Add to Your World</b></p>
+
+</div>
+  
 <button onclick="expandWorld()">⬜ Create Foundation</button>
 
 </div>
