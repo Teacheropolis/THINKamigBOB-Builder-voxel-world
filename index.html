@@ -841,6 +841,42 @@ function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
   return block;
 }
 
+function toggleFavorite(id, label, action, starButton){
+
+  const favoritesBox = document.getElementById("favoriteTools");
+  const noMessage = document.getElementById("noFavoritesMessage");
+
+  if(starButton.innerHTML === "☆"){
+
+    starButton.innerHTML = "⭐";
+
+    const favButton = document.createElement("button");
+    favButton.id = "favorite-" + id;
+    favButton.innerHTML = label;
+    favButton.setAttribute("onclick", action);
+
+    favoritesBox.appendChild(favButton);
+
+    if(noMessage){
+      noMessage.style.display = "none";
+    }
+
+  } else {
+
+    starButton.innerHTML = "☆";
+
+    const oldFavorite = document.getElementById("favorite-" + id);
+
+    if(oldFavorite){
+      oldFavorite.remove();
+    }
+
+    if(favoritesBox.querySelectorAll("button").length === 0 && noMessage){
+      noMessage.style.display = "block";
+    }
+  }
+}
+  
 function toggleCategory(id, button){
 
   const section = document.getElementById(id);
