@@ -279,39 +279,46 @@
 
 <body>
 
-<div id="viewCube">
+<div id="viewCubeBox">
+  <canvas id="viewCubeCanvas" width="120" height="120"></canvas>
 
-  <button class="cubeFace topFace"
-          onclick="setView('top')">
-    TOP
-  </button>
-
-  <button class="cubeFace centerFace"
-          onclick="setView('home')">
-    HOME
-  </button>
-
-  <button class="cubeFace leftFace"
-          onclick="setView('left')">
-    LEFT
-  </button>
-
-  <button class="cubeFace rightFace"
-          onclick="setView('right')">
-    RIGHT
-  </button>
-
-  <button class="cubeFace frontFace"
-          onclick="setView('front')">
-    FRONT
-  </button>
-
-  <button class="cubeFace backFace"
-          onclick="setView('back')">
-    BACK
-  </button>
-
+  <div id="viewCubeButtons">
+    <button onclick="setView('top')">Top</button>
+    <button onclick="setView('front')">Front</button>
+    <button onclick="setView('right')">Right</button>
+    <br>
+    <button onclick="setView('left')">Left</button>
+    <button onclick="setView('back')">Back</button>
+    <button onclick="setView('home')">Home</button>
+  </div>
 </div>
+  
+#viewCubeBox {
+  position: fixed;
+  top: 110px;
+  left: 380px;
+  width: 150px;
+  background: rgba(255,255,255,.95);
+  border: 3px solid #1E90FF;
+  border-radius: 16px;
+  padding: 8px;
+  z-index: 300;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0,0,0,.25);
+}
+
+#viewCubeCanvas {
+  width: 120px;
+  height: 120px;
+  display: block;
+  margin: 0 auto;
+}
+
+#viewCubeButtons button {
+  font-size: 11px;
+  padding: 4px 6px;
+  margin: 2px;
+}
   
 <div id="missionCard">
 
@@ -1035,6 +1042,57 @@ document.addEventListener('contextmenu', (event)=>{
       blocks.splice(index, 1);
     }
 
+const viewCubeCanvas =
+  document.getElementById("viewCubeCanvas");
+
+const viewCubeScene = new THREE.Scene();
+
+const viewCubeCamera =
+  new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+
+viewCubeCamera.position.set(3, 3, 5);
+viewCubeCamera.lookAt(0, 0, 0);
+
+const viewCubeRenderer =
+  new THREE.WebGLRenderer({
+    canvas: viewCubeCanvas,
+    alpha: true
+  });
+
+viewCubeRenderer.setSize(120, 120);
+
+const viewCubeGroup = new THREE.Group();
+
+const cubeMaterial = [
+  new THREE.MeshLambertMaterial({ color: 0xFFD700 }), // right
+  new THREE.MeshLambertMaterial({ color: 0xD4AF37 }), // left
+  new THREE.MeshLambertMaterial({ color: 0xFFFFFF }), // top
+  new THREE.MeshLambertMaterial({ color: 0xCCCCCC }), // bottom
+  new THREE.MeshLambertMaterial({ color: 0x1E90FF }), // front
+  new THREE.MeshLambertMaterial({ color: 0x87CEFA })  // back
+];
+
+const miniCube =
+  new THREE.Mesh(
+    new THREE.BoxGeometry(1.8, 1.8, 1.8),
+    cubeMaterial
+  );
+
+viewCubeGroup.add(miniCube);
+
+viewCubeScene.add(viewCubeGroup);
+
+const viewCubeLight =
+  new THREE.DirectionalLight(0xffffff, 1);
+
+viewCubeLight.position.set(3, 5, 4);
+viewCubeScene.add(viewCubeLight);
+
+const viewCubeAmbient =
+  new THREE.AmbientLight(0xffffff, 0.7);
+
+viewCubeScene.add(viewCubeAmbient);
+    
     checkBadge();
   }
 });
@@ -1069,6 +1127,13 @@ spinningTurbines.forEach(turbine => {
       }
     }
   });
+
+  // Update mini view cube rotation
+viewCubeGroup.rotation.y = cameraAngle;
+viewCubeGroup.rotation.x = cameraHeight * 0.03;
+
+// Render mini cube
+viewCubeRenderer.render(viewCubeScene, viewCubeCamera);
 
   camera.lookAt(0, 0, 0);
   renderer.render(scene, camera);
