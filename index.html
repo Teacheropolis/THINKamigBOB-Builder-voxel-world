@@ -1043,10 +1043,46 @@ document.addEventListener('keydown', (event)=>{
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+function clickedUI(event){
+
+  return (
+    event.target.closest("#info") ||
+    event.target.closest("#floatingToolbox") ||
+    event.target.closest("#toolbox") ||
+    event.target.closest("#buildBar") ||
+    event.target.closest("#blockColor") ||
+    event.target.closest("#missionCard") ||
+    event.target.closest("#viewCubeBox")
+  );
+
+}
+
+[
+  "info",
+  "floatingToolbox",
+  "toolbox",
+  "buildBar",
+  "missionCard",
+  "viewCubeBox"
+].forEach(id => {
+
+  const element = document.getElementById(id);
+
+  if(element){
+    element.addEventListener("click", function(event){
+      event.stopPropagation();
+    });
+
+    element.addEventListener("mousedown", function(event){
+      event.stopPropagation();
+    });
+  }
+
+});
+
 document.addEventListener('click', (event)=>{
 
-  // Do not place blocks when clicking the menu
-  if(event.target.closest("#info")){
+  if(clickedUI(event)){
     return;
   }
 
