@@ -571,7 +571,7 @@
 <div id="natureTools" class="toolCategory">
 
 <div class="toolRow">
-  <button onclick="addTree(); showTreeVocab();">
+  <button onclick="addTree(); showToolInfo('tree');">
     🌲 Add Tree
   </button>
 
@@ -939,27 +939,71 @@ function searchTools(){
   });
 }
 
-function showTreeVocab(){
+const TOOL_INFO = {
 
-document.getElementById("vocabPanel").innerHTML=`
-<h3>🌲 Tree</h3>
+  tree:{
+    title:"🌲 Tree",
+    vocabulary:[
+      "Producer",
+      "Photosynthesis",
+      "Habitat",
+      "Roots",
+      "Leaves"
+    ],
+    fact:"Trees make oxygen for people and animals.",
+    challenge:"Build a forest with at least five trees."
+  },
 
-<b>Vocabulary</b><br>
-Producer<br>
-Photosynthesis<br>
-Habitat<br>
-Roots<br>
-Leaves<br><br>
+  pond:{
+    title:"🌊 Pond",
+    vocabulary:[
+      "Habitat",
+      "Ecosystem",
+      "Freshwater",
+      "Water Source"
+    ],
+    fact:"Ponds can provide water, food, and shelter for many living things.",
+    challenge:"Build a pond habitat with trees, rocks, and animals nearby."
+  },
 
-💡 <b>Did You Know?</b><br>
-Trees make oxygen for people and animals.
-<br><br>
+  rocks:{
+    title:"🪨 Rocks",
+    vocabulary:[
+      "Erosion",
+      "Weathering",
+      "Sediment",
+      "Landform"
+    ],
+    fact:"Rocks can be broken down by wind, water, ice, and plant roots.",
+    challenge:"Use rocks to create a path, mountain, shelter, or barrier."
+  }
 
-⭐ <b>Challenge</b><br>
-Can you build a forest with at least five trees?
+};
+  
+function showToolInfo(toolId){
 
-`;
+  const info = TOOL_INFO[toolId];
 
+  if(!info){
+    return;
+  }
+
+  document.getElementById("vocabPanel").innerHTML = `
+    <h3>${info.title}</h3>
+
+    <b>Vocabulary</b><br>
+    ${info.vocabulary.join("<br>")}
+
+    <br><br>
+
+    💡 <b>Did You Know?</b><br>
+    ${info.fact}
+
+    <br><br>
+
+    ⭐ <b>Challenge</b><br>
+    ${info.challenge}
+  `;
 }
   
  function setGroundColor(color){
