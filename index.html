@@ -533,11 +533,10 @@
 </div>
 
 <button class="categoryButton"
-        onclick="toggleCategory('weatherTools')">
+        onclick="toggleCategory('natureTools', this)">
   🌦️ Weather Tools ▶
-</button>
-
-<div id="weatherTools" class="toolCategory">
+<button class="categoryButton"
+        onclick="toggleCategory('weatherTools', this)">
 
   <button onclick="addRainGauge();">🌧️ Add Rain Gauge</button>
   <button onclick="addWeatherBalloon();">🎈 Add Weather Balloon</button>
@@ -554,52 +553,86 @@
 <button onclick="addRainbowBridge()">🌈 Add Rainbow Bridge</button>
 <button onclick="addCrystalCluster()">🔮 Add Crystal Cluster</button>
 
-<p><b>⚡ Energy Tools</b></p>
-<button onclick="addWindTurbine()">🌬️ Add Wind Turbine</button>
-<button onclick="addSolarPanels()">☀️ Add Solar Panels</button>
-<button onclick="addPowerLine()">⚡ Add Power Line</button>
-<button onclick="addBattery()">🔋 Add Battery</button>
-<button onclick="addElectricCar()">🚗 Add Electric Car</button>
+<button class="categoryButton"
+        onclick="toggleCategory('energyTools', this)">
+  ⚡ Energy ▶
+</button>
 
-<p><b>🚀 Space Tools</b></p>
-<button onclick="addRocket()">🚀 Add Rocket</button>
-<button onclick="addSatellite()">🛰️ Add Satellite</button>
-<button onclick="addRover()">🤖 Add Rover</button>
-<button onclick="addSolarArray()">🔋 Add Solar Array</button>
-<button onclick="addGreenhouse()">🌱 Add Space Greenhouse</button>
+<div id="energyTools" class="toolCategory">
 
-<p><b>🏗️ Engineering Tools</b></p>
-<button onclick="addBridgeBeam()">🌉 Add Bridge Beam</button>
-<button onclick="addSupportColumn()">🏛️ Add Support Column</button>
-<button onclick="addRamp()">📐 Add Ramp</button>
-<button onclick="addTestTower()">🗼 Add Test Tower</button>
+  <button onclick="addWindTurbine()">
+    🌬️ Add Wind Turbine
+  </button>
 
-<p><b>🧬 Cell Tools</b></p>
+  <button onclick="addSolarPanels()">
+    ☀️ Add Solar Panels
+  </button>
 
-<button onclick="buildPlantCell()">🌱 Start Plant Cell</button>
-<button onclick="buildAnimalCell()">🐾 Start Animal Cell</button>
+  <button onclick="addPowerLine()">
+    ⚡ Add Power Line
+  </button>
 
-<button onclick="addCellWall()">🧱 Add Cell Wall</button>
-<button onclick="addCellMembrane()">⭕ Add Cell Membrane</button>
-<button onclick="addNucleus()">🔵 Add Nucleus</button>
-<button onclick="addDNA()">🧬 Add DNA</button>
-<button onclick="addMitochondria()">⚡ Add Mitochondria</button>
-<button onclick="addChloroplast()">🟢 Add Chloroplast</button>
-<button onclick="addVacuoleSmall()">💧 Add Small Vacuole</button>
-<button onclick="addVacuoleLarge()">💦 Add Large Vacuole</button>
-<button onclick="addER()">〰️ Add Endoplasmic Reticulum</button>
-<button onclick="addRibosomes()">⚫ Add Ribosomes</button>
-<button onclick="addGolgi()">📦 Add Golgi Body</button>
-<button onclick="addLysosome()">🟣 Add Lysosome</button>
+  <button onclick="addBattery()">
+    🔋 Add Battery
+  </button>
 
-<hr>
+  <button onclick="addElectricCar()">
+    🚗 Add Electric Car
+  </button>
 
-<h3>📖 STEM Vocabulary</h3>
-
-<div id="vocabPanel">
-  Click a building tool to learn.
 </div>
-  
+<button class="categoryButton"
+        onclick="toggleCategory('spaceTools', this)">
+  🚀 Space ▶
+</button>
+
+<div id="spaceTools" class="toolCategory">
+
+  <button onclick="addRocket()">🚀 Add Rocket</button>
+  <button onclick="addSatellite()">🛰️ Add Satellite</button>
+  <button onclick="addRover()">🤖 Add Rover</button>
+  <button onclick="addSolarArray()">🔋 Add Solar Array</button>
+  <button onclick="addGreenhouse()">🌱 Add Space Greenhouse</button>
+
+</div>
+
+<button class="categoryButton"
+        onclick="toggleCategory('engineeringTools', this)">
+  🏗 Engineering ▶
+</button>
+
+<div id="engineeringTools" class="toolCategory">
+
+  <button onclick="addBridgeBeam()">🌉 Add Bridge Beam</button>
+  <button onclick="addSupportColumn()">🏛️ Add Support Column</button>
+  <button onclick="addRamp()">📐 Add Ramp</button>
+  <button onclick="addTestTower()">🗼 Add Test Tower</button>
+
+</div>
+
+<button class="categoryButton"
+        onclick="toggleCategory('cellTools', this)">
+  🧬 Cell Biology ▶
+</button>
+
+<div id="cellTools" class="toolCategory">
+
+  <button onclick="buildPlantCell()">🌱 Start Plant Cell</button>
+  <button onclick="buildAnimalCell()">🐾 Start Animal Cell</button>
+
+  <button onclick="addCellWall()">🧱 Add Cell Wall</button>
+  <button onclick="addCellMembrane()">⭕ Add Cell Membrane</button>
+  <button onclick="addNucleus()">🔵 Add Nucleus</button>
+  <button onclick="addDNA()">🧬 Add DNA</button>
+  <button onclick="addMitochondria()">⚡ Add Mitochondria</button>
+  <button onclick="addChloroplast()">🟢 Add Chloroplast</button>
+  <button onclick="addVacuoleSmall()">💧 Add Small Vacuole</button>
+  <button onclick="addVacuoleLarge()">💦 Add Large Vacuole</button>
+  <button onclick="addER()">〰️ Endoplasmic Reticulum</button>
+  <button onclick="addRibosomes()">⚫ Add Ribosomes</button>
+  <button onclick="addGolgi()">📦 Add Golgi Body</button>
+  <button onclick="addLysosome()">🟣 Add Lysosome</button>
+
 </div>
 
 </div>
@@ -753,17 +786,25 @@ function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
   return block;
 }
 
-function toggleCategory(id){
+function toggleCategory(id, button){
 
-    const section =
-      document.getElementById(id);
+  const section = document.getElementById(id);
 
-    if(section.style.display==="block"){
-        section.style.display="none";
-    }else{
-        section.style.display="block";
+  if(section.style.display === "block"){
 
-    }
+      section.style.display = "none";
+
+      button.innerHTML =
+        button.innerHTML.replace("▼","▶");
+
+  }else{
+
+      section.style.display = "block";
+
+      button.innerHTML =
+        button.innerHTML.replace("▶","▼");
+
+  }
 
 }
 
