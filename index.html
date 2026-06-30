@@ -960,9 +960,12 @@ document.addEventListener('mousemove', (event)=>{
 document.addEventListener('wheel', (event) => {
 
   // Allow scrolling inside the menu panel
-  if(event.target.closest("#info")){
-    return;
-  }
+if(
+  event.target.closest("#info") ||
+  event.target.closest("#floatingToolbox")
+){
+  return;
+}
 
   event.preventDefault();
 
