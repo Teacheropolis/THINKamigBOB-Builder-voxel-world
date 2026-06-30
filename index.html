@@ -1004,15 +1004,13 @@ document.querySelectorAll("#challengeChecklist label")
 
 const infoPanel = document.getElementById("info");
 
-// Hide menu
-infoPanel.style.display = "none";
+// Move menu completely off screen
+infoPanel.style.left = "-1000px";
 
-// Remove menu shadow
+// Remove shadow while screenshot is taken
 infoPanel.style.boxShadow = "none";
 
-document.getElementById("evidenceTitle").innerHTML =
-  document.getElementById("worldTitle").textContent;
-
+// Hide title banner
 document.getElementById("worldTitle").style.display = "none";
 
 document.getElementById("evidencePanel").style.display =
@@ -1031,20 +1029,19 @@ html2canvas(document.body, {
     );
   }
 
-}).then(canvas => {
+html2canvas(...).then(canvas => {
 
-document.getElementById("evidencePanel").style.display =
-  "none";
+    document.getElementById("evidencePanel").style.display =
+      "none";
 
-// Restore menu
-infoPanel.style.display = "block";  
-infoPanel.style.visibility = "visible";
-infoPanel.style.opacity = "1";
+    // Put menu back where it belongs
+    infoPanel.style.left = "10px";
 
-// Restore shadow
-infoPanel.style.boxShadow = "";
+    // Restore shadow
+    infoPanel.style.boxShadow = "";
 
-document.getElementById("worldTitle").style.display = "block";
+    // Show title again
+    document.getElementById("worldTitle").style.display = "block";
           
       const link = document.createElement("a");
 
