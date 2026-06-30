@@ -304,12 +304,6 @@
   <canvas id="viewCubeCanvas" width="120" height="120"></canvas>
 </div>
 
-#viewCubeButtons button {
-  font-size: 11px;
-  padding: 4px 6px;
-  margin: 2px;
-}
-  
 <div id="missionCard">
 
   <button id="missionToggle"
@@ -325,14 +319,7 @@
       <label><input type="checkbox" onchange="syncChecklists()"> <span id="floatChallenge3">Build a dragon perch</span></label>
       <label><input type="checkbox" onchange="syncChecklists()"> <span id="floatChallenge4">Reset and try a new design</span></label>
     </div>
-
-<div id="viewCubeBox">
-  <canvas id="viewCubeCanvas"
-          width="120"
-          height="120">
-  </canvas>
-</div>
-    
+   
     <p id="floatingBadge">
       🏅 Badge: Keep building!
     </p>
@@ -785,6 +772,59 @@ let cameraAngle = 0;
 let cameraDistance = 24;
 let cameraHeight = 5;
 
+const viewCubeCanvas =
+  document.getElementById("viewCubeCanvas");
+
+const viewCubeScene = new THREE.Scene();
+
+const viewCubeCamera =
+  new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+
+viewCubeCamera.position.set(3, 3, 5);
+viewCubeCamera.lookAt(0, 0, 0);
+
+const viewCubeRenderer =
+  new THREE.WebGLRenderer({
+    canvas: viewCubeCanvas,
+    alpha: true
+  });
+
+viewCubeRenderer.setSize(120, 120);
+
+const viewCubeGroup = new THREE.Group();
+
+const cubeMaterial = [
+  new THREE.MeshLambertMaterial({ color: 0xFFD700 }), // right
+  new THREE.MeshLambertMaterial({ color: 0xD4AF37 }), // left
+  new THREE.MeshLambertMaterial({ color: 0xFFFFFF }), // top
+  new THREE.MeshLambertMaterial({ color: 0xCCCCCC }), // bottom
+  new THREE.MeshLambertMaterial({ color: 0x1E90FF }), // front
+  new THREE.MeshLambertMaterial({ color: 0x87CEFA })  // back
+];
+
+const miniCube =
+  new THREE.Mesh(
+    new THREE.BoxGeometry(1.8, 1.8, 1.8),
+    cubeMaterial
+  );
+
+viewCubeGroup.add(miniCube);
+
+viewCubeScene.add(viewCubeGroup);
+
+const viewCubeLight =
+  new THREE.DirectionalLight(0xffffff, 1);
+
+viewCubeLight.position.set(3, 5, 4);
+
+viewCubeScene.add(viewCubeLight);
+
+const viewCubeAmbient =
+  new THREE.AmbientLight(0xffffff, 0.7);
+
+viewCubeScene.add(viewCubeAmbient);
+
+  
 function updateCamera(){
 
   camera.position.x =
@@ -1039,60 +1079,6 @@ document.addEventListener('contextmenu', (event)=>{
       blocks.splice(index, 1);
     }
 
-const viewCubeCanvas =
-  document.getElementById("viewCubeCanvas");
-
-const viewCubeScene = new THREE.Scene();
-
-const viewCubeCamera =
-  new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-
-viewCubeCamera.position.set(3, 3, 5);
-viewCubeCamera.lookAt(0, 0, 0);
-
-const viewCubeRenderer =
-  new THREE.WebGLRenderer({
-    canvas: viewCubeCanvas,
-    alpha: true
-  });
-
-viewCubeRenderer.setSize(120, 120);
-
-const viewCubeGroup = new THREE.Group();
-
-const cubeMaterial = [
-  new THREE.MeshLambertMaterial({ color: 0xFFD700 }), // right
-  new THREE.MeshLambertMaterial({ color: 0xD4AF37 }), // left
-  new THREE.MeshLambertMaterial({ color: 0xFFFFFF }), // top
-  new THREE.MeshLambertMaterial({ color: 0xCCCCCC }), // bottom
-  new THREE.MeshLambertMaterial({ color: 0x1E90FF }), // front
-  new THREE.MeshLambertMaterial({ color: 0x87CEFA })  // back
-];
-
-const miniCube =
-  new THREE.Mesh(
-    new THREE.BoxGeometry(1.8, 1.8, 1.8),
-    cubeMaterial
-  );
-
-viewCubeGroup.add(miniCube);
-
-viewCubeScene.add(viewCubeGroup);
-
-const viewCubeLight =
-  new THREE.DirectionalLight(0xffffff, 1);
-
-viewCubeLight.position.set(3, 5, 4);
-viewCubeScene.add(viewCubeLight);
-
-const viewCubeAmbient =
-  new THREE.AmbientLight(0xffffff, 0.7);
-
-viewCubeScene.add(viewCubeAmbient);
-    
-    checkBadge();
-  }
-});
 
 function animate(){
   requestAnimationFrame(animate);
