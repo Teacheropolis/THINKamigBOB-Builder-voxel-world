@@ -486,6 +486,11 @@
 
 <div id="toolbox">
 
+<input id="toolSearch"
+       placeholder="🔎 Search tools..."
+       oninput="searchTools()"
+       style="width:95%; padding:8px; border-radius:8px; margin:6px 0;">
+  
 <p><b>🔴 Move Tools</b></p>
 
 <button class="moveButton"
@@ -818,6 +823,31 @@ function toggleCategory(id, button){
   }
 
 }
+
+ function searchTools(){
+
+  const searchText =
+    document.getElementById("toolSearch").value.toLowerCase();
+
+  const buttons =
+    document.querySelectorAll("#toolbox button");
+
+  buttons.forEach(button => {
+
+    const text =
+      button.innerText.toLowerCase();
+
+    if(
+      text.includes(searchText) ||
+      button.classList.contains("categoryButton")
+    ){
+      button.style.display = "block";
+    } else {
+      button.style.display = "none";
+    }
+
+  });
+} 
 
 function showTreeVocab(){
 
