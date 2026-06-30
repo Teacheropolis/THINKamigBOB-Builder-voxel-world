@@ -16,6 +16,16 @@
       display: block;
     }
 
+#viewCubeButtons {
+  margin-top: 4px;
+}
+
+#viewCubeButtons button {
+  font-size: 11px;
+  padding: 4px 6px;
+  margin: 2px;
+}
+    
 #missionCard {
   position: fixed;
   top: 90px;
@@ -263,6 +273,16 @@
 
 <div id="viewCubeBox">
   <canvas id="viewCubeCanvas" width="120" height="120"></canvas>
+
+  <div id="viewCubeButtons">
+    <button onclick="setView('top')">Top</button>
+    <button onclick="setView('front')">Front</button>
+    <button onclick="setView('right')">Right</button>
+    <br>
+    <button onclick="setView('left')">Left</button>
+    <button onclick="setView('back')">Back</button>
+    <button onclick="setView('home')">Home</button>
+  </div>
 </div>
 
 <div id="missionCard">
