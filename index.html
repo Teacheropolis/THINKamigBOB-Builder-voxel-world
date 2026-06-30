@@ -532,12 +532,20 @@
 
 </div>
 
-<p><b>🌦️ Weather Tools</b></p>
-<button onclick="addRainGauge()">🌧️ Add Rain Gauge</button>
-<button onclick="addWeatherBalloon()">🎈 Add Weather Balloon</button>
-<button onclick="addTornadoShelter()">🌪️ Add Tornado Shelter</button>
-<button onclick="addLightningRod()">⚡ Add Lightning Rod</button>
-<button onclick="addThermometer()">🌡️ Add Thermometer</button>
+<button class="categoryButton"
+        onclick="toggleCategory('weatherTools')">
+  🌦️ Weather Tools ▶
+</button>
+
+<div id="weatherTools" class="toolCategory">
+
+  <button onclick="addRainGauge();">🌧️ Add Rain Gauge</button>
+  <button onclick="addWeatherBalloon();">🎈 Add Weather Balloon</button>
+  <button onclick="addTornadoShelter();">🌪️ Add Tornado Shelter</button>
+  <button onclick="addLightningRod();">⚡ Add Lightning Rod</button>
+  <button onclick="addThermometer();">🌡️ Add Thermometer</button>
+
+</div>
 
 <p><b>🏗️ Buildings & Magic</b></p>
 <button onclick="addBuilding()">🏢 Add Building</button>
