@@ -1021,6 +1021,7 @@ document.getElementById("evidencePanel").style.display =
 html2canvas(document.body, {
   useCORS: true,
   scrollY: -window.scrollY,
+  }).then(canvas => {
 
   ignoreElements: (element) => {
     return (
