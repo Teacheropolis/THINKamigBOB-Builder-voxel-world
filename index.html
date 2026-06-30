@@ -17,80 +17,43 @@
     }
 
 #viewCube{
-
   position:fixed;
-
   top:120px;
   left:380px;
-
-  width:180px;
-  height:180px;
-
-  background:rgba(255,255,255,.95);
-
-  border:3px solid #1E90FF;
-  border-radius:20px;
-
-  box-shadow:0 0 12px rgba(0,0,0,.25);
-
+  width:150px;
+  height:150px;
   z-index:300;
+  perspective:500px;
+  background:transparent;
+  border:none;
+  box-shadow:none;
 }
 
 .cubeFace{
-
   position:absolute;
-
-  width:65px;
+  width:70px;
   height:45px;
-
-  border:none;
-  border-radius:10px;
-
-  background:#FFD700;
+  border:2px solid #1E90FF;
+  background:#f5f5f5;
   color:black;
-
   font-weight:bold;
-  font-size:14px;
-}
-
-.cubeFace:hover{
-
-  background:#FFA500;
-  transform:scale(1.05);
-}
-
-.topFace{
-  top:10px;
-  left:57px;
+  font-size:12px;
+  border-radius:6px;
 }
 
 .centerFace{
-  top:67px;
-  left:57px;
-
+  top:50px;
+  left:40px;
   background:#1E90FF;
   color:white;
+  transform:rotateX(20deg) rotateY(-25deg);
 }
 
-.leftFace{
-  top:67px;
-  left:5px;
-}
-
-.rightFace{
-  top:67px;
-  right:5px;
-}
-
-.frontFace{
-  bottom:15px;
-  left:25px;
-}
-
-.backFace{
-  bottom:15px;
-  right:25px;
-}
+.topFace{ top:10px; left:40px; }
+.leftFace{ top:55px; left:0; }
+.rightFace{ top:55px; right:0; }
+.frontFace{ bottom:8px; left:20px; }
+.backFace{ bottom:8px; right:20px; }
         
 #missionCard {
   position: fixed;
@@ -124,7 +87,18 @@
 }
     
 #evidencePanel {
-  ...
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  background: rgba(255,255,255,0.95);
+  border: 3px solid gold;
+  border-radius: 12px;
+  padding: 12px;
+  z-index: 600;
+  color: black;
+  font-size: 14px;
   box-shadow: none;
 }
     
@@ -2307,7 +2281,7 @@ setSkyColor(0x87CEEB);
 addMovingClouds(); 
 
   document.getElementById("worldTitle").innerHTML =
-    "🏰 THINKamigBOB Castle Builder 🏰"
+    "🏰 THINKamigBOB Castle Builder 🏰";
 
   document.getElementById("missionText").innerHTML =
     "<b>Mission:</b> Build a Wizard Castle!";
