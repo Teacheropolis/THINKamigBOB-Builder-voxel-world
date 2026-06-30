@@ -273,16 +273,7 @@
   color: white;
   border: 2px solid gold;
 }
-    
-  </style>
-</head>
 
-<body>
-
-<div id="viewCubeBox">
-  <canvas id="viewCubeCanvas" width="120" height="120"></canvas>
-</div>
-  
 #viewCubeBox {
   position: fixed;
   top: 110px;
@@ -303,6 +294,15 @@
   display: block;
   margin: 0 auto;
 }
+    
+  </style>
+</head>
+
+<body>
+
+<div id="viewCubeBox">
+  <canvas id="viewCubeCanvas" width="120" height="120"></canvas>
+</div>
 
 #viewCubeButtons button {
   font-size: 11px;
@@ -326,6 +326,13 @@
       <label><input type="checkbox" onchange="syncChecklists()"> <span id="floatChallenge4">Reset and try a new design</span></label>
     </div>
 
+<div id="viewCubeBox">
+  <canvas id="viewCubeCanvas"
+          width="120"
+          height="120">
+  </canvas>
+</div>
+    
     <p id="floatingBadge">
       🏅 Badge: Keep building!
     </p>
