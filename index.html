@@ -490,6 +490,49 @@
        placeholder="🔎 Search tools..."
        oninput="searchTools()"
        style="width:95%; padding:8px; border-radius:8px; margin:6px 0;">
+
+<button class="categoryButton"
+        onclick="toggleCategory('moveTools', this)">
+  🔴 Move Tools ▶
+</button>
+
+<div id="moveTools" class="toolCategory">
+
+  <button class="moveButton"
+          onclick="startSelectMode()">
+    🖱️ Select Structure
+  </button>
+
+  <button class="moveButton"
+          onclick="startMoveSelected()">
+    ↔️ Move Selected
+  </button>
+
+  <button class="moveButton"
+          onclick="deleteSelectedStructure()">
+    🗑️ Delete Structure
+  </button>
+
+  <p id="toolMessage"
+     style="font-size:12px; font-weight:bold; color:#6A0DAD;">
+    Tool message will show here.
+  </p>
+
+</div>
+  
+<button class="categoryButton"
+        onclick="toggleCategory('favoriteTools', this)">
+  ⭐ Favorites ▶
+</button>
+
+<div id="favoriteTools" class="toolCategory">
+
+  <button onclick="addTree()">🌲 Add Tree</button>
+  <button onclick="addBuilding()">🏢 Add Building</button>
+  <button onclick="addSolarPanels()">☀️ Add Solar Panels</button>
+  <button onclick="addNucleus()">🔵 Add Nucleus</button>
+
+</div>
   
 <p><b>🔴 Move Tools</b></p>
 
@@ -824,30 +867,45 @@ function toggleCategory(id, button){
 
 }
 
- function searchTools(){
+function searchTools(){
 
   const searchText =
     document.getElementById("toolSearch").value.toLowerCase();
 
-  const buttons =
-    document.querySelectorAll("#toolbox button");
+  const categories =
+    document.querySelectorAll(".toolCategory");
 
-  buttons.forEach(button => {
+  categories.forEach(category => {
 
-    const text =
-      button.innerText.toLowerCase();
+    let foundMatch = false;
 
-    if(
-      text.includes(searchText) ||
-      button.classList.contains("categoryButton")
-    ){
-      button.style.display = "block";
+    const buttons =
+      category.querySelectorAll("button");
+
+    buttons.forEach(button => {
+
+      const text =
+        button.innerText.toLowerCase();
+
+      if(searchText === "" || text.includes(searchText)){
+        button.style.display = "block";
+        foundMatch = true;
+      } else {
+        button.style.display = "none";
+      }
+
+    });
+
+    if(searchText === ""){
+      category.style.display = "none";
+    } else if(foundMatch){
+      category.style.display = "block";
     } else {
-      button.style.display = "none";
+      category.style.display = "none";
     }
 
   });
-} 
+}
 
 function showTreeVocab(){
 
