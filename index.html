@@ -16,6 +16,24 @@
       display: block;
     }
 
+#buildBar{
+  position:fixed;
+  bottom:15px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,.95);
+  border:3px solid gold;
+  border-radius:14px;
+  padding:10px 15px;
+  z-index:300;
+  text-align:center;
+}
+
+#buildBar select{
+  width:230px;
+  font-size:15px;
+}
+    
 #viewCubeButtons {
   margin-top: 4px;
 }
@@ -303,6 +321,33 @@
 
 <body>
 
+<div class="blockHeader">
+  🎨 Choose Your Building Block
+</div>  
+
+  <select id="blockColor">
+  <option value="0x654321">🟫 Door Brown</option>
+  <option value="0x87CEFA">🟦 Window Blue</option>
+  <option value="0x222222">⬛ Roof Black</option>
+  <option value="0xcccccc">⬜ Stone Gray</option>
+  <option value="0x8B4513">🟫 Wood Brown</option>
+  <option value="0xFFD700">🟨 Gold</option>
+  <option value="0xB22222">🟥 Brick Red</option>
+  <option value="0x228B22">🟩 Forest Green</option>
+  <option value="0x6A0DAD">🟪 Wizard Purple</option>
+  <option value="0xFFFFFF">⬜ Snow</option>
+  <option value="0x000000">⬛ Obsidian</option>
+  <option value="0x1E90FF">🟦 Water</option>
+  <option value="0xFFA500">🟧 Lava</option>
+  <option value="0x808080">⬜ Stone Brick</option>
+  <option value="0x00FFFF">🩵 Crystal Cyan</option>
+  <option value="0xFF00FF">😈 Magic Magenta</option>
+  <option value="0x7FFFD4">🧃 Glow Crystal</option>
+  <option value="0x9400D3">🔮 Dark Magic</option>
+  <option value="0xF5F5DC">🌕 Moonstone</option>
+  <option value="0xADFF2F">🍋‍🟩 Potion Green</option>
+</select>
+  
 <div id="viewCubeBox">
   <button class="viewBtn topBtn" onclick="setView('top')">TOP</button>
   <button class="viewBtn leftBtn" onclick="setView('left')">LEFT</button>
@@ -384,33 +429,6 @@
   <button onclick="document.getElementById('loadFile').click()">📂 Load World</button>
   <button onclick="resetWorld()">🔄 Reset World</button>
 </div>
-
-<div class="blockHeader">
-  🎨 Choose Your Building Block
-</div>  
-
-  <select id="blockColor">
-  <option value="0x654321">🟫 Door Brown</option>
-  <option value="0x87CEFA">🟦 Window Blue</option>
-  <option value="0x222222">⬛ Roof Black</option>
-  <option value="0xcccccc">⬜ Stone Gray</option>
-  <option value="0x8B4513">🟫 Wood Brown</option>
-  <option value="0xFFD700">🟨 Gold</option>
-  <option value="0xB22222">🟥 Brick Red</option>
-  <option value="0x228B22">🟩 Forest Green</option>
-  <option value="0x6A0DAD">🟪 Wizard Purple</option>
-  <option value="0xFFFFFF">⬜ Snow</option>
-  <option value="0x000000">⬛ Obsidian</option>
-  <option value="0x1E90FF">🟦 Water</option>
-  <option value="0xFFA500">🟧 Lava</option>
-  <option value="0x808080">⬜ Stone Brick</option>
-  <option value="0x00FFFF">🩵 Crystal Cyan</option>
-  <option value="0xFF00FF">😈 Magic Magenta</option>
-  <option value="0x7FFFD4">🧃 Glow Crystal</option>
-  <option value="0x9400D3">🔮 Dark Magic</option>
-  <option value="0xF5F5DC">🌕 Moonstone</option>
-  <option value="0xADFF2F">🍋‍🟩 Potion Green</option>
-</select>
 
 <p style="font-size:12px; margin-top:0;">
   Choose a world to begin your adventure.
