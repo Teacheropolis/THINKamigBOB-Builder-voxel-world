@@ -511,12 +511,13 @@
 <p><b>⬜ Build Base</b></p>
 <button onclick="expandWorld()">⬜ Create Foundation</button>
 
+</div>
+  
 <button class="categoryButton"
         onclick="toggleCategory('natureTools', this)">
-
 🌿 Nature ▶
 </button>
-
+  
 <div id="natureTools" class="toolCategory">
 
 <button onclick="addTree(); showTreeVocab();">
@@ -533,10 +534,13 @@
 
 </div>
 
-  🌦️ Weather Tools ▶
-<button class="categoryButton"
+  <button class="categoryButton"
         onclick="toggleCategory('weatherTools', this)">
-
+  🌦️ Weather Tools ▶
+</button>
+       
+<div id="weatherTools" class="toolCategory">
+  
   <button onclick="addRainGauge();">🌧️ Add Rain Gauge</button>
   <button onclick="addWeatherBalloon();">🎈 Add Weather Balloon</button>
   <button onclick="addTornadoShelter();">🌪️ Add Tornado Shelter</button>
