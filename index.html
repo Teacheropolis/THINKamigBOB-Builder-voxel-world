@@ -58,29 +58,26 @@
 }    
 
 #stemCoach{
-
   position:fixed;
-
-  top:300px;
-
+  top:230px;
   right:20px;
-
   width:300px;
-
-  background:white;
-
+  background:rgba(255,255,255,0.88);
   border:3px solid gold;
-
-  border-radius:18px;
-
-  padding:15px;
-
+  border-radius:14px;
+  padding:10px;
   z-index:550;
-
-  max-height:300px;
-
+  color:black;
+  font-size:14px;
+  max-height:260px;
   overflow-y:auto;
+}
 
+#stemCoachToggle{
+  width:100%;
+  background:black;
+  color:gold;
+  border:2px solid gold;
 }
     
 #floatingToolbox{
@@ -485,6 +482,22 @@
       <label><input type="checkbox" onchange="syncChecklists()"> <span id="floatChallenge4">Reset and try a new design</span></label>
     </div>
 
+    <div id="stemCoach">
+
+  <button id="stemCoachToggle"
+          onclick="toggleStemCoach()">
+    🧙 Professor Bob's STEM Coach ▼
+  </button>
+
+  <div id="stemCoachContent">
+    <div id="vocabPanel">
+      <p><b>Welcome, Builder!</b></p>
+      <p>Click a building tool to learn STEM vocabulary, facts, and challenges.</p>
+    </div>
+  </div>
+
+</div>
+
     <p id="floatingBadge">
       🏅 Badge: Keep building!
     </p>
@@ -876,6 +889,23 @@ function toggleFavorite(id, label, action, starButton){
     }
   }
 }
+
+function toggleStemCoach(){
+
+  const content =
+    document.getElementById("stemCoachContent");
+
+  const button =
+    document.getElementById("stemCoachToggle");
+
+  if(content.style.display === "none"){
+    content.style.display = "block";
+    button.innerHTML = "🧙 Professor Bob's STEM Coach ▼";
+  } else {
+    content.style.display = "none";
+    button.innerHTML = "🧙 Professor Bob's STEM Coach ▶";
+  }
+}  
   
 function toggleCategory(id, button){
 
