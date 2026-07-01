@@ -160,6 +160,42 @@
   transform:scale(1.1);
 }
     
+.vocabButton{
+  display:inline-block;
+  width:auto !important;
+  margin:3px 4px 3px 0;
+  padding:4px 7px;
+  background:rgba(255,255,255,.18);
+  color:#fff7c2;
+  border:1px solid rgba(255,215,0,.65);
+  border-radius:8px;
+  font-size:12px;
+}
+
+.vocabButton:hover{
+  background:rgba(255,215,0,.28);
+  color:white;
+}
+
+#vocabDetailBox{
+  margin-top:8px;
+  background:rgba(0,0,0,.28);
+  border-left:3px solid gold;
+  border-radius:8px;
+  padding:8px;
+  font-size:13px;
+}
+
+.starterNote input{
+  display:none;
+}
+
+.starterNote{
+  background:rgba(255,215,0,.18);
+  border-radius:8px;
+  padding:6px;
+}
+
 #floatingToolbox{
   position:fixed;
   bottom:10px;
@@ -470,32 +506,14 @@
   margin:0 auto 6px auto;
 }
 
-#viewDiceButtons{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:4px;
+#viewDiceHint{
+  font-size:11px;
+  color:#111;
+  margin-top:3px;
 }
 
-.viewDiceBtn{
-  background:rgba(255,215,0,.92);
-  border:2px solid rgba(0,0,0,.45);
-  border-radius:9px;
-  font-weight:bold;
-  font-size:10px;
-  padding:5px 2px;
-  margin:0;
-  box-shadow:0 2px 4px rgba(0,0,0,.25);
-}
-
-.viewDiceBtn:hover{
-  background:#fff1a8;
-  box-shadow:0 0 10px gold;
-}
-
-.viewDiceHome{
-  background:#1E90FF;
-  color:white;
-  border-color:#87CEFA;
+#viewCubeCanvas{
+  cursor:pointer;
 }
 
 </style>
@@ -549,14 +567,7 @@
 <div id="viewCubeBox">
   <div id="viewCubeTitle">3D View Dice</div>
   <canvas id="viewCubeCanvas" width="120" height="120"></canvas>
-  <div id="viewDiceButtons">
-    <button class="viewDiceBtn" onclick="setView('top')">TOP</button>
-    <button class="viewDiceBtn" onclick="setView('front')">FRONT</button>
-    <button class="viewDiceBtn" onclick="setView('right')">RIGHT</button>
-    <button class="viewDiceBtn" onclick="setView('left')">LEFT</button>
-    <button class="viewDiceBtn" onclick="setView('back')">BACK</button>
-    <button class="viewDiceBtn viewDiceHome" onclick="setView('home')">HOME</button>
-  </div>
+  <div id="viewDiceHint">Click a cube face • Double-click for HOME</div>
 </div>
 
 <div id="missionCard">
@@ -1294,27 +1305,33 @@ function createGrassTexture(){
   const ctx = canvas.getContext("2d");
 
   const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, "#3f8f36");
-  gradient.addColorStop(0.35, "#5fb14a");
-  gradient.addColorStop(0.7, "#2f7d32");
-  gradient.addColorStop(1, "#7ac75a");
+  gradient.addColorStop(0, "#245f25");
+  gradient.addColorStop(0.22, "#4c9a35");
+  gradient.addColorStop(0.5, "#7bcf58");
+  gradient.addColorStop(0.72, "#2f7d2b");
+  gradient.addColorStop(1, "#98df69");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  for(let i = 0; i < 180; i++){
-    const isLight = Math.random() > 0.52;
-    const green = isLight ? 135 + Math.random() * 80 : 55 + Math.random() * 70;
-    const red = isLight ? 70 + Math.random() * 45 : 20 + Math.random() * 45;
-    const blue = isLight ? 45 + Math.random() * 35 : 20 + Math.random() * 30;
+  // Large soft patches with darker and lighter greens
+  for(let i = 0; i < 320; i++){
+    const palette = [
+      [30, 92, 28],
+      [45, 126, 39],
+      [72, 160, 53],
+      [105, 195, 75],
+      [150, 220, 96]
+    ];
 
-    ctx.globalAlpha = 0.08 + Math.random() * 0.16;
-    ctx.fillStyle = `rgb(${Math.floor(red)},${Math.floor(green)},${Math.floor(blue)})`;
+    const color = palette[Math.floor(Math.random() * palette.length)];
+    ctx.globalAlpha = 0.07 + Math.random() * 0.18;
+    ctx.fillStyle = `rgb(${color[0]},${color[1]},${color[2]})`;
     ctx.beginPath();
     ctx.ellipse(
       Math.random() * canvas.width,
       Math.random() * canvas.height,
-      18 + Math.random() * 42,
-      8 + Math.random() * 24,
+      12 + Math.random() * 55,
+      5 + Math.random() * 28,
       Math.random() * Math.PI,
       0,
       Math.PI * 2
@@ -1322,12 +1339,27 @@ function createGrassTexture(){
     ctx.fill();
   }
 
-  for(let i = 0; i < 11000; i++){
-    const green = 65 + Math.floor(Math.random() * 120);
-    const red = 20 + Math.floor(Math.random() * 65);
-    const blue = 20 + Math.floor(Math.random() * 45);
+  // Fine pixel grass texture
+  for(let i = 0; i < 18000; i++){
+    const shade = Math.random();
+    let red, green, blue;
+
+    if(shade < 0.33){
+      red = 18 + Math.floor(Math.random() * 35);
+      green = 70 + Math.floor(Math.random() * 60);
+      blue = 18 + Math.floor(Math.random() * 30);
+    }else if(shade < 0.66){
+      red = 45 + Math.floor(Math.random() * 45);
+      green = 120 + Math.floor(Math.random() * 70);
+      blue = 25 + Math.floor(Math.random() * 35);
+    }else{
+      red = 90 + Math.floor(Math.random() * 70);
+      green = 175 + Math.floor(Math.random() * 65);
+      blue = 45 + Math.floor(Math.random() * 45);
+    }
+
     ctx.fillStyle = `rgb(${red},${green},${blue})`;
-    ctx.globalAlpha = 0.25 + Math.random() * 0.45;
+    ctx.globalAlpha = 0.22 + Math.random() * 0.5;
     ctx.fillRect(
       Math.random() * canvas.width,
       Math.random() * canvas.height,
@@ -1336,29 +1368,32 @@ function createGrassTexture(){
     );
   }
 
-  for(let i = 0; i < 95; i++){
-    ctx.globalAlpha = 0.55;
-    ctx.fillStyle = Math.random() > 0.5 ? "#ffd966" : "#f4a6c8";
+  // Thin blade strokes
+  for(let i = 0; i < 1400; i++){
+    ctx.globalAlpha = 0.08 + Math.random() * 0.18;
+    ctx.strokeStyle = Math.random() > 0.5 ? "#b5ef7c" : "#1f5f25";
+    ctx.lineWidth = 1;
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + Math.random() * 8 - 4, y - (2 + Math.random() * 8));
+    ctx.stroke();
+  }
+
+  // Tiny flowers
+  for(let i = 0; i < 120; i++){
+    ctx.globalAlpha = 0.48;
+    ctx.fillStyle = Math.random() > 0.55 ? "#ffd966" : "#f4a6c8";
     ctx.beginPath();
     ctx.arc(
       Math.random() * canvas.width,
       Math.random() * canvas.height,
-      1.2 + Math.random() * 1.2,
+      1 + Math.random() * 1.5,
       0,
       Math.PI * 2
     );
     ctx.fill();
-  }
-
-  for(let i = 0; i < 75; i++){
-    ctx.globalAlpha = 0.28;
-    ctx.fillStyle = "#6b6b5f";
-    ctx.fillRect(
-      Math.random() * canvas.width,
-      Math.random() * canvas.height,
-      1 + Math.random() * 2,
-      1 + Math.random() * 2
-    );
   }
 
   ctx.globalAlpha = 1;
@@ -1366,7 +1401,7 @@ function createGrassTexture(){
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(10, 10);
+  texture.repeat.set(9, 9);
   texture.anisotropy = 8;
   return texture;
 }
@@ -1877,65 +1912,15 @@ function buildThinkerBobSpeech(info){
 let availableVoices = [];
 
 const THINKER_BOB_VOICE_GROUPS = [
-  {label:"Chrome US English", langs:["en-US"], max:4},
-  {label:"British English", langs:["en-GB"], max:1},
-  {label:"Australian English", langs:["en-AU"], max:1},
-  {label:"Spanish", langs:["es-US","es-MX","es-ES","es"], max:1},
-  {label:"Chinese", langs:["zh-CN","zh-TW","zh-HK","zh"], max:1},
-  {label:"Arabic", langs:["ar"], max:1},
-  {label:"Vietnamese", langs:["vi"], max:1},
-  {label:"Tagalog / Filipino", langs:["fil","tl"], max:1},
-  {label:"Hindi", langs:["hi"], max:1},
-  {label:"Korean", langs:["ko"], max:1},
-  {label:"French", langs:["fr"], max:1},
-  {label:"Portuguese", langs:["pt"], max:1},
-  {label:"Russian", langs:["ru"], max:1},
-  {label:"Haitian Creole", langs:["ht"], max:1}
+  {label:"English Voice 3", langs:["en-US"], index:2},
+  {label:"English Voice 4 (Default)", langs:["en-US"], index:3}
 ];
 
-const maleVoiceHints = [
-  "male", "david", "mark", "george", "daniel", "fred", "alex",
-  "arthur", "thomas", "matthew", "oliver", "james", "paul", "jorge"
-];
-
-function voiceScore(voice){
-  const name = voice.name.toLowerCase();
-  let score = 0;
-
-  if(name.includes("google")) score += 8;
-  if(name.includes("chrome")) score += 6;
-  if(name.includes("enhanced")) score += 2;
-
-  maleVoiceHints.forEach(hint => {
-    if(name.includes(hint)) score += 12;
+function englishVoices(){
+  return availableVoices.filter(voice => {
+    const lang = (voice.lang || "").toLowerCase();
+    return lang === "en-us" || lang.startsWith("en-us");
   });
-
-  ["female", "zira", "susan", "samantha", "victoria", "karen", "moira", "tessa"].forEach(hint => {
-    if(name.includes(hint)) score -= 10;
-  });
-
-  return score;
-}
-
-function voicesForGroup(group){
-  const used = new Set();
-  const matches = [];
-
-  group.langs.forEach(lang => {
-    availableVoices.forEach(voice => {
-      const voiceLang = (voice.lang || "").toLowerCase();
-      const wanted = lang.toLowerCase();
-
-      if(!used.has(voice.name) && (voiceLang === wanted || voiceLang.startsWith(wanted + "-") || voiceLang.startsWith(wanted))){
-        used.add(voice.name);
-        matches.push(voice);
-      }
-    });
-  });
-
-  return matches
-    .sort((a,b) => voiceScore(b) - voiceScore(a))
-    .slice(0, group.max);
 }
 
 function populateVoiceChoices(){
@@ -1954,33 +1939,41 @@ function populateVoiceChoices(){
 
   const savedVoice = localStorage.getItem("thinkerBobVoice") || "";
 
-  voiceSelect.innerHTML = `<option value="">Default THINKer BOB Voice</option>`;
+  voiceSelect.innerHTML = "";
 
-  let addedCount = 0;
+  const english = englishVoices();
+  const choices = [];
 
-  THINKER_BOB_VOICE_GROUPS.forEach(group => {
-    const voices = voicesForGroup(group);
+  if(english[2]){
+    choices.push({label:"English Voice 3", voice:english[2]});
+  }
 
-    voices.forEach(voice => {
-      const option = document.createElement("option");
-      option.value = voice.name;
-      option.textContent = group.label + ": " + voice.name + " (" + voice.lang + ")";
-      voiceSelect.appendChild(option);
-      addedCount++;
-    });
-  });
+  if(english[3]){
+    choices.push({label:"English Voice 4 (Default)", voice:english[3]});
+  }
 
-  if(addedCount === 0){
-    availableVoices.forEach(voice => {
-      const option = document.createElement("option");
-      option.value = voice.name;
-      option.textContent = voice.name + " (" + voice.lang + ")";
-      voiceSelect.appendChild(option);
+  // If this Chromebook/browser has fewer than four US English voices, keep the menu usable.
+  if(choices.length === 0){
+    english.slice(0,2).forEach((voice, index) => {
+      choices.push({label:"English Voice " + (index + 1), voice:voice});
     });
   }
 
+  choices.forEach(choice => {
+    const option = document.createElement("option");
+    option.value = choice.voice.name;
+    option.textContent = choice.label + ": " + choice.voice.name;
+    voiceSelect.appendChild(option);
+  });
+
   if(savedVoice && Array.from(voiceSelect.options).some(option => option.value === savedVoice)){
     voiceSelect.value = savedVoice;
+  }else{
+    const defaultOption = Array.from(voiceSelect.options).find(option => option.textContent.includes("Voice 4"));
+    if(defaultOption){
+      voiceSelect.value = defaultOption.value;
+      localStorage.setItem("thinkerBobVoice", defaultOption.value);
+    }
   }
 }
 
@@ -2076,6 +2069,107 @@ function readThinkerBob(){
   playThinkerBob();
 }
 
+function cleanEmoji(text){
+  return text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "").trim();
+}
+
+const VOCAB_DEFINITIONS = {
+  structure:"Something built from connected parts.",
+  foundation:"The strong base that supports a structure.",
+  producer:"A living thing that makes its own food, usually using sunlight.",
+  photosynthesis:"The process plants use to make food from sunlight, water, and air.",
+  habitat:"A place where a living thing gets food, water, shelter, and space.",
+  ecosystem:"A community of living and nonliving things that interact.",
+  freshwater:"Water that is not salty, like pond, lake, or river water.",
+  erosion:"The movement of soil or rock by water, wind, ice, or gravity.",
+  weathering:"The breaking down of rock into smaller pieces.",
+  sediment:"Small pieces of rock, sand, or soil.",
+  precipitation:"Water that falls from clouds, such as rain, snow, sleet, or hail.",
+  rainfall:"The amount of rain that falls in an area.",
+  measurement:"Using numbers and tools to describe something accurately.",
+  data:"Information collected from observations or measurements.",
+  atmosphere:"The layer of gases surrounding Earth or another planet.",
+  temperature:"How hot or cold something is.",
+  electricity:"Energy caused by moving electric charges.",
+  conductor:"A material that allows electricity or heat to move through it easily.",
+  renewable:"A resource that can be replaced naturally, like sunlight or wind.",
+  turbine:"A machine with blades that spin to help make energy.",
+  generator:"A machine that changes motion into electrical energy.",
+  circuit:"A path that electricity can travel through.",
+  battery:"A device that stores electrical energy.",
+  thrust:"A pushing force that moves something forward or upward.",
+  orbit:"The path one object follows around another object in space.",
+  robot:"A machine that can do tasks automatically or by remote control.",
+  sensor:"A device that detects information from the environment.",
+  beam:"A long support piece used in structures like bridges.",
+  span:"The distance a bridge or beam crosses.",
+  load:"The weight or force a structure must hold.",
+  column:"A vertical support that carries weight downward.",
+  compression:"A squeezing force.",
+  ramp:"A sloped surface used to move up or down more easily.",
+  slope:"How steep something is.",
+  accessibility:"Designing so more people can use something safely and easily.",
+  stability:"How well something stays balanced and does not fall over.",
+  cell:"The smallest unit of life.",
+  organelle:"A tiny cell part with a specific job.",
+  nucleus:"The cell part that holds DNA and controls many cell activities.",
+  dna:"Instructions that living things use to grow and function.",
+  mitochondria:"Cell parts that help release energy from food.",
+  chloroplast:"A plant cell part that uses sunlight to make food.",
+  vacuole:"A cell part that stores water, food, or waste.",
+  ribosomes:"Tiny cell parts that build proteins.",
+  protein:"A material cells build and use for structure and jobs.",
+  lysosome:"A cell part that breaks down waste and old cell parts.",
+  recycle:"To break something down and use parts again."
+};
+
+function vocabKey(term){
+  return cleanEmoji(term).toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
+}
+
+function getVocabDefinition(term){
+  const key = vocabKey(term);
+  return VOCAB_DEFINITIONS[key] || VOCAB_DEFINITIONS[key.split(" ")[0]] ||
+    "This is an important STEM word connected to the object you selected.";
+}
+
+function makeVocabButtons(toolId, words){
+  return words.map(word => {
+    return `<button class="vocabButton" onclick="showVocabDetail('${toolId}', '${String(word).replace(/'/g, "&#39;")}')">${word}</button>`;
+  }).join(" ");
+}
+
+function showVocabDetail(toolId, word){
+  const info = TOOL_INFO[toolId];
+  if(!info){
+    return;
+  }
+
+  const plainWord = cleanEmoji(word);
+  const definition = getVocabDefinition(plainWord);
+  const objectName = cleanEmoji(info.title);
+
+  const nextStep =
+    "Next step: Add or change something in your " + objectName +
+    " build that shows this word in action.";
+
+  const box = document.getElementById("vocabDetailBox");
+  if(box){
+    box.innerHTML = `
+      <b>📘 ${plainWord}</b><br>
+      ${definition}<br><br>
+      <b>How it connects:</b><br>
+      In your ${objectName}, this word helps explain how the object works, what it does, or why it matters.<br><br>
+      <b>Suggested next step:</b><br>
+      ${nextStep}
+    `;
+  }
+
+  currentThinkerBobSpeech =
+    plainWord + ". " + definition + " In your " + objectName +
+    ", this word helps explain how the object works. " + nextStep;
+}
+
 function showToolInfo(toolId){
 
   const info = TOOL_INFO[toolId];
@@ -2088,7 +2182,11 @@ function showToolInfo(toolId){
     <h3>${info.title}</h3>
 
     <p><b>📚 Vocabulary</b><br>
-    ${info.vocabulary.join("<br>")}</p>
+    ${makeVocabButtons(toolId, info.vocabulary)}</p>
+
+    <div id="vocabDetailBox">
+      Click a vocabulary word to learn what it means and how it connects to your build.
+    </div>
 
     <p><b>💡 STEM Fact</b><br>
     ${info.fact}</p>
@@ -2109,11 +2207,6 @@ function showToolInfo(toolId){
   }
 }
   
-function setGrassGround(){
-  ground.material.map = grassTexture;
-  ground.material.color.set(0xffffff);
-  ground.material.needsUpdate = true;
-}
 
 function setGroundColor(color){
   const greenGroundColors = [0x55aa55, 0x228B22, 0x3f8f36, 0x5fb14a];
@@ -2384,6 +2477,42 @@ const viewCubeAmbient =
   new THREE.AmbientLight(0xffffff, 0.7);
 
 viewCubeScene.add(viewCubeAmbient);
+
+const viewDiceRaycaster = new THREE.Raycaster();
+const viewDiceMouse = new THREE.Vector2();
+
+function viewFromDiceFace(materialIndex){
+  const faceMap = {
+    0:"right",
+    1:"left",
+    2:"top",
+    4:"front",
+    5:"back"
+  };
+
+  return faceMap[materialIndex] || "home";
+}
+
+viewCubeCanvas.addEventListener("click", function(event){
+  const rect = viewCubeCanvas.getBoundingClientRect();
+
+  viewDiceMouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  viewDiceMouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  viewDiceRaycaster.setFromCamera(viewDiceMouse, viewCubeCamera);
+
+  const hits = viewDiceRaycaster.intersectObject(miniCube);
+
+  if(hits.length > 0){
+    const faceIndex = hits[0].face.materialIndex;
+    setView(viewFromDiceFace(faceIndex));
+  }
+});
+
+viewCubeCanvas.addEventListener("dblclick", function(){
+  setView("home");
+});
+
 
   
 function updateCamera(){
@@ -3854,11 +3983,16 @@ function showMissionPopup(){
   document.getElementById("popupTitle").innerHTML =
     document.getElementById("worldTitle").innerHTML;
 
+  const challenge1Text = document.getElementById("challenge1").innerHTML;
+  const starterText = isStarterChallengeText(challenge1Text)
+    ? "<p><b>Starter:</b> " + challenge1Text + "</p>"
+    : "";
+
   document.getElementById("popupMission").innerHTML =
-    document.getElementById("missionText").innerHTML;
+    document.getElementById("missionText").innerHTML + starterText;
 
   document.getElementById("popupChallenges").innerHTML =
-    "<li>" + document.getElementById("challenge1").innerHTML + "</li>" +
+    (isStarterChallengeText(challenge1Text) ? "" : "<li>" + challenge1Text + "</li>") +
     "<li>" + document.getElementById("challenge2").innerHTML + "</li>" +
     "<li>" + document.getElementById("challenge3").innerHTML + "</li>" +
     "<li>" + document.getElementById("challenge4").innerHTML + "</li>";
@@ -3872,6 +4006,30 @@ function showMissionPopup(){
 
 function closeMissionPopup(){
   document.getElementById("missionPopup").style.display = "none";
+}
+
+function isStarterChallengeText(text){
+  const lower = String(text || "").toLowerCase();
+  return lower.includes("template includes") || lower.includes("starter world includes") || lower.includes("starter includes");
+}
+
+function updateStarterChallengeDisplay(){
+  const challenge1Text = document.getElementById("challenge1").innerHTML;
+  const isStarter = isStarterChallengeText(challenge1Text);
+
+  const mainRow = document.querySelector("#challengeChecklist label");
+  const floatRow = document.querySelector("#floatingChecklist label");
+
+  [mainRow, floatRow].forEach(row => {
+    if(row){
+      row.classList.toggle("starterNote", isStarter);
+      const input = row.querySelector("input");
+      if(input){
+        input.checked = false;
+        input.disabled = isStarter;
+      }
+    }
+  });
 }
 
 function updateFloatingChecklist(){
@@ -3890,6 +4048,8 @@ function updateFloatingChecklist(){
 
   document.getElementById("floatingBadge").innerHTML =
     document.getElementById("badgeMessage").innerHTML;
+
+  updateStarterChallengeDisplay();
 }
 
 function toggleMissionCard(){
@@ -3921,7 +4081,9 @@ function syncChecklists(){
     document.querySelectorAll("#floatingChecklist input");
 
   mainBoxes.forEach((box, index) => {
-    box.checked = floatBoxes[index].checked;
+    if(floatBoxes[index] && !box.disabled && !floatBoxes[index].disabled){
+      box.checked = floatBoxes[index].checked;
+    }
   });
 }
   
@@ -3933,6 +4095,8 @@ function resetChecklist(){
   boxes.forEach(box => {
     box.checked = false;
   });
+
+  updateStarterChallengeDisplay();
 }
   
 function buildCastle(){
