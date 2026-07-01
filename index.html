@@ -1589,6 +1589,218 @@ input{
 #creatorPrompt{ color:#B7F34A; font-weight:900; white-space:nowrap; margin-left:4px; }
 @media(max-width:900px){ .startGrid{ grid-template-columns:1fr; } .startWorldGrid{ grid-template-columns:1fr; } #colorSwatchBar{ max-width:90vw; } }
 
+  
+
+/* ===== Builder 2.1 workspace layout refinements ===== */
+.startWorldGrid button.selectedStartWorld{
+  background:linear-gradient(135deg, #B7F34A, #36D8FF) !important;
+  color:#031525 !important;
+  border:2px solid rgba(255,255,255,.95) !important;
+  box-shadow:0 0 0 4px rgba(183,243,74,.24), 0 0 26px rgba(54,216,255,.62), 0 8px 22px rgba(0,0,0,.32) !important;
+  transform:translateY(-2px) scale(1.02) !important;
+  text-shadow:none !important;
+}
+
+/* Hide the old dropdown but keep it in the code as the color source. */
+#blockColor{
+  position:absolute !important;
+  left:-9999px !important;
+  width:1px !important;
+  height:1px !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+/* Bottom creator bar now leaves room for the toolbox on the right. */
+#buildBar{
+  left:18px !important;
+  right:350px !important;
+  bottom:10px !important;
+  transform:none !important;
+  width:auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  justify-content:flex-start !important;
+  background:rgba(5,10,24,.34) !important;
+  border:1px solid rgba(54,216,255,.32) !important;
+  border-radius:22px !important;
+  box-shadow:0 10px 24px rgba(0,0,0,.26), 0 0 18px rgba(54,216,255,.12) !important;
+}
+
+#creatorPrompt{
+  font-size:15px !important;
+  color:#B7F34A !important;
+  text-shadow:0 2px 5px rgba(0,0,0,.85) !important;
+}
+
+.colorSwatch{
+  min-width:42px !important;
+  height:38px !important;
+  border-radius:13px !important;
+  border:2px solid rgba(255,255,255,.88) !important;
+  box-shadow:0 4px 12px rgba(0,0,0,.34), inset 0 0 0 1px rgba(255,255,255,.22) !important;
+}
+.colorSwatch:hover{
+  transform:translateY(-2px) scale(1.04) !important;
+}
+.colorSwatch.selected{
+  outline:3px solid #B7F34A !important;
+  box-shadow:0 0 0 4px rgba(183,243,74,.20), 0 0 20px rgba(54,216,255,.45), 0 6px 14px rgba(0,0,0,.35) !important;
+}
+
+/* Mission becomes transparent HUD text in the top-left. */
+#info{
+  top:18px !important;
+  left:18px !important;
+  max-width:310px !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  padding:0 !important;
+  color:white !important;
+  text-shadow:0 2px 5px rgba(0,0,0,.94), 0 0 10px rgba(0,0,0,.70) !important;
+}
+#info h2{
+  margin:0 0 8px 0 !important;
+  color:#B7F34A !important;
+  font-size:22px !important;
+  text-shadow:0 2px 5px rgba(0,0,0,.95), 0 0 12px rgba(183,243,74,.45) !important;
+}
+#missionText,
+#challengeTitle,
+#moreChallenge,
+#badgeMessage{
+  background:rgba(5,10,24,.20) !important;
+  border-radius:10px !important;
+  padding:5px 7px !important;
+  margin:6px 0 !important;
+  width:max-content;
+  max-width:310px;
+}
+#challengeChecklist{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
+}
+#challengeChecklist label{
+  background:rgba(5,10,24,.20) !important;
+  border-radius:8px !important;
+  padding:3px 6px !important;
+  margin:4px 0 !important;
+  width:max-content;
+  max-width:310px;
+}
+
+/* THINKer BOB moves to top-right and becomes lighter/transparent. */
+#stemCoach{
+  top:18px !important;
+  right:18px !important;
+  width:315px !important;
+  max-height:43vh !important;
+  background:rgba(5,10,24,.28) !important;
+  border:1px solid rgba(54,216,255,.28) !important;
+  border-radius:20px !important;
+  box-shadow:0 10px 28px rgba(0,0,0,.25), 0 0 18px rgba(54,216,255,.12) !important;
+}
+#stemCoachToggle{
+  background:transparent !important;
+  border:none !important;
+  border-bottom:1px solid rgba(54,216,255,.28) !important;
+  box-shadow:none !important;
+  color:#B7F34A !important;
+  text-align:left !important;
+  font-size:17px !important;
+}
+#thinkerBobPanel{
+  background:rgba(5,10,24,.22) !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+}
+
+/* Toolbox is now the right end of the bottom tool area. */
+#floatingToolbox{
+  position:fixed !important;
+  bottom:10px !important;
+  right:18px !important;
+  width:315px !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
+  z-index:760 !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+#toolboxButton{
+  margin:0 !important;
+  background:rgba(5,10,24,.48) !important;
+  border:1px solid rgba(54,216,255,.40) !important;
+  border-radius:18px !important;
+  color:#B7F34A !important;
+  box-shadow:0 10px 24px rgba(0,0,0,.28), 0 0 16px rgba(54,216,255,.13) !important;
+}
+#toolbox{
+  max-height:52vh !important;
+  overflow-y:auto !important;
+  margin-bottom:8px !important;
+  padding:10px !important;
+  border-radius:18px !important;
+  background:rgba(245,251,255,.92) !important;
+  border:1px solid rgba(54,216,255,.34) !important;
+  box-shadow:0 14px 34px rgba(0,0,0,.35) !important;
+}
+
+/* Main title floats without a shaded plaque. */
+#gameLogo{
+  top:6px !important;
+  left:50% !important;
+  min-width:720px !important;
+  max-width:70vw !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+.logoMain{
+  font-size:42px !important;
+  text-shadow:0 3px 0 rgba(0,40,60,.95), 0 0 18px rgba(54,216,255,.86), 0 0 30px rgba(183,243,74,.32) !important;
+}
+.logoSub{
+  box-shadow:0 0 12px rgba(54,216,255,.38) !important;
+}
+
+/* Current world/mission header is larger and darker under the title. */
+#worldTitle{
+  top:78px !important;
+  left:50% !important;
+  max-width:780px !important;
+  min-width:440px !important;
+  font-size:22px !important;
+  font-weight:900 !important;
+  color:#05243B !important;
+  -webkit-text-fill-color:#05243B !important;
+  text-shadow:0 2px 0 rgba(255,255,255,.62), 0 0 10px rgba(255,255,255,.55), 0 0 16px rgba(54,216,255,.35) !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
+}
+
+#studentProjectBar{ display:none !important; }
+#missionCard{ display:none !important; }
+
+@media(max-width:1150px){
+  #gameLogo{ min-width:560px !important; max-width:64vw !important; }
+  .logoMain{ font-size:34px !important; }
+  #worldTitle{ font-size:18px !important; min-width:340px !important; top:70px !important; }
+  #buildBar{ right:320px !important; }
+  #floatingToolbox{ width:295px !important; }
+}
+
   </style>
 </head>
 
@@ -1622,16 +1834,16 @@ input{
       <div class="startPanel">
         <h2>🌎 Choose Your STEM Mission</h2>
         <div class="startWorldGrid">
-          <button onclick="chooseStartWorld('buildCastle')">🏰 Castle Builder</button>
-          <button onclick="chooseStartWorld('buildPlayground')">🛝 Playground Builder</button>
-          <button onclick="chooseStartWorld('buildHabitat')">🌳 Habitat Builder</button>
-          <button onclick="chooseStartWorld('buildDragonLair')">🐉 Dragon Lair</button>
-          <button onclick="chooseStartWorld('buildFutureCity')">🏙️ Future City</button>
-          <button onclick="chooseStartWorld('buildWeatherWorld')">🌦️ Grade 3: Weather Station</button>
-          <button onclick="chooseStartWorld('buildEnergyCity')">⚡ Grade 4: Energy City</button>
-          <button onclick="chooseStartWorld('buildSpaceColony')">🚀 Grade 5: Moon Colony</button>
-          <button onclick="chooseStartWorld('buildEngineeringWorld')">🏗️ Grade 6: Engineering Challenge</button>
-          <button onclick="chooseStartWorld('buildCellWorld')">🧬 Grade 6: Cell Builder Lab</button>
+          <button class="selectedStartWorld" onclick="chooseStartWorld('buildCastle', this)">🏰 Castle Builder</button>
+          <button onclick="chooseStartWorld('buildPlayground', this)">🛝 Playground Builder</button>
+          <button onclick="chooseStartWorld('buildHabitat', this)">🌳 Habitat Builder</button>
+          <button onclick="chooseStartWorld('buildDragonLair', this)">🐉 Dragon Lair</button>
+          <button onclick="chooseStartWorld('buildFutureCity', this)">🏙️ Future City</button>
+          <button onclick="chooseStartWorld('buildWeatherWorld', this)">🌦️ Grade 3: Weather Station</button>
+          <button onclick="chooseStartWorld('buildEnergyCity', this)">⚡ Grade 4: Energy City</button>
+          <button onclick="chooseStartWorld('buildSpaceColony', this)">🚀 Grade 5: Moon Colony</button>
+          <button onclick="chooseStartWorld('buildEngineeringWorld', this)">🏗️ Grade 6: Engineering Challenge</button>
+          <button onclick="chooseStartWorld('buildCellWorld', this)">🧬 Grade 6: Cell Builder Lab</button>
         </div>
       </div>
     </div>
@@ -1673,6 +1885,7 @@ input{
     <button onclick="saveImage()">📸 Screenshot</button>
     <button onclick="document.getElementById('loadFile').click()">📂 Load</button>
     <button onclick="resetWorld()">🔄 Reset</button>
+    <button onclick="showStartScreen()">🌎 Missions</button>
   </div>
 
   <div id="voiceControls">
@@ -6978,6 +7191,86 @@ function buildColorSwatches(){
   if(bar.firstChild) bar.firstChild.classList.add('selected');
 }
 window.addEventListener('load', buildColorSwatches);
+
+
+/* ===== Builder 2.1 behavior refinements ===== */
+(function(){
+  function safeCall(name){
+    if(typeof window[name] === 'function'){
+      window[name]();
+    }
+  }
+
+  window.chooseStartWorld = function(fnName, buttonEl){
+    selectedStartWorld = fnName;
+    document.querySelectorAll('.startWorldGrid button').forEach(btn => btn.classList.remove('selectedStartWorld'));
+    if(buttonEl){ buttonEl.classList.add('selectedStartWorld'); }
+  };
+
+  window.showStartScreen = function(){
+    stopThinkerBob && stopThinkerBob();
+    const screen = document.getElementById('startScreen');
+    const student = document.getElementById('studentName');
+    const project = document.getElementById('projectName');
+    const sn = document.getElementById('startStudentName');
+    const pn = document.getElementById('startProjectName');
+    if(sn && student) sn.value = student.value;
+    if(pn && project) pn.value = project.value;
+    if(screen) screen.classList.remove('hidden');
+  };
+
+  window.hideStartScreen = function(){
+    const screen = document.getElementById('startScreen');
+    if(screen) screen.classList.add('hidden');
+  };
+
+  window.startSelectedWorld = function(){
+    syncStartFields();
+    if(typeof window[selectedStartWorld] === 'function'){
+      window[selectedStartWorld]();
+    }
+    hideStartScreen();
+    if(typeof updateCreatorBarSelection === 'function') updateCreatorBarSelection();
+  };
+
+  window.buildColorSwatches = function(){
+    const select = document.getElementById('blockColor');
+    const bar = document.getElementById('colorSwatchBar');
+    if(!select || !bar) return;
+    bar.innerHTML = '';
+    Array.from(select.options).forEach(option => {
+      const btn = document.createElement('button');
+      btn.className = 'colorSwatch';
+      btn.type = 'button';
+      const label = option.textContent.trim();
+      btn.title = label;
+      btn.setAttribute('aria-label', label);
+      btn.dataset.value = option.value;
+      btn.style.background = '#' + Number(option.value).toString(16).padStart(6,'0');
+      btn.onclick = () => {
+        select.value = option.value;
+        updateCreatorBarSelection();
+      };
+      bar.appendChild(btn);
+    });
+    updateCreatorBarSelection();
+  };
+
+  window.updateCreatorBarSelection = function(){
+    const select = document.getElementById('blockColor');
+    document.querySelectorAll('.colorSwatch').forEach(btn => {
+      btn.classList.toggle('selected', select && btn.dataset.value === select.value);
+    });
+  };
+
+  window.addEventListener('load', function(){
+    buildColorSwatches();
+    const first = document.querySelector('.startWorldGrid button');
+    if(first && !document.querySelector('.startWorldGrid button.selectedStartWorld')){
+      first.classList.add('selectedStartWorld');
+    }
+  });
+})();
 
 </script>
 
