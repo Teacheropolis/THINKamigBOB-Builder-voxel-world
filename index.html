@@ -571,19 +571,31 @@
   </button>
 
   <button class="favoriteStar"
-          onclick="toggleFavorite('tree', '🌲 Add Tree', 'addTree(); updateThinkerBob(\'tree\');', this)">
+         onclick="toggleFavorite('tree', '🌲 Add Tree', 'addTree(); showToolInfo(\'tree\');', this)"
     ☆
   </button>
 </div>
 
-<button onclick="addPond(); showToolInfo('pond');">
-🌊 Add Pond
-</button>
+<div class="toolRow">
+  <button onclick="addPond(); showToolInfo('pond');">
+    🌊 Add Pond
+  </button>
 
-<button onclick="addRocks(); showToolInfo('rocks');">
-🪨 Add Rocks
-</button>
+  <button class="favoriteStar"
+          onclick="toggleFavorite('pond', '🌊 Add Pond', 'addPond(); showToolInfo(\'pond\');', this)">
+    ☆
+  </button>
+</div>
 
+<div class="toolRow">
+  <button onclick="addRocks(); showToolInfo('rocks');">
+    🪨 Add Rocks
+  </button>
+
+  <button class="favoriteStar"
+          onclick="toggleFavorite('rocks', '🪨 Add Rocks', 'addRocks(); showToolInfo(\'rocks\');', this)">
+    ☆
+  </button>
 </div>
 
   <button class="categoryButton"
