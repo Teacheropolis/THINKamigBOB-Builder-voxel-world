@@ -186,6 +186,35 @@
   font-size:13px;
 }
 
+
+#readerHighlightBox{
+  margin-top:8px;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,215,0,.45);
+  border-radius:8px;
+  padding:8px;
+  font-size:13px;
+  line-height:1.55;
+  max-height:92px;
+  overflow-y:auto;
+}
+
+.readWord{
+  cursor:pointer;
+  padding:1px 2px;
+  border-radius:4px;
+}
+
+.readWord:hover{
+  background:rgba(255,215,0,.25);
+}
+
+.readWord.currentReadWord{
+  background:gold;
+  color:black;
+  font-weight:bold;
+}
+
 .starterNote input{
   display:none;
 }
@@ -2117,16 +2146,101 @@ function getSelectedVoice(){
   return availableVoices.find(voice => voice.name === voiceSelect.value) || null;
 }
 
-function speakText(text){
+let currentReaderWords = [];
+let currentReaderText = "";
+
+function normalizeSpeechWord(word){
+  return String(word)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function cleanRepeatedWords(text){
+  const words = String(text).replace(/\s+/g, " ").trim().split(" ");
+  const cleaned = [];
+
+  words.forEach(word => {
+    const previous = cleaned[cleaned.length - 1];
+
+    if(previous && normalizeSpeechWord(previous) === normalizeSpeechWord(word)){
+      return;
+    }
+
+    cleaned.push(word);
+  });
+
+  return cleaned.join(" ");
+}
+
+function prepareSpeechText(text){
+  return cleanRepeatedWords(cleanEmoji(String(text))).replace(/\s+/g, " ").trim();
+}
+
+function renderReaderText(text){
+  const panel = document.getElementById("thinkerBobPanel");
+  if(!panel){
+    return;
+  }
+
+  const prepared = prepareSpeechText(text);
+  currentReaderText = prepared;
+  currentReaderWords = prepared ? prepared.split(/\s+/) : [];
+
+  let box = document.getElementById("readerHighlightBox");
+
+  if(!box){
+    box = document.createElement("div");
+    box.id = "readerHighlightBox";
+    panel.appendChild(box);
+  }
+
+  box.innerHTML = currentReaderWords.map((word, index) => {
+    const safeWord = word
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    return `<span class="readWord" data-word-index="${index}" onclick="readFromWord(${index})">${safeWord}</span>`;
+  }).join(" ");
+}
+
+function highlightReaderWord(index){
+  document.querySelectorAll(".readWord.currentReadWord").forEach(word => {
+    word.classList.remove("currentReadWord");
+  });
+
+  const word = document.querySelector(`.readWord[data-word-index="${index}"]`);
+
+  if(word){
+    word.classList.add("currentReadWord");
+    word.scrollIntoView({block:"nearest", inline:"nearest", behavior:"smooth"});
+  }
+}
+
+function speakText(text, startIndex = 0){
 
   if(!("speechSynthesis" in window)){
     alert("Sorry, this browser does not support text-to-speech.");
     return;
   }
 
+  const prepared = prepareSpeechText(text);
+
+  if(!prepared){
+    return;
+  }
+
+  if(prepared !== currentReaderText || currentReaderWords.length === 0){
+    renderReaderText(prepared);
+  }
+
+  startIndex = Math.max(0, Math.min(startIndex, currentReaderWords.length - 1));
+
+  const textToSpeak = currentReaderWords.slice(startIndex).join(" ");
+
   window.speechSynthesis.cancel();
 
-  const utterance = new SpeechSynthesisUtterance(text);
+  const utterance = new SpeechSynthesisUtterance(textToSpeak);
   const selectedVoice = getSelectedVoice();
 
   if(selectedVoice){
@@ -2140,7 +2254,29 @@ function speakText(text){
   utterance.pitch = 0.9;
   utterance.volume = 1;
 
+  utterance.onboundary = function(event){
+    if(event.name && event.name !== "word"){
+      return;
+    }
+
+    const before = textToSpeak.slice(0, event.charIndex).trim();
+    const localIndex = before ? before.split(/\s+/).length : 0;
+    highlightReaderWord(startIndex + localIndex);
+  };
+
+  utterance.onend = function(){
+    setTimeout(() => {
+      document.querySelectorAll(".readWord.currentReadWord").forEach(word => {
+        word.classList.remove("currentReadWord");
+      });
+    }, 500);
+  };
+
   window.speechSynthesis.speak(utterance);
+}
+
+function readFromWord(index){
+  speakText(currentThinkerBobSpeech, index);
 }
 
 function playThinkerBob(){
@@ -2167,6 +2303,10 @@ function stopThinkerBob(){
   if("speechSynthesis" in window){
     window.speechSynthesis.cancel();
   }
+
+  document.querySelectorAll(".readWord.currentReadWord").forEach(word => {
+    word.classList.remove("currentReadWord");
+  });
 }
 
 function readThinkerBob(){
@@ -2272,6 +2412,9 @@ function showVocabDetail(toolId, word){
   currentThinkerBobSpeech =
     plainWord + ". " + definition + " In your " + objectName +
     ", this word helps explain how the object works. " + nextStep;
+
+  renderReaderText(currentThinkerBobSpeech);
+  speakText(currentThinkerBobSpeech);
 }
 
 function showToolInfo(toolId){
@@ -2303,6 +2446,7 @@ function showToolInfo(toolId){
   `;
 
   currentThinkerBobSpeech = buildThinkerBobSpeech(info);
+  renderReaderText(currentThinkerBobSpeech);
 
   const autoRead = document.getElementById("autoReadToggle");
 
@@ -4879,7 +5023,7 @@ function buildEngineeringWorld(){
   addMovingClouds();
 
   document.getElementById("worldTitle").innerHTML =
-    "🏗️ Grade 6: THINKamigBOB Engineering Challenge 🏗️";
+    "🏗️ Grade 6: THINKamigBOB Engineering Challenge";
 
   document.getElementById("missionText").innerHTML =
     "<b>Mission:</b> Design and improve structures that solve engineering problems!";
