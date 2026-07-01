@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -114,32 +115,51 @@
   gap:6px;
   align-items:center;
   flex-wrap:wrap;
-  margin-top:10px;
+  margin-top:8px;
+  justify-content:center;
 }
 
 .voiceButton{
-  flex:1;
-  min-width:120px;
-  background:rgba(0,0,0,.35);
+  background:#111;
   color:gold;
-  border:2px solid rgba(255,215,0,.85);
+  border:2px solid gold;
   border-radius:10px;
   font-weight:bold;
+  padding:7px 10px;
+  width:auto !important;
 }
 
 .voiceButton:hover{
-  background:rgba(0,0,0,.55);
+  background:#222;
   color:#FFD700;
 }
 
-#autoReadLabel{
-  width:100%;
+#voiceSelect{
+  width:210px;
+  max-width:210px;
   font-size:12px;
-  color:white;
+  padding:5px;
+}
+
+#voiceRate,
+#voiceVolume{
+  width:80px;
+}
+
+.voiceSmallLabel{
+  font-size:12px;
+  font-weight:bold;
+  white-space:nowrap;
+}
+
+#autoReadLabel{
+  font-size:12px;
+  color:black;
   display:flex;
   align-items:center;
-  gap:6px;
-  margin:2px 4px 0 4px;
+  gap:4px;
+  margin:0 4px;
+  white-space:nowrap;
 }
 
 #autoReadToggle{
@@ -175,6 +195,8 @@
   padding:10px 15px;
   z-index:300;
   text-align:center;
+  min-width:620px;
+  max-width:86vw;
 }
 
 #buildBar select{
@@ -488,6 +510,27 @@
   <option value="0xF5F5DC">🌕 Moonstone</option>
   <option value="0xADFF2F">🍋‍🟩 Potion Green</option>
 </select>
+
+  <div id="voiceControls">
+    <button class="voiceButton" onclick="readThinkerBob()">🔊 Read</button>
+    <button class="voiceButton" onclick="stopThinkerBob()">⏹ Stop</button>
+
+    <span class="voiceSmallLabel">🎙 Voice</span>
+    <select id="voiceSelect" onchange="saveVoiceSettings()">
+      <option value="">Default Voice</option>
+    </select>
+
+    <span class="voiceSmallLabel">🐢 Speed</span>
+    <input id="voiceRate" type="range" min="0.6" max="1.2" step="0.05" value="0.9" oninput="saveVoiceSettings()">
+
+    <span class="voiceSmallLabel">🔊 Volume</span>
+    <input id="voiceVolume" type="range" min="0" max="1" step="0.05" value="1" oninput="saveVoiceSettings()">
+
+    <label id="autoReadLabel">
+      <input type="checkbox" id="autoReadToggle" onchange="saveVoiceSettings()">
+      Auto-read
+    </label>
+  </div>
 </div>
   
 <div id="viewCubeBox">
@@ -534,19 +577,6 @@
   </button>
 
   <div id="stemCoachContent">
-
-    <div id="voiceControls">
-      <button class="voiceButton" onclick="readThinkerBob()">
-        🔊 Read to Me
-      </button>
-      <button class="voiceButton" onclick="stopThinkerBob()">
-        ⏹ Stop
-      </button>
-      <label id="autoReadLabel">
-        <input type="checkbox" id="autoReadToggle">
-        Auto-read when I click a tool
-      </label>
-    </div>
 
     <div id="thinkerBobPanel">
       <p><b>👋 Welcome, Builder!</b></p>
@@ -1242,8 +1272,61 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+function createGrassTexture(){
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#55aa55";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for(let i = 0; i < 5000; i++){
+    const green = 90 + Math.floor(Math.random() * 80);
+    const red = 25 + Math.floor(Math.random() * 45);
+    const blue = 25 + Math.floor(Math.random() * 35);
+    ctx.fillStyle = `rgb(${red},${green},${blue})`;
+    ctx.globalAlpha = 0.28 + Math.random() * 0.35;
+    ctx.fillRect(
+      Math.random() * canvas.width,
+      Math.random() * canvas.height,
+      1 + Math.random() * 2,
+      1 + Math.random() * 2
+    );
+  }
+
+  // tiny flowers and light patches
+  for(let i = 0; i < 65; i++){
+    ctx.globalAlpha = 0.65;
+    ctx.fillStyle = Math.random() > 0.5 ? "#ffd966" : "#f4a6c8";
+    ctx.beginPath();
+    ctx.arc(
+      Math.random() * canvas.width,
+      Math.random() * canvas.height,
+      1.2,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+
+  ctx.globalAlpha = 1;
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(12, 12);
+  texture.anisotropy = 4;
+  return texture;
+}
+
+const grassTexture = createGrassTexture();
+
 const groundGeometry = new THREE.BoxGeometry(50, 1, 50);
-const groundMaterial = new THREE.MeshLambertMaterial({color:0x55aa55});
+const groundMaterial = new THREE.MeshLambertMaterial({
+  color:0xffffff,
+  map:grassTexture
+});
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.position.y = -1;
 scene.add(ground);
@@ -1740,6 +1823,94 @@ function buildThinkerBobSpeech(info){
   ].join(" ");
 }
 
+let availableVoices = [];
+
+function populateVoiceChoices(){
+
+  if(!("speechSynthesis" in window)){
+    return;
+  }
+
+  availableVoices = window.speechSynthesis.getVoices();
+
+  const voiceSelect = document.getElementById("voiceSelect");
+
+  if(!voiceSelect){
+    return;
+  }
+
+  const savedVoice = localStorage.getItem("thinkerBobVoice") || "";
+
+  voiceSelect.innerHTML = `<option value="">Default Voice</option>`;
+
+  availableVoices.forEach((voice, index) => {
+    const option = document.createElement("option");
+    option.value = voice.name;
+    option.textContent = voice.name + " (" + voice.lang + ")";
+    voiceSelect.appendChild(option);
+  });
+
+  if(savedVoice){
+    voiceSelect.value = savedVoice;
+  }
+}
+
+function saveVoiceSettings(){
+
+  const voiceSelect = document.getElementById("voiceSelect");
+  const rate = document.getElementById("voiceRate");
+  const volume = document.getElementById("voiceVolume");
+  const autoRead = document.getElementById("autoReadToggle");
+
+  if(voiceSelect){
+    localStorage.setItem("thinkerBobVoice", voiceSelect.value);
+  }
+
+  if(rate){
+    localStorage.setItem("thinkerBobRate", rate.value);
+  }
+
+  if(volume){
+    localStorage.setItem("thinkerBobVolume", volume.value);
+  }
+
+  if(autoRead){
+    localStorage.setItem("thinkerBobAutoRead", autoRead.checked ? "true" : "false");
+  }
+}
+
+function loadVoiceSettings(){
+
+  const rate = document.getElementById("voiceRate");
+  const volume = document.getElementById("voiceVolume");
+  const autoRead = document.getElementById("autoReadToggle");
+
+  if(rate && localStorage.getItem("thinkerBobRate")){
+    rate.value = localStorage.getItem("thinkerBobRate");
+  }
+
+  if(volume && localStorage.getItem("thinkerBobVolume")){
+    volume.value = localStorage.getItem("thinkerBobVolume");
+  }
+
+  if(autoRead){
+    autoRead.checked = localStorage.getItem("thinkerBobAutoRead") === "true";
+  }
+
+  populateVoiceChoices();
+}
+
+function getSelectedVoice(){
+
+  const voiceSelect = document.getElementById("voiceSelect");
+
+  if(!voiceSelect || !voiceSelect.value){
+    return null;
+  }
+
+  return availableVoices.find(voice => voice.name === voiceSelect.value) || null;
+}
+
 function speakText(text){
 
   if(!("speechSynthesis" in window)){
@@ -1750,10 +1921,18 @@ function speakText(text){
   window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
-  utterance.rate = 0.9;
+  const selectedVoice = getSelectedVoice();
+
+  if(selectedVoice){
+    utterance.voice = selectedVoice;
+    utterance.lang = selectedVoice.lang;
+  }else{
+    utterance.lang = "en-US";
+  }
+
+  utterance.rate = Number(document.getElementById("voiceRate")?.value || 0.9);
   utterance.pitch = 1;
-  utterance.volume = 1;
+  utterance.volume = Number(document.getElementById("voiceVolume")?.value || 1);
 
   window.speechSynthesis.speak(utterance);
 }
@@ -1801,8 +1980,16 @@ function showToolInfo(toolId){
   }
 }
   
+function setGrassGround(){
+  ground.material.map = grassTexture;
+  ground.material.color.set(0xffffff);
+  ground.material.needsUpdate = true;
+}
+
 function setGroundColor(color){
+  ground.material.map = null;
   ground.material.color.set(color);
+  ground.material.needsUpdate = true;
 }
 
 function setSkyColor(color){
@@ -2531,7 +2718,7 @@ moveSelectedMode = false;
 
 clearAtmosphere();
 
-setGroundColor(0x55aa55); // default grass
+setGrassGround(); // default grass texture
 setSkyColor(0x87CEEB);    // default blue sky
 
 buildStarterGrid();
@@ -4705,6 +4892,12 @@ Have fun building!`
     
 checkBadge();
 updateFloatingChecklist();
+loadVoiceSettings();
+
+if("speechSynthesis" in window){
+  window.speechSynthesis.onvoiceschanged = populateVoiceChoices;
+}
+
 animate();    
   
 window.addEventListener('resize', ()=>{
