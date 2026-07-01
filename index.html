@@ -2,6 +2,9 @@
 <html>
 <head>
   <title>THINKamigBOB Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     html, body {
       margin: 0;
@@ -1361,7 +1364,183 @@ input{
   text-shadow:0 2px 5px rgba(0,0,0,.70);
 }
 
-</style>
+
+
+/* ===== Lexend + cleaner STEM game header refresh ===== */
+html, body,
+button,
+select,
+input{
+  font-family:"Lexend", "Segoe UI", Arial, sans-serif !important;
+}
+
+:root{
+  --thinker-navy:#071827;
+  --thinker-blue:#177DDC;
+  --thinker-cyan:#36D8FF;
+  --thinker-lime:#B7F34A;
+  --thinker-white:#F5FBFF;
+  --thinker-shadow:0 10px 28px rgba(0,0,0,.30), 0 0 26px rgba(54,216,255,.18);
+}
+
+/* Make the main logo wider, shorter, and more like a published game title. */
+#gameLogo{
+  top:6px !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  min-width:760px !important;
+  max-width:58vw !important;
+  padding:4px 44px 6px 44px !important;
+  border-radius:999px !important;
+  background:linear-gradient(90deg,
+    rgba(7,24,39,.12),
+    rgba(7,24,39,.54) 18%,
+    rgba(14,42,65,.58) 50%,
+    rgba(7,24,39,.54) 82%,
+    rgba(7,24,39,.12)
+  ) !important;
+  border:1px solid rgba(54,216,255,.62) !important;
+  border-bottom:2px solid rgba(183,243,74,.55) !important;
+  box-shadow:
+    0 0 30px rgba(54,216,255,.28),
+    0 0 18px rgba(183,243,74,.16),
+    0 9px 24px rgba(0,0,0,.22),
+    inset 0 0 22px rgba(255,255,255,.07) !important;
+}
+
+.logoKicker{
+  font-size:9px !important;
+  letter-spacing:.34em !important;
+  color:var(--thinker-lime) !important;
+  text-shadow:0 0 10px rgba(183,243,74,.72), 0 2px 5px rgba(0,0,0,.80) !important;
+  margin-bottom:-3px !important;
+}
+
+.logoMain{
+  font-size:38px !important;
+  line-height:.88 !important;
+  font-weight:900 !important;
+  letter-spacing:.065em !important;
+  color:var(--thinker-white) !important;
+  background:linear-gradient(180deg, #FFFFFF 0%, #DDF7FF 42%, #36D8FF 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  -webkit-text-stroke:.7px rgba(255,255,255,.45) !important;
+  text-shadow:
+    0 2px 0 rgba(0,45,70,.95),
+    0 0 14px rgba(54,216,255,.75),
+    0 0 26px rgba(183,243,74,.22) !important;
+}
+
+.logoSub{
+  margin-top:0 !important;
+  padding:1px 26px 2px 26px !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  letter-spacing:.42em !important;
+  background:linear-gradient(90deg, #B7F34A, #36D8FF) !important;
+  color:#04111D !important;
+  box-shadow:0 2px 0 rgba(0,0,0,.28), 0 0 12px rgba(54,216,255,.34) !important;
+  text-shadow:none !important;
+}
+
+#worldTitle{
+  top:78px !important;
+  left:50% !important;
+  max-width:760px !important;
+  min-width:420px !important;
+  padding:3px 20px !important;
+  font-size:14px !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  color:var(--thinker-white) !important;
+  text-shadow:
+    0 2px 5px rgba(0,0,0,.95),
+    0 0 10px rgba(54,216,255,.42) !important;
+}
+
+#studentProjectBar{
+  top:108px !important;
+}
+
+#studentProjectBar label{
+  background:rgba(7,24,39,.28) !important;
+  border:1px solid rgba(54,216,255,.36) !important;
+  box-shadow:0 5px 14px rgba(0,0,0,.20), 0 0 10px rgba(54,216,255,.12) !important;
+}
+
+#studentProjectBar b{
+  color:var(--thinker-lime) !important;
+}
+
+/* Starter Worlds heading: plain transparent HUD text, no button box/background. */
+#starterButton{
+  display:block !important;
+  background:transparent !important;
+  border:none !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  color:var(--thinker-lime) !important;
+  width:100% !important;
+  padding:8px 0 6px 0 !important;
+  margin:10px 0 8px 0 !important;
+  text-align:left !important;
+  font-size:20px !important;
+  font-weight:900 !important;
+  letter-spacing:.02em !important;
+  text-shadow:
+    0 2px 5px rgba(0,0,0,.95),
+    0 0 10px rgba(183,243,74,.42) !important;
+  transform:none !important;
+}
+
+#starterButton:hover,
+#starterButton:focus,
+#starterButton:active{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  transform:none !important;
+  filter:brightness(1.12) !important;
+}
+
+#starterWorlds button{
+  background:linear-gradient(135deg, rgba(23,125,220,.96), rgba(54,216,255,.78)) !important;
+  border:1px solid rgba(245,251,255,.34) !important;
+  box-shadow:0 4px 0 rgba(5,53,88,.58), 0 8px 18px rgba(0,0,0,.22), 0 0 12px rgba(54,216,255,.14) !important;
+}
+
+#starterWorlds button:hover{
+  background:linear-gradient(135deg, rgba(54,216,255,.96), rgba(183,243,74,.78)) !important;
+  color:#04111D !important;
+  text-shadow:none !important;
+}
+
+#missionTitle,
+#missionCard h3,
+#missionCard b{
+  color:var(--thinker-lime) !important;
+}
+
+@media (max-width:1250px){
+  #gameLogo{
+    min-width:620px !important;
+    max-width:58vw !important;
+    padding-left:34px !important;
+    padding-right:34px !important;
+  }
+  .logoMain{ font-size:34px !important; }
+  .logoKicker{ font-size:8px !important; }
+  .logoSub{ font-size:11px !important; }
+  #worldTitle{ top:74px !important; max-width:620px !important; }
+  #studentProjectBar{ top:102px !important; }
+}
+
+  </style>
 </head>
 
 <body>
