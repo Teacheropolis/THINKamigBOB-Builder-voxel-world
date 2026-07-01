@@ -1069,6 +1069,182 @@ input{
   #studentProjectBar{ left:58%; }
 }
 
+
+
+/* ===== Branding polish update: game-style title + clearer audio controls ===== */
+#gameLogo{
+  position:absolute;
+  top:8px;
+  left:61%;
+  transform:translateX(-50%);
+  z-index:720;
+  text-align:center;
+  pointer-events:none;
+  padding:6px 26px 8px 26px;
+  border-radius:22px;
+  background:linear-gradient(135deg, rgba(5,10,25,.72), rgba(16,32,64,.48));
+  border:1px solid rgba(255,215,0,.55);
+  box-shadow:0 0 22px rgba(255,215,0,.32), 0 12px 30px rgba(0,0,0,.35), inset 0 0 18px rgba(255,255,255,.06);
+  overflow:hidden;
+}
+
+#gameLogo::after{
+  content:"";
+  position:absolute;
+  top:-40%;
+  left:-60%;
+  width:45%;
+  height:180%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+  transform:rotate(18deg);
+  animation:logoShine 8s ease-in-out infinite;
+}
+
+@keyframes logoShine{
+  0%, 70%{ left:-60%; opacity:0; }
+  76%{ opacity:.75; }
+  88%{ left:125%; opacity:0; }
+  100%{ left:125%; opacity:0; }
+}
+
+.logoKicker{
+  color:#BFE7FF;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.22em;
+  text-shadow:0 1px 8px rgba(56,189,248,.85);
+  margin-bottom:-2px;
+}
+
+.logoMain{
+  font-size:34px;
+  line-height:.96;
+  font-weight:1000;
+  letter-spacing:.035em;
+  color:#FFD766;
+  text-transform:none;
+  text-shadow:0 2px 0 #573B00, 0 0 14px rgba(255,215,0,.72), 0 0 28px rgba(56,189,248,.32);
+  -webkit-text-stroke:1px rgba(255,255,255,.38);
+}
+
+.logoSub{
+  display:inline-block;
+  margin-top:2px;
+  padding:2px 22px 3px 22px;
+  border-radius:999px;
+  background:linear-gradient(180deg, #38BDF8, #1D4ED8);
+  color:white;
+  font-size:15px;
+  font-weight:1000;
+  letter-spacing:.28em;
+  box-shadow:0 3px 0 rgba(0,0,0,.35), 0 0 14px rgba(56,189,248,.55);
+  text-shadow:0 2px 4px rgba(0,0,0,.55);
+}
+
+/* World title becomes a smaller current-world ribbon under the logo. */
+#worldTitle{
+  top:88px !important;
+  left:61% !important;
+  transform:translateX(-50%) !important;
+  font-size:15px !important;
+  padding:5px 16px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(255,215,0,.58) !important;
+  border-bottom:2px solid rgba(255,215,0,.38) !important;
+  background:linear-gradient(135deg, rgba(8,13,25,.76), rgba(29,44,75,.54)) !important;
+  box-shadow:0 6px 18px rgba(0,0,0,.28), 0 0 14px rgba(255,215,0,.14) !important;
+  color:#FFE58A !important;
+  max-width:520px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#studentProjectBar{
+  top:124px !important;
+  left:61% !important;
+}
+
+/* Stronger, easier-to-see audio buttons. */
+#voiceControls .voiceButton{
+  min-width:78px;
+  min-height:38px;
+  font-size:15px;
+  color:#ffffff !important;
+  background:linear-gradient(180deg, #2563EB, #102A6B) !important;
+  border:2px solid rgba(255,255,255,.92) !important;
+  border-bottom:4px solid rgba(7,17,47,.78) !important;
+  border-radius:14px !important;
+  text-shadow:0 2px 4px rgba(0,0,0,.75);
+  box-shadow:0 0 0 2px rgba(56,189,248,.25), 0 8px 18px rgba(0,0,0,.28) !important;
+}
+
+#voiceControls .voiceButton:hover{
+  background:linear-gradient(180deg, #3B82F6, #1D4ED8) !important;
+  box-shadow:0 0 0 2px rgba(255,215,0,.32), 0 0 20px rgba(56,189,248,.48), 0 10px 20px rgba(0,0,0,.32) !important;
+}
+
+#floatingReaderControls{
+  gap:8px !important;
+  padding:8px 10px !important;
+  border:2px solid rgba(255,255,255,.75) !important;
+  background:linear-gradient(180deg, rgba(11,20,45,.97), rgba(9,14,28,.94)) !important;
+  box-shadow:0 0 0 2px rgba(56,189,248,.22), 0 0 22px rgba(255,215,0,.22), 0 12px 26px rgba(0,0,0,.42) !important;
+}
+
+#floatingReaderControls button{
+  width:42px !important;
+  height:42px !important;
+  min-width:42px !important;
+  padding:0 !important;
+  margin:0 2px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:24px !important;
+  font-weight:1000 !important;
+  color:#ffffff !important;
+  background:linear-gradient(180deg, #2563EB, #0F2A68) !important;
+  border:2px solid rgba(255,255,255,.95) !important;
+  border-bottom:4px solid rgba(3,7,18,.75) !important;
+  border-radius:50% !important;
+  text-shadow:0 2px 4px rgba(0,0,0,.85);
+  box-shadow:0 0 12px rgba(56,189,248,.45), 0 5px 10px rgba(0,0,0,.30) !important;
+}
+
+#floatingReaderControls button:hover{
+  background:linear-gradient(180deg, #60A5FA, #1D4ED8) !important;
+  transform:translateY(-1px) scale(1.04) !important;
+}
+
+#floatingReaderControls button:active{
+  transform:translateY(1px) scale(.98) !important;
+}
+
+#readerProgress{
+  height:8px !important;
+  width:88px !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.18) !important;
+  border:1px solid rgba(255,255,255,.2) !important;
+  overflow:hidden;
+}
+
+#readerProgressFill{
+  height:100% !important;
+  border-radius:999px !important;
+  background:linear-gradient(90deg, #38BDF8, #FDE68A, #22C55E) !important;
+}
+
+@media (max-width:1100px){
+  #gameLogo{ left:62%; padding-left:18px; padding-right:18px; }
+  .logoMain{ font-size:28px; }
+  .logoSub{ font-size:12px; }
+  .logoKicker{ font-size:9px; }
+  #worldTitle{ top:78px !important; left:62% !important; max-width:430px; }
+  #studentProjectBar{ top:112px !important; left:62% !important; }
+}
+
 </style>
 </head>
 
@@ -1764,6 +1940,12 @@ input{
   </div>
 </div>
   
+<div id="gameLogo">
+  <div class="logoKicker">⚙️ THINK • BUILD • DISCOVER ⚙️</div>
+  <div class="logoMain">THINKamigBOB</div>
+  <div class="logoSub">BUILDER</div>
+</div>
+
 <div id="worldTitle">
   🧠 THINKamigBOB Builder 🧠
 </div>
