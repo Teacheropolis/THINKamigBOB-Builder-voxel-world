@@ -603,14 +603,59 @@
   🌦️ Weather ▶
 </button>
        
-<div id="weatherTools" class="toolCategory">
-  
-  <button onclick="addRainGauge();">🌧️ Add Rain Gauge</button>
-  <button onclick="addWeatherBalloon();">🎈 Add Weather Balloon</button>
-  <button onclick="addTornadoShelter();">🌪️ Add Tornado Shelter</button>
-  <button onclick="addLightningRod();">⚡ Add Lightning Rod</button>
-  <button onclick="addThermometer();">🌡️ Add Thermometer</button>
+<div class="toolRow">
+  <button onclick="addRainGauge(); showToolInfo('rainGauge');">
+    🌧️ Add Rain Gauge
+  </button>
 
+  <button class="favoriteStar"
+          onclick="toggleFavorite('rainGauge', '🌧️ Add Rain Gauge', 'addRainGauge(); showToolInfo(\'rainGauge\');', this)">
+    ☆
+  </button>
+</div>
+
+<div class="toolRow">
+  <button onclick="addWeatherBalloon(); showToolInfo('weatherBalloon');">
+    🎈 Add Weather Balloon
+  </button>
+
+  <button class="favoriteStar"
+          onclick="toggleFavorite('weatherBalloon', '🎈 Add Weather Balloon', 'addWeatherBalloon(); showToolInfo(\'weatherBalloon\');', this)">
+    ☆
+  </button>
+</div>
+
+<div class="toolRow">
+  <button onclick="addTornadoShelter(); showToolInfo('tornadoShelter');">
+    🌪️ Add Tornado Shelter
+  </button>
+
+  <button class="favoriteStar"
+          onclick="toggleFavorite('tornadoShelter', '🌪️ Add Tornado Shelter', 'addTornadoShelter(); showToolInfo(\'tornadoShelter\');', this)">
+    ☆
+  </button>
+</div>
+
+<div class="toolRow">
+  <button onclick="addLightningRod(); showToolInfo('lightningRod');">
+    ⚡ Add Lightning Rod
+  </button>
+
+  <button class="favoriteStar"
+          onclick="toggleFavorite('lightningRod', '⚡ Add Lightning Rod', 'addLightningRod(); showToolInfo(\'lightningRod\');', this)">
+    ☆
+  </button>
+</div>
+
+<div class="toolRow">
+  <button onclick="addThermometer(); showToolInfo('thermometer');">
+    🌡️ Add Thermometer
+  </button>
+
+  <button class="favoriteStar"
+          onclick="toggleFavorite('thermometer', '🌡️ Add Thermometer', 'addThermometer(); showToolInfo(\'thermometer\');', this)">
+    ☆
+  </button>
 </div>
 
 <button class="categoryButton"
@@ -967,7 +1012,41 @@ const TOOL_INFO = {
     question:"How can weathering and erosion change rocks over time?",
     skill:"Earth Science"
   }
+,
+rainGauge:{
+  title:"🌧️ Rain Gauge",
+  vocabulary:["Precipitation","Rainfall","Measurement","Weather Data"],
+  fact:"A rain gauge measures how much rain falls in a place.",
+  challenge:"Build a weather station with a rain gauge and thermometer."
+},
 
+weatherBalloon:{
+  title:"🎈 Weather Balloon",
+  vocabulary:["Atmosphere","Air Pressure","Temperature","Weather Data"],
+  fact:"Weather balloons collect information high above Earth.",
+  challenge:"Add a weather balloon above your station."
+},
+
+tornadoShelter:{
+  title:"🌪️ Tornado Shelter",
+  vocabulary:["Severe Weather","Safety","Shelter","Structure"],
+  fact:"A tornado shelter protects people from strong winds and flying debris.",
+  challenge:"Build a safe shelter near your weather station."
+},
+
+lightningRod:{
+  title:"⚡ Lightning Rod",
+  vocabulary:["Electricity","Lightning","Conductor","Safety"],
+  fact:"Lightning rods help direct lightning safely into the ground.",
+  challenge:"Add a lightning rod to protect an important building."
+},
+
+thermometer:{
+  title:"🌡️ Thermometer",
+  vocabulary:["Temperature","Degrees","Weather","Data"],
+  fact:"A thermometer measures how hot or cold the air is.",
+  challenge:"Place a thermometer where it could measure outdoor temperature."
+}
 };
   
 function updateThinkerBob(toolId){
