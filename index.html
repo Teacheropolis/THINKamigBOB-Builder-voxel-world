@@ -59,87 +59,55 @@
 
 #stemCoach{
   position:fixed;
-
-  top:270px;
+  top:230px;
   right:20px;
-
   width:300px;
-
   background:rgba(35,35,35,.45);
-
   backdrop-filter:blur(8px);
-
   border:2px solid rgba(255,215,0,.75);
-
   border-radius:16px;
-
   color:white;
-
   padding:12px;
-
   z-index:550;
-
   box-shadow:0 0 15px rgba(0,0,0,.45);
-
   max-height:320px;
-
   overflow-y:auto;
 }
 
 #stemCoachToggle{
-
   width:100%;
-
   background:rgba(0,0,0,.25);
-
   color:gold;
-
   border:2px solid gold;
-
   border-radius:10px;
-
   font-weight:bold;
-
   padding:8px;
-
   cursor:pointer;
 }
 
-#vocabPanel{
-
+#thinkerBobPanel{
   margin-top:10px;
-
   background:rgba(255,255,255,.08);
-
   border-radius:10px;
-
   padding:10px;
-
   color:white;
-
   line-height:1.5;
+  font-size:14px;
 }
-    
+
+
 #floatingToolbox{
   position:fixed;
-
   top:auto;
   bottom:20px;
-
   right:20px;
-
   width:300px;
-
   background:rgba(255,255,255,.95);
-
   border:3px solid gold;
   border-radius:14px;
-
   padding:10px;
-
   z-index:400;
-
-  max-height:55vh;
+  max-height:35vh;
   overflow-y:auto;
 }
 
@@ -181,27 +149,6 @@
   right:20px;
   width:300px;
   z-index:600;
-}
-
-#stemCoach{
-  position:fixed;
-  top:230px;
-  right:20px;
-  width:300px;
-  max-height:240px;
-  overflow-y:auto;
-  z-index:550;
-}
-
-#floatingToolbox{
-  position:fixed;
-  top:auto;
-  bottom:20px;
-  right:20px;
-  width:300px;
-  max-height:35vh;
-  overflow-y:auto;
-  z-index:400;
 }
 
 #missionToggle {
@@ -522,26 +469,27 @@
       <label><input type="checkbox" onchange="syncChecklists()"> <span id="floatChallenge4">Reset and try a new design</span></label>
     </div>
 
-    <div id="stemCoach">
-
-  <button id="stemCoachToggle"
-          onclick="toggleStemCoach()">
-    🧙 Professor Bob's STEM Coach ▼
-  </button>
-
-  <div id="stemCoachContent">
-    <div id="vocabPanel">
-      <p><b>Welcome, Builder!</b></p>
-      <p>Click a building tool to learn STEM vocabulary, facts, and challenges.</p>
-    </div>
-  </div>
-
-</div>
-
     <p id="floatingBadge">
       🏅 Badge: Keep building!
     </p>
 
+  </div>
+
+</div>
+
+<div id="stemCoach">
+
+  <button id="stemCoachToggle"
+          onclick="toggleStemCoach()">
+    🤔 THINKer BOB — The STEM Coach ▼
+  </button>
+
+  <div id="stemCoachContent">
+    <div id="thinkerBobPanel">
+      <p><b>👋 Welcome, Builder!</b></p>
+      <p>I'm THINKer BOB. Click a building tool to discover STEM vocabulary, facts, questions, and challenges.</p>
+      <p><b>Think • Build • Discover</b></p>
+    </div>
   </div>
 
 </div>
@@ -629,7 +577,7 @@
   </button>
 
   <button class="favoriteStar"
-          onclick="toggleFavorite('tree', '🌲 Add Tree', 'addTree(); showTreeVocab();', this)">
+          onclick="toggleFavorite('tree', '🌲 Add Tree', 'addTree(); updateThinkerBob(\'tree\');', this)">
     ☆
   </button>
 </div>
@@ -940,10 +888,10 @@ function toggleStemCoach(){
 
   if(content.style.display === "none"){
     content.style.display = "block";
-    button.innerHTML = "🧙 Professor Bob's STEM Coach ▼";
+    button.innerHTML = "🤔 THINKer BOB — The STEM Coach ▼";
   } else {
     content.style.display = "none";
-    button.innerHTML = "🧙 Professor Bob's STEM Coach ▶";
+    button.innerHTML = "🤔 THINKer BOB — The STEM Coach ▶";
   }
 }  
   
@@ -1021,7 +969,9 @@ const TOOL_INFO = {
       "Leaves"
     ],
     fact:"Trees make oxygen for people and animals.",
-    challenge:"Build a forest with at least five trees."
+    challenge:"Build a forest with at least five trees.",
+    question:"Why are trees called producers?",
+    skill:"Life Science"
   },
 
   pond:{
@@ -1033,7 +983,9 @@ const TOOL_INFO = {
       "Water Source"
     ],
     fact:"Ponds can provide water, food, and shelter for many living things.",
-    challenge:"Build a pond habitat with trees, rocks, and animals nearby."
+    challenge:"Build a pond habitat with trees, rocks, and animals nearby.",
+    question:"What living things could use your pond for survival?",
+    skill:"Ecosystems"
   },
 
   rocks:{
@@ -1045,12 +997,14 @@ const TOOL_INFO = {
       "Landform"
     ],
     fact:"Rocks can be broken down by wind, water, ice, and plant roots.",
-    challenge:"Use rocks to create a path, mountain, shelter, or barrier."
+    challenge:"Use rocks to create a path, mountain, shelter, or barrier.",
+    question:"How can weathering and erosion change rocks over time?",
+    skill:"Earth Science"
   }
 
 };
   
-function showToolInfo(toolId){
+function updateThinkerBob(toolId){
 
   const info = TOOL_INFO[toolId];
 
@@ -1058,22 +1012,48 @@ function showToolInfo(toolId){
     return;
   }
 
-  document.getElementById("vocabPanel").innerHTML = `
+  const question =
+    info.question || "What do you notice about this tool?";
+
+  const skill =
+    info.skill || "STEM Thinking";
+
+  document.getElementById("thinkerBobPanel").innerHTML = `
+    <h3>🤔 THINKer BOB</h3>
+    <p><b>The STEM Coach</b></p>
+    <p><b>Think • Build • Discover</b></p>
+
+    <hr>
+
     <h3>${info.title}</h3>
 
-    <b>Vocabulary</b><br>
+    <b>📚 Vocabulary</b><br>
     ${info.vocabulary.join("<br>")}
 
     <br><br>
 
-    💡 <b>Did You Know?</b><br>
+    💡 <b>STEM Fact</b><br>
     ${info.fact}
 
     <br><br>
 
-    ⭐ <b>Challenge</b><br>
+    ❓ <b>Think About It</b><br>
+    ${question}
+
+    <br><br>
+
+    🎯 <b>Builder Challenge</b><br>
     ${info.challenge}
+
+    <br><br>
+
+    🏅 <b>STEM Skill</b><br>
+    ${skill}
   `;
+}
+
+function showToolInfo(toolId){
+  updateThinkerBob(toolId);
 }
   
  function setGroundColor(color){
@@ -1389,6 +1369,7 @@ if(
   event.target.closest("#info") ||
   event.target.closest("#floatingToolbox") ||
   event.target.closest("#missionCard") ||
+  event.target.closest("#stemCoach") ||
   event.target.closest("#buildBar") ||
   event.target.closest("#viewCubeBox")
 ){
@@ -1472,6 +1453,7 @@ function clickedUI(event){
     event.target.closest("#buildBar") ||
     event.target.closest("#blockColor") ||
     event.target.closest("#missionCard") ||
+    event.target.closest("#stemCoach") ||
     event.target.closest("#viewCubeBox")
   );
 
@@ -1483,6 +1465,7 @@ function clickedUI(event){
   "toolbox",
   "buildBar",
   "missionCard",
+  "stemCoach",
   "viewCubeBox"
 ].forEach(id => {
 
