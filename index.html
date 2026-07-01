@@ -59,7 +59,7 @@
 
 #stemCoach{
   position:fixed;
-  top:304px;
+  top:300px;
   right:20px;
   width:300px;
   background:rgba(35,35,35,.45);
@@ -256,6 +256,11 @@
   text-shadow:
     0 2px 4px rgba(0,0,0,.95),
     0 0 8px rgba(0,0,0,.85);
+}
+
+#missionCard label{
+  display:block;
+  margin:5px 0;
 }
 
 #missionTitle{
@@ -1548,6 +1553,37 @@ function toggleFavorite(id, label, action, starButton){
   syncFavoriteStars();
 }
 
+
+function positionRightPanels(){
+
+  const mission = document.getElementById("missionCard");
+  const coach = document.getElementById("stemCoach");
+  const toolbox = document.getElementById("floatingToolbox");
+
+  if(!mission || !coach || !toolbox){
+    return;
+  }
+
+  const gap = 10;
+  const minCoachHeight = 150;
+
+  const missionBottom =
+    mission.getBoundingClientRect().bottom;
+
+  const coachTop =
+    Math.max(20, Math.round(missionBottom + gap));
+
+  coach.style.top = coachTop + "px";
+
+  const toolboxTop =
+    toolbox.getBoundingClientRect().top;
+
+  const availableHeight =
+    Math.max(minCoachHeight, Math.round(toolboxTop - coachTop - gap));
+
+  coach.style.maxHeight = availableHeight + "px";
+}
+
 function toggleStemCoach(){
 
   const content =
@@ -1563,6 +1599,8 @@ function toggleStemCoach(){
     content.style.display = "none";
     button.innerHTML = "🤔 THINKer BOB — The STEM Coach ▶";
   }
+
+  positionRightPanels();
 }  
   
 function toggleCategory(id, button){
@@ -4130,6 +4168,7 @@ function updateFloatingChecklist(){
     document.getElementById("badgeMessage").innerHTML;
 
   updateStarterChallengeDisplay();
+  positionRightPanels();
 }
 
 function toggleMissionCard(){
@@ -4150,6 +4189,8 @@ function toggleMissionCard(){
     content.style.display = "none";
     button.innerHTML = "⭐ Mission Tracker ▶";
   }
+
+  positionRightPanels();
 }
 
 function syncChecklists(){
@@ -4177,6 +4218,7 @@ function resetChecklist(){
   });
 
   updateStarterChallengeDisplay();
+  positionRightPanels();
 }
   
 function buildCastle(){
@@ -5175,6 +5217,7 @@ function toggleToolbox(){
     button.innerHTML = "🧰 THINKamigBOB Toolbox ▶";
   }
 
+  positionRightPanels();
 }
 
 function toggleTools(){
@@ -5200,6 +5243,48 @@ function toggleTools(){
       "⚙️ Building Tools ▶";
   }
 }
+
+
+window.addEventListener("resize", positionRightPanels);
+
+window.addEventListener("load", () => {
+  positionRightPanels();
+
+  const mission = document.getElementById("missionCard");
+  if(mission){
+    const observer = new MutationObserver(positionRightPanels);
+    observer.observe(mission, {
+      childList:true,
+      subtree:true,
+      characterData:true,
+      attributes:true
+    });
+  }
+
+  const coach = document.getElementById("stemCoach");
+  if(coach){
+    const observer = new MutationObserver(positionRightPanels);
+    observer.observe(coach, {
+      childList:true,
+      subtree:true,
+      characterData:true,
+      attributes:true
+    });
+  }
+
+  const toolbox = document.getElementById("floatingToolbox");
+  if(toolbox){
+    const observer = new MutationObserver(positionRightPanels);
+    observer.observe(toolbox, {
+      childList:true,
+      subtree:true,
+      attributes:true
+    });
+  }
+});
+
+setTimeout(positionRightPanels, 100);
+setTimeout(positionRightPanels, 500);
 
 checkBadge();
 animate();
