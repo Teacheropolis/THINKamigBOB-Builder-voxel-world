@@ -657,6 +657,418 @@
   line-height:1.1;
 }
 
+
+
+/* =========================================================
+   THINKamigBOB Builder — Published Game UI Polish
+   Keeps the same layout/features, but upgrades the visual style.
+   ========================================================= */
+:root{
+  --bg-glass: rgba(12, 18, 30, .72);
+  --bg-glass-light: rgba(255, 255, 255, .12);
+  --panel-edge: rgba(255, 215, 0, .62);
+  --panel-edge-soft: rgba(255, 255, 255, .18);
+  --gold: #FFD766;
+  --gold-dark: #B98A22;
+  --ink: #10131c;
+  --cream: #FFF8D6;
+  --blue: #38BDF8;
+  --green: #22C55E;
+  --red: #EF4444;
+  --purple: #8B5CF6;
+  --shadow-heavy: 0 18px 45px rgba(0,0,0,.38), 0 0 0 1px rgba(255,255,255,.08) inset;
+  --shadow-soft: 0 10px 24px rgba(0,0,0,.25), 0 0 0 1px rgba(255,255,255,.08) inset;
+  --radius-lg: 18px;
+  --radius-md: 12px;
+}
+
+html, body{
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  background: radial-gradient(circle at top, #9FE8FF 0%, #72C8E8 38%, #5CAFD7 100%);
+}
+
+button,
+select,
+input{
+  font-family: inherit;
+}
+
+/* Global button upgrade */
+button{
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:12px;
+  background:linear-gradient(180deg, rgba(255,222,116,.96), rgba(199,147,37,.96));
+  color:#111827;
+  box-shadow:0 4px 0 rgba(98,73,18,.45), 0 8px 18px rgba(0,0,0,.18);
+  letter-spacing:.01em;
+  transition:transform .12s ease, filter .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+button:hover{
+  background:linear-gradient(180deg, #FFEFA8, #DFAE3D);
+  filter:saturate(1.08);
+  transform:translateY(-1px);
+  box-shadow:0 5px 0 rgba(98,73,18,.45), 0 12px 22px rgba(0,0,0,.22);
+}
+
+button:active{
+  transform:translateY(2px);
+  box-shadow:0 2px 0 rgba(98,73,18,.45), 0 5px 12px rgba(0,0,0,.22);
+}
+
+select,
+input{
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:10px;
+  background:rgba(255,255,255,.92);
+  box-shadow:0 2px 8px rgba(0,0,0,.16) inset;
+}
+
+/* Main title: less slide-like, more game HUD */
+#worldTitle{
+  background:linear-gradient(135deg, rgba(13,18,33,.86), rgba(38,44,69,.72));
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  color:var(--gold);
+  border:1px solid rgba(255,215,0,.7);
+  border-bottom:3px solid rgba(255,215,0,.6);
+  border-radius:20px;
+  box-shadow:var(--shadow-heavy), 0 0 24px rgba(255,215,0,.22);
+  text-shadow:0 2px 8px rgba(0,0,0,.75);
+  letter-spacing:.02em;
+}
+
+/* Student/project strip */
+#studentProjectBar{
+  background:linear-gradient(135deg, rgba(12,18,30,.78), rgba(12,18,30,.58));
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  color:white;
+  border:1px solid rgba(255,215,0,.5);
+  box-shadow:var(--shadow-soft);
+}
+#studentProjectBar b{ color:var(--gold); }
+#studentProjectBar input{
+  background:rgba(255,255,255,.9);
+  border:1px solid rgba(255,255,255,.25);
+}
+
+/* Left mission/setup panel */
+#info{
+  background:linear-gradient(180deg, rgba(11,18,32,.78), rgba(18,26,44,.68));
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  color:white;
+  border:1px solid rgba(255,215,0,.48);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-heavy);
+}
+#info h2,
+#info b,
+#challengeTitle,
+#info p b{
+  color:var(--gold);
+}
+#info p{
+  color:rgba(255,255,255,.92);
+}
+#challengeChecklist{
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,215,0,.45);
+  color:white;
+  border-radius:14px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.05) inset;
+}
+#challengeChecklist label{ color:white; }
+
+/* Primary black/gold buttons become premium HUD buttons */
+#starterButton,
+#toolboxButton,
+#toolsButton,
+#missionToggle,
+#stemCoachToggle{
+  background:linear-gradient(180deg, rgba(12,18,30,.95), rgba(27,34,55,.92));
+  color:var(--gold);
+  border:1px solid rgba(255,215,0,.72);
+  border-bottom:3px solid rgba(255,215,0,.55);
+  border-radius:14px;
+  box-shadow:0 8px 20px rgba(0,0,0,.28), 0 0 18px rgba(255,215,0,.10) inset;
+  text-shadow:0 2px 6px rgba(0,0,0,.75);
+}
+#starterButton:hover,
+#toolboxButton:hover,
+#toolsButton:hover,
+#missionToggle:hover,
+#stemCoachToggle:hover{
+  background:linear-gradient(180deg, rgba(25,35,56,.98), rgba(13,18,30,.95));
+  color:#FFF3B0;
+}
+
+/* Starter worlds list */
+#starterWorlds button{
+  background:linear-gradient(135deg, rgba(37,99,235,.95), rgba(14,165,233,.86));
+  color:white;
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:0 4px 0 rgba(16,64,120,.55), 0 8px 18px rgba(0,0,0,.22);
+  text-shadow:0 1px 4px rgba(0,0,0,.45);
+}
+#starterWorlds button:hover{
+  background:linear-gradient(135deg, rgba(59,130,246,1), rgba(34,211,238,.92));
+}
+
+/* Right side transparent HUD panels */
+#stemCoach,
+#floatingToolbox,
+#missionCard,
+#buildBar,
+#viewCubeBox,
+#missionPopupBox,
+#evidencePanel{
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+
+#stemCoach{
+  background:linear-gradient(180deg, rgba(10,16,30,.72), rgba(21,27,45,.58));
+  border:1px solid rgba(255,215,0,.62);
+  border-bottom:3px solid rgba(255,215,0,.42);
+  border-radius:20px;
+  box-shadow:var(--shadow-heavy);
+}
+
+#thinkerBobPanel,
+#readerHighlightBox,
+#popupReaderHighlightBox,
+#vocabDetailBox{
+  background:rgba(255,255,255,.09);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:14px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset;
+}
+#thinkerBobPanel h3{
+  color:var(--gold);
+  margin-top:4px;
+  text-shadow:0 2px 8px rgba(0,0,0,.65);
+}
+#thinkerBobPanel b{ color:#FFF0A6; }
+
+.vocabButton{
+  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.08));
+  border:1px solid rgba(255,215,0,.42);
+  border-radius:999px;
+  color:#FFF3B0;
+  box-shadow:none;
+}
+.vocabButton:hover{
+  background:rgba(255,215,0,.22);
+  transform:translateY(-1px);
+}
+
+/* Toolbox */
+#floatingToolbox{
+  background:linear-gradient(180deg, rgba(246,250,255,.88), rgba(228,236,248,.78));
+  border:1px solid rgba(255,215,0,.68);
+  border-bottom:3px solid rgba(255,215,0,.5);
+  border-radius:20px;
+  box-shadow:var(--shadow-heavy);
+}
+#floatingToolbox p b{
+  color:#334155;
+  letter-spacing:.02em;
+}
+#toolbox{
+  color:#172033;
+}
+.categoryButton{
+  background:linear-gradient(135deg, rgba(28,122,82,.98), rgba(34,197,94,.9));
+  color:white;
+  border:1px solid rgba(255,255,255,.25);
+  border-bottom:3px solid rgba(11,94,58,.55);
+  border-radius:14px;
+  box-shadow:0 6px 15px rgba(17,93,60,.22);
+  text-align:left;
+  padding-left:14px;
+  text-shadow:0 1px 5px rgba(0,0,0,.35);
+}
+.categoryButton:hover{
+  background:linear-gradient(135deg, rgba(34,197,94,1), rgba(20,184,166,.9));
+}
+.toolCategory{
+  margin-left:4px;
+  padding:6px 0 8px 6px;
+  border-left:2px solid rgba(28,122,82,.18);
+}
+.toolRow button:first-child,
+#favoriteTools .favoriteTool,
+#toolbox > button:not(.categoryButton):not(#toolboxButton),
+#toolbox .toolCategory > button:not(.favoriteStar){
+  background:linear-gradient(180deg, #FFFFFF, #EAF0FA);
+  color:#172033;
+  border:1px solid rgba(15,23,42,.12);
+  box-shadow:0 3px 0 rgba(148,163,184,.45), 0 6px 14px rgba(15,23,42,.12);
+  text-align:left;
+}
+.toolRow button:first-child:hover,
+#favoriteTools .favoriteTool:hover{
+  background:linear-gradient(180deg, #FFFFFF, #DBEAFE);
+}
+.favoriteStar{
+  background:linear-gradient(180deg, #FFF7C4, #F5BD35) !important;
+  color:#111827;
+  border:1px solid rgba(180,116,18,.35) !important;
+  box-shadow:0 3px 0 rgba(154,104,17,.42), 0 6px 13px rgba(0,0,0,.12) !important;
+  text-align:center !important;
+}
+.moveButton{
+  background:linear-gradient(135deg, rgba(185,28,28,.98), rgba(239,68,68,.92));
+  color:#FFF4BF;
+  border:1px solid rgba(255,255,255,.24);
+  border-bottom:3px solid rgba(127,29,29,.55);
+  box-shadow:0 6px 14px rgba(127,29,29,.24);
+  text-shadow:0 1px 5px rgba(0,0,0,.4);
+}
+.moveButton:hover{ background:linear-gradient(135deg, #EF4444, #F97316); }
+#toolMessage{
+  background:rgba(255,255,255,.65);
+  border:1px solid rgba(124,58,237,.18);
+  border-radius:10px;
+  padding:7px;
+}
+
+/* Bottom command bar */
+#buildBar{
+  background:linear-gradient(180deg, rgba(9,15,28,.82), rgba(21,29,48,.70));
+  border:1px solid rgba(255,215,0,.62);
+  border-bottom:3px solid rgba(255,215,0,.42);
+  border-radius:22px;
+  color:white;
+  box-shadow:var(--shadow-heavy);
+}
+#buildBar b,
+.voiceSmallLabel{ color:var(--gold); }
+#buildBar select,
+#voiceSelect{
+  background:rgba(255,255,255,.92);
+  color:#111827;
+}
+#bottomBuildTools button,
+.voiceButton{
+  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.08));
+  color:white;
+  border:1px solid rgba(255,255,255,.22);
+  border-bottom:2px solid rgba(255,255,255,.14);
+  box-shadow:0 6px 14px rgba(0,0,0,.16);
+  text-shadow:0 1px 4px rgba(0,0,0,.4);
+}
+#bottomBuildTools button:hover,
+.voiceButton:hover{
+  background:linear-gradient(180deg, rgba(56,189,248,.36), rgba(14,165,233,.18));
+  color:#EAFBFF;
+}
+#autoReadLabel{ color:white; }
+
+/* View dice: cleaner CAD HUD */
+#viewCubeBox{
+  background:linear-gradient(180deg, rgba(8,14,27,.66), rgba(21,29,48,.48));
+  border:1px solid rgba(255,215,0,.45);
+  border-radius:18px;
+  box-shadow:var(--shadow-soft);
+}
+#viewCubeTitle{
+  color:#FFF1A8;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+#viewDiceHint{
+  color:rgba(255,255,255,.78);
+}
+
+/* Mission text HUD */
+#missionTitle{
+  color:var(--gold);
+  letter-spacing:.02em;
+}
+#floatingChecklist label,
+#floatingBadge{
+  background:rgba(0,0,0,.18);
+  border-radius:8px;
+  padding:2px 5px;
+  width:max-content;
+  max-width:295px;
+}
+
+/* Popups and evidence */
+#missionPopup{
+  background:rgba(4,8,18,.62);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+#missionPopupBox,
+#evidencePanel{
+  background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(235,241,252,.94));
+  border:1px solid rgba(255,215,0,.8);
+  border-bottom:4px solid rgba(255,215,0,.55);
+  border-radius:22px;
+  box-shadow:var(--shadow-heavy);
+}
+#closeMissionPopup{
+  background:linear-gradient(135deg, #B91C1C, #EF4444);
+  color:white;
+}
+
+/* Reader controls */
+#floatingReaderControls{
+  background:linear-gradient(180deg, rgba(9,15,28,.92), rgba(21,29,48,.90));
+  border:1px solid rgba(255,215,0,.75);
+  border-bottom:3px solid rgba(255,215,0,.5);
+  border-radius:999px;
+  box-shadow:var(--shadow-heavy);
+}
+#floatingReaderControls button{
+  border-radius:999px;
+  background:rgba(255,255,255,.10);
+  color:white;
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:none;
+}
+.readWord.currentReadWord{
+  background:linear-gradient(180deg, #FFF1A8, #FFD54D);
+  color:#111827;
+  box-shadow:0 0 0 2px rgba(255,215,0,.22);
+}
+#readerProgressFill{ background:linear-gradient(90deg, #38BDF8, #FFD766); }
+
+/* Scrollbar polish */
+#info::-webkit-scrollbar,
+#floatingToolbox::-webkit-scrollbar,
+#stemCoach::-webkit-scrollbar,
+#readerHighlightBox::-webkit-scrollbar,
+#popupReaderHighlightBox::-webkit-scrollbar{
+  width:8px;
+}
+#info::-webkit-scrollbar-thumb,
+#floatingToolbox::-webkit-scrollbar-thumb,
+#stemCoach::-webkit-scrollbar-thumb,
+#readerHighlightBox::-webkit-scrollbar-thumb,
+#popupReaderHighlightBox::-webkit-scrollbar-thumb{
+  background:rgba(255,215,0,.45);
+  border-radius:999px;
+}
+#info::-webkit-scrollbar-track,
+#floatingToolbox::-webkit-scrollbar-track,
+#stemCoach::-webkit-scrollbar-track,
+#readerHighlightBox::-webkit-scrollbar-track,
+#popupReaderHighlightBox::-webkit-scrollbar-track{
+  background:rgba(0,0,0,.12);
+}
+
+/* Responsive guardrails */
+@media (max-width: 1100px){
+  #buildBar{ min-width:auto; width:calc(100vw - 30px); }
+  #worldTitle{ font-size:22px; padding:8px 18px; }
+  #studentProjectBar{ left:58%; }
+}
+
 </style>
 </head>
 
