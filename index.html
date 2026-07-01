@@ -187,7 +187,8 @@
 }
 
 
-#readerHighlightBox{
+#readerHighlightBox,
+#popupReaderHighlightBox{
   margin-top:8px;
   background:rgba(255,255,255,.10);
   border:1px solid rgba(255,215,0,.45);
@@ -1347,6 +1348,7 @@
     <p id="popupMission"></p>
     <ul id="popupChallenges"></ul>
     <p id="popupMoreChallenge"></p>
+    <div id="popupReaderHighlightBox" style="display:none;"></div>
   </div>
 </div>
   
@@ -2226,15 +2228,31 @@ function prepareSpeechText(text){
   return cleanRepeatedWords(cleanEmoji(String(text))).replace(/\s+/g, " ").trim();
 }
 
-function renderReaderText(text){
-  const panel = document.getElementById("thinkerBobPanel");
-  if(!panel){
-    return;
+let currentReaderBoxId = "readerHighlightBox";
+let currentReaderSourceText = "";
+
+function getReaderBox(target = "thinkerBob"){
+  if(target === "popup"){
+    let popupBox = document.getElementById("popupReaderHighlightBox");
+
+    if(!popupBox){
+      const missionPopupBox = document.getElementById("missionPopupBox");
+      popupBox = document.createElement("div");
+      popupBox.id = "popupReaderHighlightBox";
+      if(missionPopupBox){
+        missionPopupBox.appendChild(popupBox);
+      }
+    }
+
+    popupBox.style.display = "block";
+    currentReaderBoxId = "popupReaderHighlightBox";
+    return popupBox;
   }
 
-  const prepared = prepareSpeechText(text);
-  currentReaderText = prepared;
-  currentReaderWords = prepared ? prepared.split(/\s+/) : [];
+  const panel = document.getElementById("thinkerBobPanel");
+  if(!panel){
+    return null;
+  }
 
   let box = document.getElementById("readerHighlightBox");
 
@@ -2242,6 +2260,21 @@ function renderReaderText(text){
     box = document.createElement("div");
     box.id = "readerHighlightBox";
     panel.appendChild(box);
+  }
+
+  currentReaderBoxId = "readerHighlightBox";
+  return box;
+}
+
+function renderReaderText(text, target = "thinkerBob"){
+  const prepared = prepareSpeechText(text);
+  currentReaderText = prepared;
+  currentReaderSourceText = prepared;
+  currentReaderWords = prepared ? prepared.split(/\s+/) : [];
+
+  const box = getReaderBox(target);
+  if(!box){
+    return;
   }
 
   box.innerHTML = currentReaderWords.map((word, index) => {
@@ -2270,11 +2303,31 @@ function showFloatingReaderControlsNearElement(element){
     return;
   }
 
-  const rect = element.getBoundingClientRect();
   controls.style.display = "flex";
 
-  const left = Math.min(window.innerWidth - 120, rect.right + 8);
-  const top = Math.max(8, Math.min(window.innerHeight - 50, rect.top - 4));
+  const wordRect = element.getBoundingClientRect();
+  const readingArea =
+    element.closest("#readerHighlightBox, #popupReaderHighlightBox, #thinkerBobPanel, #missionPopupBox") || element;
+  const areaRect = readingArea.getBoundingClientRect();
+
+  const controlsWidth = controls.offsetWidth || 112;
+  const controlsHeight = controls.offsetHeight || 42;
+
+  // Prefer placing controls just outside the reading area so they never cover the text.
+  let left = areaRect.left - controlsWidth - 10;
+
+  // If there is not enough room on the left, place them just to the right.
+  if(left < 8){
+    left = areaRect.right + 10;
+  }
+
+  // If right side would go off screen, tuck it inside the nearest safe edge.
+  if(left + controlsWidth > window.innerWidth - 8){
+    left = Math.max(8, window.innerWidth - controlsWidth - 8);
+  }
+
+  let top = wordRect.top - 6;
+  top = Math.max(8, Math.min(window.innerHeight - controlsHeight - 8, top));
 
   controls.style.left = left + "px";
   controls.style.top = top + "px";
@@ -2292,7 +2345,8 @@ function highlightReaderWord(index){
     word.classList.remove("currentReadWord");
   });
 
-  const word = document.querySelector(`.readWord[data-word-index="${index}"]`);
+  const box = document.getElementById(currentReaderBoxId) || document;
+  const word = box.querySelector(`.readWord[data-word-index="${index}"]`);
 
   if(word){
     word.classList.add("currentReadWord");
@@ -2302,7 +2356,7 @@ function highlightReaderWord(index){
   }
 }
 
-function speakText(text, startIndex = 0){
+function speakText(text, startIndex = 0, target = "thinkerBob"){
   activeSpeechMode = "lesson";
   currentUtteranceMode = "lesson";
 
@@ -2317,8 +2371,10 @@ function speakText(text, startIndex = 0){
     return;
   }
 
-  if(prepared !== currentReaderText || currentReaderWords.length === 0){
-    renderReaderText(prepared);
+  const targetBoxId = target === "popup" ? "popupReaderHighlightBox" : "readerHighlightBox";
+
+  if(prepared !== currentReaderText || currentReaderWords.length === 0 || currentReaderBoxId !== targetBoxId){
+    renderReaderText(prepared, target);
   }
 
   startIndex = Math.max(0, Math.min(startIndex, currentReaderWords.length - 1));
@@ -2367,7 +2423,7 @@ function speakText(text, startIndex = 0){
 }
 
 function readFromWord(index){
-  speakText(currentThinkerBobSpeech, index);
+  speakText(currentReaderSourceText || currentThinkerBobSpeech, index, currentReaderBoxId === "popupReaderHighlightBox" ? "popup" : "thinkerBob");
 }
 
 function speakPlainText(text){
@@ -2457,6 +2513,11 @@ let currentUtteranceMode = "none";
 
 function getHoverReadText(element){
   if(!element){
+    return "";
+  }
+
+  // Do not make the audio controls read their own labels.
+  if(element.closest("#floatingReaderControls, #voiceControls")){
     return "";
   }
 
@@ -4537,13 +4598,22 @@ function showMissionPopup(){
 
   document.getElementById("missionPopup").style.display = "flex";
 
+  const popupSpeech = buildMissionPopupSpeech();
+  currentThinkerBobSpeech = popupSpeech;
+
   setTimeout(() => {
-    speakPlainText(buildMissionPopupSpeech());
+    renderReaderText(popupSpeech, "popup");
+    speakText(popupSpeech, 0, "popup");
   }, 250);
 }
 
 function closeMissionPopup(){
+  stopThinkerBob();
   document.getElementById("missionPopup").style.display = "none";
+  const popupReader = document.getElementById("popupReaderHighlightBox");
+  if(popupReader){
+    popupReader.style.display = "none";
+  }
 }
 
 function isStarterChallengeText(text){
