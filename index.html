@@ -1245,6 +1245,122 @@ input{
   #studentProjectBar{ top:112px !important; left:62% !important; }
 }
 
+
+
+/* ===== Top branding/header polish requested by Jen ===== */
+#gameLogo{
+  top:10px !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  padding:8px 34px 10px 34px !important;
+  min-width:390px;
+  border-radius:26px !important;
+  background:linear-gradient(135deg, rgba(4,10,24,.50), rgba(17,36,74,.28)) !important;
+  border:1px solid rgba(255,215,0,.46) !important;
+  box-shadow:
+    0 0 28px rgba(255,215,0,.42),
+    0 0 48px rgba(56,189,248,.24),
+    0 14px 34px rgba(0,0,0,.30),
+    inset 0 0 22px rgba(255,255,255,.08) !important;
+}
+
+.logoKicker{
+  font-size:12px !important;
+  letter-spacing:.26em !important;
+  color:#D9F3FF !important;
+}
+
+.logoMain{
+  font-size:42px !important;
+  letter-spacing:.045em !important;
+  color:#FFE47A !important;
+  text-shadow:
+    0 3px 0 #4c3300,
+    0 0 18px rgba(255,215,0,.92),
+    0 0 35px rgba(56,189,248,.42) !important;
+  -webkit-text-stroke:1.2px rgba(255,255,255,.50) !important;
+}
+
+.logoSub{
+  font-size:16px !important;
+  padding:3px 28px 4px 28px !important;
+  letter-spacing:.33em !important;
+}
+
+#worldTitle{
+  top:108px !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  max-width:620px !important;
+  font-size:16px !important;
+  padding:6px 18px !important;
+  background:rgba(5,10,24,.36) !important;
+  backdrop-filter:blur(10px) !important;
+  -webkit-backdrop-filter:blur(10px) !important;
+  border:1px solid rgba(255,215,0,.42) !important;
+  color:#FFE58A !important;
+  box-shadow:0 0 16px rgba(255,215,0,.24), 0 8px 18px rgba(0,0,0,.22) !important;
+}
+
+#studentProjectBar{
+  top:146px !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  gap:12px !important;
+  padding:0 !important;
+}
+
+#studentProjectBar label{
+  background:rgba(5,10,24,.34);
+  border:1px solid rgba(255,215,0,.34);
+  border-radius:999px;
+  padding:6px 10px;
+  box-shadow:0 5px 14px rgba(0,0,0,.24);
+  color:white;
+  text-shadow:0 2px 6px rgba(0,0,0,.85);
+}
+
+#studentProjectBar input{
+  width:145px !important;
+  background:rgba(255,255,255,.72) !important;
+  border:1px solid rgba(255,255,255,.30) !important;
+  border-radius:999px !important;
+  padding:5px 9px !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.18) inset !important;
+}
+
+#starterButton{
+  background:transparent !important;
+  border:none !important;
+  border-bottom:none !important;
+  color:#FFE58A !important;
+  box-shadow:none !important;
+  text-align:left !important;
+  font-size:18px !important;
+  padding:8px 2px !important;
+  margin:10px 0 8px 0 !important;
+  text-shadow:
+    0 2px 4px rgba(0,0,0,.95),
+    0 0 10px rgba(255,215,0,.35) !important;
+}
+
+#starterButton:hover{
+  background:rgba(255,255,255,.08) !important;
+  border-radius:12px !important;
+  transform:none !important;
+  box-shadow:none !important;
+}
+
+#info > p:first-of-type{
+  color:rgba(255,255,255,.90) !important;
+  text-shadow:0 2px 5px rgba(0,0,0,.70);
+}
+
 </style>
 </head>
 
@@ -1970,7 +2086,7 @@ input{
 </p>
 
 <button id="starterButton" onclick="toggleStarterWorlds()">
-  🌍 THINKamigBOB Starter Worlds ▼
+  🌍 Starter Worlds ▼
 </button>
 
 <div id="starterWorlds">
