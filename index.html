@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -60,7 +59,7 @@
 
 #stemCoach{
   position:fixed;
-  top:270px;
+  top:310px;
   right:20px;
   width:300px;
   background:rgba(35,35,35,.45);
@@ -135,15 +134,10 @@
 }
 
 #voiceSelect{
-  width:210px;
-  max-width:210px;
+  width:245px;
+  max-width:245px;
   font-size:12px;
   padding:5px;
-}
-
-#voiceRate,
-#voiceVolume{
-  width:80px;
 }
 
 .voiceSmallLabel{
@@ -227,6 +221,23 @@
   background: black;
   color: gold;
   border: 2px solid gold;
+}
+
+#missionContent{
+  margin-top:8px;
+  background:rgba(35,35,35,.45);
+  backdrop-filter:blur(8px);
+  border:2px solid rgba(255,215,0,.65);
+  border-radius:14px;
+  color:white;
+  padding:10px;
+  box-shadow:0 0 12px rgba(0,0,0,.35);
+}
+
+#floatingChecklist label,
+#floatingBadge{
+  color:white;
+  text-shadow:0 1px 3px rgba(0,0,0,.85);
 }
 
 #floatingChecklist label {
@@ -430,57 +441,64 @@
 #viewCubeBox{
   position:fixed;
   top:20px;
-  left:400px;
-  width:220px;
-  height:240px;
+  left:390px;
+  width:180px;
   z-index:300;
+  background:rgba(255,255,255,.58);
+  backdrop-filter:blur(8px);
+  border:2px solid rgba(255,215,0,.85);
+  border-radius:18px;
+  padding:8px;
+  text-align:center;
+  box-shadow:0 0 14px rgba(0,0,0,.25);
+}
+
+#viewCubeTitle{
+  font-size:12px;
+  font-weight:bold;
+  color:#111;
+  margin-bottom:4px;
 }
 
 #viewCubeCanvas{
-  position:absolute;
-  top:40px;
-  left:50px;
   width:120px;
   height:120px;
   background:transparent;
   border:none;
   border-radius:18px;
+  display:block;
+  margin:0 auto 6px auto;
 }
 
-.viewBtn{
-  position:absolute;
-  width:55px;
-  height:55px;
-  background:#FFD700;
-  border:none;
-  border-radius:50%;
+#viewDiceButtons{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:4px;
+}
+
+.viewDiceBtn{
+  background:rgba(255,215,0,.92);
+  border:2px solid rgba(0,0,0,.45);
+  border-radius:9px;
   font-weight:bold;
-  font-size:12px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 2px 4px rgba(0,0,0,.2);
+  font-size:10px;
+  padding:5px 2px;
+  margin:0;
+  box-shadow:0 2px 4px rgba(0,0,0,.25);
 }
 
-.topBtn{
-  top:-10px;
-  left:75px;
+.viewDiceBtn:hover{
+  background:#fff1a8;
+  box-shadow:0 0 10px gold;
 }
-    
-.leftBtn{ top:70px; left:0; }
-.rightBtn{ top:70px; right:0; }
-.frontBtn{ top:120px; left:40px; }
-.backBtn{ top:120px; right:40px; }
 
-.homeBtn{
-  top:185px;
-  left:75px;
+.viewDiceHome{
   background:#1E90FF;
   color:white;
+  border-color:#87CEFA;
 }
-        
-  </style>
+
+</style>
 </head>
 
 <body>
@@ -512,19 +530,14 @@
 </select>
 
   <div id="voiceControls">
-    <button class="voiceButton" onclick="readThinkerBob()">🔊 Read</button>
+    <button class="voiceButton" onclick="playThinkerBob()">▶️ Play</button>
+    <button class="voiceButton" onclick="pauseThinkerBob()">⏸ Pause</button>
     <button class="voiceButton" onclick="stopThinkerBob()">⏹ Stop</button>
 
     <span class="voiceSmallLabel">🎙 Voice</span>
     <select id="voiceSelect" onchange="saveVoiceSettings()">
       <option value="">Default Voice</option>
     </select>
-
-    <span class="voiceSmallLabel">🐢 Speed</span>
-    <input id="voiceRate" type="range" min="0.6" max="1.2" step="0.05" value="0.9" oninput="saveVoiceSettings()">
-
-    <span class="voiceSmallLabel">🔊 Volume</span>
-    <input id="voiceVolume" type="range" min="0" max="1" step="0.05" value="1" oninput="saveVoiceSettings()">
 
     <label id="autoReadLabel">
       <input type="checkbox" id="autoReadToggle" onchange="saveVoiceSettings()">
@@ -534,15 +547,16 @@
 </div>
   
 <div id="viewCubeBox">
-  <button class="viewBtn topBtn" onclick="setView('top')">TOP</button>
-  <button class="viewBtn leftBtn" onclick="setView('left')">LEFT</button>
-
+  <div id="viewCubeTitle">3D View Dice</div>
   <canvas id="viewCubeCanvas" width="120" height="120"></canvas>
-
-  <button class="viewBtn rightBtn" onclick="setView('right')">RIGHT</button>
-  <button class="viewBtn frontBtn" onclick="setView('front')">FRONT</button>
-  <button class="viewBtn backBtn" onclick="setView('back')">BACK</button>
-  <button class="viewBtn homeBtn" onclick="setView('home')">HOME</button>
+  <div id="viewDiceButtons">
+    <button class="viewDiceBtn" onclick="setView('top')">TOP</button>
+    <button class="viewDiceBtn" onclick="setView('front')">FRONT</button>
+    <button class="viewDiceBtn" onclick="setView('right')">RIGHT</button>
+    <button class="viewDiceBtn" onclick="setView('left')">LEFT</button>
+    <button class="viewDiceBtn" onclick="setView('back')">BACK</button>
+    <button class="viewDiceBtn viewDiceHome" onclick="setView('home')">HOME</button>
+  </div>
 </div>
 
 <div id="missionCard">
@@ -639,7 +653,7 @@
 
 <button class="categoryButton"
         onclick="toggleCategory('buildingMagicTools', this)">
-🏗️ Buildings & Magic ▶
+🏰 Magic ▶
 </button>  
 
 <div id="buildingMagicTools" class="toolCategory">
@@ -745,7 +759,7 @@
 
   <button class="categoryButton"
         onclick="toggleCategory('weatherTools', this)">
-  🌦️ Weather Tools ▶
+  🌦️ Weather ▶
 </button>
        
 <div id="weatherTools" class="toolCategory">
@@ -989,7 +1003,7 @@
 
 <button class="categoryButton"
         onclick="toggleCategory('cellTools', this)">
-  🧬 Cell Biology ▶
+  🧬 Cells ▶
 </button>
 
 <div id="cellTools" class="toolCategory">
@@ -1274,19 +1288,71 @@ document.body.appendChild(renderer.domElement);
 
 function createGrassTexture(){
   const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 256;
+  canvas.width = 512;
+  canvas.height = 512;
 
   const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#55aa55";
+
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  gradient.addColorStop(0, "#3f8f36");
+  gradient.addColorStop(0.35, "#5fb14a");
+  gradient.addColorStop(0.7, "#2f7d32");
+  gradient.addColorStop(1, "#7ac75a");
+  ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  for(let i = 0; i < 5000; i++){
-    const green = 90 + Math.floor(Math.random() * 80);
-    const red = 25 + Math.floor(Math.random() * 45);
-    const blue = 25 + Math.floor(Math.random() * 35);
+  for(let i = 0; i < 180; i++){
+    const isLight = Math.random() > 0.52;
+    const green = isLight ? 135 + Math.random() * 80 : 55 + Math.random() * 70;
+    const red = isLight ? 70 + Math.random() * 45 : 20 + Math.random() * 45;
+    const blue = isLight ? 45 + Math.random() * 35 : 20 + Math.random() * 30;
+
+    ctx.globalAlpha = 0.08 + Math.random() * 0.16;
+    ctx.fillStyle = `rgb(${Math.floor(red)},${Math.floor(green)},${Math.floor(blue)})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      Math.random() * canvas.width,
+      Math.random() * canvas.height,
+      18 + Math.random() * 42,
+      8 + Math.random() * 24,
+      Math.random() * Math.PI,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+
+  for(let i = 0; i < 11000; i++){
+    const green = 65 + Math.floor(Math.random() * 120);
+    const red = 20 + Math.floor(Math.random() * 65);
+    const blue = 20 + Math.floor(Math.random() * 45);
     ctx.fillStyle = `rgb(${red},${green},${blue})`;
-    ctx.globalAlpha = 0.28 + Math.random() * 0.35;
+    ctx.globalAlpha = 0.25 + Math.random() * 0.45;
+    ctx.fillRect(
+      Math.random() * canvas.width,
+      Math.random() * canvas.height,
+      1 + Math.random() * 3,
+      1 + Math.random() * 3
+    );
+  }
+
+  for(let i = 0; i < 95; i++){
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = Math.random() > 0.5 ? "#ffd966" : "#f4a6c8";
+    ctx.beginPath();
+    ctx.arc(
+      Math.random() * canvas.width,
+      Math.random() * canvas.height,
+      1.2 + Math.random() * 1.2,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+
+  for(let i = 0; i < 75; i++){
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = "#6b6b5f";
     ctx.fillRect(
       Math.random() * canvas.width,
       Math.random() * canvas.height,
@@ -1295,28 +1361,13 @@ function createGrassTexture(){
     );
   }
 
-  // tiny flowers and light patches
-  for(let i = 0; i < 65; i++){
-    ctx.globalAlpha = 0.65;
-    ctx.fillStyle = Math.random() > 0.5 ? "#ffd966" : "#f4a6c8";
-    ctx.beginPath();
-    ctx.arc(
-      Math.random() * canvas.width,
-      Math.random() * canvas.height,
-      1.2,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-  }
-
   ctx.globalAlpha = 1;
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(12, 12);
-  texture.anisotropy = 4;
+  texture.repeat.set(10, 10);
+  texture.anisotropy = 8;
   return texture;
 }
 
@@ -1825,6 +1876,68 @@ function buildThinkerBobSpeech(info){
 
 let availableVoices = [];
 
+const THINKER_BOB_VOICE_GROUPS = [
+  {label:"Chrome US English", langs:["en-US"], max:4},
+  {label:"British English", langs:["en-GB"], max:1},
+  {label:"Australian English", langs:["en-AU"], max:1},
+  {label:"Spanish", langs:["es-US","es-MX","es-ES","es"], max:1},
+  {label:"Chinese", langs:["zh-CN","zh-TW","zh-HK","zh"], max:1},
+  {label:"Arabic", langs:["ar"], max:1},
+  {label:"Vietnamese", langs:["vi"], max:1},
+  {label:"Tagalog / Filipino", langs:["fil","tl"], max:1},
+  {label:"Hindi", langs:["hi"], max:1},
+  {label:"Korean", langs:["ko"], max:1},
+  {label:"French", langs:["fr"], max:1},
+  {label:"Portuguese", langs:["pt"], max:1},
+  {label:"Russian", langs:["ru"], max:1},
+  {label:"Haitian Creole", langs:["ht"], max:1}
+];
+
+const maleVoiceHints = [
+  "male", "david", "mark", "george", "daniel", "fred", "alex",
+  "arthur", "thomas", "matthew", "oliver", "james", "paul", "jorge"
+];
+
+function voiceScore(voice){
+  const name = voice.name.toLowerCase();
+  let score = 0;
+
+  if(name.includes("google")) score += 8;
+  if(name.includes("chrome")) score += 6;
+  if(name.includes("enhanced")) score += 2;
+
+  maleVoiceHints.forEach(hint => {
+    if(name.includes(hint)) score += 12;
+  });
+
+  ["female", "zira", "susan", "samantha", "victoria", "karen", "moira", "tessa"].forEach(hint => {
+    if(name.includes(hint)) score -= 10;
+  });
+
+  return score;
+}
+
+function voicesForGroup(group){
+  const used = new Set();
+  const matches = [];
+
+  group.langs.forEach(lang => {
+    availableVoices.forEach(voice => {
+      const voiceLang = (voice.lang || "").toLowerCase();
+      const wanted = lang.toLowerCase();
+
+      if(!used.has(voice.name) && (voiceLang === wanted || voiceLang.startsWith(wanted + "-") || voiceLang.startsWith(wanted))){
+        used.add(voice.name);
+        matches.push(voice);
+      }
+    });
+  });
+
+  return matches
+    .sort((a,b) => voiceScore(b) - voiceScore(a))
+    .slice(0, group.max);
+}
+
 function populateVoiceChoices(){
 
   if(!("speechSynthesis" in window)){
@@ -1841,16 +1954,32 @@ function populateVoiceChoices(){
 
   const savedVoice = localStorage.getItem("thinkerBobVoice") || "";
 
-  voiceSelect.innerHTML = `<option value="">Default Voice</option>`;
+  voiceSelect.innerHTML = `<option value="">Default THINKer BOB Voice</option>`;
 
-  availableVoices.forEach((voice, index) => {
-    const option = document.createElement("option");
-    option.value = voice.name;
-    option.textContent = voice.name + " (" + voice.lang + ")";
-    voiceSelect.appendChild(option);
+  let addedCount = 0;
+
+  THINKER_BOB_VOICE_GROUPS.forEach(group => {
+    const voices = voicesForGroup(group);
+
+    voices.forEach(voice => {
+      const option = document.createElement("option");
+      option.value = voice.name;
+      option.textContent = group.label + ": " + voice.name + " (" + voice.lang + ")";
+      voiceSelect.appendChild(option);
+      addedCount++;
+    });
   });
 
-  if(savedVoice){
+  if(addedCount === 0){
+    availableVoices.forEach(voice => {
+      const option = document.createElement("option");
+      option.value = voice.name;
+      option.textContent = voice.name + " (" + voice.lang + ")";
+      voiceSelect.appendChild(option);
+    });
+  }
+
+  if(savedVoice && Array.from(voiceSelect.options).some(option => option.value === savedVoice)){
     voiceSelect.value = savedVoice;
   }
 }
@@ -1858,20 +1987,10 @@ function populateVoiceChoices(){
 function saveVoiceSettings(){
 
   const voiceSelect = document.getElementById("voiceSelect");
-  const rate = document.getElementById("voiceRate");
-  const volume = document.getElementById("voiceVolume");
   const autoRead = document.getElementById("autoReadToggle");
 
   if(voiceSelect){
     localStorage.setItem("thinkerBobVoice", voiceSelect.value);
-  }
-
-  if(rate){
-    localStorage.setItem("thinkerBobRate", rate.value);
-  }
-
-  if(volume){
-    localStorage.setItem("thinkerBobVolume", volume.value);
   }
 
   if(autoRead){
@@ -1881,17 +2000,7 @@ function saveVoiceSettings(){
 
 function loadVoiceSettings(){
 
-  const rate = document.getElementById("voiceRate");
-  const volume = document.getElementById("voiceVolume");
   const autoRead = document.getElementById("autoReadToggle");
-
-  if(rate && localStorage.getItem("thinkerBobRate")){
-    rate.value = localStorage.getItem("thinkerBobRate");
-  }
-
-  if(volume && localStorage.getItem("thinkerBobVolume")){
-    volume.value = localStorage.getItem("thinkerBobVolume");
-  }
 
   if(autoRead){
     autoRead.checked = localStorage.getItem("thinkerBobAutoRead") === "true";
@@ -1930,21 +2039,41 @@ function speakText(text){
     utterance.lang = "en-US";
   }
 
-  utterance.rate = Number(document.getElementById("voiceRate")?.value || 0.9);
-  utterance.pitch = 1;
-  utterance.volume = Number(document.getElementById("voiceVolume")?.value || 1);
+  utterance.rate = 0.92;
+  utterance.pitch = 0.9;
+  utterance.volume = 1;
 
   window.speechSynthesis.speak(utterance);
 }
 
-function readThinkerBob(){
+function playThinkerBob(){
+  if(!("speechSynthesis" in window)){
+    alert("Sorry, this browser does not support text-to-speech.");
+    return;
+  }
+
+  if(window.speechSynthesis.paused){
+    window.speechSynthesis.resume();
+    return;
+  }
+
   speakText(currentThinkerBobSpeech);
+}
+
+function pauseThinkerBob(){
+  if("speechSynthesis" in window){
+    window.speechSynthesis.pause();
+  }
 }
 
 function stopThinkerBob(){
   if("speechSynthesis" in window){
     window.speechSynthesis.cancel();
   }
+}
+
+function readThinkerBob(){
+  playThinkerBob();
 }
 
 function showToolInfo(toolId){
@@ -1976,7 +2105,7 @@ function showToolInfo(toolId){
   const autoRead = document.getElementById("autoReadToggle");
 
   if(autoRead && autoRead.checked){
-    readThinkerBob();
+    playThinkerBob();
   }
 }
   
@@ -1987,6 +2116,13 @@ function setGrassGround(){
 }
 
 function setGroundColor(color){
+  const greenGroundColors = [0x55aa55, 0x228B22, 0x3f8f36, 0x5fb14a];
+
+  if(greenGroundColors.includes(color)){
+    setGrassGround();
+    return;
+  }
+
   ground.material.map = null;
   ground.material.color.set(color);
   ground.material.needsUpdate = true;
@@ -2189,13 +2325,42 @@ viewCubeRenderer.setClearColor(0x000000, 0);
 
 const viewCubeGroup = new THREE.Group();
 
+function createViewDiceFace(label, background, textColor = "#111111"){
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+
+  const ctx = canvas.getContext("2d");
+
+  const gradient = ctx.createLinearGradient(0, 0, 256, 256);
+  gradient.addColorStop(0, background);
+  gradient.addColorStop(1, "#ffffff");
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 256, 256);
+
+  ctx.strokeStyle = "rgba(0,0,0,.35)";
+  ctx.lineWidth = 10;
+  ctx.strokeRect(12, 12, 232, 232);
+
+  ctx.fillStyle = textColor;
+  ctx.font = "bold 42px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, 128, 128);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 4;
+  return texture;
+}
+
 const cubeMaterial = [
-  new THREE.MeshLambertMaterial({ color: 0xFFD700 }), // right
-  new THREE.MeshLambertMaterial({ color: 0xD4AF37 }), // left
-  new THREE.MeshLambertMaterial({ color: 0xFFFFFF }), // top
-  new THREE.MeshLambertMaterial({ color: 0xCCCCCC }), // bottom
-  new THREE.MeshLambertMaterial({ color: 0x1E90FF }), // front
-  new THREE.MeshLambertMaterial({ color: 0x87CEFA })  // back
+  new THREE.MeshLambertMaterial({ map:createViewDiceFace("RIGHT", "#FFD700") }),
+  new THREE.MeshLambertMaterial({ map:createViewDiceFace("LEFT", "#D4AF37") }),
+  new THREE.MeshLambertMaterial({ map:createViewDiceFace("TOP", "#FFFFFF") }),
+  new THREE.MeshLambertMaterial({ map:createViewDiceFace("BOTTOM", "#CCCCCC") }),
+  new THREE.MeshLambertMaterial({ map:createViewDiceFace("FRONT", "#1E90FF", "#ffffff") }),
+  new THREE.MeshLambertMaterial({ map:createViewDiceFace("BACK", "#87CEFA") })
 ];
 
 const miniCube =
