@@ -215,6 +215,49 @@
   font-weight:bold;
 }
 
+#floatingReaderControls{
+  position:fixed;
+  display:none;
+  align-items:center;
+  gap:6px;
+  background:rgba(0,0,0,.78);
+  color:gold;
+  border:2px solid gold;
+  border-radius:12px;
+  padding:6px 8px;
+  z-index:900;
+  box-shadow:0 0 12px rgba(0,0,0,.45);
+}
+
+#floatingReaderControls button{
+  width:auto !important;
+  margin:0;
+  padding:5px 7px;
+  background:#111;
+  color:gold;
+  border:1px solid gold;
+  border-radius:8px;
+  font-size:12px;
+}
+
+#readerProgress{
+  position:absolute;
+  left:8px;
+  right:8px;
+  bottom:2px;
+  height:3px;
+  background:rgba(255,255,255,.25);
+  border-radius:4px;
+  overflow:hidden;
+}
+
+#readerProgressFill{
+  width:0%;
+  height:100%;
+  background:gold;
+}
+
+
 .starterNote input{
   display:none;
 }
@@ -712,6 +755,13 @@
     </div>
   </div>
 
+</div>
+
+<div id="floatingReaderControls">
+  <button onclick="playThinkerBob()">▶</button>
+  <button onclick="pauseThinkerBob()">⏸</button>
+  <button onclick="stopThinkerBob()">⏹</button>
+  <div id="readerProgress"><div id="readerProgressFill"></div></div>
 </div>
 
 <div id="floatingToolbox">
@@ -2204,6 +2254,39 @@ function renderReaderText(text){
   }).join(" ");
 }
 
+function updateReaderProgress(index){
+  const fill = document.getElementById("readerProgressFill");
+  if(!fill || currentReaderWords.length === 0){
+    return;
+  }
+
+  const percent = ((index + 1) / currentReaderWords.length) * 100;
+  fill.style.width = Math.max(0, Math.min(100, percent)) + "%";
+}
+
+function showFloatingReaderControlsNearElement(element){
+  const controls = document.getElementById("floatingReaderControls");
+  if(!controls || !element){
+    return;
+  }
+
+  const rect = element.getBoundingClientRect();
+  controls.style.display = "flex";
+
+  const left = Math.min(window.innerWidth - 120, rect.right + 8);
+  const top = Math.max(8, Math.min(window.innerHeight - 50, rect.top - 4));
+
+  controls.style.left = left + "px";
+  controls.style.top = top + "px";
+}
+
+function hideFloatingReaderControls(){
+  const controls = document.getElementById("floatingReaderControls");
+  if(controls){
+    controls.style.display = "none";
+  }
+}
+
 function highlightReaderWord(index){
   document.querySelectorAll(".readWord.currentReadWord").forEach(word => {
     word.classList.remove("currentReadWord");
@@ -2214,10 +2297,14 @@ function highlightReaderWord(index){
   if(word){
     word.classList.add("currentReadWord");
     word.scrollIntoView({block:"start", inline:"nearest", behavior:"smooth"});
+    showFloatingReaderControlsNearElement(word);
+    updateReaderProgress(index);
   }
 }
 
 function speakText(text, startIndex = 0){
+  activeSpeechMode = "lesson";
+  currentUtteranceMode = "lesson";
 
   if(!("speechSynthesis" in window)){
     alert("Sorry, this browser does not support text-to-speech.");
@@ -2239,6 +2326,7 @@ function speakText(text, startIndex = 0){
   const textToSpeak = currentReaderWords.slice(startIndex).join(" ");
 
   window.speechSynthesis.cancel();
+  updateReaderProgress(startIndex);
 
   const utterance = new SpeechSynthesisUtterance(textToSpeak);
   const selectedVoice = getSelectedVoice();
@@ -2269,6 +2357,9 @@ function speakText(text, startIndex = 0){
       document.querySelectorAll(".readWord.currentReadWord").forEach(word => {
         word.classList.remove("currentReadWord");
       });
+      hideFloatingReaderControls();
+      activeSpeechMode = "none";
+      currentUtteranceMode = "none";
     }, 500);
   };
 
@@ -2280,6 +2371,8 @@ function readFromWord(index){
 }
 
 function speakPlainText(text){
+  activeSpeechMode = "hover";
+  currentUtteranceMode = "hover";
 
   if(!("speechSynthesis" in window)){
     return;
@@ -2307,6 +2400,14 @@ function speakPlainText(text){
   utterance.pitch = 0.9;
   utterance.volume = 1;
 
+  utterance.onend = function(){
+    if(currentUtteranceMode === "hover"){
+      activeSpeechMode = "none";
+      currentUtteranceMode = "none";
+      hideFloatingReaderControls();
+    }
+  };
+
   window.speechSynthesis.speak(utterance);
 }
 
@@ -2318,6 +2419,7 @@ function playThinkerBob(){
 
   if(window.speechSynthesis.paused){
     window.speechSynthesis.resume();
+    activeSpeechMode = currentUtteranceMode || "lesson";
     return;
   }
 
@@ -2338,6 +2440,10 @@ function stopThinkerBob(){
   document.querySelectorAll(".readWord.currentReadWord").forEach(word => {
     word.classList.remove("currentReadWord");
   });
+
+  activeSpeechMode = "none";
+  currentUtteranceMode = "none";
+  hideFloatingReaderControls();
 }
 
 function readThinkerBob(){
@@ -2346,6 +2452,8 @@ function readThinkerBob(){
 
 let hoverReadTimer = null;
 let lastHoverReadText = "";
+let activeSpeechMode = "none";
+let currentUtteranceMode = "none";
 
 function getHoverReadText(element){
   if(!element){
@@ -2376,6 +2484,8 @@ function getHoverReadText(element){
 }
 
 function initHoverReader(){
+  const HOVER_DELAY_MS = 750;
+
   document.body.addEventListener("mouseover", function(event){
 
     const text = getHoverReadText(event.target);
@@ -2387,15 +2497,24 @@ function initHoverReader(){
     clearTimeout(hoverReadTimer);
 
     hoverReadTimer = setTimeout(() => {
-      if(text !== lastHoverReadText){
+      if(activeSpeechMode === "lesson"){
+        return;
+      }
+
+      if(text !== lastHoverReadText || activeSpeechMode !== "hover"){
         lastHoverReadText = text;
         speakPlainText(text);
       }
-    }, 500);
+    }, HOVER_DELAY_MS);
   });
 
   document.body.addEventListener("mouseout", function(){
     clearTimeout(hoverReadTimer);
+  });
+
+  document.body.addEventListener("click", function(){
+    clearTimeout(hoverReadTimer);
+    lastHoverReadText = "";
   });
 }
 
