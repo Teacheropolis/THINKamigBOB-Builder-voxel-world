@@ -2517,7 +2517,7 @@ function getHoverReadText(element){
   }
 
   // Do not make the audio controls read their own labels.
-  if(element.closest("#floatingReaderControls, #voiceControls")){
+  if(element.closest("#floatingReaderControls, #voiceControls, .voiceButton")){
     return "";
   }
 
@@ -2534,9 +2534,7 @@ function getHoverReadText(element){
   }
 
   if(target.tagName === "SELECT"){
-    const label = target.id === "voiceSelect" ? "Voice choice" : "Building block choice";
-    const selected = target.options[target.selectedIndex];
-    return selected ? label + ": " + selected.textContent : label;
+    return target.id === "voiceSelect" ? "Voice" : "Building block";
   }
 
   return cleanEmoji(target.innerText || target.textContent || target.value || "")
@@ -2580,7 +2578,14 @@ function initHoverReader(){
 }
 
 function cleanEmoji(text){
-  return text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "").trim();
+  return String(text)
+    // remove emoji and symbol characters that speech engines sometimes read aloud
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "")
+    // remove arrows, triangles, and geometric controls like ▶ ▼ ▾ ▸
+    .replace(/[\u{2190}-\u{21FF}\u{25A0}-\u{25FF}]/gu, "")
+    .replace(/\b(button|menu button|down pointing triangle|right pointing triangle)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 const VOCAB_DEFINITIONS = {
@@ -2792,8 +2797,26 @@ function clearAtmosphere(){
   for(let i = atmosphereObjects.length - 1; i >= 0; i--){
     scene.remove(atmosphereObjects[i]);
   }
+
   atmosphereObjects.length = 0;
   stars.length = 0;
+
+  // Remove special sky/space objects that are not regular blocks.
+  if(moon){
+    scene.remove(moon);
+    moon = null;
+  }
+
+  if(earth){
+    scene.remove(earth);
+    earth = null;
+  }
+
+  // Remove animated wind turbine blade groups from starter worlds.
+  for(let i = spinningTurbines.length - 1; i >= 0; i--){
+    scene.remove(spinningTurbines[i]);
+  }
+  spinningTurbines.length = 0;
 }
 
 function createCloud(x, y, z){
