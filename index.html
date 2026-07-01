@@ -2213,7 +2213,7 @@ function highlightReaderWord(index){
 
   if(word){
     word.classList.add("currentReadWord");
-    word.scrollIntoView({block:"nearest", inline:"nearest", behavior:"smooth"});
+    word.scrollIntoView({block:"start", inline:"nearest", behavior:"smooth"});
   }
 }
 
@@ -2279,6 +2279,37 @@ function readFromWord(index){
   speakText(currentThinkerBobSpeech, index);
 }
 
+function speakPlainText(text){
+
+  if(!("speechSynthesis" in window)){
+    return;
+  }
+
+  const prepared = prepareSpeechText(text);
+
+  if(!prepared){
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(prepared);
+  const selectedVoice = getSelectedVoice();
+
+  if(selectedVoice){
+    utterance.voice = selectedVoice;
+    utterance.lang = selectedVoice.lang;
+  }else{
+    utterance.lang = "en-US";
+  }
+
+  utterance.rate = 0.92;
+  utterance.pitch = 0.9;
+  utterance.volume = 1;
+
+  window.speechSynthesis.speak(utterance);
+}
+
 function playThinkerBob(){
   if(!("speechSynthesis" in window)){
     alert("Sorry, this browser does not support text-to-speech.");
@@ -2311,6 +2342,61 @@ function stopThinkerBob(){
 
 function readThinkerBob(){
   playThinkerBob();
+}
+
+let hoverReadTimer = null;
+let lastHoverReadText = "";
+
+function getHoverReadText(element){
+  if(!element){
+    return "";
+  }
+
+  const target = element.closest(
+    "button, #voiceSelect, #blockColor, #starterWorlds button, #toolbox button, #bottomBuildTools button, #buildBar label, #missionCard label"
+  );
+
+  if(!target){
+    return "";
+  }
+
+  if(target.classList && target.classList.contains("readWord")){
+    return "";
+  }
+
+  if(target.tagName === "SELECT"){
+    const label = target.id === "voiceSelect" ? "Voice choice" : "Building block choice";
+    const selected = target.options[target.selectedIndex];
+    return selected ? label + ": " + selected.textContent : label;
+  }
+
+  return cleanEmoji(target.innerText || target.textContent || target.value || "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function initHoverReader(){
+  document.body.addEventListener("mouseover", function(event){
+
+    const text = getHoverReadText(event.target);
+
+    if(!text || text.length > 120){
+      return;
+    }
+
+    clearTimeout(hoverReadTimer);
+
+    hoverReadTimer = setTimeout(() => {
+      if(text !== lastHoverReadText){
+        lastHoverReadText = text;
+        speakPlainText(text);
+      }
+    }, 500);
+  });
+
+  document.body.addEventListener("mouseout", function(){
+    clearTimeout(hoverReadTimer);
+  });
 }
 
 function cleanEmoji(text){
@@ -4290,6 +4376,23 @@ function expandWorld(){
   checkBadge();
 }
 
+function buildMissionPopupSpeech(){
+  const title = cleanEmoji(document.getElementById("popupTitle").innerText || "Mission");
+  const mission = cleanEmoji(document.getElementById("popupMission").innerText || "");
+  const challenges = Array.from(document.querySelectorAll("#popupChallenges li"))
+    .map(item => cleanEmoji(item.innerText || ""))
+    .filter(Boolean)
+    .join(". ");
+  const more = cleanEmoji(document.getElementById("popupMoreChallenge").innerText || "");
+
+  return [
+    title,
+    mission,
+    challenges ? "Your challenges are: " + challenges + "." : "",
+    more
+  ].filter(Boolean).join(" ");
+}
+
 function showMissionPopup(){
 
   document.getElementById("popupTitle").innerHTML =
@@ -4314,6 +4417,10 @@ function showMissionPopup(){
     document.getElementById("moreChallenge").innerHTML;
 
   document.getElementById("missionPopup").style.display = "flex";
+
+  setTimeout(() => {
+    speakPlainText(buildMissionPopupSpeech());
+  }, 250);
 }
 
 function closeMissionPopup(){
@@ -5602,6 +5709,7 @@ Have fun building!`
 checkBadge();
 updateFloatingChecklist();
 loadVoiceSettings();
+initHoverReader();
 
 if("speechSynthesis" in window){
   window.speechSynthesis.onvoiceschanged = populateVoiceChoices;
