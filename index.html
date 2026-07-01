@@ -107,6 +107,44 @@
 
   line-height:1.5;
 }
+
+
+#voiceControls{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+.voiceButton{
+  flex:1;
+  min-width:120px;
+  background:rgba(0,0,0,.35);
+  color:gold;
+  border:2px solid rgba(255,215,0,.85);
+  border-radius:10px;
+  font-weight:bold;
+}
+
+.voiceButton:hover{
+  background:rgba(0,0,0,.55);
+  color:#FFD700;
+}
+
+#autoReadLabel{
+  width:100%;
+  font-size:12px;
+  color:white;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:2px 4px 0 4px;
+}
+
+#autoReadToggle{
+  transform:scale(1.1);
+}
     
 #floatingToolbox{
   position:fixed;
@@ -496,6 +534,20 @@
   </button>
 
   <div id="stemCoachContent">
+
+    <div id="voiceControls">
+      <button class="voiceButton" onclick="readThinkerBob()">
+        🔊 Read to Me
+      </button>
+      <button class="voiceButton" onclick="stopThinkerBob()">
+        ⏹ Stop
+      </button>
+      <label id="autoReadLabel">
+        <input type="checkbox" id="autoReadToggle">
+        Auto-read when I click a tool
+      </label>
+    </div>
+
     <div id="thinkerBobPanel">
       <p><b>👋 Welcome, Builder!</b></p>
       <p>I'm THINKer BOB. Click a building tool to discover STEM vocabulary, facts, questions, and challenges.</p>
@@ -1207,7 +1259,8 @@ let moveSelectedMode = false;
   
 const stars = [];
 let moon = null;
-let favoriteData = [];  
+let favoriteData = [];
+let currentThinkerBobSpeech = "Welcome, Builder! I'm THINKer BOB. Click a building tool to discover STEM vocabulary, facts, questions, and challenges. Think. Build. Discover.";  
 
 function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
   const block = new THREE.Mesh(
@@ -1675,6 +1728,46 @@ const TOOL_INFO = {
 
 };
   
+
+function buildThinkerBobSpeech(info){
+
+  return [
+    info.title,
+    "Vocabulary: " + info.vocabulary.join(", ") + ".",
+    "STEM fact: " + info.fact,
+    "Think about it: " + (info.question || "What do you notice as you build?"),
+    "Builder challenge: " + info.challenge
+  ].join(" ");
+}
+
+function speakText(text){
+
+  if(!("speechSynthesis" in window)){
+    alert("Sorry, this browser does not support text-to-speech.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+function readThinkerBob(){
+  speakText(currentThinkerBobSpeech);
+}
+
+function stopThinkerBob(){
+  if("speechSynthesis" in window){
+    window.speechSynthesis.cancel();
+  }
+}
+
 function showToolInfo(toolId){
 
   const info = TOOL_INFO[toolId];
@@ -1698,6 +1791,14 @@ function showToolInfo(toolId){
     <p><b>🎯 Builder Challenge</b><br>
     ${info.challenge}</p>
   `;
+
+  currentThinkerBobSpeech = buildThinkerBobSpeech(info);
+
+  const autoRead = document.getElementById("autoReadToggle");
+
+  if(autoRead && autoRead.checked){
+    readThinkerBob();
+  }
 }
   
 function setGroundColor(color){
@@ -2395,6 +2496,8 @@ function undoLast(){
 }
   
 function resetWorld(){
+
+stopThinkerBob();
 
 document.getElementById("worldTitle").innerHTML =
   "🧠 THINKamigBOB Builder 🧠";
