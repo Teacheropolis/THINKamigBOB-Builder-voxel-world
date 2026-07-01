@@ -551,9 +551,13 @@
   Tool message will show here.
 </p>
 
+<hr>
+
+<p><b>➕ Add to Your World</b></p>
+
 <button class="categoryButton"
         onclick="toggleCategory('buildingMagicTools', this)">
-🏰 Magic ▶
+🏗️ Buildings & Magic ▶
 </button>  
 
 <div id="buildingMagicTools" class="toolCategory">
@@ -659,7 +663,7 @@
 
   <button class="categoryButton"
         onclick="toggleCategory('weatherTools', this)">
-  🌦️ Weather ▶
+  🌦️ Weather Tools ▶
 </button>
        
 <div id="weatherTools" class="toolCategory">
@@ -903,7 +907,7 @@
 
 <button class="categoryButton"
         onclick="toggleCategory('cellTools', this)">
-  🧬 Cells ▶
+  🧬 Cell Biology ▶
 </button>
 
 <div id="cellTools" class="toolCategory">
@@ -1202,7 +1206,8 @@ let selectMode = false;
 let moveSelectedMode = false;
   
 const stars = [];
-let moon = null;  
+let moon = null;
+let favoriteData = [];  
 
 function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
   const block = new THREE.Mesh(
@@ -1217,40 +1222,86 @@ function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
   return block;
 }
 
-function toggleFavorite(id, label, action, starButton){
+function renderFavorites(){
 
   const favoritesBox = document.getElementById("favoriteTools");
   const noMessage = document.getElementById("noFavoritesMessage");
 
-  if(starButton.innerHTML === "☆"){
+  if(!favoritesBox){
+    return;
+  }
 
-    starButton.innerHTML = "⭐";
+  favoritesBox.querySelectorAll(".favoriteTool").forEach(button => {
+    button.remove();
+  });
+
+  favoriteData.forEach(item => {
 
     const favButton = document.createElement("button");
-    favButton.id = "favorite-" + id;
-    favButton.innerHTML = label;
-    favButton.setAttribute("onclick", action);
+    favButton.className = "favoriteTool";
+    favButton.id = "favorite-" + item.id;
+    favButton.innerHTML = item.label;
+    favButton.setAttribute("onclick", item.action);
 
     favoritesBox.appendChild(favButton);
+  });
 
-    if(noMessage){
-      noMessage.style.display = "none";
+  if(noMessage){
+    noMessage.style.display = favoriteData.length === 0 ? "block" : "none";
+  }
+}
+
+function syncFavoriteStars(){
+
+  document.querySelectorAll(".favoriteStar").forEach(star => {
+    star.innerHTML = "☆";
+  });
+
+  favoriteData.forEach(item => {
+
+    const matchingStar = Array.from(
+      document.querySelectorAll(".favoriteStar")
+    ).find(star => {
+
+      const code = star.getAttribute("onclick") || "";
+      return code.includes("toggleFavorite('" + item.id + "'");
+    });
+
+    if(matchingStar){
+      matchingStar.innerHTML = "⭐";
+    }
+  });
+}
+
+function toggleFavorite(id, label, action, starButton){
+
+  const alreadyFavorite =
+    favoriteData.some(item => item.id === id);
+
+  if(alreadyFavorite){
+
+    favoriteData =
+      favoriteData.filter(item => item.id !== id);
+
+    if(starButton){
+      starButton.innerHTML = "☆";
     }
 
   } else {
 
-    starButton.innerHTML = "☆";
+    favoriteData.push({
+      id: id,
+      label: label,
+      action: action
+    });
 
-    const oldFavorite = document.getElementById("favorite-" + id);
-
-    if(oldFavorite){
-      oldFavorite.remove();
-    }
-
-    if(favoritesBox.querySelectorAll("button").length === 0 && noMessage){
-      noMessage.style.display = "block";
+    if(starButton){
+      starButton.innerHTML = "⭐";
     }
   }
+
+  renderFavorites();
+  syncFavoriteStars();
 }
 
 function toggleStemCoach(){
@@ -4142,7 +4193,14 @@ checkBadge();
     });
   });
 
-  const dataStr = JSON.stringify(worldData);
+  const saveData = {
+    app: "THINKamigBOB Builder",
+    version: 2,
+    blocks: worldData,
+    favorites: favoriteData
+  };
+
+  const dataStr = JSON.stringify(saveData, null, 2);
 
   const blob = new Blob(
     [dataStr],
@@ -4155,7 +4213,7 @@ checkBadge();
     URL.createObjectURL(blob);
 
   link.download =
-    'bobwarts-world.json';
+    'thinkamigbob-world.json';
 
   link.click();
 }
@@ -4173,8 +4231,18 @@ document.getElementById('loadFile')
 
     resetWorld();
 
-    const worldData =
+    const loadedData =
       JSON.parse(e.target.result);
+
+    const worldData =
+      Array.isArray(loadedData)
+        ? loadedData
+        : loadedData.blocks || [];
+
+    favoriteData =
+      Array.isArray(loadedData)
+        ? []
+        : loadedData.favorites || [];
 
     worldData.forEach(data => {
 
@@ -4193,7 +4261,12 @@ document.getElementById('loadFile')
 
     });
 
+    renderFavorites();
+    syncFavoriteStars();
     checkBadge();
+
+    document.getElementById("toolMessage").innerHTML =
+      "💾 World and favorites loaded.";
   };
 
   reader.readAsText(file);
@@ -4383,7 +4456,7 @@ function toggleStarterWorlds(){
     section.style.display = "none";
 
     button.innerHTML =
-      "🌍 Bobwarts Starter Worlds ▶";
+      "🌍 THINKamigBOB Worlds ▶";
   }
 }
 
@@ -4498,7 +4571,7 @@ function zoomOut(){
 function showDirections(){
 
   alert(
-`🏰 BOBWARTS BUILD WORLD
+`🏰 THINKamigBOB BUILDER
 
 1. Choose a Starter World.
 
