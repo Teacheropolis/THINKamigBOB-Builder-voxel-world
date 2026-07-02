@@ -1901,7 +1901,7 @@ input{
         <h2>📖 How to Play</h2>
         <div class="startHowTo">
           <div class="startTip">🖱 Click the ground to build with blocks.</div>
-          <div class="startTip">🧰 Use the toolbox to add STEM objects.</div>
+          <div class="startTip">🧱 Use the Build Library to add STEM objects.</div>
           <div class="startTip">🎨 Use the color bar to create your own designs.</div>
           <div class="startTip">🤔 THINKer BOB can read and teach vocabulary.</div>
         </div>
@@ -2045,7 +2045,7 @@ input{
 <div id="floatingToolbox">
   
 <button id="toolboxButton" onclick="toggleToolbox()">
-  🧰 THINKamigBOB Toolbox ▶
+  🧱 Build Library ▲
 </button>
 
 <div id="toolbox">
@@ -7012,10 +7012,10 @@ function toggleToolbox(){
 
   if(isHidden){
     toolbox.style.display = "block";
-    button.innerHTML = "🧰 THINKamigBOB Toolbox ▼";
+    button.innerHTML = "🧱 Build Library ▼";
   }else{
     toolbox.style.display = "none";
-    button.innerHTML = "🧰 THINKamigBOB Toolbox ▶";
+    button.innerHTML = "🧱 Build Library ▲";
   }
 
   positionRightPanels();
@@ -7659,6 +7659,128 @@ window.addEventListener('load', buildColorSwatches);
   setTimeout(polishControls, 400);
   setInterval(setupBadgeClicks, 1500);
   if('speechSynthesis' in window){ window.speechSynthesis.onvoiceschanged = populateVoiceChoices; }
+})();
+</script>
+
+
+<!-- ===== Jen update: Build Library bottom-right + taller STEM Coach ===== -->
+<style>
+  /* Rename/layout behavior: Build Library lives at the bottom-right and opens upward. */
+  #floatingToolbox{
+    position:fixed !important;
+    right:18px !important;
+    bottom:10px !important;
+    width:315px !important;
+    z-index:760 !important;
+    display:flex !important;
+    flex-direction:column-reverse !important;
+    align-items:stretch !important;
+    gap:8px !important;
+    background:transparent !important;
+    border:none !important;
+    box-shadow:none !important;
+    padding:0 !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+
+  #toolboxButton{
+    margin:0 !important;
+    width:100% !important;
+    font-size:16px !important;
+    padding:10px 12px !important;
+    border-radius:18px !important;
+    background:rgba(5,10,24,.56) !important;
+    border:1px solid rgba(54,216,255,.46) !important;
+    color:#B7F34A !important;
+    box-shadow:0 10px 24px rgba(0,0,0,.30), 0 0 16px rgba(54,216,255,.16) !important;
+  }
+
+  #toolbox{
+    order:2 !important;
+    max-height:52vh !important;
+    overflow-y:auto !important;
+    margin:0 !important;
+    padding:8px 10px !important;
+    border-radius:18px !important;
+    background:rgba(245,251,255,.94) !important;
+    border:1px solid rgba(54,216,255,.38) !important;
+    box-shadow:0 14px 34px rgba(0,0,0,.35) !important;
+  }
+
+  /* STEM Coach starts at the top-right but still stops around the old lower edge. */
+  #stemCoach{
+    top:18px !important;
+    right:18px !important;
+    width:315px !important;
+    max-height:345px !important;
+    overflow-y:auto !important;
+    background:rgba(5,10,24,.28) !important;
+    border:1px solid rgba(54,216,255,.28) !important;
+  }
+
+  /* Bottom creator bar can use more width now because the library button is tucked at the edge. */
+  #buildBar{
+    right:350px !important;
+  }
+
+  @media(max-height:740px){
+    #stemCoach{ max-height:315px !important; }
+    #toolbox{ max-height:46vh !important; }
+  }
+
+  @media(max-width:1150px){
+    #floatingToolbox{ width:295px !important; }
+    #buildBar{ right:320px !important; }
+  }
+</style>
+<script>
+(function(){
+  function applyBuildLibraryUpdate(){
+    const toolboxButton = document.getElementById('toolboxButton');
+    const toolbox = document.getElementById('toolbox');
+
+    if(toolboxButton){
+      const isOpen = toolbox && window.getComputedStyle(toolbox).display !== 'none';
+      toolboxButton.innerHTML = isOpen ? '🧱 Build Library ▼' : '🧱 Build Library ▲';
+      toolboxButton.setAttribute('aria-label', 'Open Build Library');
+    }
+
+    document.querySelectorAll('.startTip').forEach(tip => {
+      tip.innerHTML = tip.innerHTML.replace('🧰 Use the toolbox to add STEM objects.', '🧱 Use the Build Library to add STEM objects.');
+    });
+  }
+
+  window.positionRightPanels = function(){
+    const coach = document.getElementById('stemCoach');
+    if(coach){
+      coach.style.top = '18px';
+      coach.style.right = '18px';
+      coach.style.maxHeight = (window.innerHeight < 740 ? '315px' : '345px');
+    }
+  };
+
+  window.toggleToolbox = function(){
+    const toolbox = document.getElementById('toolbox');
+    const button = document.getElementById('toolboxButton');
+    if(!toolbox || !button) return;
+
+    const isHidden = window.getComputedStyle(toolbox).display === 'none';
+    if(isHidden){
+      toolbox.style.display = 'block';
+      button.innerHTML = '🧱 Build Library ▼';
+    }else{
+      toolbox.style.display = 'none';
+      button.innerHTML = '🧱 Build Library ▲';
+    }
+
+    window.positionRightPanels();
+  };
+
+  window.addEventListener('load', applyBuildLibraryUpdate);
+  window.addEventListener('resize', window.positionRightPanels);
+  setTimeout(applyBuildLibraryUpdate, 300);
+  setTimeout(window.positionRightPanels, 300);
 })();
 </script>
 
