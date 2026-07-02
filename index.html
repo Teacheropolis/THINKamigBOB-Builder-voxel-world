@@ -2049,10 +2049,6 @@ input{
           <div class="startTip">🎨 Use the color bar to create your own designs.</div>
           <div class="startTip">🤔 THINKer BOB can read and teach vocabulary.</div>
         </div>
-        <label id="startAutoReadLabel" class="startAutoReadOption">
-          <input type="checkbox" id="startAutoReadToggle" onchange="syncAutoReadFromStart()">
-          🔊 Auto-read STEM Coach information
-        </label>
         <button id="startBuildingButton" onclick="startSelectedWorld()">▶ START FROM THE HUB</button>
       </div>
       <div class="startPanel">
@@ -2137,13 +2133,9 @@ input{
       <select id="voiceSelect" onchange="saveVoiceSettings()">
         <option value="">Default Voice</option>
       </select>
-      <label id="audioPowerLabel" title="Turn all voice reading on or off">
-        <input type="checkbox" id="audioPowerToggle" onchange="saveVoiceSettings()" checked>
-        Voice Reader ON/OFF
-      </label>
-      <label id="autoReadLabel" title="Start reading STEM Coach information automatically when new info opens">
-        <input type="checkbox" id="autoReadToggle" onchange="saveVoiceSettings()">
-        Auto-read info
+      <label id="audioPowerLabel" title="Check to turn the voice reader on. Uncheck to turn it off everywhere.">
+        <input type="checkbox" id="audioPowerToggle" onchange="voiceReaderPowerChanged()" checked>
+        Voice Reader
       </label>
     </div>
   </div>
@@ -8060,6 +8052,267 @@ window.addEventListener('load', buildColorSwatches);
     if(button && !button.textContent.includes('Object Library')) button.innerHTML = '🧰 Object Library ▶';
   });
   setInterval(checkboxSafety, 1500);
+})();
+</script>
+
+
+
+<style id="voiceReaderSimplifiedSingleSwitch">
+/* Single-switch voice reader: no Auto-read controls. */
+#autoReadLabel,
+#startAutoReadLabel,
+.startAutoReadOption{ display:none !important; }
+#audioPowerLabel{
+  width:100% !important;
+  display:flex !important;
+  justify-content:flex-end !important;
+  align-items:center !important;
+  gap:8px !important;
+  color:#F5FBFF !important;
+  font-weight:900 !important;
+  font-size:14px !important;
+  cursor:pointer !important;
+  padding:5px 8px !important;
+  border-radius:999px !important;
+  background:rgba(5,10,24,.24) !important;
+  border:1px solid rgba(54,216,255,.28) !important;
+}
+#audioPowerToggle{
+  width:22px !important;
+  height:22px !important;
+  transform:none !important;
+  accent-color:#36D8FF !important;
+  cursor:pointer !important;
+}
+#floatingBadge b,
+#badgeMessage b,
+#evidenceBadge b{
+  color:#36D8FF !important;
+}
+#challengeChecklist label,
+#floatingChecklist label{
+  display:grid !important;
+  grid-template-columns:36px 1fr !important;
+  gap:10px !important;
+  align-items:start !important;
+  width:100% !important;
+  max-width:340px !important;
+  padding:7px 9px !important;
+  cursor:default !important;
+}
+#challengeChecklist input,
+#floatingChecklist input{
+  width:22px !important;
+  height:22px !important;
+  margin:0 !important;
+  justify-self:center !important;
+  align-self:start !important;
+  accent-color:#36D8FF !important;
+  cursor:pointer !important;
+}
+#floatingToolbox{
+  bottom:10px !important;
+  right:18px !important;
+  width:315px !important;
+}
+#toolbox{
+  max-height:330px !important;
+  overflow-y:auto !important;
+  margin-bottom:8px !important;
+}
+</style>
+
+<script id="voiceReaderSimplifiedSingleSwitchScript">
+(function(){
+  function byId(id){ return document.getElementById(id); }
+
+  function readerOn(){
+    const power = byId('audioPowerToggle');
+    return !power || power.checked;
+  }
+
+  window.isVoiceReaderOn = readerOn;
+  window.isAutoReadOn = readerOn;
+
+  window.voiceReaderPowerChanged = function(){
+    const power = byId('audioPowerToggle');
+    if(power){
+      localStorage.setItem('thinkerBobAudioPower', power.checked ? 'true' : 'false');
+      if(!power.checked && typeof stopThinkerBob === 'function'){
+        stopThinkerBob();
+      }
+    }
+    if(typeof saveVoiceSettings === 'function'){
+      try{ saveVoiceSettings(); }catch(e){}
+    }
+  };
+
+  window.saveVoiceSettings = function(){
+    const voiceSelect = byId('voiceSelect');
+    const power = byId('audioPowerToggle');
+    if(voiceSelect){ localStorage.setItem('thinkerBobVoice', voiceSelect.value); }
+    if(power){
+      localStorage.setItem('thinkerBobAudioPower', power.checked ? 'true' : 'false');
+      if(!power.checked && typeof stopThinkerBob === 'function') stopThinkerBob();
+    }
+  };
+
+  window.loadVoiceSettings = function(){
+    const power = byId('audioPowerToggle');
+    if(power){ power.checked = localStorage.getItem('thinkerBobAudioPower') !== 'false'; }
+    if(typeof populateVoiceChoices === 'function') populateVoiceChoices();
+  };
+
+  // Hovering over text or buttons should not trigger any audio.
+  window.speakPlainText = function(){ return; };
+  window.initHoverReader = function(){ return; };
+
+  const originalStop = window.stopThinkerBob;
+  window.stopThinkerBob = function(){
+    try{ if(originalStop) originalStop(); }catch(e){}
+    if('speechSynthesis' in window){
+      window.speechSynthesis.pause();
+      window.speechSynthesis.cancel();
+      setTimeout(function(){ window.speechSynthesis.cancel(); }, 0);
+      setTimeout(function(){ window.speechSynthesis.cancel(); }, 50);
+      setTimeout(function(){ window.speechSynthesis.cancel(); }, 150);
+    }
+    document.querySelectorAll('.readWord.currentReadWord').forEach(function(word){
+      word.classList.remove('currentReadWord');
+    });
+    const controls = byId('floatingReaderControls');
+    if(controls) controls.style.display = 'none';
+  };
+
+  const originalSpeakText = window.speakText;
+  window.speakText = function(text, startIndex, target){
+    if(!readerOn()){
+      if(typeof stopThinkerBob === 'function') stopThinkerBob();
+      return;
+    }
+    if('speechSynthesis' in window){ window.speechSynthesis.cancel(); }
+    if(originalSpeakText){ return originalSpeakText(text, startIndex || 0, target || 'thinkerBob'); }
+  };
+
+  window.playThinkerBob = function(){
+    if(!readerOn()){
+      if(typeof stopThinkerBob === 'function') stopThinkerBob();
+      return;
+    }
+    if(!('speechSynthesis' in window)){
+      alert('Sorry, this browser does not support text-to-speech.');
+      return;
+    }
+    if(window.speechSynthesis.paused){
+      window.speechSynthesis.resume();
+      return;
+    }
+    if(typeof speakText === 'function') speakText(window.currentThinkerBobSpeech || currentThinkerBobSpeech || '');
+  };
+
+  window.readFromWord = function(index){
+    if(!readerOn()) return;
+    const isPopup = (window.currentReaderBoxId || currentReaderBoxId) === 'popupReaderHighlightBox';
+    const text = window.currentReaderSourceText || currentReaderSourceText || window.currentThinkerBobSpeech || currentThinkerBobSpeech || '';
+    if(typeof speakText === 'function') speakText(text, index || 0, isPopup ? 'popup' : 'thinkerBob');
+  };
+
+  // Object Library selections: stop the old reading, update info, then automatically read the new object if Voice Reader is checked.
+  window.showToolInfo = function(toolId){
+    const info = (window.TOOL_INFO && window.TOOL_INFO[toolId]) || (typeof TOOL_INFO !== 'undefined' ? TOOL_INFO[toolId] : null);
+    if(!info) return;
+    if(typeof stopThinkerBob === 'function') stopThinkerBob();
+
+    const panel = byId('thinkerBobPanel');
+    if(!panel) return;
+    const vocabHtml = (typeof makeVocabButtons === 'function')
+      ? makeVocabButtons(toolId, info.vocabulary)
+      : (info.vocabulary || []).map(function(w){ return '<button class="vocabButton">' + w + '</button>'; }).join(' ');
+
+    panel.innerHTML = `
+      <h3>${info.title}</h3>
+      <p><b>📚 Vocabulary</b><br>${vocabHtml}</p>
+      <div id="vocabDetailBox">Click a vocabulary word to learn what it means and how it connects to your build.</div>
+      <p><b>💡 STEM Fact</b><br>${info.fact}</p>
+      <p><b>❓ Think About It</b><br>${info.question || 'What do you notice as you build?'}</p>
+      <p><b>🎯 Builder Challenge</b><br>${info.challenge}</p>
+    `;
+
+    const speech = (typeof buildThinkerBobSpeech === 'function')
+      ? buildThinkerBobSpeech(info)
+      : [info.title, info.fact, info.question || '', info.challenge].join(' ');
+    window.currentThinkerBobSpeech = speech;
+    try{ currentThinkerBobSpeech = speech; }catch(e){}
+    if(typeof renderReaderText === 'function') renderReaderText(speech);
+    if(readerOn()){
+      setTimeout(function(){ if(readerOn() && typeof speakText === 'function') speakText(speech); }, 60);
+    }
+  };
+
+  window.showVocabDetail = function(toolId, word){
+    const info = (window.TOOL_INFO && window.TOOL_INFO[toolId]) || (typeof TOOL_INFO !== 'undefined' ? TOOL_INFO[toolId] : null);
+    if(!info) return;
+    if(typeof stopThinkerBob === 'function') stopThinkerBob();
+
+    const plainWord = (typeof cleanEmoji === 'function') ? cleanEmoji(word) : String(word);
+    const definition = (typeof getVocabDefinition === 'function') ? getVocabDefinition(plainWord) : 'This is an important STEM word connected to the object you selected.';
+    const objectName = (typeof cleanEmoji === 'function') ? cleanEmoji(info.title) : info.title;
+    const nextStep = 'Next step: Add or change something in your ' + objectName + ' build that shows this word in action.';
+    const box = byId('vocabDetailBox');
+    if(box){
+      box.innerHTML = '<b>📘 ' + plainWord + '</b><br>' + definition + '<br><br><b>How it connects:</b><br>In your ' + objectName + ', this word helps explain how the object works, what it does, or why it matters.<br><br><b>Suggested next step:</b><br>' + nextStep;
+    }
+    const speech = plainWord + '. ' + definition + ' In your ' + objectName + ', this word helps explain how the object works. ' + nextStep;
+    window.currentThinkerBobSpeech = speech;
+    try{ currentThinkerBobSpeech = speech; }catch(e){}
+    if(typeof renderReaderText === 'function') renderReaderText(speech);
+    if(readerOn() && typeof speakText === 'function') speakText(speech);
+  };
+
+  function keepCheckboxesSeparate(){
+    document.querySelectorAll('#challengeChecklist label, #floatingChecklist label').forEach(function(label){
+      if(label.dataset.singleSwitchSafe) return;
+      label.dataset.singleSwitchSafe = 'true';
+      label.addEventListener('click', function(event){
+        if(event.target.tagName !== 'INPUT'){
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, true);
+    });
+    document.querySelectorAll('#challengeChecklist input, #floatingChecklist input').forEach(function(input){
+      if(input.dataset.singleSwitchSafe) return;
+      input.dataset.singleSwitchSafe = 'true';
+      input.addEventListener('click', function(event){ event.stopPropagation(); }, true);
+    });
+  }
+
+  function polishSingleSwitchReader(){
+    const auto = byId('autoReadLabel');
+    if(auto) auto.remove();
+    const startAuto = byId('startAutoReadLabel');
+    if(startAuto) startAuto.remove();
+    const power = byId('audioPowerToggle');
+    if(power){
+      power.checked = localStorage.getItem('thinkerBobAudioPower') !== 'false';
+      power.onchange = window.voiceReaderPowerChanged;
+    }
+    const label = byId('audioPowerLabel');
+    if(label){
+      label.childNodes.forEach(function(node){
+        if(node.nodeType === 3) node.nodeValue = ' Voice Reader';
+      });
+    }
+    const toolbox = byId('toolbox');
+    if(toolbox && !toolbox.style.display) toolbox.style.display = 'none';
+    const toolboxButton = byId('toolboxButton');
+    if(toolboxButton) toolboxButton.innerHTML = toolbox && toolbox.style.display === 'block' ? '🧰 Object Library ▼' : '🧰 Object Library ▶';
+    keepCheckboxesSeparate();
+  }
+
+  window.addEventListener('load', polishSingleSwitchReader);
+  setTimeout(polishSingleSwitchReader, 300);
+  setInterval(keepCheckboxesSeparate, 1500);
 })();
 </script>
 
