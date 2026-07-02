@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -1948,6 +1947,80 @@ input{
   #floatingToolbox{ bottom:168px !important; }
 }
 
+
+
+/* ===== Voice reader + Object Library refinement update ===== */
+#audioPowerLabel{
+  width:100%;
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:6px;
+  color:#F5FBFF;
+  font-weight:900;
+  font-size:13px;
+  text-shadow:0 1px 5px rgba(0,0,0,.75);
+}
+#audioPowerToggle{
+  transform:scale(1.18);
+  accent-color:#36D8FF;
+}
+#autoReadLabel{
+  background:rgba(5,10,24,.24);
+  border:1px solid rgba(54,216,255,.22);
+  border-radius:999px;
+  padding:4px 8px;
+}
+#floatingToolbox{
+  bottom:10px !important;
+  right:18px !important;
+  width:315px !important;
+  z-index:760 !important;
+}
+#toolbox{
+  max-height:330px !important;
+  overflow-y:auto !important;
+  margin-bottom:8px !important;
+  display:none;
+}
+#toolboxButton{
+  width:100% !important;
+}
+#floatingBadge b,
+#badgeMessage b,
+#evidenceBadge b{
+  color:#36D8FF !important;
+}
+#challengeChecklist label,
+#floatingChecklist label{
+  display:grid !important;
+  grid-template-columns:34px 1fr;
+  gap:8px;
+  align-items:start;
+  width:100% !important;
+  max-width:330px !important;
+  padding:6px 8px !important;
+  background:rgba(5,10,24,.20) !important;
+  border:1px solid rgba(54,216,255,.20);
+  border-radius:10px !important;
+  cursor:default;
+}
+#challengeChecklist input,
+#floatingChecklist input{
+  width:22px;
+  height:22px;
+  margin:0 !important;
+  justify-self:center;
+  accent-color:#36D8FF;
+  cursor:pointer;
+}
+#challengeChecklist span,
+#floatingChecklist span{
+  display:block;
+  padding-left:4px;
+}
+#challengeChecklist br{ display:none; }
+
 </style>
 </head>
 
@@ -1978,7 +2051,7 @@ input{
         </div>
         <label id="startAutoReadLabel" class="startAutoReadOption">
           <input type="checkbox" id="startAutoReadToggle" onchange="syncAutoReadFromStart()">
-          🔊 Auto-read STEM Coach
+          🔊 Auto-read STEM Coach information
         </label>
         <button id="startBuildingButton" onclick="startSelectedWorld()">▶ START FROM THE HUB</button>
       </div>
@@ -2064,9 +2137,13 @@ input{
       <select id="voiceSelect" onchange="saveVoiceSettings()">
         <option value="">Default Voice</option>
       </select>
-      <label id="autoReadLabel">
+      <label id="audioPowerLabel" title="Turn all voice reading on or off">
+        <input type="checkbox" id="audioPowerToggle" onchange="saveVoiceSettings()" checked>
+        Voice Reader ON/OFF
+      </label>
+      <label id="autoReadLabel" title="Start reading STEM Coach information automatically when new info opens">
         <input type="checkbox" id="autoReadToggle" onchange="saveVoiceSettings()">
-        Auto-read
+        Auto-read info
       </label>
     </div>
   </div>
@@ -2771,6 +2848,32 @@ function buildColorSwatches(){
   if(bar.firstChild) bar.firstChild.classList.add('selected');
 }
 window.addEventListener('load', buildColorSwatches);
+
+
+
+function setupCheckboxClickSafety(){
+  document.querySelectorAll('#challengeChecklist label, #floatingChecklist label').forEach(label => {
+    if(label.dataset.checkboxSafe === 'true') return;
+    label.dataset.checkboxSafe = 'true';
+    label.addEventListener('click', function(event){
+      if(event.target.tagName !== 'INPUT'){
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    });
+  });
+  document.querySelectorAll('#challengeChecklist input, #floatingChecklist input').forEach(box => {
+    if(box.dataset.checkboxSafe === 'true') return;
+    box.dataset.checkboxSafe = 'true';
+    box.addEventListener('click', function(event){ event.stopPropagation(); });
+  });
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', setupCheckboxClickSafety);
+}else{
+  setupCheckboxClickSafety();
+}
 
 </script>
 
@@ -3706,6 +3809,10 @@ function highlightReaderWord(index){
 }
 
 function speakText(text, startIndex = 0, target = "thinkerBob"){
+  if(!isVoiceReaderOn()){
+    stopThinkerBob();
+    return;
+  }
   activeSpeechMode = "lesson";
   currentUtteranceMode = "lesson";
 
@@ -3776,6 +3883,9 @@ function readFromWord(index){
 }
 
 function speakPlainText(text){
+  if(!isVoiceReaderOn()){
+    return;
+  }
   activeSpeechMode = "hover";
   currentUtteranceMode = "hover";
 
@@ -3817,6 +3927,10 @@ function speakPlainText(text){
 }
 
 function playThinkerBob(){
+  if(!isVoiceReaderOn()){
+    stopThinkerBob();
+    return;
+  }
   if(!("speechSynthesis" in window)){
     alert("Sorry, this browser does not support text-to-speech.");
     return;
@@ -3839,8 +3953,14 @@ function pauseThinkerBob(){
 
 function stopThinkerBob(){
   if("speechSynthesis" in window){
+    window.speechSynthesis.pause();
     window.speechSynthesis.cancel();
+    setTimeout(() => window.speechSynthesis.cancel(), 0);
+    setTimeout(() => window.speechSynthesis.cancel(), 80);
   }
+
+  clearTimeout(hoverReadTimer);
+  lastHoverReadText = "";
 
   document.querySelectorAll(".readWord.currentReadWord").forEach(word => {
     word.classList.remove("currentReadWord");
@@ -3854,6 +3974,12 @@ function stopThinkerBob(){
 function readThinkerBob(){
   playThinkerBob();
 }
+
+function isVoiceReaderOn(){
+  const audioPower = document.getElementById("audioPowerToggle");
+  return !audioPower || audioPower.checked;
+}
+window.isVoiceReaderOn = isVoiceReaderOn;
 
 let hoverReadTimer = null;
 let lastHoverReadText = "";
@@ -3871,7 +3997,7 @@ function getHoverReadText(element){
   }
 
   const target = element.closest(
-    "button, #voiceSelect, #blockColor, #starterWorlds button, #toolbox button, #bottomBuildTools button, #buildBar label, #missionCard label"
+    "button, #starterWorlds button, #toolbox button, #bottomBuildTools button"
   );
 
   if(!target){
@@ -3892,7 +4018,7 @@ function getHoverReadText(element){
 }
 
 function initHoverReader(){
-  const HOVER_DELAY_MS = 750;
+  const HOVER_DELAY_MS = 1500;
 
   document.body.addEventListener("mouseover", function(event){
 
@@ -3923,6 +4049,20 @@ function initHoverReader(){
   document.body.addEventListener("click", function(){
     clearTimeout(hoverReadTimer);
     lastHoverReadText = "";
+  });
+
+  document.body.addEventListener("click", function(event){
+    const infoTarget = event.target.closest("#thinkerBobPanel p, #thinkerBobPanel h3, #vocabDetailBox, #readerHighlightBox, #missionText, #moreChallenge, .startTip");
+    if(!infoTarget){
+      return;
+    }
+    if(event.target.closest("button, input, select, label, #challengeChecklist, #floatingChecklist, #voiceControls, #floatingReaderControls")){
+      return;
+    }
+    const text = cleanEmoji(infoTarget.innerText || infoTarget.textContent || "").replace(/\s+/g, " ").trim();
+    if(text){
+      speakText(text);
+    }
   });
 }
 
@@ -4070,7 +4210,7 @@ function showToolInfo(toolId){
 
   const autoRead = document.getElementById("autoReadToggle");
 
-  if(autoRead && autoRead.checked){
+  if(autoRead && autoRead.checked && isVoiceReaderOn()){
     playThinkerBob();
   }
 }
@@ -7811,6 +7951,115 @@ window.addEventListener('load', buildColorSwatches);
   setTimeout(polishControls, 400);
   setInterval(setupBadgeClicks, 1500);
   if('speechSynthesis' in window){ window.speechSynthesis.onvoiceschanged = populateVoiceChoices; }
+})();
+</script>
+
+
+
+<style id="voiceReaderFinalFixes">
+/* Final override: keep Object Library at lower-right and make controls clearer. */
+#floatingToolbox{ bottom:10px !important; right:18px !important; width:315px !important; }
+#toolbox{ max-height:330px !important; overflow-y:auto !important; margin-bottom:8px !important; }
+#audioPowerLabel{ width:100% !important; display:flex !important; justify-content:flex-end !important; align-items:center !important; gap:6px !important; color:#F5FBFF !important; font-weight:900 !important; font-size:13px !important; }
+#audioPowerToggle{ transform:scale(1.18) !important; accent-color:#36D8FF; }
+#floatingBadge b,#badgeMessage b,#evidenceBadge b{ color:#36D8FF !important; }
+#challengeChecklist label,#floatingChecklist label{ display:grid !important; grid-template-columns:34px 1fr !important; gap:8px !important; align-items:start !important; width:100% !important; max-width:330px !important; cursor:default !important; }
+#challengeChecklist input,#floatingChecklist input{ width:22px !important; height:22px !important; margin:0 !important; justify-self:center !important; accent-color:#36D8FF !important; cursor:pointer !important; }
+#challengeChecklist br{ display:none !important; }
+</style>
+
+<script id="voiceReaderFinalBehaviorFixes">
+(function(){
+  function byId(id){ return document.getElementById(id); }
+
+  window.isVoiceReaderOn = function(){
+    const power = byId('audioPowerToggle');
+    return !power || power.checked;
+  };
+
+  const previousSave = window.saveVoiceSettings;
+  window.saveVoiceSettings = function(){
+    const voiceSelect = byId('voiceSelect');
+    const autoRead = byId('autoReadToggle');
+    const startAuto = byId('startAutoReadToggle');
+    const power = byId('audioPowerToggle');
+
+    if(voiceSelect){ localStorage.setItem('thinkerBobVoice', voiceSelect.value); }
+    if(autoRead){ localStorage.setItem('thinkerBobAutoRead', autoRead.checked ? 'true' : 'false'); }
+    if(startAuto && autoRead){ startAuto.checked = autoRead.checked; }
+    if(power){
+      localStorage.setItem('thinkerBobAudioPower', power.checked ? 'true' : 'false');
+      if(!power.checked && typeof stopThinkerBob === 'function') stopThinkerBob();
+    }
+    if(previousSave && previousSave !== window.saveVoiceSettings){
+      try{ previousSave(); }catch(e){}
+    }
+  };
+
+  const previousLoad = window.loadVoiceSettings;
+  window.loadVoiceSettings = function(){
+    if(previousLoad && previousLoad !== window.loadVoiceSettings){
+      try{ previousLoad(); }catch(e){}
+    }
+    const autoRead = byId('autoReadToggle');
+    const startAuto = byId('startAutoReadToggle');
+    const power = byId('audioPowerToggle');
+    const savedAuto = localStorage.getItem('thinkerBobAutoRead') === 'true';
+    if(autoRead) autoRead.checked = savedAuto;
+    if(startAuto) startAuto.checked = savedAuto;
+    if(power) power.checked = localStorage.getItem('thinkerBobAudioPower') !== 'false';
+  };
+
+  window.syncAutoReadFromStart = function(){
+    const start = byId('startAutoReadToggle');
+    const bottom = byId('autoReadToggle');
+    if(bottom && start) bottom.checked = start.checked;
+    window.saveVoiceSettings();
+  };
+
+  window.isAutoReadOn = function(){
+    const auto = byId('autoReadToggle');
+    return !!(auto && auto.checked && window.isVoiceReaderOn());
+  };
+
+  const previousStop = window.stopThinkerBob;
+  window.stopThinkerBob = function(){
+    try{ if(previousStop) previousStop(); }catch(e){}
+    if('speechSynthesis' in window){
+      window.speechSynthesis.pause();
+      window.speechSynthesis.cancel();
+      setTimeout(function(){ window.speechSynthesis.cancel(); }, 0);
+      setTimeout(function(){ window.speechSynthesis.cancel(); }, 80);
+    }
+  };
+
+  function checkboxSafety(){
+    document.querySelectorAll('#challengeChecklist label, #floatingChecklist label').forEach(function(label){
+      if(label.dataset.finalCheckboxSafe) return;
+      label.dataset.finalCheckboxSafe = 'true';
+      label.addEventListener('click', function(event){
+        if(event.target.tagName !== 'INPUT'){
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, true);
+    });
+    document.querySelectorAll('#challengeChecklist input, #floatingChecklist input').forEach(function(input){
+      if(input.dataset.finalCheckboxSafe) return;
+      input.dataset.finalCheckboxSafe = 'true';
+      input.addEventListener('click', function(event){ event.stopPropagation(); }, true);
+    });
+  }
+
+  window.addEventListener('load', function(){
+    if(typeof loadVoiceSettings === 'function') loadVoiceSettings();
+    checkboxSafety();
+    const toolbox = byId('toolbox');
+    const button = byId('toolboxButton');
+    if(toolbox && !toolbox.style.display) toolbox.style.display = 'none';
+    if(button && !button.textContent.includes('Object Library')) button.innerHTML = '🧰 Object Library ▶';
+  });
+  setInterval(checkboxSafety, 1500);
 })();
 </script>
 
