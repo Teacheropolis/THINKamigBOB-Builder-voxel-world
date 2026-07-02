@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -1877,7 +1878,77 @@ input{
   .bottomToolMessage{ max-width:180px; }
 }
 
-  </style>
+  
+
+/* ===== Jen layout update: Dashboard + Object Library + Hub ===== */
+#buildBar{
+  left:18px !important;
+  right:350px !important;
+  bottom:10px !important;
+  width:auto !important;
+  min-height:120px !important;
+  display:grid !important;
+  grid-template-rows:auto auto !important;
+  gap:6px !important;
+  align-items:stretch !important;
+  justify-content:stretch !important;
+  padding:10px 12px !important;
+}
+.dashboardRow{
+  display:grid;
+  grid-template-columns:190px minmax(360px,1fr) 315px;
+  gap:10px;
+  align-items:center;
+  width:100%;
+}
+.dashboardTopRow{ grid-template-columns:190px minmax(360px,1fr) 315px; }
+.dashboardMiddleRow{ grid-template-columns:190px minmax(360px,1fr) 315px; align-items:start; }
+.dashboardCreateStack{ display:flex; flex-direction:column; gap:7px; align-items:stretch; }
+#creatorPrompt{ margin:0 !important; text-align:left; }
+#returnMissionsButton{ margin:0 !important; width:100%; font-size:14px; padding:8px 10px; }
+.dashboardUtilityButtons{ display:grid; grid-template-columns:1fr 1fr; gap:5px; align-items:start; }
+.dashboardUtilityButtons button{ margin:0 !important; padding:7px 6px !important; font-size:12px !important; white-space:nowrap; }
+.dashboardUtilityButtons button:nth-child(3){ grid-column:1 / span 2; }
+.dashboardColorArea{ grid-column:2 / span 2; min-width:0; display:flex; align-items:center; }
+.colorScrollWrap{ position:relative; width:100%; display:flex; align-items:center; min-width:0; }
+#colorSwatchBar{ max-width:none !important; width:100%; overflow-x:auto; padding-right:34px !important; scrollbar-width:thin; }
+#colorMoreArrow{
+  position:absolute; right:0; top:50%; transform:translateY(-50%);
+  width:30px; height:38px; display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:900; color:#04111D;
+  border-radius:12px; background:linear-gradient(180deg,#B7F34A,#36D8FF);
+  box-shadow:0 0 12px rgba(54,216,255,.5), 0 4px 10px rgba(0,0,0,.28);
+  pointer-events:none;
+}
+#bottomBuildTools.dashboardGreenTools{
+  grid-column:2; display:grid !important; grid-template-columns:repeat(4, minmax(88px, 1fr));
+  gap:6px !important; min-width:0 !important; align-items:start; justify-content:center !important;
+}
+#bottomBuildTools.dashboardGreenTools button{ margin:0 !important; padding:8px 7px !important; font-size:13px !important; }
+#bottomBuildTools.dashboardGreenTools .bottomToolMessage{
+  grid-column:1 / -1; justify-self:center; width:min(520px,100%); max-width:none !important;
+  justify-content:center; text-align:center; border-radius:14px; min-height:30px;
+}
+#voiceControls.dashboardAudioControls{
+  grid-column:3; grid-row:1; margin-top:0 !important; justify-content:flex-end !important;
+  display:flex !important; gap:5px !important; align-items:center; flex-wrap:wrap;
+}
+#voiceControls.dashboardAudioControls .voiceButton{ min-width:64px !important; min-height:34px !important; font-size:13px !important; padding:5px 7px !important; }
+#voiceSelect{ width:170px !important; max-width:170px !important; }
+#autoReadLabel{ width:100%; justify-content:flex-end; }
+#floatingToolbox{ bottom:145px !important; }
+#toolboxButton{ font-size:15px !important; }
+#toolbox{ max-height:300px !important; }
+#stemCoach{ max-height:calc(100vh - 500px) !important; }
+@media(max-width:1150px){
+  #buildBar{ right:320px !important; min-height:145px !important; }
+  .dashboardRow{ grid-template-columns:170px minmax(260px,1fr) 275px; }
+  .dashboardColorArea{ grid-column:2 / span 2; }
+  #voiceSelect{ width:140px !important; max-width:140px !important; }
+  #floatingToolbox{ bottom:168px !important; }
+}
+
+</style>
 </head>
 
 <body>
@@ -1901,7 +1972,7 @@ input{
         <h2>📖 How to Play</h2>
         <div class="startHowTo">
           <div class="startTip">🖱 Click the ground to build with blocks.</div>
-          <div class="startTip">🧰 Use the toolbox to add STEM objects.</div>
+          <div class="startTip">🧰 Use the Object Library to add STEM objects.</div>
           <div class="startTip">🎨 Use the color bar to create your own designs.</div>
           <div class="startTip">🤔 THINKer BOB can read and teach vocabulary.</div>
         </div>
@@ -1909,10 +1980,10 @@ input{
           <input type="checkbox" id="startAutoReadToggle" onchange="syncAutoReadFromStart()">
           🔊 Auto-read STEM Coach
         </label>
-        <button id="startBuildingButton" onclick="startSelectedWorld()">▶ START BUILDING</button>
+        <button id="startBuildingButton" onclick="startSelectedWorld()">▶ START FROM THE HUB</button>
       </div>
       <div class="startPanel">
-        <h2>🌎 Choose Your STEM Mission</h2>
+        <h2>🌎 Hub: Choose Your STEM Mission</h2>
         <div class="startWorldGrid">
           <button class="selectedStartWorld" onclick="chooseStartWorld('buildCastle', this)">🏰 Castle Builder</button>
           <button onclick="chooseStartWorld('buildPlayground', this)">🛝 Playground Builder</button>
@@ -1931,10 +2002,15 @@ input{
 </div>
 
 
-<div id="buildBar">
-  
-  
-  <select id="blockColor">
+<div id="buildBar" aria-label="Dashboard">
+  <div class="dashboardRow dashboardTopRow">
+    <div class="dashboardLeft dashboardCreateStack">
+      <span id="creatorPrompt">Create with blocks</span>
+      <button id="returnMissionsButton" onclick="showStartScreen()">🌎 Return to Missions</button>
+    </div>
+
+    <div class="dashboardColorArea">
+      <select id="blockColor">
   <option value="0x654321">🟫 Door Brown</option>
   <option value="0x87CEFA">🟦 Window Blue</option>
   <option value="0x222222">⬛ Roof Black</option>
@@ -1956,37 +2032,43 @@ input{
   <option value="0xF5F5DC">🌕 Moonstone</option>
   <option value="0xADFF2F">🍋‍🟩 Potion Green</option>
 </select>
-  <span id="creatorPrompt">Create with blocks</span>
-  <div id="colorSwatchBar" aria-label="Building block colors"></div>
-
-  <div id="bottomBuildTools">
-    <button class="bottomBuilderTool" onclick="startSelectMode()">🖱️ Select</button>
-    <button class="bottomBuilderTool" onclick="startMoveSelected()">↔️ Move</button>
-    <button class="bottomBuilderTool" onclick="deleteSelectedStructure()">🗑️ Delete</button>
-    <button class="bottomBuilderTool" onclick="expandWorld()">🏗️ Foundation</button>
-    <button onclick="undoLast()">↩️ Undo</button>
-    <button onclick="saveWorld()">💾 Save</button>
-    <button onclick="saveImage()">📸 Screenshot</button>
-    <button onclick="document.getElementById('loadFile').click()">📂 Load</button>
-    <button onclick="resetWorld()">🔄 Reset</button>
-    <button id="returnMissionsButton" onclick="showStartScreen()">🌎 Return to Missions</button>
-    <span id="toolMessage" class="bottomToolMessage">Tool message will show here.</span>
+      <div class="colorScrollWrap">
+        <div id="colorSwatchBar" aria-label="Building block colors"></div>
+        <div id="colorMoreArrow" title="Scroll for more colors">➜</div>
+      </div>
+    </div>
   </div>
 
-  <div id="voiceControls">
-    <button class="voiceButton" onclick="playThinkerBob()">▶️ Play</button>
-    <button class="voiceButton" onclick="pauseThinkerBob()">⏸ Pause</button>
-    <button class="voiceButton" onclick="stopThinkerBob()">⏹ Stop</button>
+  <div class="dashboardRow dashboardMiddleRow">
+    <div class="dashboardLeft dashboardUtilityButtons">
+      <button onclick="undoLast()">↩️ Undo</button>
+      <button onclick="saveWorld()">💾 Save</button>
+      <button onclick="saveImage()">📸 Screenshot</button>
+      <button onclick="document.getElementById('loadFile').click()">📂 Load</button>
+      <button onclick="resetWorld()">🔄 Reset</button>
+    </div>
 
-    <span class="voiceSmallLabel">🎙 Voice</span>
-    <select id="voiceSelect" onchange="saveVoiceSettings()">
-      <option value="">Default Voice</option>
-    </select>
+    <div id="bottomBuildTools" class="dashboardGreenTools">
+      <button class="bottomBuilderTool" onclick="startSelectMode()">🖱️ Select</button>
+      <button class="bottomBuilderTool" onclick="startMoveSelected()">↔️ Move</button>
+      <button class="bottomBuilderTool" onclick="deleteSelectedStructure()">🗑️ Delete</button>
+      <button class="bottomBuilderTool" onclick="expandWorld()">🏗️ Foundation</button>
+      <span id="toolMessage" class="bottomToolMessage">Tool message will show here.</span>
+    </div>
 
-    <label id="autoReadLabel">
-      <input type="checkbox" id="autoReadToggle" onchange="saveVoiceSettings()">
-      Auto-read
-    </label>
+    <div id="voiceControls" class="dashboardAudioControls">
+      <button class="voiceButton" onclick="playThinkerBob()">▶️ Play</button>
+      <button class="voiceButton" onclick="pauseThinkerBob()">⏸ Pause</button>
+      <button class="voiceButton" onclick="stopThinkerBob()">⏹ Stop</button>
+      <span class="voiceSmallLabel">🎙 Voice</span>
+      <select id="voiceSelect" onchange="saveVoiceSettings()">
+        <option value="">Default Voice</option>
+      </select>
+      <label id="autoReadLabel">
+        <input type="checkbox" id="autoReadToggle" onchange="saveVoiceSettings()">
+        Auto-read
+      </label>
+    </div>
   </div>
 </div>
   
@@ -2045,7 +2127,7 @@ input{
 <div id="floatingToolbox">
   
 <button id="toolboxButton" onclick="toggleToolbox()">
-  🧰 THINKamigBOB Toolbox ▶
+  🧰 Object Library ▶
 </button>
 
 <div id="toolbox">
@@ -6082,7 +6164,7 @@ addMovingClouds();
   
 
   document.getElementById("worldTitle").innerHTML =
-    "🛝 Bobwarts Playground Builder 🛝";
+    "🛝 Playground Builder 🛝";
 
   document.getElementById("missionText").innerHTML =
     "<b>Mission:</b> Design an amazing playground!";
@@ -6100,7 +6182,7 @@ addMovingClouds();
     "Reset the world and design a completely new playground";
 
   document.getElementById("moreChallenge").innerHTML =
-    "Add safety features, benches, lights, colors, and a special Bobwarts magical area.";
+    "Add safety features, benches, lights, colors, and a special special STEM creative area.";
 
   // Slide platform
   addBlock(-6, 1, -4, 0xFFD700);
@@ -6305,7 +6387,7 @@ updateCamera();
     "Reset the world and create a new future city";
 
   document.getElementById("moreChallenge").innerHTML =
-    "Add bridges, trains, electric vehicles, parks, lights, or create a futuristic Bobwarts technology center.";
+    "Add bridges, trains, electric vehicles, parks, lights, or create a futuristic THINKamigBOB technology center.";
 
   // Skyscrapers
   addBlock(-7, 3, -4, 0x808080, new THREE.BoxGeometry(2, 6, 2));
@@ -6865,7 +6947,7 @@ function setAsteroidEnvironment(){
   addBlock(-4, 0.8, 6, 0x777777, new THREE.BoxGeometry(2, 0.5, 2));
 
   document.getElementById("worldTitle").innerHTML =
-    "🪨 Bobwarts Asteroid Base 🪨";
+    "🪨 Asteroid Base 🪨";
 
   document.getElementById("missionText").innerHTML =
     "<b>Mission:</b> Build a research base on an asteroid!";
@@ -6893,7 +6975,7 @@ function setSpaceStationEnvironment(){
   addBlock(8, 1, 0, 0x1E90FF, new THREE.BoxGeometry(6, 0.2, 3));
 
   document.getElementById("worldTitle").innerHTML =
-    "🛰️ Bobwarts Space Station 🛰️";
+    "🛰️ Space Station 🛰️";
 
   document.getElementById("missionText").innerHTML =
     "<b>Mission:</b> Build and improve an orbiting space station!";
@@ -6924,7 +7006,7 @@ function setAsteroidEnvironment(){
   addBlock(6, 0.8, 5, 0x444444, new THREE.BoxGeometry(3, 0.4, 3));
 
   document.getElementById("worldTitle").innerHTML =
-    "🪨 Bobwarts Asteroid Base 🪨";
+    "🪨 Asteroid Base 🪨";
 
   document.getElementById("missionText").innerHTML =
     "<b>Mission:</b> Build a research base on an asteroid!";
@@ -6949,7 +7031,7 @@ function setSpaceStationEnvironment(){
   addBlock(8, 1, 0, 0x1E90FF, new THREE.BoxGeometry(6, 0.2, 3));
 
   document.getElementById("worldTitle").innerHTML =
-    "🛰️ Bobwarts Space Station 🛰️";
+    "🛰️ Space Station 🛰️";
 
   document.getElementById("missionText").innerHTML =
     "<b>Mission:</b> Build and improve an orbiting space station!";
@@ -7012,10 +7094,10 @@ function toggleToolbox(){
 
   if(isHidden){
     toolbox.style.display = "block";
-    button.innerHTML = "🧰 THINKamigBOB Toolbox ▼";
+    button.innerHTML = "🧰 Object Library ▼";
   }else{
     toolbox.style.display = "none";
-    button.innerHTML = "🧰 THINKamigBOB Toolbox ▶";
+    button.innerHTML = "🧰 Object Library ▶";
   }
 
   positionRightPanels();
@@ -7174,7 +7256,7 @@ function showDirections(){
 
 8. Choose different blocks and colors from the 🎨 Choose Your Building Block menu.
 
-9. Use the Builder Toolbox to add trees, ponds, portals, and more.
+9. Use the Object Library to add trees, ponds, portals, and more.
 
 10. Complete the Challenge and earn badges!
 
@@ -7496,6 +7578,76 @@ window.addEventListener('load', buildColorSwatches);
     padding:12px 24px;
     border-radius:18px;
   }
+
+
+/* ===== Jen layout update: Dashboard + Object Library + Hub ===== */
+#buildBar{
+  left:18px !important;
+  right:350px !important;
+  bottom:10px !important;
+  width:auto !important;
+  min-height:120px !important;
+  display:grid !important;
+  grid-template-rows:auto auto !important;
+  gap:6px !important;
+  align-items:stretch !important;
+  justify-content:stretch !important;
+  padding:10px 12px !important;
+}
+.dashboardRow{
+  display:grid;
+  grid-template-columns:190px minmax(360px,1fr) 315px;
+  gap:10px;
+  align-items:center;
+  width:100%;
+}
+.dashboardTopRow{ grid-template-columns:190px minmax(360px,1fr) 315px; }
+.dashboardMiddleRow{ grid-template-columns:190px minmax(360px,1fr) 315px; align-items:start; }
+.dashboardCreateStack{ display:flex; flex-direction:column; gap:7px; align-items:stretch; }
+#creatorPrompt{ margin:0 !important; text-align:left; }
+#returnMissionsButton{ margin:0 !important; width:100%; font-size:14px; padding:8px 10px; }
+.dashboardUtilityButtons{ display:grid; grid-template-columns:1fr 1fr; gap:5px; align-items:start; }
+.dashboardUtilityButtons button{ margin:0 !important; padding:7px 6px !important; font-size:12px !important; white-space:nowrap; }
+.dashboardUtilityButtons button:nth-child(3){ grid-column:1 / span 2; }
+.dashboardColorArea{ grid-column:2 / span 2; min-width:0; display:flex; align-items:center; }
+.colorScrollWrap{ position:relative; width:100%; display:flex; align-items:center; min-width:0; }
+#colorSwatchBar{ max-width:none !important; width:100%; overflow-x:auto; padding-right:34px !important; scrollbar-width:thin; }
+#colorMoreArrow{
+  position:absolute; right:0; top:50%; transform:translateY(-50%);
+  width:30px; height:38px; display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:900; color:#04111D;
+  border-radius:12px; background:linear-gradient(180deg,#B7F34A,#36D8FF);
+  box-shadow:0 0 12px rgba(54,216,255,.5), 0 4px 10px rgba(0,0,0,.28);
+  pointer-events:none;
+}
+#bottomBuildTools.dashboardGreenTools{
+  grid-column:2; display:grid !important; grid-template-columns:repeat(4, minmax(88px, 1fr));
+  gap:6px !important; min-width:0 !important; align-items:start; justify-content:center !important;
+}
+#bottomBuildTools.dashboardGreenTools button{ margin:0 !important; padding:8px 7px !important; font-size:13px !important; }
+#bottomBuildTools.dashboardGreenTools .bottomToolMessage{
+  grid-column:1 / -1; justify-self:center; width:min(520px,100%); max-width:none !important;
+  justify-content:center; text-align:center; border-radius:14px; min-height:30px;
+}
+#voiceControls.dashboardAudioControls{
+  grid-column:3; grid-row:1; margin-top:0 !important; justify-content:flex-end !important;
+  display:flex !important; gap:5px !important; align-items:center; flex-wrap:wrap;
+}
+#voiceControls.dashboardAudioControls .voiceButton{ min-width:64px !important; min-height:34px !important; font-size:13px !important; padding:5px 7px !important; }
+#voiceSelect{ width:170px !important; max-width:170px !important; }
+#autoReadLabel{ width:100%; justify-content:flex-end; }
+#floatingToolbox{ bottom:145px !important; }
+#toolboxButton{ font-size:15px !important; }
+#toolbox{ max-height:300px !important; }
+#stemCoach{ max-height:calc(100vh - 500px) !important; }
+@media(max-width:1150px){
+  #buildBar{ right:320px !important; min-height:145px !important; }
+  .dashboardRow{ grid-template-columns:170px minmax(260px,1fr) 275px; }
+  .dashboardColorArea{ grid-column:2 / span 2; }
+  #voiceSelect{ width:140px !important; max-width:140px !important; }
+  #floatingToolbox{ bottom:168px !important; }
+}
+
 </style>
 
 <div id="badgePopup" onclick="closeBadgePopup()">
