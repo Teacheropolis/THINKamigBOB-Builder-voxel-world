@@ -2026,99 +2026,225 @@ input{
 }
 #challengeChecklist br{ display:none; }
 
-</style>
 
 
-<style id="dashboardJenFinalPolish">
-/* Final Dashboard polish: two rows, centered color label, equal bottom buttons. */
-#buildBar{
-  grid-template-rows:auto auto !important;
+/* ===== Title + hover Dashboard update ===== */
+#gameLogo{
+  top:18px !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  width:auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  z-index:725 !important;
+  pointer-events:none;
 }
-.dashboardTopRow{
-  grid-template-columns:210px minmax(390px,1fr) 340px !important;
+
+#builderTitleLogo{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  min-width:560px;
+  max-width:66vw;
+  padding:10px 28px 12px 28px;
+  border-radius:999px;
+  overflow:hidden;
+  background:linear-gradient(180deg, rgba(255,255,255,.80), rgba(205,232,245,.64) 46%, rgba(7,24,39,.62) 100%);
+  border:2px solid rgba(54,216,255,.70);
+  border-bottom:4px solid rgba(4,27,48,.76);
+  box-shadow:0 9px 22px rgba(0,0,0,.28), 0 0 22px rgba(54,216,255,.38), inset 0 0 14px rgba(255,255,255,.35);
 }
-.dashboardCreateStack{
-  justify-content:center !important;
+
+#builderTitleLogo::after{
+  content:"";
+  position:absolute;
+  left:8%;
+  bottom:6%;
+  width:84%;
+  height:32%;
+  background:linear-gradient(110deg, transparent 0%, transparent 42%, rgba(255,255,255,0.75) 50%, transparent 58%, transparent 100%);
+  transform:translateX(-120%);
+  animation:stemBuilderShine 6s ease-in-out infinite;
+  pointer-events:none;
 }
-#dashboardLabel{
-  display:block;
-  text-align:center;
-  font-size:18px;
+
+@keyframes stemBuilderShine{
+  0%,70%{ transform:translateX(-120%); opacity:0; }
+  76%{ opacity:1; }
+  90%{ transform:translateX(120%); opacity:0; }
+  100%{ transform:translateX(120%); opacity:0; }
+}
+
+#titleRobotHead{
+  position:absolute;
+  left:50%;
+  top:-34px;
+  transform:translateX(-50%);
+  font-size:48px;
+  line-height:1;
+  filter:drop-shadow(0 4px 5px rgba(0,0,0,.45)) drop-shadow(0 0 10px rgba(54,216,255,.45));
+  z-index:3;
+}
+
+#titleWords{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:16px;
+  width:100%;
+  white-space:nowrap;
+}
+
+.titleThink{
+  font-size:36px;
   font-weight:900;
-  color:#36D8FF;
-  letter-spacing:.04em;
-  text-shadow:0 2px 7px rgba(0,0,0,.85), 0 0 12px rgba(54,216,255,.45);
-  margin:0 0 3px 0;
+  letter-spacing:.015em;
+  color:#071827;
+  -webkit-text-fill-color:#071827;
+  text-shadow:0 2px 0 rgba(255,255,255,.72), 0 0 11px rgba(54,216,255,.46);
 }
-.dashboardColorArea{
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:stretch !important;
-  gap:4px !important;
-}
-#creatorPrompt{
-  display:block !important;
-  width:100% !important;
-  text-align:center !important;
-  font-size:16px !important;
-  line-height:1.05 !important;
-  margin:0 !important;
-}
-.colorScrollWrap{ width:100% !important; }
-#voiceControls.dashboardAudioControls{
-  grid-template-columns:repeat(3, minmax(58px,1fr)) minmax(118px,132px) minmax(96px,auto) !important;
-  gap:5px !important;
-}
-#voiceSelect{
-  grid-column:4 !important;
-  width:100% !important;
-  max-width:132px !important;
-}
-#audioPowerLabel{
-  grid-column:5 !important;
-  justify-self:end !important;
-  white-space:nowrap !important;
-  color:#F5FBFF !important;
-}
-#voiceControls.dashboardAudioControls .voiceSmallLabel{ display:none !important; }
-.dashboardMiddleRow{
-  grid-template-columns:minmax(470px,1fr) minmax(376px, .8fr) minmax(220px,.55fr) !important;
-}
-.dashboardUtilityButtons,
-#bottomBuildTools.dashboardGreenTools{
-  align-items:stretch !important;
-}
-.dashboardUtilityButtons button,
-#bottomBuildTools.dashboardGreenTools button{
-  height:40px !important;
-  min-height:40px !important;
-  max-height:40px !important;
-  padding:0 6px !important;
-  margin:0 !important;
-  font-size:12px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  text-align:center !important;
-  border-radius:13px !important;
-  box-sizing:border-box !important;
-}
-.dashboardUtilityButtons{
-  grid-template-columns:repeat(5, minmax(84px,1fr)) !important;
-}
-#bottomBuildTools.dashboardGreenTools{
-  grid-template-columns:repeat(4, minmax(84px,1fr)) !important;
-}
-.bottomToolMessage{ min-height:40px !important; }
-@media(max-width:1150px){
-  .dashboardTopRow{ grid-template-columns:180px minmax(260px,1fr) 270px !important; }
-  .dashboardMiddleRow{ grid-template-columns:minmax(360px,1fr) minmax(300px,.8fr) minmax(180px,.55fr) !important; }
-  .dashboardUtilityButtons button,
-  #bottomBuildTools.dashboardGreenTools button{ font-size:10px !important; padding:0 3px !important; }
-  #voiceControls.dashboardAudioControls{ grid-template-columns:repeat(3, minmax(44px,1fr)) minmax(92px,108px) minmax(82px,auto) !important; }
-}
-</style>
 
+.titleStem{
+  font-size:27px;
+  font-weight:900;
+  letter-spacing:.025em;
+  color:#F5FBFF;
+  -webkit-text-fill-color:#F5FBFF;
+  text-shadow:0 2px 0 rgba(0,35,55,.90), 0 0 12px rgba(54,216,255,.62), 0 0 14px rgba(183,243,74,.26);
+}
+
+/* Mission text floats in the sky by the robot, not inside a sign. */
+#worldTitle{
+  position:absolute !important;
+  top:26px !important;
+  left:calc(50% + 250px) !important;
+  transform:none !important;
+  min-width:260px !important;
+  max-width:420px !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  color:#F5FBFF !important;
+  -webkit-text-fill-color:#F5FBFF !important;
+  font-weight:900 !important;
+  line-height:1.08 !important;
+  text-align:left !important;
+  text-shadow:0 2px 5px rgba(0,0,0,.85), 0 0 10px rgba(54,216,255,.42) !important;
+  z-index:724 !important;
+  pointer-events:none;
+}
+
+#worldTitle .missionLabel,
+#worldTitle::before{
+  display:block;
+  content:"Selected Mission";
+  color:#B7F34A !important;
+  -webkit-text-fill-color:#B7F34A !important;
+  font-size:13px !important;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:3px;
+}
+
+#worldTitle .missionName,
+#worldTitle{
+  font-size:22px !important;
+}
+
+#worldTitle .missionName{ display:block; }
+
+/* Keep old logo sub-elements hidden if any old markup is still present. */
+.logoKicker,.logoMain,.logoSub{ display:none !important; }
+
+/* Bottom Dashboard: hover tab reveals controls so the platform stays open. */
+#dashboardRevealZone{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  height:66px;
+  z-index:895;
+  pointer-events:auto;
+}
+
+#dashboardTab{
+  position:absolute;
+  left:50%;
+  bottom:0;
+  transform:translateX(-50%);
+  padding:7px 34px 8px 34px;
+  border-radius:16px 16px 0 0;
+  background:linear-gradient(180deg, rgba(7,24,39,.92), rgba(14,42,65,.92));
+  border:1px solid rgba(54,216,255,.68);
+  border-bottom:none;
+  color:#F5FBFF;
+  font-size:16px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  box-shadow:0 -7px 18px rgba(0,0,0,.22), 0 0 18px rgba(54,216,255,.28);
+  text-shadow:0 2px 5px rgba(0,0,0,.85);
+}
+
+#buildBar{
+  bottom:12px !important;
+  transform:translateY(calc(100% + 20px)) !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+  transition:transform .22s ease, opacity .18s ease !important;
+  z-index:900 !important;
+}
+
+#dashboardRevealZone:hover ~ #buildBar,
+#buildBar:hover,
+#buildBar:focus-within{
+  transform:translateY(0) !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+#dashboardRevealZone:hover #dashboardTab{
+  background:linear-gradient(180deg, rgba(54,216,255,.92), rgba(7,24,39,.94));
+  color:#FFFFFF;
+  box-shadow:0 -7px 20px rgba(0,0,0,.26), 0 0 24px rgba(54,216,255,.46), 0 0 14px rgba(183,243,74,.22);
+}
+
+/* Object Library returns to the bottom-right, because the Dashboard is now hidden until needed. */
+#floatingToolbox{
+  bottom:10px !important;
+  right:18px !important;
+}
+#toolbox{
+  max-height:330px !important;
+}
+#stemCoach{
+  max-height:calc(100vh - 390px) !important;
+}
+
+@media(max-width:1200px){
+  #builderTitleLogo{ min-width:470px; max-width:62vw; padding-left:20px; padding-right:20px; }
+  .titleThink{ font-size:30px; }
+  .titleStem{ font-size:22px; }
+  #worldTitle{ left:calc(50% + 205px) !important; max-width:320px !important; font-size:18px !important; }
+}
+
+@media(max-width:900px){
+  #builderTitleLogo{ min-width:380px; max-width:78vw; }
+  .titleThink{ font-size:24px; }
+  .titleStem{ font-size:18px; }
+  #worldTitle{ top:82px !important; left:50% !important; transform:translateX(-50%) !important; text-align:center !important; }
+}
+
+  </style>
 </head>
 
 <body>
@@ -2168,15 +2294,18 @@ input{
 </div>
 
 
+<div id="dashboardRevealZone" aria-label="Show Dashboard">
+  <div id="dashboardTab">Dashboard</div>
+</div>
+
 <div id="buildBar" aria-label="Dashboard">
   <div class="dashboardRow dashboardTopRow">
     <div class="dashboardLeft dashboardCreateStack">
-      <span id="dashboardLabel">Dashboard</span>
+      <span id="creatorPrompt">Create with blocks</span>
       <button id="returnMissionsButton" onclick="showStartScreen()">🌎 Return to Missions</button>
     </div>
 
     <div class="dashboardColorArea">
-      <span id="creatorPrompt">Create with blocks</span>
       <select id="blockColor">
   <option value="0x654321">🟫 Door Brown</option>
   <option value="0x87CEFA">🟦 Window Blue</option>
@@ -2209,6 +2338,7 @@ input{
       <button class="voiceButton" onclick="playThinkerBob()">▶️ Play</button>
       <button class="voiceButton" onclick="pauseThinkerBob()">⏸ Pause</button>
       <button class="voiceButton" onclick="stopThinkerBob()">⏹ Stop</button>
+      <span class="voiceSmallLabel">🎙 Voice</span>
       <select id="voiceSelect" onchange="saveVoiceSettings()">
         <option value="">Default Voice</option>
       </select>
@@ -2856,13 +2986,18 @@ input{
 </div>
   
 <div id="gameLogo">
-  <div class="logoKicker">⚙️ THINK • BUILD • DISCOVER ⚙️</div>
-  <div class="logoMain">THINKamigBOB</div>
-  <div class="logoSub">BUILDER</div>
+  <div id="builderTitleLogo" aria-label="THINKamigBOB STEM Builder title">
+    <div id="titleRobotHead">🤖</div>
+    <div id="titleWords">
+      <span class="titleThink">THINKamigBOB</span>
+      <span class="titleStem">STEM Builder</span>
+    </div>
+  </div>
 </div>
 
 <div id="worldTitle">
-  🧠 THINKamigBOB Builder 🧠
+  <span class="missionLabel">Selected Mission</span>
+  <span class="missionName">Choose a STEM Mission</span>
 </div>
 
 <div id="studentProjectBar">
@@ -8418,6 +8553,28 @@ window.addEventListener('load', buildColorSwatches);
   window.addEventListener('load', polishSingleSwitchReader);
   setTimeout(polishSingleSwitchReader, 300);
   setInterval(keepCheckboxesSeparate, 1500);
+})();
+</script>
+
+
+
+<script>
+(function(){
+  function formatMissionTitle(){
+    const wt = document.getElementById('worldTitle');
+    if(!wt || wt.dataset.formatting === '1') return;
+    const raw = (wt.textContent || '').replace(/Selected Mission/gi,'').replace(/[🧠🌎🏰🛝🏗️🧬]/g,'').trim() || 'Choose a STEM Mission';
+    wt.dataset.formatting = '1';
+    wt.innerHTML = '<span class="missionLabel">Selected Mission</span><span class="missionName">' + raw + '</span>';
+    wt.dataset.formatting = '0';
+  }
+  window.addEventListener('DOMContentLoaded', function(){
+    const wt = document.getElementById('worldTitle');
+    if(!wt) return;
+    formatMissionTitle();
+    const obs = new MutationObserver(formatMissionTitle);
+    obs.observe(wt, { childList:true, characterData:true, subtree:true });
+  });
 })();
 </script>
 
