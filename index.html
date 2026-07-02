@@ -7637,7 +7637,8 @@ Have fun building!`
 checkBadge();
 updateFloatingChecklist();
 loadVoiceSettings();
-initHoverReader();
+/* hover reader disabled for responsiveness */
+if(false && typeof initHoverReader === "function"){ initHoverReader(); }
 
 if("speechSynthesis" in window){
   window.speechSynthesis.onvoiceschanged = populateVoiceChoices;
@@ -8574,6 +8575,122 @@ window.addEventListener('load', buildColorSwatches);
     formatMissionTitle();
     const obs = new MutationObserver(formatMissionTitle);
     obs.observe(wt, { childList:true, characterData:true, subtree:true });
+  });
+})();
+</script>
+
+
+
+<!-- ===== Responsiveness + Hub button fix patch ===== -->
+<style id="responsiveHubFixPatch">
+  #startScreen{
+    pointer-events:auto !important;
+    z-index:3000 !important;
+  }
+  #startCard,
+  #startCard *{
+    pointer-events:auto !important;
+  }
+  #startBuildingButton,
+  .startWorldGrid button{
+    cursor:pointer !important;
+    position:relative !important;
+    z-index:3002 !important;
+  }
+  #startScreen.hidden{
+    display:none !important;
+    pointer-events:none !important;
+  }
+  #dashboardRevealZone{
+    pointer-events:auto;
+  }
+  #startScreen:not(.hidden) ~ #dashboardRevealZone,
+  #startScreen:not(.hidden) ~ #buildBar{
+    display:none !important;
+  }
+</style>
+<script id="responsiveHubFixScript">
+(function(){
+  "use strict";
+
+  // The old hover reader made the page feel busy and sometimes sluggish.
+  // Voice reading now happens only from intentional clicks when Voice Reader is checked.
+  window.initHoverReader = function(){};
+  window.cancelHoverReader = function(){};
+
+  if(typeof window.selectedStartWorld === "undefined"){
+    window.selectedStartWorld = "buildCastle";
+  }
+
+  window.chooseStartWorld = function(fnName, buttonEl){
+    window.selectedStartWorld = fnName;
+    document.querySelectorAll(".startWorldGrid button").forEach(function(btn){
+      btn.classList.remove("selectedStartWorld");
+    });
+    var clicked = buttonEl || (window.event && window.event.currentTarget) || null;
+    if(clicked){ clicked.classList.add("selectedStartWorld"); }
+  };
+
+  window.syncStartFields = function(){
+    var sn = document.getElementById("startStudentName");
+    var pn = document.getElementById("startProjectName");
+    var student = document.getElementById("studentName");
+    var project = document.getElementById("projectName");
+    if(student && sn) student.value = sn.value;
+    if(project && pn) project.value = pn.value;
+  };
+
+  window.hideStartScreen = function(){
+    var screen = document.getElementById("startScreen");
+    if(screen){ screen.classList.add("hidden"); }
+    if(typeof window.positionRightPanels === "function"){
+      window.positionRightPanels();
+    }
+  };
+
+  window.startSelectedWorld = function(){
+    window.syncStartFields();
+    var fnName = window.selectedStartWorld || "buildCastle";
+    if(typeof window[fnName] === "function"){
+      window[fnName]();
+    } else {
+      console.warn("Starter world function not found:", fnName);
+    }
+    window.hideStartScreen();
+    if(typeof window.updateCreatorBarSelection === "function"){
+      window.updateCreatorBarSelection();
+    }
+  };
+
+  document.addEventListener("DOMContentLoaded", function(){
+    document.querySelectorAll(".startWorldGrid button").forEach(function(btn){
+      var m = (btn.getAttribute("onclick") || "").match(/chooseStartWorld\('([^']+)'/);
+      if(m){
+        btn.dataset.worldFunction = m[1];
+        btn.removeAttribute("onclick");
+        btn.addEventListener("click", function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          window.chooseStartWorld(btn.dataset.worldFunction, btn);
+        });
+      }
+    });
+
+    var startBtn = document.getElementById("startBuildingButton");
+    if(startBtn){
+      startBtn.removeAttribute("onclick");
+      startBtn.addEventListener("click", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        window.startSelectedWorld();
+      });
+    }
+
+    var selected = document.querySelector(".startWorldGrid button.selectedStartWorld") || document.querySelector(".startWorldGrid button");
+    if(selected){
+      selected.classList.add("selectedStartWorld");
+      if(selected.dataset.worldFunction){ window.selectedStartWorld = selected.dataset.worldFunction; }
+    }
   });
 })();
 </script>
