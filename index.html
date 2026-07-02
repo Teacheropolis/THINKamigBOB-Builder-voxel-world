@@ -1801,6 +1801,82 @@ input{
   #floatingToolbox{ width:295px !important; }
 }
 
+  
+
+/* ===== Workspace layout update: builder tools in bottom bar, compact toolbox ===== */
+#bottomBuildTools{
+  flex: 1 1 auto !important;
+  min-width: 430px !important;
+  justify-content:center !important;
+}
+
+#bottomBuildTools .bottomBuilderTool{
+  background:linear-gradient(180deg, rgba(183,243,74,.95), rgba(34,197,94,.88)) !important;
+  color:#04111D !important;
+  border:1px solid rgba(245,251,255,.40) !important;
+  border-bottom:3px solid rgba(5,90,55,.55) !important;
+  box-shadow:0 5px 13px rgba(0,0,0,.22), 0 0 10px rgba(183,243,74,.18) !important;
+  text-shadow:none !important;
+}
+
+.bottomToolMessage{
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  max-width:260px;
+  padding:4px 10px;
+  border-radius:999px;
+  background:rgba(5,10,24,.32);
+  border:1px solid rgba(54,216,255,.24);
+  color:#F5FBFF;
+  font-size:12px;
+  font-weight:700;
+  text-shadow:0 1px 5px rgba(0,0,0,.75);
+}
+
+#stemCoach{
+  top:108px !important;
+  right:18px !important;
+  width:315px !important;
+  max-height:255px !important;
+  overflow-y:auto !important;
+  background:rgba(5,10,24,.28) !important;
+  border:1px solid rgba(54,216,255,.28) !important;
+}
+
+#floatingToolbox{
+  bottom:116px !important;
+  right:18px !important;
+  width:315px !important;
+}
+
+#toolbox{
+  max-height:220px !important;
+  overflow-y:auto !important;
+  margin-bottom:8px !important;
+  padding:8px 10px !important;
+}
+
+#toolbox hr:first-of-type{
+  display:none;
+}
+
+#toolboxButton{
+  font-size:15px !important;
+  padding:8px 10px !important;
+}
+
+@media(max-height:740px){
+  #stemCoach{ max-height:225px !important; }
+  #toolbox{ max-height:185px !important; }
+  #floatingToolbox{ bottom:108px !important; }
+}
+
+@media(max-width:1150px){
+  #bottomBuildTools{ min-width:360px !important; }
+  .bottomToolMessage{ max-width:180px; }
+}
+
   </style>
 </head>
 
@@ -1884,12 +1960,17 @@ input{
   <div id="colorSwatchBar" aria-label="Building block colors"></div>
 
   <div id="bottomBuildTools">
+    <button class="bottomBuilderTool" onclick="startSelectMode()">🖱️ Select</button>
+    <button class="bottomBuilderTool" onclick="startMoveSelected()">↔️ Move</button>
+    <button class="bottomBuilderTool" onclick="deleteSelectedStructure()">🗑️ Delete</button>
+    <button class="bottomBuilderTool" onclick="expandWorld()">🏗️ Foundation</button>
     <button onclick="undoLast()">↩️ Undo</button>
     <button onclick="saveWorld()">💾 Save</button>
     <button onclick="saveImage()">📸 Screenshot</button>
     <button onclick="document.getElementById('loadFile').click()">📂 Load</button>
     <button onclick="resetWorld()">🔄 Reset</button>
     <button id="returnMissionsButton" onclick="showStartScreen()">🌎 Return to Missions</button>
+    <span id="toolMessage" class="bottomToolMessage">Tool message will show here.</span>
   </div>
 
   <div id="voiceControls">
@@ -1985,31 +2066,6 @@ input{
   
 <hr>
 
-<p><b>🛠️ Builder Tools</b></p>
-
-<button class="moveButton" onclick="startSelectMode()">
-  🖱️ Select Structure
-</button>
-
-<button class="moveButton" onclick="startMoveSelected()">
-  ↔️ Move Selected
-</button>
-
-<button class="moveButton" onclick="deleteSelectedStructure()">
-  🗑️ Delete Structure
-</button>
-
-<button onclick="expandWorld()">
-  🏗️ Create Foundation</button>
-
-<p id="toolMessage"
-   style="font-size:12px; font-weight:bold; color:#6A0DAD;">
-  Tool message will show here.
-</p>
-
-<hr>
-
-<p><b>➕ Add to Your World</b></p>
 
 <button class="categoryButton"
         onclick="toggleCategory('buildingMagicTools', this)">
