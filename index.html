@@ -2027,6 +2027,98 @@ input{
 #challengeChecklist br{ display:none; }
 
 </style>
+
+
+<style id="dashboardJenFinalPolish">
+/* Final Dashboard polish: two rows, centered color label, equal bottom buttons. */
+#buildBar{
+  grid-template-rows:auto auto !important;
+}
+.dashboardTopRow{
+  grid-template-columns:210px minmax(390px,1fr) 340px !important;
+}
+.dashboardCreateStack{
+  justify-content:center !important;
+}
+#dashboardLabel{
+  display:block;
+  text-align:center;
+  font-size:18px;
+  font-weight:900;
+  color:#36D8FF;
+  letter-spacing:.04em;
+  text-shadow:0 2px 7px rgba(0,0,0,.85), 0 0 12px rgba(54,216,255,.45);
+  margin:0 0 3px 0;
+}
+.dashboardColorArea{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  gap:4px !important;
+}
+#creatorPrompt{
+  display:block !important;
+  width:100% !important;
+  text-align:center !important;
+  font-size:16px !important;
+  line-height:1.05 !important;
+  margin:0 !important;
+}
+.colorScrollWrap{ width:100% !important; }
+#voiceControls.dashboardAudioControls{
+  grid-template-columns:repeat(3, minmax(58px,1fr)) minmax(118px,132px) minmax(96px,auto) !important;
+  gap:5px !important;
+}
+#voiceSelect{
+  grid-column:4 !important;
+  width:100% !important;
+  max-width:132px !important;
+}
+#audioPowerLabel{
+  grid-column:5 !important;
+  justify-self:end !important;
+  white-space:nowrap !important;
+  color:#F5FBFF !important;
+}
+#voiceControls.dashboardAudioControls .voiceSmallLabel{ display:none !important; }
+.dashboardMiddleRow{
+  grid-template-columns:minmax(470px,1fr) minmax(376px, .8fr) minmax(220px,.55fr) !important;
+}
+.dashboardUtilityButtons,
+#bottomBuildTools.dashboardGreenTools{
+  align-items:stretch !important;
+}
+.dashboardUtilityButtons button,
+#bottomBuildTools.dashboardGreenTools button{
+  height:40px !important;
+  min-height:40px !important;
+  max-height:40px !important;
+  padding:0 6px !important;
+  margin:0 !important;
+  font-size:12px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  text-align:center !important;
+  border-radius:13px !important;
+  box-sizing:border-box !important;
+}
+.dashboardUtilityButtons{
+  grid-template-columns:repeat(5, minmax(84px,1fr)) !important;
+}
+#bottomBuildTools.dashboardGreenTools{
+  grid-template-columns:repeat(4, minmax(84px,1fr)) !important;
+}
+.bottomToolMessage{ min-height:40px !important; }
+@media(max-width:1150px){
+  .dashboardTopRow{ grid-template-columns:180px minmax(260px,1fr) 270px !important; }
+  .dashboardMiddleRow{ grid-template-columns:minmax(360px,1fr) minmax(300px,.8fr) minmax(180px,.55fr) !important; }
+  .dashboardUtilityButtons button,
+  #bottomBuildTools.dashboardGreenTools button{ font-size:10px !important; padding:0 3px !important; }
+  #voiceControls.dashboardAudioControls{ grid-template-columns:repeat(3, minmax(44px,1fr)) minmax(92px,108px) minmax(82px,auto) !important; }
+}
+</style>
+
 </head>
 
 <body>
@@ -2079,11 +2171,12 @@ input{
 <div id="buildBar" aria-label="Dashboard">
   <div class="dashboardRow dashboardTopRow">
     <div class="dashboardLeft dashboardCreateStack">
-      <span id="creatorPrompt">Create with blocks</span>
+      <span id="dashboardLabel">Dashboard</span>
       <button id="returnMissionsButton" onclick="showStartScreen()">🌎 Return to Missions</button>
     </div>
 
     <div class="dashboardColorArea">
+      <span id="creatorPrompt">Create with blocks</span>
       <select id="blockColor">
   <option value="0x654321">🟫 Door Brown</option>
   <option value="0x87CEFA">🟦 Window Blue</option>
@@ -2116,7 +2209,6 @@ input{
       <button class="voiceButton" onclick="playThinkerBob()">▶️ Play</button>
       <button class="voiceButton" onclick="pauseThinkerBob()">⏸ Pause</button>
       <button class="voiceButton" onclick="stopThinkerBob()">⏹ Stop</button>
-      <span class="voiceSmallLabel">🎙 Voice</span>
       <select id="voiceSelect" onchange="saveVoiceSettings()">
         <option value="">Default Voice</option>
       </select>
