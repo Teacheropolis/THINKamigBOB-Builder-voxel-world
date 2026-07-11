@@ -1,4 +1,40 @@
 # CHANGELOG
+## Update #101B — Add Engineering Build Grid
+
+### Changes
+- Added a persistent engineering grid across the full 50 × 50 build surface.
+- Added minor grid lines every 1 world unit.
+- Added brighter major grid lines every 5 world units.
+- Aligned the grid to block-placement coordinates.
+- Positioned the grid slightly above the ground to avoid flicker.
+- Kept the grid non-interactive and excluded from raycasting.
+- Prevented duplicate grid creation after Reset World.
+
+### Verification
+- Tested across grass, gray, dark, moon, and white mission grounds.
+- Confirmed block placement, removal, move mode, and reset remain unchanged.
+- Confirmed no duplicate grid or noticeable performance issue.
+
+
+## Update #101A — Inspect Build Area for Engineering Grid
+
+### Type
+Diagnostic inspection only — no code changes.
+
+### Findings
+- Confirmed the active build surface is the `ground` mesh.
+- Confirmed the ground is a 50 × 1 × 50 box positioned at `y = -1`.
+- Confirmed the visible ground and block-placement raycasting surface are the same object.
+- Confirmed block placement snaps to one-unit coordinates.
+- Found no active Three.js engineering grid.
+- Identified the empty `buildStarterGrid()` function as the safest insertion point.
+- Recommended a lightweight custom `THREE.LineSegments` grid with minor lines every 1 unit and major lines every 5 units.
+- Recommended placing the grid approximately 0.015 units above the ground.
+- Confirmed the grid can be non-interactive and should have negligible Chromebook performance impact.
+
+### Status
+Inspection complete. Awaiting Update #101B implementation and testing.
+
 ## Update #100.3B — Apply Final Mission HUD Style Immediately
 
 ### Changes
