@@ -1,4 +1,20 @@
 # CHANGELOG
+## Update #101B — Add Engineering Build Grid
+
+### Changes
+- Added a persistent engineering grid across the full 50 × 50 build surface.
+- Added minor grid lines every 1 world unit.
+- Added brighter major grid lines every 5 world units.
+- Aligned the grid to block-placement coordinates.
+- Positioned the grid slightly above the ground to avoid flicker.
+- Kept the grid non-interactive and excluded from raycasting.
+- Prevented duplicate grid creation after Reset World.
+
+### Verification
+- Tested across grass, gray, dark, moon, and white mission grounds.
+- Confirmed block placement, removal, move mode, and reset remain unchanged.
+- Confirmed no duplicate grid or noticeable performance issue.
+
 
 ## Update #101A — Inspect Build Area for Engineering Grid
 

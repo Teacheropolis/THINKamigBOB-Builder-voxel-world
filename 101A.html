@@ -14512,5 +14512,25 @@ body:not(.starterScreenActive).builderTitleCompactActive #worldTitle:not([data-p
 }
 </style>
 
+
+
+<!-- =====================================================
+UPDATE #100.3B — APPLY FINAL MISSION HUD STYLE IMMEDIATELY
+Scope: active #worldTitle::after cyan glow only.
+===================================================== -->
+<style id="update1003BImmediateMissionHudGlowCSS">
+body:not(.starterScreenActive) #worldTitle:not([data-placeholder="true"])::after,
+body:not(.starterScreenActive).builderTitleCompactActive #worldTitle:not([data-placeholder="true"])::after {
+  content:"" !important;
+  display:block !important;
+  width:min(560px, 100%) !important;
+  height:3px !important;
+  margin-top:10px !important;
+  border-radius:999px !important;
+  background:linear-gradient(90deg, rgba(54,216,255,0), rgba(54,216,255,.95), rgba(54,216,255,.10)) !important;
+  box-shadow:0 0 12px rgba(54,216,255,.65) !important;
+}
+</style>
+
 </body>
 </html>

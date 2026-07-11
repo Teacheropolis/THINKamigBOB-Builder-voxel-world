@@ -3675,6 +3675,9 @@ const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.position.y = -1;
 scene.add(ground);
 
+// UPDATE #101B: Persistent, non-interactive engineering build grid.
+let engineeringGrid = null;
+
 const blocks = [];
 let lastNucleus = null;
   
@@ -5036,8 +5039,75 @@ function addDragonSmoke(){
 }
 
 function buildStarterGrid(){
-  // No white starter blocks needed.
-  // Students can build directly on the colored ground.
+  // UPDATE #101B: Create the engineering grid once and keep it separate
+  // from the ground, blocks, and all raycasting targets.
+  if(engineeringGrid) return;
+
+  const gridHalfSize = 25;
+  const minorSpacing = 1;
+  const majorSpacing = 5;
+  const minorPositions = [];
+  const majorPositions = [];
+
+  for(let coordinate = -gridHalfSize; coordinate <= gridHalfSize; coordinate += minorSpacing){
+    const target = coordinate % majorSpacing === 0
+      ? majorPositions
+      : minorPositions;
+
+    // Line parallel to the Z axis.
+    target.push(
+      coordinate, 0, -gridHalfSize,
+      coordinate, 0,  gridHalfSize
+    );
+
+    // Line parallel to the X axis.
+    target.push(
+      -gridHalfSize, 0, coordinate,
+       gridHalfSize, 0, coordinate
+    );
+  }
+
+  const minorGeometry = new THREE.BufferGeometry();
+  minorGeometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(minorPositions, 3)
+  );
+
+  const majorGeometry = new THREE.BufferGeometry();
+  majorGeometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(majorPositions, 3)
+  );
+
+  const minorMaterial = new THREE.LineBasicMaterial({
+    color: 0x8DDEFF,
+    transparent: true,
+    opacity: 0.18,
+    depthWrite: false
+  });
+
+  const majorMaterial = new THREE.LineBasicMaterial({
+    color: 0x39CFFF,
+    transparent: true,
+    opacity: 0.34,
+    depthWrite: false
+  });
+
+  const minorLines = new THREE.LineSegments(minorGeometry, minorMaterial);
+  const majorLines = new THREE.LineSegments(majorGeometry, majorMaterial);
+
+  engineeringGrid = new THREE.Group();
+  engineeringGrid.name = "engineeringBuildGrid";
+  engineeringGrid.position.y = -0.485;
+
+  // Extra safeguard: the grid can never become a raycast target.
+  engineeringGrid.raycast = function(){};
+  minorLines.raycast = function(){};
+  majorLines.raycast = function(){};
+
+  engineeringGrid.add(minorLines);
+  engineeringGrid.add(majorLines);
+  scene.add(engineeringGrid);
 }
 
 buildStarterGrid();
