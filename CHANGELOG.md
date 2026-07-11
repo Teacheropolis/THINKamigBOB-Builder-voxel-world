@@ -1,4 +1,17 @@
 # CHANGELOG
+## Update #100.3B — Apply Final Mission HUD Style Immediately
+
+### Changes
+- Applied the approved Mission HUD cyan bottom glow immediately when the active HUD appears.
+- Removed the visible dependency on the delayed `builderTitleCompactActive` state.
+- Preserved the existing HUD design, placement, dimensions, mission text, and timing.
+- Made no JavaScript or gameplay changes.
+
+### Verification
+- Tested multiple missions in Chrome using Live Server.
+- Confirmed that the HUD appears immediately in its complete final style.
+- Confirmed that no delayed style change remains.
+
 ## Update #100.3A — Diagnose Delayed Mission HUD Style Change
 
 ### Type
