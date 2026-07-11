@@ -1,4 +1,21 @@
 # CHANGELOG
+## Update #100.3A — Diagnose Delayed Mission HUD Style Change
+
+### Type
+Diagnostic inspection only — no code changes.
+
+### Findings
+- Confirmed that `#worldTitle` is the single active Selected Mission HUD.
+- Confirmed that the main blue HUD panel appears immediately in its correct style.
+- Identified a legacy `#worldTitle::after` rule that adds the cyan bottom glow only after the body receives the `builderTitleCompactActive` class.
+- Confirmed that delayed legacy Builder title JavaScript adds `builderTitleCompactActive` after a timer or title-state change.
+- Determined that the delayed visual change is not caused by mission text, the popup, image loading, or a delayed stylesheet.
+- Recommended a CSS-only final override that applies the approved cyan glow immediately and removes its dependency on the delayed compact-title class.
+
+### Status
+Diagnosis complete. Awaiting Update #100.3B implementation and testing.
+
+
 
 ## Update 58 — Builder Refactor Setup
 - Added README.md
@@ -111,11 +128,24 @@ Changes:
 - Determined JavaScript is no longer causing movement.
 - Recommended one final CSS appearance freeze before removing remaining legacy Builder title CSS.
   
-
-  
-
 ### Known Issues
 
 - Selected Mission HUD remains in the correct position but changes visual styling after approximately 20–30 seconds.
 - Suspected cause: delayed legacy CSS class or higher-specificity selector overriding the HUD appearance.
 - Gameplay, mission launch, robot, and Builder sign are stable.
+
+## Update #100.3A — Diagnose Delayed Mission HUD Style Change
+
+### Type
+Diagnostic inspection only — no code changes.
+
+### Findings
+- Confirmed that `#worldTitle` is the single active Selected Mission HUD.
+- Confirmed that the main blue HUD panel appears immediately in its correct style.
+- Identified a legacy `#worldTitle::after` rule that adds the cyan bottom glow only after the body receives the `builderTitleCompactActive` class.
+- Confirmed that delayed legacy Builder title JavaScript adds `builderTitleCompactActive` after a timer or title-state change.
+- Determined that the delayed visual change is not caused by mission text, the popup, image loading, or a delayed stylesheet.
+- Recommended a CSS-only final override that applies the approved cyan glow immediately and removes its dependency on the delayed compact-title class.
+
+### Status
+Diagnosis complete. Awaiting Update #100.3B implementation and testing.
