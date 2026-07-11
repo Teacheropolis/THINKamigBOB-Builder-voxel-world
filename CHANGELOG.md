@@ -57,3 +57,65 @@ Status: VERIFIED ✅
 - Removed the delayed HUD reveal after the mission popup closes.
 - Preserved mission launch, popup behavior, robot, sign, and gameplay.
 - Mission HUD remains dynamic and stable.
+
+Update #99.1 (Diagnostic)
+Identified delayed legacy title-state CSS affecting #gameLogo. No code changes made.
+
+Update #99.3 (Diagnostic)
+Identified competing CSS rules causing the Selected Mission HUD to shift downward after legacy Builder title-state classes expire. No code changes made.
+
+## Update #99.4 — Stable Builder Header and Mission HUD
+Status: VERIFIED ✅
+
+- Froze the Builder robot and sign in the approved centered position.
+- Froze the Selected Mission HUD at its approved vertical position.
+- Prevented delayed horizontal and vertical movement caused by legacy title-state CSS.
+- Preserved immediate HUD visibility, dynamic mission titles, mission launch, popup behavior, and gameplay.
+
+## Update #100.1 — Remove Obsolete PNG Builder Title Sequence
+
+Status: PASS
+
+Changes:
+- Removed the legacy PNG Builder title introduction sequence.
+- Preserved the active Builder header (#gameLogo, #builderHeaderRobot, #builderHeaderSign).
+- Preserved the active Selected Mission HUD (#worldTitle).
+- Preserved immediate mission HUD visibility.
+- Preserved dynamic mission title updates.
+- Mission launch and popup behavior remain functional.
+
+Verification:
+- One robot displayed.
+- One Builder sign displayed.
+- One Selected Mission HUD displayed.
+- Mission titles remain dynamic.
+- No regression observed after removal.
+
+Remaining Issue:
+- The Selected Mission HUD changes appearance slightly after approximately 20–30 seconds, even though its position remains fixed.
+- Robot and Builder sign remain stable.
+- This appears to be caused by a delayed legacy CSS state overriding HUD styling rather than movement.
+
+Next Step:
+- Update #99.5 Diagnostic — Trace delayed mission HUD style change.
+
+## Update #100.2 — Mission HUD Appearance Diagnostic
+
+Status: COMPLETE
+
+Changes:
+- Diagnosed delayed visual change affecting #worldTitle.
+- Confirmed HUD position remains stable.
+- Determined delayed appearance is caused by legacy builderTitleCompactActive CSS.
+- Verified robot and Builder sign remain fixed.
+- Determined JavaScript is no longer causing movement.
+- Recommended one final CSS appearance freeze before removing remaining legacy Builder title CSS.
+  
+
+  
+
+### Known Issues
+
+- Selected Mission HUD remains in the correct position but changes visual styling after approximately 20–30 seconds.
+- Suspected cause: delayed legacy CSS class or higher-specificity selector overriding the HUD appearance.
+- Gameplay, mission launch, robot, and Builder sign are stable.
