@@ -2952,10 +2952,14 @@ Future extraction target: dashboard HTML/CSS/JS.
 <div aria-label="Dashboard" id="buildBar">
 <div class="dashboardRow dashboardTopRow">
 <div class="dashboardLeft dashboardCreateStack">
-<span id="creatorPrompt">Create with Blocks</span>
 <button id="returnMissionsButton" onclick="showStartScreen()">Return to Missions</button>
 </div>
 <div class="dashboardColorArea">
+<select id="blockShape" aria-label="Building shape" title="Choose a building shape">
+<option value="cube" selected>🧊 Cube</option>
+<option value="sphere">🔵 Sphere</option>
+<option value="trianglePrism">🔺 Triangle</option>
+</select>
 <select id="blockColor">
 <option value="0x654321">🟫 Door Brown</option>
 <option value="0x87CEFA">🟦 Window Blue</option>
@@ -2980,7 +2984,6 @@ Future extraction target: dashboard HTML/CSS/JS.
 </select>
 <div class="colorScrollWrap">
 <div aria-label="Building block colors" id="colorSwatchBar"></div>
-<div id="colorMoreArrow" title="Scroll for more colors">➜</div>
 </div>
 </div>
 </div>
@@ -3704,6 +3707,82 @@ function syncEngineeringGridStyle(grassIsActive){
 }
 
 const blocks = [];
+
+// UPDATE #102B: Student building-shape selection.
+let selectedBlockShape = "cube";
+
+const blockShapeSelect = document.getElementById("blockShape");
+if(blockShapeSelect){
+  selectedBlockShape = blockShapeSelect.value || "cube";
+  blockShapeSelect.addEventListener("change", function(){
+    selectedBlockShape = this.value || "cube";
+  });
+}
+
+function createTrianglePrismGeometry(){
+  const geometry = new THREE.BufferGeometry();
+
+  // UPDATE #102C: Half-cube triangular wedge.
+  const vertices = new Float32Array([
+    -0.5, -0.5,  0.5,
+     0.5, -0.5,  0.5,
+    -0.5,  0.5,  0.5,
+
+    -0.5, -0.5, -0.5,
+    -0.5,  0.5, -0.5,
+     0.5, -0.5, -0.5
+  ]);
+
+  const indices = [
+    0, 1, 2,
+    3, 4, 5,
+    0, 3, 5, 0, 5, 1,
+    0, 2, 4, 0, 4, 3,
+    1, 5, 4, 1, 4, 2
+  ];
+
+  geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+
+  return geometry;
+}
+
+function createBuilderGeometry(shape, dimensions = {}){
+  if(shape === "sphere"){
+    return new THREE.SphereGeometry(0.5, 16, 12);
+  }
+
+  if(shape === "trianglePrism"){
+    return createTrianglePrismGeometry();
+  }
+
+  return new THREE.BoxGeometry(
+    dimensions.sx || 1,
+    dimensions.sy || 1,
+    dimensions.sz || 1
+  );
+}
+
+function createStudentShape(shape, color){
+  const normalizedShape =
+    shape === "sphere" || shape === "trianglePrism"
+      ? shape
+      : "cube";
+
+  const mesh = new THREE.Mesh(
+    createBuilderGeometry(normalizedShape),
+    new THREE.MeshLambertMaterial({color: color})
+  );
+
+  mesh.userData.studentPlaced = true;
+  mesh.userData.builderShape = normalizedShape;
+
+  return mesh;
+}
+
 let lastNucleus = null;
   
 const spinningTurbines = [];
@@ -5603,11 +5682,9 @@ if(moveSelectedMode && hit === ground){
   return;
 }
   
-    const newBlock = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({
-        color: Number(document.getElementById("blockColor").value)
-      })
+    const newBlock = createStudentShape(
+      selectedBlockShape,
+      Number(document.getElementById("blockColor").value)
     );
 
     if(hit === ground){
@@ -7699,13 +7776,15 @@ checkBadge();
       color: block.material.color.getHex(),
       sx: block.geometry.parameters.width || 1,
       sy: block.geometry.parameters.height || 1,
-      sz: block.geometry.parameters.depth || 1
+      sz: block.geometry.parameters.depth || 1,
+      shape: block.userData.builderShape || "cube",
+      rotationY: block.rotation.y || 0
     });
   });
 
   const saveData = {
     app: "THINKamigBOB Builder",
-    version: 2,
+    version: 3,
     projectName: document.getElementById("projectName")?.value || "",
     studentName: document.getElementById("studentName")?.value || "",
     blocks: worldData,
@@ -7777,18 +7856,27 @@ document.getElementById('loadFile')
 
     worldData.forEach(data => {
 
-      addBlock(
+      const loadedShape = data.shape || "cube";
+
+      const loadedBlock = addBlock(
         data.x,
         data.y,
         data.z,
         data.color,
-
-        new THREE.BoxGeometry(
-          data.sx || 1,
-          data.sy || 1,
-          data.sz || 1
-        )
+        createBuilderGeometry(loadedShape, {
+          sx: data.sx || 1,
+          sy: data.sy || 1,
+          sz: data.sz || 1
+        })
       );
+
+      loadedBlock.rotation.y =
+        typeof data.rotationY === "number"
+          ? data.rotationY
+          : 0;
+
+      loadedBlock.userData.builderShape = loadedShape;
+      loadedBlock.userData.studentPlaced = true;
 
     });
 
@@ -8548,6 +8636,18 @@ Preserved from working file. Future edits should target by section.
 .dashboardUtilityButtons button:nth-child(3){ grid-column:1 / span 2; }
 #engineeringGridToggle{ grid-column:1 / span 2; }
 .dashboardColorArea{ grid-column:2 / span 2; min-width:0; display:flex; align-items:center; }
+#blockShape{
+  width:132px !important;
+  min-width:132px !important;
+  margin:0 8px 0 0 !important;
+  padding:7px 8px !important;
+  border:2px solid #36D8FF !important;
+  border-radius:8px !important;
+  background:#071827 !important;
+  color:#EAFBFF !important;
+  font-size:14px !important;
+  font-weight:800 !important;
+}
 .colorScrollWrap{ position:relative; width:100%; display:flex; align-items:center; min-width:0; }
 #colorSwatchBar{ max-width:none !important; width:100%; overflow-x:auto; padding-right:34px !important; scrollbar-width:thin; }
 #colorMoreArrow{
@@ -14644,6 +14744,215 @@ body:not(.starterScreenActive).builderTitleCompactActive #worldTitle:not([data-p
   border-radius:999px !important;
   background:linear-gradient(90deg, rgba(54,216,255,0), rgba(54,216,255,.95), rgba(54,216,255,.10)) !important;
   box-shadow:0 0 12px rgba(54,216,255,.65) !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #101.3F — GENTLE THINKer BOB STANDING SWAY
+Scope: active Builder robot only.
+===================================================== -->
+<style id="update1013FThinkerBobIdleAnimationCSS">
+body:not(.starterScreenActive) #builderHeaderRobot {
+  transform-origin: 50% 82%;
+  animation: thinkerBobIdleLife 6.5s ease-in-out infinite;
+}
+
+@keyframes thinkerBobIdleLife {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: -0.15deg;
+  }
+
+  50% {
+    translate: 0 0;
+    rotate: 0.15deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not(.starterScreenActive) #builderHeaderRobot {
+    animation: none !important;
+    translate: 0 0 !important;
+    rotate: 0deg !important;
+  }
+}
+</style>
+
+
+
+<!-- =====================================================
+UPDATE #103 — ENGINEERING CONSOLE DASHBOARD
+Scope: Builder dashboard appearance only.
+===================================================== -->
+<style id="update103EngineeringConsoleDashboardCSS">
+/* Dark brushed-steel console with a thicker metallic-brass frame. */
+#buildBar{
+  box-sizing:border-box !important;
+  padding:14px 16px !important;
+  border:7px solid #b67a13 !important;
+  border-top-color:#f2cf63 !important;
+  border-left-color:#d49a27 !important;
+  border-right-color:#8f5b0b !important;
+  border-bottom-color:#704307 !important;
+  border-radius:23px 23px 4px 4px !important;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.024) 0 1px, rgba(0,0,0,.025) 1px 3px),
+    linear-gradient(105deg, rgba(255,255,255,.055), transparent 22%, rgba(255,255,255,.025) 48%, transparent 72%),
+    linear-gradient(180deg,#30363b 0%,#1d2227 48%,#11161b 100%) !important;
+  box-shadow:
+    0 -10px 32px rgba(0,0,0,.48),
+    0 0 0 2px rgba(42,24,2,.92),
+    0 0 0 5px rgba(242,190,62,.20),
+    0 0 25px rgba(220,154,31,.34),
+    inset 0 2px 0 rgba(255,238,163,.55),
+    inset 0 -4px 0 rgba(70,38,2,.82),
+    inset 0 0 28px rgba(0,0,0,.62) !important;
+}
+
+/* Remove the old Create/Build with Blocks heading completely. */
+#creatorPrompt,
+#creatorPrompt::before,
+#creatorPrompt::after{
+  display:none !important;
+  content:none !important;
+}
+.dashboardCreateStack{
+  justify-content:flex-start !important;
+}
+
+/* Gold navigation control: the only gold button in the dashboard. */
+#returnMissionsButton{
+  position:relative !important;
+  min-height:42px !important;
+  border:2px solid #6d4308 !important;
+  border-radius:11px !important;
+  color:#3a2305 !important;
+  -webkit-text-fill-color:#3a2305 !important;
+  font-weight:950 !important;
+  letter-spacing:.035em !important;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.055) 0 1px,rgba(75,40,0,.035) 1px 3px),
+    linear-gradient(180deg,#fff0a6 0%,#d9a42e 22%,#b97812 55%,#e0ad35 79%,#80500a 100%) !important;
+  text-shadow:0 1px 0 rgba(255,244,181,.78), 0 -1px 1px rgba(69,35,0,.72) !important;
+  box-shadow:inset 0 2px 1px rgba(255,250,208,.82), inset 0 -3px 2px rgba(77,38,0,.68), 0 4px 0 #573307, 0 7px 12px rgba(0,0,0,.42) !important;
+}
+#returnMissionsButton:hover{
+  filter:brightness(1.08) saturate(1.04) !important;
+  transform:translateY(-1px) !important;
+  box-shadow:inset 0 2px 1px rgba(255,250,208,.9), inset 0 -3px 2px rgba(77,38,0,.64), 0 5px 0 #573307, 0 9px 15px rgba(0,0,0,.48), 0 0 14px rgba(240,185,55,.40) !important;
+}
+#returnMissionsButton:active{
+  transform:translateY(3px) !important;
+  box-shadow:inset 0 2px 5px rgba(70,35,0,.58), 0 1px 0 #573307 !important;
+}
+
+/* Brushed silver controls directly below Return to Missions. */
+.dashboardUtilityButtons button{
+  border:1px solid #4d5860 !important;
+  border-radius:9px !important;
+  color:#10171c !important;
+  -webkit-text-fill-color:#10171c !important;
+  font-weight:900 !important;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.12) 0 1px,rgba(31,39,44,.035) 1px 3px),
+    linear-gradient(180deg,#f0f3f4 0%,#aab2b7 31%,#747e85 62%,#c2c8cb 100%) !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.72) !important;
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.72), inset 0 -2px 2px rgba(28,35,39,.45), 0 3px 0 #3e484e, 0 5px 9px rgba(0,0,0,.38) !important;
+}
+.dashboardUtilityButtons button:hover{
+  filter:brightness(1.10) !important;
+  transform:translateY(-1px) !important;
+}
+.dashboardUtilityButtons button:active{
+  transform:translateY(2px) !important;
+  box-shadow:inset 0 2px 4px rgba(20,27,31,.40), 0 1px 0 #3e484e !important;
+}
+
+/* Painted/anodized metal action buttons. */
+#bottomBuildTools .bottomBuilderTool,
+#voiceControls .voiceButton{
+  border:1px solid rgba(8,17,24,.9) !important;
+  border-radius:9px !important;
+  color:#f7fbff !important;
+  -webkit-text-fill-color:#f7fbff !important;
+  font-weight:900 !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.88) !important;
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.27), inset 0 -3px 2px rgba(0,0,0,.43), 0 3px 0 rgba(3,8,12,.78), 0 6px 10px rgba(0,0,0,.38) !important;
+}
+#bottomBuildTools .bottomBuilderTool:nth-of-type(1){background:repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,transparent 1px 3px),linear-gradient(180deg,#57b979,#247446 56%,#164d2d) !important;}
+#bottomBuildTools .bottomBuilderTool:nth-of-type(2){background:repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,transparent 1px 3px),linear-gradient(180deg,#4aaeea,#246eab 56%,#164a79) !important;}
+#bottomBuildTools .bottomBuilderTool:nth-of-type(3){background:repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,transparent 1px 3px),linear-gradient(180deg,#e15f5b,#a72d2a 56%,#6f1b19) !important;}
+#bottomBuildTools .bottomBuilderTool:nth-of-type(4){background:repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,transparent 1px 3px),linear-gradient(180deg,#9c71dc,#6540a5 56%,#432871) !important;}
+#voiceControls .voiceButton:nth-of-type(1){background:linear-gradient(180deg,#49aeea,#236fae 58%,#164b7a) !important;}
+#voiceControls .voiceButton:nth-of-type(2){background:linear-gradient(180deg,#e4b14c,#a96f14 58%,#714707) !important;}
+#voiceControls .voiceButton:nth-of-type(3){background:linear-gradient(180deg,#df5a57,#a32b29 58%,#6d1a19) !important;}
+#bottomBuildTools .bottomBuilderTool:hover,
+#voiceControls .voiceButton:hover{
+  filter:brightness(1.14) saturate(1.05) !important;
+  transform:translateY(-1px) !important;
+}
+#bottomBuildTools .bottomBuilderTool:active,
+#voiceControls .voiceButton:active{
+  transform:translateY(2px) !important;
+  box-shadow:inset 0 3px 5px rgba(0,0,0,.48), 0 1px 0 rgba(3,8,12,.8) !important;
+}
+
+/* Dark machined selectors and recessed status display. */
+#blockShape,
+#blockColor,
+#voiceSelect,
+#voiceSpeedSelect{
+  border:2px solid #75818a !important;
+  border-radius:8px !important;
+  color:#eef8ff !important;
+  background:linear-gradient(180deg,#2c343a,#11171c) !important;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.72), 0 1px 0 rgba(255,255,255,.22) !important;
+}
+#bottomBuildTools .bottomToolMessage{
+  color:#d9f6ff !important;
+  border:2px solid #68757d !important;
+  background:linear-gradient(180deg,#10171b,#080d11) !important;
+  box-shadow:inset 0 3px 9px rgba(0,0,0,.85), 0 1px 0 rgba(255,255,255,.16) !important;
+  text-shadow:0 0 7px rgba(54,216,255,.38) !important;
+}
+
+/* Remove the separate right-side color arrow and use the native scrollbar only. */
+#colorMoreArrow{display:none !important;}
+#colorSwatchBar{
+  padding-right:6px !important;
+}
+
+/* Metallic color chips: preserve the exact palette and selection logic. */
+.colorSwatch,
+.colorSwatch.blockButton3d,
+.colorSwatch.voxelBlockButton{
+  border:2px solid rgba(226,235,239,.82) !important;
+  background:
+    linear-gradient(115deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.08) 31%,rgba(0,0,0,.16) 58%,rgba(255,255,255,.12) 100%),
+    var(--swatch-color,#777) !important;
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.42), inset 0 -3px 3px rgba(0,0,0,.34), 0 4px 8px rgba(0,0,0,.42) !important;
+}
+.colorSwatch.selected{
+  outline:3px solid #8de9ff !important;
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.48), inset 0 -3px 3px rgba(0,0,0,.34), 0 0 13px rgba(54,216,255,.76), 0 4px 8px rgba(0,0,0,.42) !important;
+}
+
+/* Match the drawer tab to the new console without introducing another gold button. */
+#dashboardHoverTab{
+  border:4px solid #aa7112 !important;
+  border-bottom:0 !important;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px),
+    linear-gradient(180deg,#343b40,#171d22) !important;
+  color:#eef7fb !important;
+  text-shadow:0 1px 2px #000 !important;
+  box-shadow:0 -5px 14px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.20) !important;
+}
+
+@media(max-width:900px){
+  #buildBar{border-width:5px !important; padding:10px 11px !important;}
 }
 </style>
 

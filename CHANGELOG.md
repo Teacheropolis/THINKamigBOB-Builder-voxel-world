@@ -1,4 +1,61 @@
 # CHANGELOG
+
+# Update #103 – Engineering Console Dashboard
+
+Status: Complete
+
+Changes:
+- Replaced flat dashboard with brushed gunmetal engineering console.
+- Added thick metallic gold outer frame.
+- Redesigned Return to Missions as engraved brushed-gold navigation button.
+- Converted utility buttons to brushed silver.
+- Converted build controls to colored metallic buttons.
+- Updated dashboard styling to industrial engineering theme.
+- Preserved all Builder functionality.
+
+## Update #102B – Add Cube, Sphere, and Triangle Shapes
+
+Date: July 2026
+
+Status: Complete ✅
+
+Added:
+- Cube building
+- Sphere building
+- Triangle building
+- Shape selector integrated into the Builder
+
+Notes:
+- Existing Builder layout preserved.
+- Mission system unchanged.
+- Dashboard, robot animation, voice reader, engineering grid, and gameplay preserved.
+
+## Update #102B – Add Cube, Sphere, and Triangle Shapes
+
+Status: Complete ✅
+
+### Added
+- Cube building support
+- Sphere building support
+- Triangle building support
+- Shape selection integrated into the Builder
+
+### Preserved
+- Existing Builder layout
+- Mission system
+- Robot animation
+- Dashboard
+- Engineering grid
+- Toolbox
+- Passport
+- Voice reader
+- Camera controls
+- Mission-generated objects
+- Existing event listeners
+
+### Result
+Students can now build using three basic geometric shapes instead of cubes alone, providing a stronger foundation for engineering, mathematics, and creative design activities.
+
 ## Update #101.2C — Increase Grass Engineering Grid Contrast
 
 Completed:
