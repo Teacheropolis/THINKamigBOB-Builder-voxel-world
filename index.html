@@ -2956,6 +2956,11 @@ Future extraction target: dashboard HTML/CSS/JS.
 <button id="returnMissionsButton" onclick="showStartScreen()">Return to Missions</button>
 </div>
 <div class="dashboardColorArea">
+<select id="blockShape" aria-label="Building shape" title="Choose a building shape">
+<option value="cube" selected>🧊 Cube</option>
+<option value="sphere">🔵 Sphere</option>
+<option value="trianglePrism">🔺 Triangle</option>
+</select>
 <select id="blockColor">
 <option value="0x654321">🟫 Door Brown</option>
 <option value="0x87CEFA">🟦 Window Blue</option>
@@ -3704,6 +3709,81 @@ function syncEngineeringGridStyle(grassIsActive){
 }
 
 const blocks = [];
+
+// UPDATE #102B: Student building-shape selection.
+let selectedBlockShape = "cube";
+
+const blockShapeSelect = document.getElementById("blockShape");
+if(blockShapeSelect){
+  selectedBlockShape = blockShapeSelect.value || "cube";
+  blockShapeSelect.addEventListener("change", function(){
+    selectedBlockShape = this.value || "cube";
+  });
+}
+
+function createTrianglePrismGeometry(){
+  const geometry = new THREE.BufferGeometry();
+
+  const vertices = new Float32Array([
+    -0.5, -0.5,  0.5,
+     0.5, -0.5,  0.5,
+     0.0,  0.5,  0.5,
+
+    -0.5, -0.5, -0.5,
+     0.0,  0.5, -0.5,
+     0.5, -0.5, -0.5
+  ]);
+
+  const indices = [
+    0, 1, 2,
+    3, 4, 5,
+    0, 3, 5, 0, 5, 1,
+    0, 2, 4, 0, 4, 3,
+    1, 5, 4, 1, 4, 2
+  ];
+
+  geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+
+  return geometry;
+}
+
+function createBuilderGeometry(shape, dimensions = {}){
+  if(shape === "sphere"){
+    return new THREE.SphereGeometry(0.5, 16, 12);
+  }
+
+  if(shape === "trianglePrism"){
+    return createTrianglePrismGeometry();
+  }
+
+  return new THREE.BoxGeometry(
+    dimensions.sx || 1,
+    dimensions.sy || 1,
+    dimensions.sz || 1
+  );
+}
+
+function createStudentShape(shape, color){
+  const normalizedShape =
+    shape === "sphere" || shape === "trianglePrism"
+      ? shape
+      : "cube";
+
+  const mesh = new THREE.Mesh(
+    createBuilderGeometry(normalizedShape),
+    new THREE.MeshLambertMaterial({color: color})
+  );
+
+  mesh.userData.studentPlaced = true;
+  mesh.userData.builderShape = normalizedShape;
+
+  return mesh;
+}
+
 let lastNucleus = null;
   
 const spinningTurbines = [];
@@ -5603,11 +5683,9 @@ if(moveSelectedMode && hit === ground){
   return;
 }
   
-    const newBlock = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshLambertMaterial({
-        color: Number(document.getElementById("blockColor").value)
-      })
+    const newBlock = createStudentShape(
+      selectedBlockShape,
+      Number(document.getElementById("blockColor").value)
     );
 
     if(hit === ground){
@@ -7699,13 +7777,15 @@ checkBadge();
       color: block.material.color.getHex(),
       sx: block.geometry.parameters.width || 1,
       sy: block.geometry.parameters.height || 1,
-      sz: block.geometry.parameters.depth || 1
+      sz: block.geometry.parameters.depth || 1,
+      shape: block.userData.builderShape || "cube",
+      rotationY: block.rotation.y || 0
     });
   });
 
   const saveData = {
     app: "THINKamigBOB Builder",
-    version: 2,
+    version: 3,
     projectName: document.getElementById("projectName")?.value || "",
     studentName: document.getElementById("studentName")?.value || "",
     blocks: worldData,
@@ -7777,18 +7857,27 @@ document.getElementById('loadFile')
 
     worldData.forEach(data => {
 
-      addBlock(
+      const loadedShape = data.shape || "cube";
+
+      const loadedBlock = addBlock(
         data.x,
         data.y,
         data.z,
         data.color,
-
-        new THREE.BoxGeometry(
-          data.sx || 1,
-          data.sy || 1,
-          data.sz || 1
-        )
+        createBuilderGeometry(loadedShape, {
+          sx: data.sx || 1,
+          sy: data.sy || 1,
+          sz: data.sz || 1
+        })
       );
+
+      loadedBlock.rotation.y =
+        typeof data.rotationY === "number"
+          ? data.rotationY
+          : 0;
+
+      loadedBlock.userData.builderShape = loadedShape;
+      loadedBlock.userData.studentPlaced = true;
 
     });
 
@@ -8548,6 +8637,18 @@ Preserved from working file. Future edits should target by section.
 .dashboardUtilityButtons button:nth-child(3){ grid-column:1 / span 2; }
 #engineeringGridToggle{ grid-column:1 / span 2; }
 .dashboardColorArea{ grid-column:2 / span 2; min-width:0; display:flex; align-items:center; }
+#blockShape{
+  width:132px !important;
+  min-width:132px !important;
+  margin:0 8px 0 0 !important;
+  padding:7px 8px !important;
+  border:2px solid #36D8FF !important;
+  border-radius:8px !important;
+  background:#071827 !important;
+  color:#EAFBFF !important;
+  font-size:14px !important;
+  font-weight:800 !important;
+}
 .colorScrollWrap{ position:relative; width:100%; display:flex; align-items:center; min-width:0; }
 #colorSwatchBar{ max-width:none !important; width:100%; overflow-x:auto; padding-right:34px !important; scrollbar-width:thin; }
 #colorMoreArrow{
@@ -14644,6 +14745,39 @@ body:not(.starterScreenActive).builderTitleCompactActive #worldTitle:not([data-p
   border-radius:999px !important;
   background:linear-gradient(90deg, rgba(54,216,255,0), rgba(54,216,255,.95), rgba(54,216,255,.10)) !important;
   box-shadow:0 0 12px rgba(54,216,255,.65) !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #101.3F — GENTLE THINKer BOB STANDING SWAY
+Scope: active Builder robot only.
+===================================================== -->
+<style id="update1013FThinkerBobIdleAnimationCSS">
+body:not(.starterScreenActive) #builderHeaderRobot {
+  transform-origin: 50% 82%;
+  animation: thinkerBobIdleLife 6.5s ease-in-out infinite;
+}
+
+@keyframes thinkerBobIdleLife {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: -0.15deg;
+  }
+
+  50% {
+    translate: 0 0;
+    rotate: 0.15deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not(.starterScreenActive) #builderHeaderRobot {
+    animation: none !important;
+    translate: 0 0 !important;
+    rotate: 0deg !important;
+  }
 }
 </style>
 
