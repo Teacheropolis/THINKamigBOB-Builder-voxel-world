@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## Update #103.7A — Mission Button PNG Conversion
+
+Status: VERIFIED ✅
+
+Changes:
+- Replaced Builder Return to Missions button with final brass PNG.
+- Replaced Starter Page Start Mission button with matching brass PNG.
+- Preserved all existing JavaScript.
+- Preserved button functionality.
+- Improved industrial engineering appearance.
+
+
 # Update #103 – Engineering Console Dashboard
 
 Status: Complete
