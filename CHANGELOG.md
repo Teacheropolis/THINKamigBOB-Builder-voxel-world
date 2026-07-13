@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## Update #103.8 — Dashboard Title PNG
+
+**Date:** July 2026
+
+**Status:** VERIFIED ✅
+
+### Changes
+- Replaced the CSS-generated BUILD DASHBOARD plaque with the final PNG artwork.
+- Preserved all existing dashboard functionality.
+- Preserved expand/collapse behavior.
+- Preserved minimized dashboard behavior.
+- Removed the previous CSS-generated title styling.
+- Centered the new dashboard title without overlapping the color swatches.
+- Preserved dashboard layout, spacing, and controls.
+- Locked the dashboard title artwork for future updates.
+
+### Verification
+- Dashboard title displays correctly in expanded mode.
+- Dashboard title remains correctly positioned.
+- Dashboard controls function normally.
+- Dashboard layout unchanged.
+
+
 ## Update #103.7A — Mission Button PNG Conversion
 
 Status: VERIFIED ✅
