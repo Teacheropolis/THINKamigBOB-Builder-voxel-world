@@ -1,5 +1,30 @@
 # CHANGELOG
 
+Update 105.3 VERIFIED
+
+
+## Update #104 — Mission-Aware Object Library
+
+**Date:** July 2026
+
+**Status:** VERIFIED ✅
+
+### Changes
+- Added mission-aware Object Library ordering.
+- Object Library now automatically opens to the category and objects most relevant to the currently selected mission.
+- Added a centralized mission-to-object mapping.
+- Preserved the complete Object Library for browsing.
+- Preserved object placement, scrolling, categories, and selection behavior.
+- Preserved THINKer BOB STEM Coach integration and voice-reader behavior.
+- Preserved all Object Library open, close, hover, and lock-open functionality.
+
+### Verification
+- Weather Station mission automatically displays Weather objects first.
+- Recommended objects appear without hiding any other library objects.
+- Remaining Object Library stays accessible through normal scrolling.
+- Dashboard, Builder, and gameplay unaffected.
+- Object placement and STEM Coach continue functioning correctly.
+
 ## Update #103.8 — Dashboard Title PNG
 
 **Date:** July 2026
