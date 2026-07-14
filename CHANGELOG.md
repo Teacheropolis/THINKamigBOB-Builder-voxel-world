@@ -1,8 +1,13 @@
 # CHANGELOG
 
+Update #138B — Correct Start Mission Button Scaling
+- Enlarged the Starter Page Start Mission PNG proportionally.
+- Preserved the original artwork aspect ratio.
+- Removed conflicting fixed-height and padding rules.
+- Expanded only the required Before You Start grid column.
+- Preserved Starter Page scrolling and all mission behavior.
+
 Update 105.3 VERIFIED
-
-
 ## Update #104 — Mission-Aware Object Library
 
 **Date:** July 2026

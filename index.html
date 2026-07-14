@@ -3089,6 +3089,395 @@ Visual-only refinement for Mission Passport and Object Library.
 }
 </style>
 
+
+<!-- =====================================================
+UPDATE #106 — MOVE CURRENT MISSION TO RIGHT HUD
+Repositions the existing active #worldTitle mission display, removes the
+duplicate left mission heading/title row, and preserves the center sky.
+===================================================== -->
+<style id="update106CurrentMissionRightHud">
+/* Remove the duplicate mission heading and mission-name row from the left panel. */
+body:not(.starterScreenActive) #info > h2,
+body:not(.starterScreenActive) #missionText{
+  display:none !important;
+}
+
+/* Reuse the existing active mission-title element as the right-side HUD. */
+body:not(.starterScreenActive) #worldTitle{
+  position:fixed !important;
+  top:18px !important;
+  right:18px !important;
+  left:auto !important;
+  bottom:auto !important;
+  transform:none !important;
+
+  width:315px !important;
+  min-width:0 !important;
+  max-width:315px !important;
+  box-sizing:border-box !important;
+
+  margin:0 !important;
+  padding:13px 15px 14px !important;
+
+  background-color:#151b20 !important;
+  background-image:
+    linear-gradient(180deg,
+      rgba(255,245,194,.14) 0%,
+      rgba(255,255,255,.045) 12%,
+      rgba(255,255,255,0) 30%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,.014) 0px,
+      rgba(255,255,255,.014) 1px,
+      rgba(0,0,0,.025) 1px,
+      rgba(0,0,0,.025) 3px
+    ),
+    linear-gradient(180deg,#293138 0%,#171d22 48%,#0d1216 100%) !important;
+
+  border:2px solid #B98A22 !important;
+  border-radius:11px !important;
+  clip-path:polygon(
+    7px 0,
+    calc(100% - 7px) 0,
+    100% 7px,
+    100% calc(100% - 7px),
+    calc(100% - 7px) 100%,
+    7px 100%,
+    0 calc(100% - 7px),
+    0 7px
+  ) !important;
+
+  box-shadow:
+    inset 0 2px 0 rgba(255,239,170,.28),
+    inset 2px 0 0 rgba(255,255,255,.04),
+    inset -2px 0 0 rgba(0,0,0,.34),
+    inset 0 -7px 12px rgba(0,0,0,.25),
+    0 3px 0 #70490B,
+    0 9px 19px rgba(0,0,0,.32),
+    0 0 8px rgba(185,138,34,.14) !important;
+
+  color:#F5FBFF !important;
+  -webkit-text-fill-color:#F5FBFF !important;
+  font-size:16px !important;
+  line-height:1.28 !important;
+  font-weight:800 !important;
+  letter-spacing:0 !important;
+  text-align:left !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  text-shadow:0 2px 4px rgba(0,0,0,.82) !important;
+
+  pointer-events:none !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  z-index:1265 !important;
+  transition:none !important;
+  animation:none !important;
+}
+
+body:not(.starterScreenActive) #worldTitle::before,
+body:not(.starterScreenActive) #worldTitle:not([data-placeholder="true"])::before{
+  content:"CURRENT MISSION" !important;
+  display:block !important;
+  margin:0 0 6px !important;
+  color:#B7F34A !important;
+  -webkit-text-fill-color:#B7F34A !important;
+  font-size:12px !important;
+  line-height:1 !important;
+  font-weight:900 !important;
+  letter-spacing:.16em !important;
+  text-transform:uppercase !important;
+  text-align:left !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,.95),
+    0 0 7px rgba(183,243,74,.20) !important;
+}
+
+body:not(.starterScreenActive) #worldTitle::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* Keep THINKer BOB directly beneath the mission HUD. */
+body:not(.starterScreenActive) #stemCoach{
+  top:132px !important;
+}
+
+@media(max-width:1150px){
+  body:not(.starterScreenActive) #worldTitle{
+    right:14px !important;
+    width:295px !important;
+    max-width:295px !important;
+    padding:12px 13px 13px !important;
+    font-size:15px !important;
+  }
+
+  body:not(.starterScreenActive) #stemCoach{
+    top:126px !important;
+    right:14px !important;
+    width:295px !important;
+  }
+}
+
+@media(max-height:740px){
+  body:not(.starterScreenActive) #worldTitle{
+    top:10px !important;
+    padding:9px 12px 10px !important;
+    font-size:14px !important;
+  }
+
+  body:not(.starterScreenActive) #worldTitle::before,
+  body:not(.starterScreenActive) #worldTitle:not([data-placeholder="true"])::before{
+    margin-bottom:4px !important;
+    font-size:10px !important;
+  }
+
+  body:not(.starterScreenActive) #stemCoach{
+    top:104px !important;
+  }
+}
+</style>
+
+
+
+<!-- =====================================================
+UPDATE #131 — BUILDER CHALLENGE FINAL POLISH
+Scope: Builder Challenge visual styling only.
+===================================================== -->
+<style id="update131BuilderChallengeFinalPolishCSS">
+/* Final restrained charcoal-blue polish for the existing left challenge HUD. */
+body:not(.starterScreenActive) #info{
+  /* Preserve the transparent HUD footprint while giving the grouped panel a
+     slightly richer charcoal-blue visual field. */
+  filter:none !important;
+}
+
+body:not(.starterScreenActive) #missionText,
+body:not(.starterScreenActive) #challengeTitle,
+body:not(.starterScreenActive) #moreChallenge{
+  background:linear-gradient(180deg,
+    rgba(25,52,68,.96) 0%,
+    rgba(14,38,54,.97) 58%,
+    rgba(8,29,44,.98) 100%) !important;
+  border:1px solid rgba(100,157,184,.36) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    inset 0 -7px 12px rgba(0,0,0,.10),
+    0 3px 8px rgba(0,0,0,.18) !important;
+}
+
+body:not(.starterScreenActive) #challengeChecklist label{
+  background:linear-gradient(180deg,
+    rgba(27,56,72,.96) 0%,
+    rgba(15,41,57,.97) 62%,
+    rgba(9,31,46,.98) 100%) !important;
+  border:1px solid rgba(105,163,189,.38) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.045),
+    inset 0 -6px 10px rgba(0,0,0,.08),
+    0 2px 6px rgba(0,0,0,.14) !important;
+  color:#fff !important;
+}
+
+body:not(.starterScreenActive) #challengeChecklist label:hover{
+  border-color:rgba(121,180,205,.48) !important;
+  background:linear-gradient(180deg,
+    rgba(31,62,79,.97) 0%,
+    rgba(17,44,60,.98) 62%,
+    rgba(10,33,48,.99) 100%) !important;
+}
+
+/* Keep the primary challenge title pale and soften only the existing gold
+   secondary heading to the dashboard/HUD metallic-gold family. */
+body:not(.starterScreenActive) #challengeTitle{
+  color:#eef5f8 !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.92),0 0 6px rgba(93,181,216,.14) !important;
+}
+body:not(.starterScreenActive) #info > p:not([id]) > b{
+  color:#e8c45b !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.92),0 0 5px rgba(232,196,91,.16) !important;
+}
+
+/* Keep all challenge copy bright and readable. */
+body:not(.starterScreenActive) #missionText,
+body:not(.starterScreenActive) #moreChallenge,
+body:not(.starterScreenActive) #challengeChecklist label,
+body:not(.starterScreenActive) #challengeChecklist span{
+  color:#fff !important;
+}
+</style>
+
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@600;700&amp;display=swap" rel="stylesheet"/>
+
+<!-- =====================================================
+UPDATE #134 — ADD TITLE PLATE BEHIND “WANT MORE CHALLENGE?”
+Scope: Visual styling of the existing heading only.
+===================================================== -->
+<style id="update134WantMoreChallengeTitlePlateCSS">
+body:not(.starterScreenActive) #challengeChecklist + p{
+  position:relative !important;
+  isolation:isolate !important;
+}
+
+body:not(.starterScreenActive) #challengeChecklist + p::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:-3px -7px !important;
+  z-index:-1 !important;
+  border-radius:9px !important;
+  background:linear-gradient(
+    180deg,
+    rgba(34,67,84,.98) 0%,
+    rgba(20,48,65,.98) 58%,
+    rgba(11,34,50,.99) 100%
+  ) !important;
+  border:1px solid rgba(108,163,187,.42) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    inset 0 -5px 9px rgba(0,0,0,.12),
+    0 3px 8px rgba(0,0,0,.24) !important;
+  pointer-events:none !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #135 — FIX BUILDER OVERLAY STACKING
+Scope: CSS stacking order only for open Object Library and evidence panel.
+===================================================== -->
+<style id="update135OverlayStackingRepairCSS">
+body:not(.starterScreenActive) #floatingToolbox.objectLibraryOpen,
+body:not(.starterScreenActive) #floatingToolbox:hover {
+  z-index: 1300 !important;
+}
+
+body:not(.starterScreenActive) #evidencePanel {
+  z-index: 1400 !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #137 — STARTER PAGE TYPOGRAPHY
+Scope: Starter Page typography only.
+===================================================== -->
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600&amp;display=swap" rel="stylesheet"/>
+<style id="update137StarterPageTypographyCSS">
+#startScreen .startMissionPanel > h2,
+#startScreen .startBeforePanel > h2,
+#startScreen .startHelpPanel > h2 {
+  font-family: "Orbitron", sans-serif !important;
+  font-weight: 700 !important;
+}
+
+#startScreen .startTipText > strong {
+  font-family: "Oxanium", sans-serif !important;
+  font-weight: 600 !important;
+}
+
+#startScreen .missionTileTitle {
+  font-family: "Rajdhani", sans-serif !important;
+  font-weight: 600 !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #138 — ENLARGE START MISSION BUTTON
+Scope: Starter Page Start Mission button styling only.
+===================================================== -->
+<style id="update138StartMissionButtonCSS">
+#startScreen #startBuildingButton {
+  width: min(340px, 82%) !important;
+  min-height: 58px !important;
+  padding: 13px 34px !important;
+  font-size: 22px !important;
+  border-width: 3px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.22),
+    inset 0 -3px 7px rgba(0,0,0,.28),
+    0 0 14px rgba(54,174,255,.34),
+    0 5px 12px rgba(0,0,0,.32) !important;
+}
+
+#startScreen #startBuildingButton:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.28),
+    inset 0 -3px 7px rgba(0,0,0,.26),
+    0 0 18px rgba(54,174,255,.44),
+    0 6px 14px rgba(0,0,0,.34) !important;
+}
+</style>
+
+
+<style id="update138AStartMissionSize">
+#startScreen #startBuildingButton{
+ width:420px!important;
+ min-width:420px!important;
+ height:72px!important;
+ min-height:72px!important;
+ padding:16px 42px!important;
+ font-size:30px!important;
+ font-weight:700!important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #138B — CORRECT START MISSION BUTTON SCALING
+Scope: Starter Page Start Mission artwork sizing and only
+the minimum third-column space required to contain it.
+===================================================== -->
+<style id="update138BStartMissionScalingCSS">
+#startScreen .startBeforeGrid {
+  grid-template-columns:
+    minmax(260px, 1fr)
+    minmax(280px, 1fr)
+    minmax(340px, 340px) !important;
+}
+
+#startScreen #startBuildingButton,
+#startScreen #startBuildingButton.missionLaunchButtonPulse {
+  width: 340px !important;
+  min-width: 340px !important;
+  max-width: 340px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: 475 / 158 !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  background-size: contain !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  box-shadow: none !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 1050px) {
+  #startScreen .startBeforeGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  #startScreen #startBuildingButton,
+  #startScreen #startBuildingButton.missionLaunchButtonPulse {
+    width: min(340px, 100%) !important;
+    min-width: 0 !important;
+    max-width: 340px !important;
+  }
+}
+</style>
+
 </head>
 <!-- =====================================================
 HTML SECTION START — BUILDER SCREEN MARKUP
@@ -3158,6 +3547,7 @@ HTML SECTION 02 — BUILD DASHBOARD / BOTTOM TOOLBAR
 Future extraction target: dashboard HTML/CSS/JS.
 ===================================================== -->
 <div aria-label="Dashboard" id="buildBar">
+<img alt="" aria-hidden="true" class="dashboardTitleArtwork" src="assets/images/build-dashboard-title.png"/>
 <div class="dashboardRow dashboardTopRow">
 <div class="dashboardLeft dashboardCreateStack">
 <button id="returnMissionsButton" aria-label="Return to Missions" onclick="showStartScreen()">Return to Missions</button>
@@ -3262,15 +3652,18 @@ Future extraction target: mission tracker.
 HTML SECTION 05 — THINKer BOB STEM COACH PANEL
 Future extraction target: STEM Coach and read-aloud UI.
 ===================================================== -->
+<div id="rightHudColumn">
+<div data-placeholder="true" id="worldTitle"></div>
 <div id="stemCoach">
 <button id="stemCoachToggle" onclick="toggleStemCoach()">
-    THINKer BOB — STEM Coach ▼
+    <span class="stemCoachThinkerBob">THINKer BOB</span><span class="stemCoachOxanium"> — STEM Coach</span> ▼
   </button>
 <div id="stemCoachContent">
 <div id="thinkerBobPanel">
-<p><b>Welcome, Builder!</b></p>
+<p><b class="coachWelcomeOxanium">Welcome, Builder!</b></p>
 <p>I'm THINKer BOB. Choose a tool to see vocabulary, STEM facts, questions, and building challenges.</p>
-<p><b>Think • Build • Discover</b></p>
+<p><b class="coachMottoOxanium">Think • Build • Discover</b></p>
+</div>
 </div>
 </div>
 </div>
@@ -3700,7 +4093,7 @@ Use this section for Builder title image updates.
 <!-- =====================================================
 HTML SECTION: WORLD / SELECTED MISSION TITLE DISPLAY
 ===================================================== -->
-<div data-placeholder="true" id="worldTitle"></div>
+
 <div id="studentProjectBar">
 <label><b>Student:</b>
 <input id="studentName" placeholder="Name"/>
@@ -15930,6 +16323,963 @@ matching objects appear first while preserving all existing objects and behavior
     setup();
   }
   window.addEventListener("load", setup);
+})();
+</script>
+
+
+<!-- =====================================================
+UPDATE #106.1 — LOCK CURRENT MISSION INTO RIGHT HUD
+Moves the existing #worldTitle into the right HUD stack and overrides all
+legacy center-title placement states without changing mission logic.
+===================================================== -->
+<style id="update1061CurrentMissionRightHudLock">
+body:not(.starterScreenActive) #worldTitle,
+body:not(.starterScreenActive) #worldTitle:not([data-placeholder="true"]),
+body.builderMissionChosen #worldTitle,
+body.builderTitleFullActive #worldTitle,
+body.builderTitleCompactActive #worldTitle,
+body.builderSelectedMissionReady #worldTitle{
+  position:fixed !important;
+  top:18px !important;
+  right:18px !important;
+  left:auto !important;
+  bottom:auto !important;
+  transform:none !important;
+  width:315px !important;
+  min-width:0 !important;
+  max-width:315px !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  padding:13px 15px 14px !important;
+  background-color:#151b20 !important;
+  background-image:
+    linear-gradient(180deg,
+      rgba(255,245,194,.14) 0%,
+      rgba(255,255,255,.045) 12%,
+      rgba(255,255,255,0) 30%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,.014) 0px,
+      rgba(255,255,255,.014) 1px,
+      rgba(0,0,0,.025) 1px,
+      rgba(0,0,0,.025) 3px
+    ),
+    linear-gradient(180deg,#293138 0%,#171d22 48%,#0d1216 100%) !important;
+  border:2px solid #B98A22 !important;
+  border-radius:11px !important;
+  clip-path:polygon(
+    7px 0,
+    calc(100% - 7px) 0,
+    100% 7px,
+    100% calc(100% - 7px),
+    calc(100% - 7px) 100%,
+    7px 100%,
+    0 calc(100% - 7px),
+    0 7px
+  ) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255,239,170,.28),
+    inset 2px 0 0 rgba(255,255,255,.04),
+    inset -2px 0 0 rgba(0,0,0,.34),
+    inset 0 -7px 12px rgba(0,0,0,.25),
+    0 3px 0 #70490B,
+    0 9px 19px rgba(0,0,0,.32),
+    0 0 8px rgba(185,138,34,.14) !important;
+  color:#F5FBFF !important;
+  -webkit-text-fill-color:#F5FBFF !important;
+  font-size:16px !important;
+  line-height:1.28 !important;
+  font-weight:800 !important;
+  letter-spacing:0 !important;
+  text-align:left !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  text-shadow:0 2px 4px rgba(0,0,0,.82) !important;
+  pointer-events:none !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  z-index:1265 !important;
+  transition:none !important;
+  animation:none !important;
+}
+
+body:not(.starterScreenActive) #worldTitle::before,
+body:not(.starterScreenActive) #worldTitle:not([data-placeholder="true"])::before,
+body.builderMissionChosen #worldTitle::before,
+body.builderTitleFullActive #worldTitle::before,
+body.builderTitleCompactActive #worldTitle::before,
+body.builderSelectedMissionReady #worldTitle::before{
+  content:"CURRENT MISSION" !important;
+  display:block !important;
+  margin:0 0 6px !important;
+  color:#B7F34A !important;
+  -webkit-text-fill-color:#B7F34A !important;
+  font-size:12px !important;
+  line-height:1 !important;
+  font-weight:900 !important;
+  letter-spacing:.16em !important;
+  text-transform:uppercase !important;
+  text-align:left !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,.95),
+    0 0 7px rgba(183,243,74,.20) !important;
+}
+
+body:not(.starterScreenActive) #worldTitle::after,
+body.builderMissionChosen #worldTitle::after,
+body.builderTitleFullActive #worldTitle::after,
+body.builderTitleCompactActive #worldTitle::after,
+body.builderSelectedMissionReady #worldTitle::after{
+  content:none !important;
+  display:none !important;
+}
+
+body:not(.starterScreenActive) #stemCoach,
+body.builderMissionChosen #stemCoach,
+body.builderTitleFullActive #stemCoach,
+body.builderTitleCompactActive #stemCoach,
+body.builderSelectedMissionReady #stemCoach{
+  top:132px !important;
+  right:18px !important;
+}
+
+@media(max-width:1150px){
+  body:not(.starterScreenActive) #worldTitle,
+  body:not(.starterScreenActive) #worldTitle:not([data-placeholder="true"]),
+  body.builderMissionChosen #worldTitle,
+  body.builderTitleFullActive #worldTitle,
+  body.builderTitleCompactActive #worldTitle,
+  body.builderSelectedMissionReady #worldTitle{
+    right:14px !important;
+    width:295px !important;
+    max-width:295px !important;
+    padding:12px 13px 13px !important;
+    font-size:15px !important;
+  }
+
+  body:not(.starterScreenActive) #stemCoach,
+  body.builderMissionChosen #stemCoach,
+  body.builderTitleFullActive #stemCoach,
+  body.builderTitleCompactActive #stemCoach,
+  body.builderSelectedMissionReady #stemCoach{
+    top:126px !important;
+    right:14px !important;
+    width:295px !important;
+  }
+}
+
+@media(max-height:740px){
+  body:not(.starterScreenActive) #worldTitle,
+  body:not(.starterScreenActive) #worldTitle:not([data-placeholder="true"]),
+  body.builderMissionChosen #worldTitle,
+  body.builderTitleFullActive #worldTitle,
+  body.builderTitleCompactActive #worldTitle,
+  body.builderSelectedMissionReady #worldTitle{
+    top:10px !important;
+    padding:9px 12px 10px !important;
+    font-size:14px !important;
+  }
+
+  body:not(.starterScreenActive) #stemCoach,
+  body.builderMissionChosen #stemCoach,
+  body.builderTitleFullActive #stemCoach,
+  body.builderTitleCompactActive #stemCoach,
+  body.builderSelectedMissionReady #stemCoach{
+    top:104px !important;
+  }
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #106.2 — RIGHT INFORMATION COLUMN
+Creates a true right-side layout column using the existing Current Mission
+and THINKer BOB elements. No duplicate mission element is created.
+===================================================== -->
+<style id="update1062RightInformationColumn">
+body:not(.starterScreenActive) #rightHudColumn{
+  position:fixed !important;
+  top:18px !important;
+  right:18px !important;
+  left:auto !important;
+  bottom:auto !important;
+  width:315px !important;
+  max-width:315px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  gap:12px !important;
+  z-index:1265 !important;
+  pointer-events:none !important;
+}
+
+/* The existing mission title becomes the first normal-flow item in the column. */
+body:not(.starterScreenActive) #rightHudColumn > #worldTitle,
+body:not(.starterScreenActive) #rightHudColumn > #worldTitle:not([data-placeholder="true"]),
+body.builderMissionChosen #rightHudColumn > #worldTitle,
+body.builderTitleFullActive #rightHudColumn > #worldTitle,
+body.builderTitleCompactActive #rightHudColumn > #worldTitle,
+body.builderSelectedMissionReady #rightHudColumn > #worldTitle{
+  position:relative !important;
+  inset:auto !important;
+  top:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  left:auto !important;
+  transform:none !important;
+
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  padding:11px 14px 12px !important;
+
+  background-color:#151b20 !important;
+  background-image:
+    linear-gradient(180deg,
+      rgba(255,245,194,.14) 0%,
+      rgba(255,255,255,.045) 12%,
+      rgba(255,255,255,0) 30%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,.014) 0px,
+      rgba(255,255,255,.014) 1px,
+      rgba(0,0,0,.025) 1px,
+      rgba(0,0,0,.025) 3px
+    ),
+    linear-gradient(180deg,#293138 0%,#171d22 48%,#0d1216 100%) !important;
+
+  border:2px solid #B98A22 !important;
+  border-radius:11px !important;
+  clip-path:polygon(
+    7px 0,
+    calc(100% - 7px) 0,
+    100% 7px,
+    100% calc(100% - 7px),
+    calc(100% - 7px) 100%,
+    7px 100%,
+    0 calc(100% - 7px),
+    0 7px
+  ) !important;
+
+  box-shadow:
+    inset 0 2px 0 rgba(255,239,170,.28),
+    inset 2px 0 0 rgba(255,255,255,.04),
+    inset -2px 0 0 rgba(0,0,0,.34),
+    inset 0 -7px 12px rgba(0,0,0,.25),
+    0 3px 0 #70490B,
+    0 9px 19px rgba(0,0,0,.32),
+    0 0 8px rgba(185,138,34,.14) !important;
+
+  color:#F5FBFF !important;
+  -webkit-text-fill-color:#F5FBFF !important;
+  font-size:15px !important;
+  line-height:1.24 !important;
+  font-weight:800 !important;
+  letter-spacing:0 !important;
+  text-align:left !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  text-shadow:0 2px 4px rgba(0,0,0,.82) !important;
+  pointer-events:none !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  transition:none !important;
+  animation:none !important;
+}
+
+body:not(.starterScreenActive) #rightHudColumn > #worldTitle::before,
+body:not(.starterScreenActive) #rightHudColumn > #worldTitle:not([data-placeholder="true"])::before,
+body.builderMissionChosen #rightHudColumn > #worldTitle::before,
+body.builderTitleFullActive #rightHudColumn > #worldTitle::before,
+body.builderTitleCompactActive #rightHudColumn > #worldTitle::before,
+body.builderSelectedMissionReady #rightHudColumn > #worldTitle::before{
+  content:"CURRENT MISSION" !important;
+  display:block !important;
+  margin:0 0 5px !important;
+  color:#B7F34A !important;
+  -webkit-text-fill-color:#B7F34A !important;
+  font-size:11px !important;
+  line-height:1 !important;
+  font-weight:900 !important;
+  letter-spacing:.16em !important;
+  text-transform:uppercase !important;
+  text-align:left !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,.95),
+    0 0 7px rgba(183,243,74,.20) !important;
+}
+
+body:not(.starterScreenActive) #rightHudColumn > #worldTitle::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* THINKer BOB becomes the second normal-flow item in the same column. */
+body:not(.starterScreenActive) #rightHudColumn > #stemCoach,
+body.builderMissionChosen #rightHudColumn > #stemCoach,
+body.builderTitleFullActive #rightHudColumn > #stemCoach,
+body.builderTitleCompactActive #rightHudColumn > #stemCoach,
+body.builderSelectedMissionReady #rightHudColumn > #stemCoach{
+  position:relative !important;
+  inset:auto !important;
+  top:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  left:auto !important;
+  transform:none !important;
+  width:100% !important;
+  max-width:none !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  pointer-events:auto !important;
+}
+
+/* The left panel stays focused on directions and begins with Builder Challenge. */
+body:not(.starterScreenActive) #info > h2,
+body:not(.starterScreenActive) #missionText{
+  display:none !important;
+}
+
+body.starterScreenActive #rightHudColumn{
+  display:none !important;
+}
+
+@media(max-width:1150px){
+  body:not(.starterScreenActive) #rightHudColumn{
+    top:14px !important;
+    right:14px !important;
+    width:295px !important;
+    max-width:295px !important;
+    gap:10px !important;
+  }
+}
+
+@media(max-height:740px){
+  body:not(.starterScreenActive) #rightHudColumn{
+    top:10px !important;
+    gap:8px !important;
+  }
+
+  body:not(.starterScreenActive) #rightHudColumn > #worldTitle{
+    padding:8px 11px 9px !important;
+    font-size:13px !important;
+  }
+
+  body:not(.starterScreenActive) #rightHudColumn > #worldTitle::before{
+    margin-bottom:3px !important;
+    font-size:9px !important;
+  }
+
+  body:not(.starterScreenActive) #rightHudColumn > #stemCoach{
+    max-height:34vh !important;
+  }
+}
+
+
+/* ===== UPDATE #127 — THEME THE BUILDER CHALLENGE PANEL ===== */
+body:not(.starterScreenActive) #info{
+  width:300px !important;
+  max-width:300px !important;
+  color:#f5fbff !important;
+  text-shadow:0 1px 3px rgba(0,0,0,.92) !important;
+}
+
+body:not(.starterScreenActive) #challengeTitle{
+  display:block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  margin:0 0 7px 0 !important;
+  padding:6px 10px !important;
+  color:#eef8ff !important;
+  font-weight:900 !important;
+  letter-spacing:.01em !important;
+  background:linear-gradient(180deg,rgba(43,76,96,.94),rgba(18,39,55,.94)) !important;
+  border:1px solid rgba(109,211,239,.44) !important;
+  border-radius:9px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 -8px 14px rgba(0,0,0,.12),
+    0 5px 13px rgba(0,0,0,.22) !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 8px rgba(79,205,238,.26) !important;
+}
+
+body:not(.starterScreenActive) #challengeChecklist{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:5px !important;
+  width:100% !important;
+  max-width:300px !important;
+  margin:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+}
+
+body:not(.starterScreenActive) #challengeChecklist label{
+  display:grid !important;
+  grid-template-columns:34px minmax(0,1fr) !important;
+  align-items:center !important;
+  gap:8px !important;
+  width:100% !important;
+  max-width:300px !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  padding:7px 9px !important;
+  color:#f7fbff !important;
+  line-height:1.22 !important;
+  background:linear-gradient(180deg,rgba(49,88,108,.92),rgba(29,60,79,.92)) !important;
+  border:1px solid rgba(120,190,214,.30) !important;
+  border-radius:9px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    inset 0 -10px 16px rgba(0,0,0,.10),
+    0 4px 10px rgba(0,0,0,.18) !important;
+  transition:border-color .14s ease, box-shadow .14s ease, background .14s ease !important;
+}
+body:not(.starterScreenActive) #challengeChecklist label:hover{
+  border-color:rgba(183,243,74,.48) !important;
+  background:linear-gradient(180deg,rgba(55,98,118,.96),rgba(31,67,86,.96)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 4px 12px rgba(0,0,0,.22),
+    0 0 10px rgba(79,205,238,.12) !important;
+}
+
+body:not(.starterScreenActive) #challengeChecklist input[type="checkbox"]{
+  appearance:none !important;
+  -webkit-appearance:none !important;
+  width:21px !important;
+  height:21px !important;
+  margin:0 !important;
+  border:2px solid rgba(226,239,246,.86) !important;
+  border-radius:3px !important;
+  background:linear-gradient(145deg,#edf4f7,#9caeb7) !important;
+  box-shadow:inset 0 0 0 2px rgba(20,37,48,.30),0 2px 5px rgba(0,0,0,.34) !important;
+  cursor:pointer !important;
+  position:relative !important;
+}
+body:not(.starterScreenActive) #challengeChecklist input[type="checkbox"]:checked{
+  border-color:#b7f34a !important;
+  background:linear-gradient(145deg,#dfff75,#86bd22) !important;
+  box-shadow:inset 0 0 0 2px rgba(20,37,48,.24),0 0 9px rgba(183,243,74,.38) !important;
+}
+body:not(.starterScreenActive) #challengeChecklist input[type="checkbox"]:checked::after{
+  content:"✓" !important;
+  position:absolute !important;
+  inset:-3px 0 0 1px !important;
+  color:#12202a !important;
+  font-size:18px !important;
+  line-height:21px !important;
+  font-weight:1000 !important;
+  text-align:center !important;
+  text-shadow:none !important;
+}
+body:not(.starterScreenActive) #challengeChecklist input[type="checkbox"]:focus-visible{
+  outline:2px solid #36d8ff !important;
+  outline-offset:2px !important;
+}
+body:not(.starterScreenActive) #challengeChecklist span{
+  min-width:0 !important;
+  padding:0 !important;
+}
+
+body:not(.starterScreenActive) #info > p:not([id]){
+  width:max-content !important;
+  max-width:100% !important;
+  margin:8px 0 5px 0 !important;
+  padding:0 2px !important;
+  color:#ffd766 !important;
+  font-weight:900 !important;
+  text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 8px rgba(255,194,46,.20) !important;
+}
+
+body:not(.starterScreenActive) #moreChallenge{
+  display:block !important;
+  width:100% !important;
+  max-width:300px !important;
+  box-sizing:border-box !important;
+  margin:0 0 7px 0 !important;
+  padding:8px 9px !important;
+  color:#f7fbff !important;
+  line-height:1.28 !important;
+  background:linear-gradient(180deg,rgba(47,83,103,.92),rgba(27,57,75,.92)) !important;
+  border:1px solid rgba(120,190,214,.30) !important;
+  border-radius:9px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 4px 10px rgba(0,0,0,.18) !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage{
+  display:block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  margin:7px 0 0 0 !important;
+  padding:7px 11px !important;
+  color:#eef8ff !important;
+  font-weight:900 !important;
+  background:linear-gradient(180deg,rgba(45,75,91,.96),rgba(20,42,57,.96)) !important;
+  border:1px solid rgba(213,169,47,.52) !important;
+  border-radius:999px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 4px 12px rgba(0,0,0,.24) !important;
+}
+body:not(.starterScreenActive) #badgeMessage b{
+  color:#36d8ff !important;
+  text-shadow:0 0 7px rgba(54,216,255,.28) !important;
+}
+
+/* Keep the existing progress behavior; only coordinate its visible track and fill. */
+body:not(.starterScreenActive) #info + #readerProgress,
+body:not(.starterScreenActive) #readerProgress{
+  background:linear-gradient(180deg,rgba(12,27,38,.92),rgba(5,15,24,.92)) !important;
+  border:1px solid rgba(213,169,47,.40) !important;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.62),0 2px 8px rgba(0,0,0,.18) !important;
+}
+body:not(.starterScreenActive) #readerProgressFill{
+  background:linear-gradient(90deg,#cda62d,#b7f34a) !important;
+  box-shadow:0 0 8px rgba(183,243,74,.26) !important;
+}
+
+/* ===== UPDATE #128 — THEME THE VIEW PANEL ===== */
+body:not(.starterScreenActive) #viewCubeBox{
+  background:linear-gradient(180deg,rgba(20,34,48,.94),rgba(8,18,29,.94)) !important;
+  border:1px solid rgba(202,164,53,.58) !important;
+  border-radius:14px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -12px 22px rgba(0,0,0,.20),
+    0 7px 18px rgba(0,0,0,.30),
+    0 0 0 1px rgba(72,142,176,.16) !important;
+}
+
+body:not(.starterScreenActive) #viewCubeTitle{
+  margin:0 0 2px 0 !important;
+  padding:4px 7px !important;
+  color:#edf7fb !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  line-height:1.1 !important;
+  letter-spacing:.08em !important;
+  text-transform:uppercase !important;
+  background:linear-gradient(180deg,rgba(47,76,94,.86),rgba(20,39,54,.86)) !important;
+  border:1px solid rgba(103,190,220,.30) !important;
+  border-radius:9px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 2px 7px rgba(0,0,0,.20) !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 7px rgba(62,205,241,.22) !important;
+}
+
+body:not(.starterScreenActive) #viewCubeCanvas{
+  background:linear-gradient(180deg,rgba(5,15,24,.74),rgba(13,28,41,.70)) !important;
+  border:1px solid rgba(100,154,180,.27) !important;
+  border-radius:11px !important;
+  box-sizing:border-box !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.025),
+    inset 0 8px 18px rgba(0,0,0,.28),
+    0 2px 7px rgba(0,0,0,.18) !important;
+}
+
+body:not(.starterScreenActive) #viewDiceHint{
+  margin:2px 0 0 0 !important;
+  padding:4px 5px !important;
+  color:rgba(239,247,251,.90) !important;
+  font-size:9px !important;
+  line-height:1.1 !important;
+  background:linear-gradient(180deg,rgba(34,56,72,.86),rgba(16,33,47,.86)) !important;
+  border:1px solid rgba(106,157,181,.25) !important;
+  border-radius:8px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05) !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.88) !important;
+}
+
+</style>
+
+
+
+<!-- =====================================================
+UPDATE #129 — THEME THE BUILD DASHBOARD SHELL
+Scope: Build Dashboard shell and existing title plaque styling only.
+===================================================== -->
+<style id="update129DashboardShellThemeCSS">
+/* Refine only the existing dashboard shell. Dimensions, placement, and behavior remain unchanged. */
+#buildBar{
+  border-color:rgba(129,82,12,.98) !important;
+  border-top-color:rgba(255,220,103,.96) !important;
+  background:
+    linear-gradient(90deg,
+      rgba(255,226,130,.18) 0,
+      rgba(255,226,130,0) 5%,
+      rgba(255,226,130,0) 95%,
+      rgba(99,59,5,.20) 100%),
+    repeating-linear-gradient(0deg,
+      rgba(255,255,255,.018) 0 1px,
+      rgba(0,0,0,.025) 1px 3px),
+    linear-gradient(180deg,
+      rgba(37,52,64,.97) 0%,
+      rgba(18,35,49,.97) 18%,
+      rgba(8,23,36,.98) 56%,
+      rgba(4,13,24,.99) 100%) !important;
+  box-shadow:
+    0 -10px 28px rgba(0,0,0,.38),
+    0 0 0 1px rgba(255,222,116,.20),
+    0 0 20px rgba(54,216,255,.13),
+    inset 0 3px 0 rgba(255,232,151,.30),
+    inset 0 0 0 2px rgba(54,91,112,.42),
+    inset 0 -12px 24px rgba(0,0,0,.34),
+    inset 0 0 34px rgba(40,104,133,.10) !important;
+}
+
+/* A restrained recessed console field behind the existing dashboard controls. */
+#buildBar > .dashboardRow{
+  background:linear-gradient(180deg,rgba(12,31,45,.20),rgba(3,15,27,.14)) !important;
+  box-shadow:inset 0 1px 0 rgba(130,182,207,.08) !important;
+}
+
+/* Preserve the established plaque shape and hardware while coordinating its finish. */
+#dashboardHoverTab{
+  border-color:#75500f !important;
+  border-top-color:#f2d77d !important;
+  border-left-color:#c8942d !important;
+  border-right-color:#76500f !important;
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(255,255,255,.035) 0 1px,
+      rgba(0,0,0,.045) 1px 3px),
+    linear-gradient(180deg,
+      #4a5660 0%,
+      #303b44 18%,
+      #1b2832 52%,
+      #0b1721 100%) !important;
+  color:#e7eef2 !important;
+  -webkit-text-fill-color:#e7eef2 !important;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.42),
+    0 -1px 0 rgba(0,0,0,.96),
+    0 2px 5px rgba(0,0,0,.92),
+    0 0 8px rgba(105,198,231,.18) !important;
+  box-shadow:
+    0 -5px 14px rgba(0,0,0,.42),
+    0 5px 10px rgba(0,0,0,.40),
+    0 0 0 1px rgba(39,24,4,.95),
+    0 0 0 3px rgba(214,160,49,.15),
+    inset 0 2px 0 rgba(255,237,170,.38),
+    inset 0 -3px 0 rgba(52,32,7,.76),
+    inset 0 0 16px rgba(0,0,0,.38),
+    inset 0 0 12px rgba(69,151,186,.09) !important;
+}
+
+#dashboardHoverTab::before,
+#dashboardHoverTab::after{
+  color:#d8ad43 !important;
+  text-shadow:
+    0 1px 0 rgba(255,243,179,.66),
+    0 -1px 1px rgba(58,31,0,.90),
+    0 0 5px rgba(255,196,63,.18) !important;
+}
+
+#buildBar.dashboardOpen #dashboardHoverTab,
+#buildBar:hover #dashboardHoverTab{
+  color:#eaf5f8 !important;
+  -webkit-text-fill-color:#eaf5f8 !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #130 — RESTORE BUILD DASHBOARD TITLE PLATE + RECOLOR STEM COACH
+Scope: dashboard title artwork and STEM Coach colors only.
+===================================================== -->
+<style id="update130DashboardTitleCoachThemeCSS">
+/* Attached title artwork appears only while the dashboard is expanded/hovered. */
+#buildBar .dashboardTitleArtwork{
+  position:absolute !important;
+  left:50% !important;
+  top:-36px !important;
+  width:460px !important;
+  height:auto !important;
+  max-width:none !important;
+  transform:translateX(-50%) !important;
+  display:block !important;
+  object-fit:contain !important;
+  pointer-events:none !important;
+  user-select:none !important;
+  z-index:50 !important;
+  opacity:0 !important;
+}
+#buildBar.dashboardOpen .dashboardTitleArtwork,
+#buildBar:hover .dashboardTitleArtwork{
+  opacity:1 !important;
+}
+/* Keep the existing collapsed dashboard handle and its behavior unchanged. */
+#buildBar.dashboardOpen #dashboardHoverTab,
+#buildBar:hover #dashboardHoverTab{
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  text-shadow:none !important;
+  background:transparent !important;
+  border-color:transparent !important;
+  box-shadow:none !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+#buildBar.dashboardOpen #dashboardHoverTab::before,
+#buildBar.dashboardOpen #dashboardHoverTab::after,
+#buildBar:hover #dashboardHoverTab::before,
+#buildBar:hover #dashboardHoverTab::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* Coordinate the STEM Coach with the dark Builder Challenge palette without changing its footprint. */
+body:not(.starterScreenActive) #stemCoach{
+  background:
+    linear-gradient(180deg,rgba(37,65,82,.97) 0%,rgba(20,47,64,.98) 48%,rgba(9,29,44,.99) 100%) !important;
+  border:1px solid rgba(98,158,185,.42) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 -16px 26px rgba(0,0,0,.16),
+    0 9px 22px rgba(0,0,0,.27),
+    0 0 0 1px rgba(20,60,79,.20) !important;
+}
+body:not(.starterScreenActive) #stemCoachToggle{
+  color:#b7f34a !important;
+  background:linear-gradient(180deg,rgba(53,91,111,.94),rgba(27,59,77,.96)) !important;
+  border:1px solid rgba(105,174,202,.30) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    inset 0 -8px 14px rgba(0,0,0,.10),
+    0 3px 8px rgba(0,0,0,.18) !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.90),0 0 8px rgba(183,243,74,.22) !important;
+}
+body:not(.starterScreenActive) #stemCoachContent{
+  background:transparent !important;
+}
+body:not(.starterScreenActive) #thinkerBobPanel,
+body:not(.starterScreenActive) #stemCoachContent > div{
+  color:#f7fbff !important;
+  background:linear-gradient(180deg,rgba(48,84,104,.96),rgba(27,59,77,.97)) !important;
+  border:1px solid rgba(113,177,204,.30) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    inset 0 -12px 20px rgba(0,0,0,.11),
+    0 4px 12px rgba(0,0,0,.20) !important;
+}
+body:not(.starterScreenActive) #thinkerBobPanel b,
+body:not(.starterScreenActive) #stemCoachContent b{
+  color:#ffd766 !important;
+}
+body:not(.starterScreenActive) #vocabDetailBox,
+body:not(.starterScreenActive) #readerHighlightBox{
+  color:#f4f9fc !important;
+  background:linear-gradient(180deg,rgba(58,94,113,.94),rgba(36,70,89,.95)) !important;
+  border-color:rgba(125,188,213,.34) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 3px 9px rgba(0,0,0,.18) !important;
+}
+body:not(.starterScreenActive) #stemCoach::-webkit-scrollbar,
+body:not(.starterScreenActive) #stemCoachContent::-webkit-scrollbar{
+  width:9px !important;
+}
+body:not(.starterScreenActive) #stemCoach::-webkit-scrollbar-track,
+body:not(.starterScreenActive) #stemCoachContent::-webkit-scrollbar-track{
+  background:rgba(5,20,31,.70) !important;
+  border-radius:999px !important;
+}
+body:not(.starterScreenActive) #stemCoach::-webkit-scrollbar-thumb,
+body:not(.starterScreenActive) #stemCoachContent::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,#b8a13a,#7f7428) !important;
+  border:1px solid rgba(255,224,112,.34) !important;
+  border-radius:999px !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #130A — KEEP BUILD DASHBOARD TITLE VISIBLE WHEN COLLAPSED
+Scope: dashboard title artwork visibility and positioning only.
+===================================================== -->
+<style id="update130ADashboardTitlePersistentCSS">
+/* Keep the supplied artwork visible in every dashboard state. */
+#buildBar .dashboardTitleArtwork{
+  opacity:1 !important;
+  visibility:visible !important;
+  display:block !important;
+}
+
+/* Keep the original hover/click target active, but remove its competing artwork in every state. */
+#dashboardHoverTab,
+#buildBar.dashboardOpen #dashboardHoverTab,
+#buildBar:hover #dashboardHoverTab{
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  text-shadow:none !important;
+  background:transparent !important;
+  background-image:none !important;
+  border-color:transparent !important;
+  box-shadow:none !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+#dashboardHoverTab::before,
+#dashboardHoverTab::after,
+#buildBar.dashboardOpen #dashboardHoverTab::before,
+#buildBar.dashboardOpen #dashboardHoverTab::after,
+#buildBar:hover #dashboardHoverTab::before,
+#buildBar:hover #dashboardHoverTab::after{
+  content:none !important;
+  display:none !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #132 — TYPOGRAPHY TRIAL (ORBITRON HEADINGS)
+Scope: Builder page headings and utility button labels only.
+===================================================== -->
+<style id="update132OrbitronTypographyCSS">
+body:not(.starterScreenActive) #challengeTitle,
+body:not(.starterScreenActive) #challengeChecklist + p > b,
+body:not(.starterScreenActive) #worldTitle,
+body:not(.starterScreenActive) #worldTitle::before,
+body:not(.starterScreenActive) #stemCoachToggle,
+body:not(.starterScreenActive) #viewCubeTitle,
+body:not(.starterScreenActive) #missionPassportButton,
+body:not(.starterScreenActive) #toolboxButton,
+body:not(.starterScreenActive) #helpButton{
+  font-family:"Orbitron",sans-serif !important;
+  font-weight:700 !important;
+}
+
+/* Keep wider labels inside their existing fixed footprints. */
+body:not(.starterScreenActive) #stemCoachToggle{
+  font-size:16px !important;
+  letter-spacing:0 !important;
+}
+body:not(.starterScreenActive) #missionPassportButton,
+body:not(.starterScreenActive) #toolboxButton{
+  font-size:13px !important;
+  letter-spacing:0 !important;
+}
+body:not(.starterScreenActive) #viewCubeTitle,
+body:not(.starterScreenActive) #worldTitle::before{
+  letter-spacing:.10em !important;
+}
+</style>
+
+
+
+<!-- =====================================================
+UPDATE #133 — TYPOGRAPHY MIX (ORBITRON + OXANIUM)
+Scope: Only the specified human-facing labels.
+===================================================== -->
+<style id="update133OxaniumTypographyCSS">
+body:not(.starterScreenActive) #worldTitle{
+  font-family:"Oxanium",sans-serif !important;
+  font-weight:700 !important;
+}
+body:not(.starterScreenActive) #worldTitle::before{
+  font-family:"Orbitron",sans-serif !important;
+  font-weight:700 !important;
+}
+body:not(.starterScreenActive) #floatingBadge{
+  font-family:"Oxanium",sans-serif !important;
+  font-weight:700 !important;
+}
+body:not(.starterScreenActive) #stemCoachToggle .stemCoachThinkerBob{
+  font-family:"Orbitron",sans-serif !important;
+  font-weight:700 !important;
+}
+body:not(.starterScreenActive) #stemCoachToggle .stemCoachOxanium{
+  font-family:"Oxanium",sans-serif !important;
+  font-weight:700 !important;
+}
+body:not(.starterScreenActive) #thinkerBobPanel .coachWelcomeOxanium,
+body:not(.starterScreenActive) #thinkerBobPanel .coachMottoOxanium{
+  font-family:"Oxanium",sans-serif !important;
+  font-weight:700 !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #136 — CLOSE OBJECT LIBRARY AFTER OBJECT SELECTION
+Scope: Object Library open/close state only.
+===================================================== -->
+<style id="update136ObjectLibraryCloseAfterSelectionCSS">
+body:not(.starterScreenActive) #floatingToolbox.objectLibraryHoverSuppressed,
+body:not(.starterScreenActive) #floatingToolbox.objectLibraryHoverSuppressed:hover {
+  width:230px !important;
+  max-width:230px !important;
+  max-height:48px !important;
+  overflow:visible !important;
+}
+
+body:not(.starterScreenActive) #floatingToolbox.objectLibraryHoverSuppressed #toolbox,
+body:not(.starterScreenActive) #floatingToolbox.objectLibraryHoverSuppressed:hover #toolbox {
+  display:none !important;
+}
+
+@media(max-width:1150px){
+  body:not(.starterScreenActive) #floatingToolbox.objectLibraryHoverSuppressed,
+  body:not(.starterScreenActive) #floatingToolbox.objectLibraryHoverSuppressed:hover {
+    width:215px !important;
+    max-width:215px !important;
+  }
+}
+</style>
+<script id="update136ObjectLibraryCloseAfterSelectionScript">
+(function(){
+  "use strict";
+
+  function setupObjectLibraryCloseAfterSelection(){
+    var wrapper = document.getElementById("floatingToolbox");
+    var toolbox = document.getElementById("toolbox");
+    if(!wrapper || !toolbox || wrapper.dataset.closeAfterSelection136 === "true") return;
+    wrapper.dataset.closeAfterSelection136 = "true";
+
+    toolbox.addEventListener("click", function(event){
+      var button = event.target && event.target.closest
+        ? event.target.closest("button")
+        : null;
+      if(!button || !toolbox.contains(button)) return;
+      if(button.classList.contains("favoriteStar")) return;
+
+      var inlineAction = button.getAttribute("onclick") || "";
+      if(!/showToolInfo\s*\(/.test(inlineAction)) return;
+
+      wrapper.classList.add("objectLibraryHoverSuppressed");
+
+      if(wrapper.classList.contains("objectLibraryOpen") && typeof window.toggleToolbox === "function"){
+        window.toggleToolbox();
+      }else{
+        wrapper.classList.remove("objectLibraryOpen");
+        toolbox.style.display = "none";
+        var libraryButton = document.getElementById("toolboxButton");
+        if(libraryButton) libraryButton.innerHTML = "Object Library ▶";
+        if(typeof positionRightPanels === "function"){
+          try{ positionRightPanels(); }catch(e){}
+        }
+      }
+    });
+
+    wrapper.addEventListener("mouseleave", function(){
+      wrapper.classList.remove("objectLibraryHoverSuppressed");
+    });
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", setupObjectLibraryCloseAfterSelection);
+  }else{
+    setupObjectLibraryCloseAfterSelection();
+  }
+  window.addEventListener("load", setupObjectLibraryCloseAfterSelection);
 })();
 </script>
 
