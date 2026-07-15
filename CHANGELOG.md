@@ -1,5 +1,90 @@
 # CHANGELOG
 
+# Current Stable Version
+
+**Current Verified Build:** Update #139C
+
+This is the approved baseline for all future dashboard redesign work.
+
+
+## Update #139C — Verified Dashboard Baseline
+**Status:** VERIFIED ✅
+
+### Verified
+- Confirmed the Build Dashboard opens and collapses correctly.
+- Confirmed the BUILD DASHBOARD title plate remains permanently visible when collapsed.
+- Verified the expanded dashboard layout remains correctly positioned.
+- Verified Mission Passport, Object Library, Shapes, Colors, Build Tools, Utilities, Screenshot, Grid, and Voice controls remain functional.
+- Verified the tool message bar remains present.
+- Verified all IDs, JavaScript, and event listeners are preserved.
+- Verified Builder gameplay, STEM Coach, View panel, camera, robot animation, missions, passport, and voice reader remain unchanged.
+- No duplicate IDs, broken selectors, invalid HTML, or JavaScript syntax errors found.
+
+### Approved Baseline
+This version is the approved baseline for the upcoming blended dashboard redesign, combining:
+- A permanent top control row.
+- A scrollable lower dashboard area.
+- A future central dashboard dial with transparent category overlays.
+
+## Update #137 — Add Redo and Dashboard Utility Reflow
+
+### Status
+VERIFIED
+
+### Summary
+Implemented a Redo system for the existing Builder Undo feature and improved the Build Dashboard utility-button layout to better support future controls.
+
+### Added
+- Added a Redo button beside the existing Undo button.
+- Added a Redo history stack that restores the original Three.js mesh removed by Undo.
+- Added enabled/disabled states for both Undo and Redo buttons.
+- Added Redo status messages for successful restores and empty history.
+
+### Changed
+- Reflowed the silver dashboard utility buttons.
+- Prevented the utility-button column from creating a fifth row beneath the Return to Missions button.
+- Moved overflow utility buttons into the available horizontal space beneath the tool-message bar.
+- Preserved the existing dashboard height, styling, spacing, and responsive layout.
+
+### Preserved
+- Cube, sphere, and triangular wedge creation.
+- Existing Undo behavior and Ctrl/Command + Z shortcut.
+- Save, Load, Screenshot, Reset, and Grid functionality.
+- Mission system.
+- Object Library.
+- Mission Passport.
+- Voice Reader.
+- Camera controls.
+- Gameplay and Builder interaction.
+
+### Testing
+✅ Undo removes the most recently placed block.
+
+✅ Redo restores the same block with its original:
+- Geometry
+- Material
+- Color
+- Position
+- Rotation
+- Scale
+- Builder metadata
+
+✅ New block placement clears the Redo history.
+
+✅ Reset clears the Redo history.
+
+✅ Utility buttons remain inside the Build Dashboard.
+
+✅ No fifth utility-button row appears beneath Return to Missions.
+
+✅ Dashboard layout remains responsive with no control overlap.
+
+### Verification
+VERIFICATION PASSED
+
+No regressions were found in the existing Builder systems. The Redo implementation remains narrowly scoped to the current Undo behavior without introducing a general history engine.
+
+
 Update #138B — Correct Start Mission Button Scaling
 - Enlarged the Starter Page Start Mission PNG proportionally.
 - Preserved the original artwork aspect ratio.
@@ -329,3 +414,20 @@ Diagnostic inspection only — no code changes.
 
 ### Status
 Diagnosis complete. Awaiting Update #100.3B implementation and testing.
+
+---
+
+## Next Planned Update
+
+### Update #138 — Builder Status Console
+
+Replace the floating Current Mission HUD with an industrial LCD-style Builder Status Console integrated beside the BUILD DASHBOARD title plate.
+
+Planned features:
+- Current Mission display
+- Current Badge display
+- Industrial LCD styling
+- Scrolling mission title for long names
+- Future support for XP, Builder Level, Block Count, Achievements, and THINKer BOB status messages
+
+This update will also prepare the Builder interface for THINKer BOB's Workshop expansion by freeing space around the STEM Coach panel.
