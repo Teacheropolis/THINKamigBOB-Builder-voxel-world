@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## Update #140A — Integrate BUILD DASHBOARD Hood
+**Status:** VERIFIED ✅
+
+### Changed
+- Raised and narrowed the BUILD DASHBOARD title plate.
+- Integrated the plate into the gold-chrome dashboard hood.
+- Removed overlap with Build Tools, Screenshot, Utilities, Shapes and Colors, Mission controls, and Voice controls.
+- Preserved the existing dashboard width, height, and bottom placement.
+- Preserved the clean collapsed BUILD DASHBOARD tab.
+
+### Verified
+- Dashboard expands and collapses correctly.
+- All dashboard controls remain visible and clickable.
+- All IDs, JavaScript, and event listeners remain preserved.
+- Builder gameplay, missions, STEM Coach, View panel, camera, grid, robot animation, Mission Passport, Object Library, Screenshot, and voice reader remain functional.
+
+### Approved Baseline
+This version is the stable baseline for adding the compact dashboard category selector.
+
 # Current Stable Version
 
 **Current Verified Build:** Update #139C

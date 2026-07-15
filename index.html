@@ -18027,5 +18027,76 @@ body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover)::after{
 }
 </style>
 
+
+<!-- =====================================================
+UPDATE #140A — INTEGRATE BUILD DASHBOARD HOOD
+Scope: expanded BUILD DASHBOARD title artwork and surrounding gold top hood only.
+===================================================== -->
+<style id="update140AIntegratedDashboardHoodCSS">
+/* Expanded state only: lift and narrow the existing artwork so it grows from
+   the gold top rail without covering any dashboard controls. */
+body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboardTitleArtwork,
+body:not(.starterScreenActive) #buildBar:hover .dashboardTitleArtwork{
+  position:absolute !important;
+  left:50% !important;
+  top:-56px !important;
+  width:380px !important;
+  height:auto !important;
+  max-width:calc(100% - 140px) !important;
+  transform:translateX(-50%) !important;
+  z-index:62 !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  display:block !important;
+  pointer-events:none !important;
+  filter:
+    drop-shadow(0 2px 0 rgba(255,226,112,.45))
+    drop-shadow(0 5px 7px rgba(0,0,0,.72)) !important;
+}
+
+/* Strengthen only the center of the existing upper rail so the raised plaque
+   reads as an integrated automotive-style hood rather than a floating layer. */
+body:not(.starterScreenActive) #buildBar.dashboardOpen,
+body:not(.starterScreenActive) #buildBar:hover{
+  background:
+    linear-gradient(90deg,
+      transparent 0,
+      transparent calc(50% - 225px),
+      rgba(255,225,112,.18) calc(50% - 205px),
+      rgba(142,88,9,.22) calc(50% - 150px),
+      rgba(142,88,9,.22) calc(50% + 150px),
+      rgba(255,225,112,.18) calc(50% + 205px),
+      transparent calc(50% + 225px),
+      transparent 100%),
+    linear-gradient(180deg,
+      rgba(255,246,183,.78) 0,
+      rgba(255,221,91,.72) 2px,
+      rgba(195,132,19,.78) 5px,
+      rgba(94,57,7,.72) 9px,
+      rgba(27,25,18,.28) 12px,
+      transparent 13px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,rgba(0,0,0,.025) 1px 3px),
+    linear-gradient(180deg,#173447 0%,#0a2231 55%,#071722 100%) !important;
+}
+
+/* Keep the verified clean collapsed title tab exactly as Update #139B defines it. */
+@media(max-width:1180px){
+  body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboardTitleArtwork,
+  body:not(.starterScreenActive) #buildBar:hover .dashboardTitleArtwork{
+    top:-50px !important;
+    width:320px !important;
+    max-width:calc(100% - 110px) !important;
+  }
+}
+
+@media(max-height:760px){
+  body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboardTitleArtwork,
+  body:not(.starterScreenActive) #buildBar:hover .dashboardTitleArtwork{
+    top:-48px !important;
+    width:315px !important;
+  }
+}
+</style>
+
 </body>
 </html>
