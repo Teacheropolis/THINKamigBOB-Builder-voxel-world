@@ -3671,7 +3671,12 @@ HTML SECTION 02 — BUILD DASHBOARD / BOTTOM TOOLBAR
 Future extraction target: dashboard HTML/CSS/JS.
 ===================================================== -->
 <div aria-label="Dashboard" id="buildBar">
-<img alt="" aria-hidden="true" class="dashboardTitleArtwork" src="assets/images/dashboard/dashboard-hood.png"/>
+<div class="dashboardTickerAssembly" aria-hidden="true">
+<img alt="" aria-hidden="true" class="dashboardTitleArtwork" src="assets/images/dashboard/dashboard-ticker-bezel-cropped.png"/>
+<div class="dashboardTickerWindow">
+<div class="dashboardTickerText">THINKamigBOB STEM BUILDER • THINK • BUILD • DISCOVER •</div>
+</div>
+</div>
 <div data-placeholder="true" id="worldTitle" class="missionDataStore" aria-hidden="true"></div>
 
 <div class="dashboard139MainGrid">
@@ -17794,6 +17799,10 @@ body:not(.starterScreenActive) .dashboardUtilityButtons button{
   font-size:9px !important;
   line-height:1 !important;
   white-space:normal !important;
+  color:#063b5a !important;
+  -webkit-text-fill-color:#063b5a !important;
+  font-weight:900 !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.92), 0 0 2px rgba(84,205,255,.30) !important;
 }
 body:not(.starterScreenActive) #engineeringGridToggle{grid-column:auto !important;}
 
@@ -17856,8 +17865,8 @@ body:not(.starterScreenActive) #audioPowerLabel{
 body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboard139MessageStrip,
 body:not(.starterScreenActive) #buildBar:hover .dashboard139MessageStrip{
   position:absolute !important;
-  left:43.2% !important;
-  width:35.4% !important;
+  left:48.5% !important;
+  width:30% !important;
   right:auto !important;
   bottom:8px !important;
   height:30px !important;
@@ -18109,7 +18118,6 @@ Scope: BUILD DASHBOARD hood asset and expanded/collapsed presentation only.
 body:not(.starterScreenActive) #buildBar .dashboardTitleArtwork{
   position:absolute !important;
   left:50% !important;
-  top:-105px !important;
   width:min(900px, calc(100% - 80px)) !important;
   height:auto !important;
   max-width:none !important;
@@ -18282,6 +18290,338 @@ body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashbo
   transform:translateX(-50%) scale(.80) !important;
   transform-origin:bottom center !important;
   transition:transform .22s ease !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #150B — REPLACE DASHBOARD HOOD WITH LIVE LED TICKER
+Scope: dashboard hood artwork and expanded/collapsed presentation only.
+===================================================== -->
+<style id="update150BLiveDashboardTickerCSS">
+/* One shared assembly keeps the production bezel and its live text aligned. */
+body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly{
+  position:absolute !important;
+  left:50% !important;
+  width:min(900px, calc(100% - 80px)) !important;
+  height:auto !important;
+  transform:translateX(-50%) !important;
+  transform-origin:bottom center !important;
+  display:block !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  z-index:72 !important;
+  pointer-events:none !important;
+  filter:drop-shadow(0 7px 9px rgba(0,0,0,.50)) !important;
+  transition:transform .22s ease !important;
+}
+
+/* Neutralize the obsolete hood-image positioning. The image now fills the shared assembly. */
+body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly .dashboardTitleArtwork,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboardTickerAssembly .dashboardTitleArtwork,
+body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboardTickerAssembly .dashboardTitleArtwork,
+body:not(.starterScreenActive) #buildBar:hover .dashboardTickerAssembly .dashboardTitleArtwork{
+  position:relative !important;
+  inset:auto !important;
+  left:auto !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:auto !important;
+  display:block !important;
+  width:100% !important;
+  height:auto !important;
+  max-width:none !important;
+  margin:0 !important;
+  transform:none !important;
+  transform-origin:center center !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:none !important;
+  filter:none !important;
+}
+
+/* Live text is clipped to the black center LED matrix in the production artwork. */
+body:not(.starterScreenActive) #buildBar .dashboardTickerWindow{
+  position:absolute !important;
+  left:16.7% !important;
+  right:16.7% !important;
+  top:24% !important;
+  bottom:24% !important;
+  display:flex !important;
+  align-items:center !important;
+  overflow:hidden !important;
+  white-space:nowrap !important;
+  pointer-events:none !important;
+  z-index:2 !important;
+}
+
+body:not(.starterScreenActive) #buildBar .dashboardTickerText{
+  display:inline-block !important;
+  min-width:max-content !important;
+  padding-left:100% !important;
+  white-space:nowrap !important;
+  color:#8ff6ff !important;
+  font-family:"Courier New",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace !important;
+  font-size:clamp(16px, 2.15vw, 31px) !important;
+  line-height:1 !important;
+  font-weight:900 !important;
+  letter-spacing:.12em !important;
+  text-transform:uppercase !important;
+  text-shadow:0 0 4px rgba(92,235,255,.95),0 0 10px rgba(41,181,255,.72) !important;
+  animation:dashboardTickerScroll 15s linear infinite !important;
+  will-change:transform !important;
+  pointer-events:none !important;
+}
+
+@keyframes dashboardTickerScroll{
+  from{transform:translateX(0);}
+  to{transform:translateX(-100%);}
+}
+
+/* Hovering the dashboard pauses the message while preserving the existing open behavior. */
+body:not(.starterScreenActive) #buildBar:hover .dashboardTickerText{
+  animation-play-state:paused !important;
+}
+
+/* Vertical state anchoring is consolidated in Update #150E Retry below. */
+
+/* Decorative layers never intercept the verified dashboard interaction target. */
+body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly,
+body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly *,
+body:not(.starterScreenActive) #buildBar .dashboardTickerWindow,
+body:not(.starterScreenActive) #buildBar .dashboardTickerText{
+  pointer-events:none !important;
+}
+body:not(.starterScreenActive) #buildBar #dashboardHoverTab{
+  pointer-events:auto !important;
+}
+
+@media(max-width:1180px){
+  body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly{
+    width:min(720px, calc(100% - 64px)) !important;
+  }
+}
+
+@media(max-height:760px){
+  body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly{
+    width:min(680px, calc(100% - 64px)) !important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  body:not(.starterScreenActive) #buildBar .dashboardTickerText{
+    animation:none !important;
+    transform:none !important;
+    padding-left:2% !important;
+  }
+}
+</style>
+
+
+
+<!-- =====================================================
+UPDATE #150C — SHOW ONLY LED TICKER WHEN DASHBOARD IS COLLAPSED
+Scope: collapsed Build Dashboard shell presentation only.
+===================================================== -->
+<style id="update150CCollapsedTickerOnlyCSS">
+/* In the collapsed state, the live LED ticker is the only visible dashboard element.
+   The verified hover/click target remains active and the expanded state is untouched. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover){
+  background:transparent !important;
+  background-image:none !important;
+  border-color:transparent !important;
+  border-width:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  filter:none !important;
+  outline:none !important;
+}
+
+/* Remove any historical shell/rail decoration that could remain visible. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover)::before,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover)::after{
+  content:none !important;
+  display:none !important;
+  background:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+/* Keep every internal control and dashboard-content layer concealed while collapsed. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) > :not(.dashboardTickerAssembly):not(#dashboardHoverTab){
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+/* Preserve the complete ticker and the verified invisible interaction target. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboardTickerAssembly{
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:none !important;
+}
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab{
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab::before,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab::after{
+  content:none !important;
+  display:none !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #150D — FIT WIDER PRODUCTION LED TICKER
+Scope: final CSS-only sizing, positioning, and ticker-window alignment.
+===================================================== -->
+<style id="update150DFitWiderProductionTickerCSS">
+/* The wider production bezel and live text remain one aligned assembly. */
+body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly{
+  width:min(1080px, calc(100% - 48px)) !important;
+}
+
+/* Use more of the longer black LED matrix while retaining safe clearance
+   from both speaker housings, the gold trim, screws, and blue status LEDs. */
+body:not(.starterScreenActive) #buildBar .dashboardTickerWindow{
+  left:15.5% !important;
+  right:15.5% !important;
+  top:25% !important;
+  bottom:25% !important;
+}
+
+/* State-specific vertical anchoring is consolidated in Update #150E Retry below. */
+body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboardTickerAssembly{
+  width:min(1080px, calc(100% - 48px)) !important;
+  transform:translateX(-50%) scale(1) !important;
+}
+
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen) .dashboardTickerAssembly{
+  width:min(1120px, 68vw) !important;
+  max-width:calc(100vw - 48px) !important;
+  transform:translateX(-50%) scale(1) !important;
+}
+
+@media(max-width:1180px){
+  body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboardTickerAssembly{
+    width:min(900px, calc(100% - 40px)) !important;
+  }
+  body:not(.starterScreenActive) #buildBar:not(.dashboardOpen) .dashboardTickerAssembly{
+    width:min(900px, 72vw) !important;
+    max-width:calc(100vw - 36px) !important;
+  }
+}
+
+@media(max-height:760px){
+  body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboardTickerAssembly{
+    width:min(840px, calc(100% - 40px)) !important;
+  }
+  body:not(.starterScreenActive) #buildBar:not(.dashboardOpen) .dashboardTickerAssembly{
+    width:min(840px, 70vw) !important;
+    max-width:calc(100vw - 36px) !important;
+  }
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #150E RETRY — REPAIR EXPANDED AND COLLAPSED TICKER ANCHORING
+Scope: ticker vertical positioning and collapsed hover-tab alignment only.
+===================================================== -->
+<style id="update150ERetryTickerAnchoringCSS">
+body:not(.starterScreenActive) #buildBar{
+  /* Account for the dashboard rail's 12px visual inset so the bezel meets
+     the rail when expanded; keep the hidden bezel flush to the viewport. */
+  --dashboard-ticker-rail-gap:12px;
+  --dashboard-ticker-viewport-gap:0px;
+}
+
+/* One authoritative vertical anchor for the ticker in every state. */
+body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly{
+  top:auto !important;
+}
+
+/* Expanded: place the bezel completely above the dashboard's top edge. */
+body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboardTickerAssembly{
+  bottom:calc(100% + var(--dashboard-ticker-rail-gap)) !important;
+}
+
+/* Collapsed: compensate for the dashboard's downward translate so the bezel
+   remains a small, stable distance above the viewport bottom. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen) .dashboardTickerAssembly,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboardTickerAssembly,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):hover .dashboardTickerAssembly{
+  top:auto !important;
+  bottom:calc(100% - var(--dash-tab-height) + var(--dashboard-ticker-viewport-gap)) !important;
+}
+
+/* Keep the existing transparent collapsed interaction target aligned with the bezel. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen) #dashboardHoverTab,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):hover #dashboardHoverTab{
+  top:auto !important;
+  bottom:calc(100% - var(--dash-tab-height) + var(--dashboard-ticker-viewport-gap)) !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #150F — CROP-AWARE LED TICKER ANCHORING
+Scope: use the tightly cropped bezel asset and keep its visible edge aligned
+in both dashboard states.
+===================================================== -->
+<style id="update150FCropAwareTickerAnchoringCSS">
+/* The production bezel was cropped from 2048×840 to its actual opaque bounds
+   (1978×298). Its element box now matches the visible hardware, so anchoring
+   the assembly's bottom also anchors the visible bezel's bottom. */
+body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly{
+  aspect-ratio:1978 / 298 !important;
+}
+
+/* Expanded: mount the visible bezel directly above the dashboard rail. */
+body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboardTickerAssembly,
+body:not(.starterScreenActive) #buildBar:hover .dashboardTickerAssembly{
+  bottom:calc(100% + var(--dashboard-ticker-rail-gap)) !important;
+}
+
+/* Collapsed: this calculation cancels the dashboard's hidden-state translate,
+   leaving the visible bezel eight pixels above the viewport edge. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboardTickerAssembly{
+  bottom:calc(100% - var(--dash-tab-height) + var(--dashboard-ticker-viewport-gap)) !important;
+  transform:translateX(-50%) scale(.8) !important;
+}
+
+/* Keep the invisible collapsed-state click target exactly over the cropped
+   bezel, rather than the former 840px-tall transparent image canvas. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab{
+  left:50% !important;
+  width:min(1120px, 68vw) !important;
+  max-width:calc(100vw - 48px) !important;
+  height:auto !important;
+  min-height:0 !important;
+  aspect-ratio:1978 / 298 !important;
+  transform:translateX(-50%) scale(.8) !important;
+  transform-origin:bottom center !important;
+  z-index:73 !important;
+}
+
+@media(max-width:1180px){
+  body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab{
+    width:min(900px, 72vw) !important;
+    max-width:calc(100vw - 36px) !important;
+  }
+}
+
+@media(max-height:760px){
+  body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab{
+    width:min(840px, 70vw) !important;
+    max-width:calc(100vw - 36px) !important;
+  }
 }
 </style>
 

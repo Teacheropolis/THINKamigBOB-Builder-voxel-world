@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## Update #150F — Dashboard Ticker and Readability Polish
+**Status:** VERIFIED ✅
+
+### Changed
+- Cropped the production LED ticker bezel to its visible bounds and aligned it in both dashboard states.
+- Seated the expanded ticker directly against the dashboard rail and made the hidden ticker flush with the viewport bottom.
+- Reduced the hidden ticker to 80% scale while keeping its click target aligned.
+- Improved Utilities button-label contrast and moved the tool-message bar right to clear the color scrollbar.
+
+### Verified
+- Hidden and expanded ticker positions were measured at the reference viewport.
+- Dashboard controls, ticker interaction, and the message bar remain usable.
+- User-tested build passes.
+
 ## Update #140A — Integrate BUILD DASHBOARD Hood
 **Status:** VERIFIED ✅
 
