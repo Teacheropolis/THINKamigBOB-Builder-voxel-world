@@ -3642,7 +3642,7 @@ Keep button IDs and onclick handlers unchanged.
 <button type="button" class="missionTile" onclick="chooseStartWorld('buildFutureCity', this)"><span class="missionArt missionCity">🏙️</span><span class="missionTileTitle">Future City</span></button>
 <button type="button" class="missionTile" onclick="chooseStartWorld('buildWeatherWorld', this)"><span class="missionArt missionWeather">🌦️</span><span class="missionTileTitle">Grade 3: Weather Station</span></button>
 <button type="button" class="missionTile" onclick="chooseStartWorld('buildEnergyCity', this)"><span class="missionArt missionEnergy">⚡</span><span class="missionTileTitle">Grade 4: Energy City</span></button>
-<button type="button" class="missionTile" onclick="chooseStartWorld('buildSpaceColony', this)"><span class="missionArt missionMoon">🚀</span><span class="missionTileTitle">Grade 5: Moon Colony</span></button>
+<button type="button" class="missionTile" onclick="chooseStartWorld('buildSpaceColony', this)"><span class="missionArt missionMoon">🌕 🔴</span><span class="missionTileTitle">Grade 5: Moon or Mars Colony</span></button>
 <button type="button" class="missionTile" onclick="chooseStartWorld('buildEngineeringWorld', this)"><span class="missionArt missionEngineering">🏗️</span><span class="missionTileTitle">Grade 6: Engineering Challenge</span></button>
 <button type="button" class="missionTile" onclick="chooseStartWorld('buildCellWorld', this)"><span class="missionArt missionCell">🧬</span><span class="missionTileTitle">Grade 6: Cell Builder Lab</span></button>
 </div>
@@ -3654,6 +3654,17 @@ Keep button IDs and onclick handlers unchanged.
 <label><span>Project Name</span><input id="startProjectName" placeholder="Optional project title"/></label>
 <button type="button" id="startBuildingButton" onclick="startSelectedWorld()" aria-label="Start Mission"></button>
 </div>
+</div>
+<div id="spaceDestinationChooser" role="dialog" aria-modal="true" aria-labelledby="spaceDestinationTitle" hidden>
+  <div class="spaceDestinationCard">
+    <h2 id="spaceDestinationTitle">Choose Your Colony Destination</h2>
+    <p>Where will your Grade 5 colony begin?</p>
+    <div class="spaceDestinationButtons">
+      <button type="button" onclick="chooseSpaceDestination('moon')">🌕 Moon</button>
+      <button type="button" onclick="chooseSpaceDestination('mars')">🔴 Mars</button>
+    </div>
+    <button type="button" class="spaceDestinationCancel" onclick="cancelSpaceDestination()">Back to missions</button>
+  </div>
 </div>
 <div class="startHelpPanel">
 <h2>How to Use the Builder</h2>
@@ -4225,6 +4236,10 @@ Use this section for Builder title image updates.
 <div id="gameLogo" aria-hidden="true">
 <img id="builderHeaderRobot" src="assets/images/builder-robot.png" alt="" />
 <img id="builderHeaderSign" src="assets/images/builder-sign.png" alt="" />
+</div>
+<div id="skyBannerPlane" aria-hidden="true">
+  <img src="assets/images/sky-banner-plane.png" alt="" />
+  <span>THINKamigBOB STEM Builder</span>
 </div>
 <!-- =====================================================
 HTML SECTION: WORLD / SELECTED MISSION TITLE DISPLAY
@@ -6687,9 +6702,23 @@ function redoLast(){
   updateUndoRedoButtons();
 }
   
+function setSkyBannerVehicle(vehicle){
+  const banner = document.getElementById("skyBannerPlane");
+  const artwork = banner && banner.querySelector("img");
+  const useRocket = vehicle === "rocket";
+  if(!banner || !artwork) return;
+
+  banner.classList.toggle("skyBannerRocket", useRocket);
+  artwork.src = useRocket
+    ? "assets/images/sky-banner-rocket.png"
+    : "assets/images/sky-banner-plane.png";
+}
+window.setSkyBannerVehicle = setSkyBannerVehicle;
+
 function resetWorld(){
 
 stopThinkerBob();
+setSkyBannerVehicle("plane");
 
 document.getElementById("worldTitle").innerHTML = "";
 document.getElementById("worldTitle").setAttribute("data-placeholder", "true");
@@ -8184,29 +8213,39 @@ showMissionPopup();
 checkBadge();
 }
   
-function buildSpaceColony(){
+function buildSpaceColony(planet = "moon"){
 
   resetWorld();
+  setSkyBannerVehicle("rocket");
   resetChecklist();
 
   cameraDistance = 26;
   cameraHeight = 5;
   updateCamera();
 
-  setGroundColor(0x777777);
-  setSkyColor(0x000022);
+  const isMars = planet === "mars";
+  setGroundColor(isMars ? 0x8B3A20 : 0x777777);
+  setSkyColor(isMars ? 0x6B2B1A : 0x000022);
 
-addStars();
-addEarth();
+  clearAtmosphere();
+  addStars();
+  if(isMars){
+    if(earth){
+      scene.remove(earth);
+      earth = null;
+    }
+  }else{
+    addEarth();
+  }
 
   document.getElementById("worldTitle").innerHTML =
-    "🌕 THINKamigBOB Moon Colony 🌕";
+    isMars ? "🔴 THINKamigBOB Mars Colony 🔴" : "🌕 THINKamigBOB Moon Colony 🌕";
 
   document.getElementById("missionText").innerHTML =
-    "<b>Mission:</b> Design a colony on the Moon or Mars!";
+    isMars ? "<b>Mission:</b> Design a sustainable colony on Mars!" : "<b>Mission:</b> Design a sustainable colony on the Moon!";
 
   document.getElementById("challenge1").innerHTML =
-    "Starter world includes: Moon surface, launch pad, habitat, solar panels, and research station";
+    isMars ? "Starter world includes: Mars surface, launch pad, habitat, solar panels, and research station" : "Starter world includes: Moon surface, launch pad, habitat, solar panels, and research station";
 
   document.getElementById("challenge2").innerHTML =
     "Build a space habitat where astronauts can live";
@@ -8220,8 +8259,8 @@ addEarth();
   document.getElementById("moreChallenge").innerHTML =
     "Add rovers, satellites, communication towers, greenhouses, craters, or a landing zone.";
 
-  // Moon surface base
-  addBlock(0, 0.5, 0, 0x999999, new THREE.BoxGeometry(14, 0.4, 14));
+  // Planet surface base and surface features.
+  addBlock(0, 0.5, 0, isMars ? 0xA4472A : 0x999999, new THREE.BoxGeometry(14, 0.4, 14));
 
   // Rocket launch pad
   addBlock(-5, 0.9, -4, 0x222222, new THREE.BoxGeometry(4, 0.4, 4));
@@ -8240,12 +8279,27 @@ addEarth();
   addBlock(-2, 1, 5, 0x1E90FF, new THREE.BoxGeometry(4, 0.2, 2));
   addBlock(-2, 0.5, 5, 0x777777, new THREE.BoxGeometry(0.4, 1, 0.4));
 
-  // Craters
-  addBlock(-1, 0.8, -1, 0x555555, new THREE.BoxGeometry(2, 0.2, 2));
-  addBlock(6, 0.8, -6, 0x555555, new THREE.BoxGeometry(2.5, 0.2, 2.5));
+  if(isMars){
+    // Rust-red rocks and a shallow crater make the planet choice visible at once.
+    addBlock(-1, 0.85, -1, 0x6E281B, new THREE.CylinderGeometry(1.25, 1.5, 0.24, 16));
+    addBlock(6, 0.95, -6, 0x87301D, new THREE.DodecahedronGeometry(1.05));
+    addBlock(-6, 0.9, 4, 0xA95735, new THREE.DodecahedronGeometry(0.75));
+  }else{
+    // Moon craters.
+    addBlock(-1, 0.8, -1, 0x555555, new THREE.BoxGeometry(2, 0.2, 2));
+    addBlock(6, 0.8, -6, 0x555555, new THREE.BoxGeometry(2.5, 0.2, 2.5));
+  }
 
 showMissionPopup();
 checkBadge();
+}
+
+function buildMoonColony(){
+  buildSpaceColony("moon");
+}
+
+function buildMarsColony(){
+  buildSpaceColony("mars");
 }
 
 function buildEnergyCity(){
@@ -9095,6 +9149,8 @@ function getStartWorldLaunchers(){
     buildWeatherWorld: (typeof buildWeatherWorld === 'function') ? buildWeatherWorld : window.buildWeatherWorld,
     buildEnergyCity: (typeof buildEnergyCity === 'function') ? buildEnergyCity : window.buildEnergyCity,
     buildSpaceColony: (typeof buildSpaceColony === 'function') ? buildSpaceColony : window.buildSpaceColony,
+    buildMoonColony: (typeof buildMoonColony === 'function') ? buildMoonColony : window.buildMoonColony,
+    buildMarsColony: (typeof buildMarsColony === 'function') ? buildMarsColony : window.buildMarsColony,
     buildEngineeringWorld: (typeof buildEngineeringWorld === 'function') ? buildEngineeringWorld : window.buildEngineeringWorld,
     buildCellWorld: (typeof buildCellWorld === 'function') ? buildCellWorld : window.buildCellWorld
   };
@@ -9105,6 +9161,9 @@ function setSelectedStartWorld(fnName, buttonEl){
   const startWorldLaunchers = getStartWorldLaunchers();
   selectedStartWorld = startWorldLaunchers[fnName] ? fnName : "buildCastle";
   window.selectedStartWorld = selectedStartWorld;
+  if(selectedStartWorld !== "buildSpaceColony"){
+    window.selectedSpaceDestination = null;
+  }
 
   document.querySelectorAll('.startWorldGrid button').forEach(function(btn){
     btn.classList.remove('selectedStartWorld');
@@ -9123,6 +9182,29 @@ function chooseStartWorld(fnName, buttonEl){
   setSelectedStartWorld(fnName, buttonEl);
 }
 window.chooseStartWorld = chooseStartWorld;
+
+function showSpaceDestinationChooser(){
+  const chooser = document.getElementById("spaceDestinationChooser");
+  if(chooser) chooser.hidden = false;
+}
+
+function cancelSpaceDestination(){
+  const chooser = document.getElementById("spaceDestinationChooser");
+  if(chooser) chooser.hidden = true;
+  window.missionLaunchTransitionActive = false;
+}
+window.cancelSpaceDestination = cancelSpaceDestination;
+
+function chooseSpaceDestination(destination){
+  const chooser = document.getElementById("spaceDestinationChooser");
+  if(chooser) chooser.hidden = true;
+  window.selectedSpaceDestination = destination === "mars" ? "mars" : "moon";
+  selectedStartWorld = window.selectedSpaceDestination === "mars" ? "buildMarsColony" : "buildMoonColony";
+  window.selectedStartWorld = selectedStartWorld;
+  window.missionLaunchTransitionActive = false;
+  startSelectedWorld();
+}
+window.chooseSpaceDestination = chooseSpaceDestination;
 
 function syncStartFields(){
   const sn = document.getElementById('startStudentName');
@@ -9166,6 +9248,12 @@ function startSelectedWorld(){
   if(!startWorldLaunchers[selectedStartWorld]){
     selectedStartWorld = "buildCastle";
     window.selectedStartWorld = selectedStartWorld;
+  }
+
+  if(selectedStartWorld === "buildSpaceColony" && !window.selectedSpaceDestination){
+    window.missionLaunchTransitionActive = false;
+    showSpaceDestinationChooser();
+    return;
   }
 
   const launchWorld = startWorldLaunchers[selectedStartWorld] || startWorldLaunchers.buildCastle;
@@ -18635,6 +18723,222 @@ body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashbo
   body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab{
     width:min(840px, 70vw) !important;
     max-width:calc(100vw - 36px) !important;
+  }
+}
+</style>
+
+<!-- =====================================================
+UPDATE #154 — GRADE 5 SPACE DESTINATION PICKER
+===================================================== -->
+<style id="spaceDestinationChooserCSS">
+#spaceDestinationChooser[hidden]{
+  display:none !important;
+}
+#spaceDestinationChooser{
+  position:fixed;
+  inset:0;
+  z-index:4600;
+  display:grid;
+  place-items:center;
+  padding:24px;
+  background:rgba(1,9,18,.72);
+  backdrop-filter:blur(5px);
+}
+.spaceDestinationCard{
+  width:min(560px, 92vw);
+  padding:28px;
+  text-align:center;
+  color:#f5fbff;
+  border:2px solid rgba(81,222,255,.75);
+  border-radius:20px;
+  background:linear-gradient(145deg, #123a52, #071a2a);
+  box-shadow:0 20px 55px rgba(0,0,0,.58), 0 0 28px rgba(55,209,255,.22);
+}
+.spaceDestinationCard h2{
+  margin:0 0 8px;
+  color:#c6f447;
+}
+.spaceDestinationCard p{
+  margin:0 0 22px;
+}
+.spaceDestinationButtons{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+}
+.spaceDestinationButtons button,
+.spaceDestinationCancel{
+  font:800 18px "Lexend", Arial, sans-serif;
+  cursor:pointer;
+}
+.spaceDestinationButtons button{
+  min-width:190px;
+  padding:17px 14px;
+  color:#fff;
+  border:2px solid rgba(255,255,255,.55);
+  border-radius:14px;
+  background:linear-gradient(#336f9c, #12395a);
+  box-shadow:0 5px 0 rgba(0,0,0,.34);
+}
+.spaceDestinationButtons button:last-child{
+  background:linear-gradient(#b95032, #6f241a);
+}
+.spaceDestinationCancel{
+  margin-top:20px;
+  color:#d9f8ff;
+  border:0;
+  background:transparent;
+  text-decoration:underline;
+}
+@media(max-width:560px){
+  .spaceDestinationButtons{ flex-direction:column; align-items:stretch; }
+}
+</style>
+
+<!-- =====================================================
+UPDATE #153 — STARTER / BUILDER STATE SYNCHRONIZATION
+Keep the loading guard in step with the visible screen so a completed launch
+cannot leave the 3D canvas hidden behind the starter state.
+===================================================== -->
+<script id="starterBuilderStateSync">
+(function(){
+  function syncBuilderVisibility(){
+    const startScreen = document.getElementById("startScreen");
+    if(!startScreen) return;
+
+    const startScreenIsHidden = startScreen.classList.contains("hidden") ||
+      getComputedStyle(startScreen).display === "none";
+
+    document.body.classList.toggle("starterScreenActive", !startScreenIsHidden);
+  }
+
+  function installSync(){
+    const startScreen = document.getElementById("startScreen");
+    if(!startScreen || startScreen.dataset.builderStateSyncInstalled === "true"){
+      syncBuilderVisibility();
+      return;
+    }
+
+    startScreen.dataset.builderStateSyncInstalled = "true";
+    new MutationObserver(syncBuilderVisibility).observe(startScreen, {
+      attributes:true,
+      attributeFilter:["class", "style"]
+    });
+    syncBuilderVisibility();
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", installSync, {once:true});
+  }else{
+    installSync();
+  }
+  window.addEventListener("load", syncBuilderVisibility, {once:true});
+})();
+</script>
+
+<!-- =====================================================
+UPDATE #152 — SKY BANNER PLANE
+Scope: replace the active Builder header artwork with an occasional plane.
+===================================================== -->
+<style id="skyBannerPlaneCSS">
+/* Preserve legacy header nodes for existing scripts while removing all visible
+   robot and title artwork from the active Builder sky. */
+body:not(.starterScreenActive) #gameLogo,
+body:not(.starterScreenActive) #builderHeaderRobot,
+body:not(.starterScreenActive) #builderHeaderSign{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+#skyBannerPlane{
+  display:none;
+}
+
+body:not(.starterScreenActive) #skyBannerPlane{
+  position:fixed;
+  top:118px;
+  left:0;
+  /* The longer banner keeps its plane at the original cloud-scale size. */
+  width:min(318px, 23.5vw);
+  aspect-ratio:1920 / 819;
+  display:block;
+  background:transparent;
+  pointer-events:none;
+  user-select:none;
+  /* Above the 3D world, but deliberately behind the Builder HUD cards. */
+  z-index:250;
+  opacity:0;
+  transform:translateX(-120vw) translateY(0) rotate(-1deg);
+  animation:skyBannerPlaneFlight 90s linear infinite;
+}
+
+body:not(.starterScreenActive) #skyBannerPlane.skyBannerRocket{
+  aspect-ratio:2172 / 724;
+}
+
+body:not(.starterScreenActive) #info{
+  z-index:300 !important;
+}
+
+body:not(.starterScreenActive) #skyBannerPlane img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:transparent;
+  filter:drop-shadow(0 8px 9px rgba(8,31,48,.28));
+}
+
+body:not(.starterScreenActive) #skyBannerPlane span{
+  position:absolute;
+  left:4%;
+  top:48%;
+  width:62%;
+  color:#073b61;
+  -webkit-text-fill-color:#073b61;
+  font-family:"Lexend",Arial,sans-serif;
+  font-size:clamp(9px, .65vw, 12px);
+  font-weight:900;
+  line-height:1.05;
+  letter-spacing:0;
+  text-align:center;
+  transform:translateY(-50%);
+  text-shadow:0 1px 0 rgba(255,255,255,.88);
+  white-space:nowrap;
+  overflow-wrap:normal;
+}
+
+@keyframes skyBannerPlaneFlight{
+  0%, 10%{
+    opacity:0;
+    transform:translateX(-120vw) translateY(0) rotate(-1deg);
+  }
+  12%{
+    opacity:1;
+  }
+  32%{
+    opacity:1;
+    transform:translateX(112vw) translateY(8px) rotate(.65deg);
+  }
+  34%, 100%{
+    opacity:0;
+    transform:translateX(112vw) translateY(8px) rotate(.65deg);
+  }
+}
+
+@media(max-width:900px){
+  body:not(.starterScreenActive) #skyBannerPlane{
+    top:98px;
+    width:min(268px, 48vw);
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  body:not(.starterScreenActive) #skyBannerPlane{
+    animation:none;
+    visibility:hidden;
   }
 }
 </style>

@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## Update #154 — Grade 5 Moon/Mars Colony and Mission Banner Vehicles
+**Status:** VERIFIED ✅
+
+### Grade 5 Mission
+- Replaced the single Moon Colony launcher with one shared Moon or Mars Colony mission.
+- Students now select Moon or Mars after pressing Start Mission and before the Builder loads.
+- Moon uses a gray surface with craters; Mars uses red terrain, dusty sky colors, a shallow crater, and rust-colored rocks.
+
+### Builder Sky
+- Restored the plane banner for Castle, playground, habitat, city, and all other non-space missions.
+- Added a BOB-piloted rocket banner for Moon and Mars colony missions only.
+- Saved separate transparent PNG assets for the plane and rocket, with the live banner text preserved as editable HTML.
+
+### Verification
+- Confirmed the colony picker appears after Start Mission, Mars launches successfully, both Builder canvases initialize, and the correct vehicle is selected by mission.
+
 ## Update #151 — Finished Dashboard and Live Ticker Master Build
 **Status:** VERIFIED ✅
 
