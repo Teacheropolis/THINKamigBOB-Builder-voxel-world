@@ -19034,5 +19034,68 @@ Scope: dashboard ticker messages and badge-earned celebration only.
 })();
 </script>
 
+<!-- =====================================================
+UPDATE #155 — COMPACT RETURN TO MISSIONS PLATE
+Scope: replace the old image-based control with a legible brass mission plate
+that fits the existing Mission & Library dashboard slot.
+===================================================== -->
+<style id="compactReturnMissionsPlateCSS">
+body:not(.starterScreenActive) #returnMissionsButton{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  position:relative !important;
+  height:39px !important;
+  min-height:39px !important;
+  padding:3px 28px !important;
+  overflow:hidden !important;
+  color:#1c1003 !important;
+  -webkit-text-fill-color:#1c1003 !important;
+  font-family:"Lexend",Arial,sans-serif !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  letter-spacing:.02em !important;
+  text-shadow:0 1px 0 rgba(255,241,167,.8) !important;
+  background:
+    radial-gradient(circle at 9px 9px,#fff3b5 0 1px,#6e4008 1.4px 3px,#211202 3.4px 4.5px,transparent 4.8px),
+    radial-gradient(circle at calc(100% - 9px) 9px,#fff3b5 0 1px,#6e4008 1.4px 3px,#211202 3.4px 4.5px,transparent 4.8px),
+    radial-gradient(circle at 9px calc(100% - 9px),#fff3b5 0 1px,#6e4008 1.4px 3px,#211202 3.4px 4.5px,transparent 4.8px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px),#fff3b5 0 1px,#6e4008 1.4px 3px,#211202 3.4px 4.5px,transparent 4.8px),
+    linear-gradient(90deg,#8b5109 0%,#e7b841 12%,#fff0a4 49%,#d69b27 82%,#754006 100%) !important;
+  background-size:auto,auto,auto,auto,100% 100% !important;
+  border:2px solid #5b3305 !important;
+  border-radius:6px !important;
+  box-shadow:inset 0 1px 0 rgba(255,248,194,.85), inset 0 -2px 0 rgba(83,43,2,.62), 0 3px 0 #432400, 0 5px 8px rgba(0,0,0,.34) !important;
+  filter:none !important;
+  transition:transform .16s ease, filter .16s ease !important;
+}
+body:not(.starterScreenActive) #returnMissionsButton::before{
+  content:"\25C0" !important;
+  display:block !important;
+  position:absolute !important;
+  left:15px !important;
+  top:50% !important;
+  width:auto !important;
+  height:auto !important;
+  transform:translateY(-52%) !important;
+  color:#2a1602 !important;
+  -webkit-text-fill-color:#2a1602 !important;
+  background:none !important;
+  box-shadow:none !important;
+  font-size:13px !important;
+  line-height:1 !important;
+}
+body:not(.starterScreenActive) #returnMissionsButton::after{content:none !important;display:none !important;}
+body:not(.starterScreenActive) #returnMissionsButton:hover{
+  transform:translateY(-1px) !important;
+  filter:brightness(1.07) saturate(1.06) !important;
+}
+body:not(.starterScreenActive) #returnMissionsButton:active{
+  transform:translateY(2px) !important;
+  box-shadow:inset 0 2px 5px rgba(67,34,0,.62), 0 1px 0 #432400 !important;
+}
+</style>
+
 </body>
 </html>
