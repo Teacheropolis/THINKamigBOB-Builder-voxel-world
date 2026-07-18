@@ -3671,7 +3671,7 @@ HTML SECTION 02 — BUILD DASHBOARD / BOTTOM TOOLBAR
 Future extraction target: dashboard HTML/CSS/JS.
 ===================================================== -->
 <div aria-label="Dashboard" id="buildBar">
-<img alt="" aria-hidden="true" class="dashboardTitleArtwork" src="assets/images/build-dashboard-title.png"/>
+<img alt="" aria-hidden="true" class="dashboardTitleArtwork" src="assets/images/dashboard/dashboard-hood.png"/>
 <div data-placeholder="true" id="worldTitle" class="missionDataStore" aria-hidden="true"></div>
 
 <div class="dashboard139MainGrid">
@@ -18095,6 +18095,193 @@ body:not(.starterScreenActive) #buildBar:hover{
     top:-48px !important;
     width:315px !important;
   }
+}
+</style>
+
+
+
+<!-- =====================================================
+UPDATE #141A — REPLACE DASHBOARD HOOD WITH PRODUCTION PNG
+Scope: BUILD DASHBOARD hood asset and expanded/collapsed presentation only.
+===================================================== -->
+<style id="update141AProductionDashboardHoodCSS">
+/* The production PNG now supplies all hood and title-plate artwork. */
+body:not(.starterScreenActive) #buildBar .dashboardTitleArtwork{
+  position:absolute !important;
+  left:50% !important;
+  top:-105px !important;
+  width:min(900px, calc(100% - 80px)) !important;
+  height:auto !important;
+  max-width:none !important;
+  transform:translateX(-50%) !important;
+  display:block !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  z-index:72 !important;
+  pointer-events:none !important;
+  filter:drop-shadow(0 7px 9px rgba(0,0,0,.55)) !important;
+}
+
+/* Neutralize the center-only CSS hood highlight replaced by the PNG while
+   retaining the verified dashboard frame, gold rail, dimensions, and controls. */
+body:not(.starterScreenActive) #buildBar.dashboardOpen,
+body:not(.starterScreenActive) #buildBar:hover{
+  background:
+    linear-gradient(180deg,
+      rgba(255,246,183,.78) 0,
+      rgba(255,221,91,.72) 2px,
+      rgba(195,132,19,.78) 5px,
+      rgba(94,57,7,.72) 9px,
+      rgba(27,25,18,.28) 12px,
+      transparent 13px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,rgba(0,0,0,.025) 1px 3px),
+    linear-gradient(180deg,#173447 0%,#0a2231 55%,#071722 100%) !important;
+}
+
+/* Preserve the complete production hood as the clean collapsed dashboard tab. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboardTitleArtwork{
+  left:50% !important;
+  top:-105px !important;
+  width:min(900px, calc(100% - 80px)) !important;
+  height:auto !important;
+  max-width:none !important;
+  transform:translateX(-50%) !important;
+  display:block !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:none !important;
+}
+
+/* Match the hover/click target to the visible production hood without adding
+   any visible layer or intercepting controls below it. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab{
+  left:50% !important;
+  right:auto !important;
+  top:-105px !important;
+  width:min(900px, calc(100% - 80px)) !important;
+  max-width:none !important;
+  height:120px !important;
+  min-height:120px !important;
+  transform:translateX(-50%) !important;
+  background:transparent !important;
+  border-color:transparent !important;
+  box-shadow:none !important;
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  text-shadow:none !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+  z-index:73 !important;
+}
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab::before,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab::after{
+  content:none !important;
+  display:none !important;
+}
+
+@media(max-width:1180px){
+  body:not(.starterScreenActive) #buildBar .dashboardTitleArtwork,
+  body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboardTitleArtwork{
+    top:-88px !important;
+    width:min(720px, calc(100% - 64px)) !important;
+  }
+  body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab{
+    top:-88px !important;
+    width:min(720px, calc(100% - 64px)) !important;
+    height:100px !important;
+    min-height:100px !important;
+  }
+}
+
+@media(max-height:760px){
+  body:not(.starterScreenActive) #buildBar .dashboardTitleArtwork,
+  body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboardTitleArtwork{
+    top:-82px !important;
+    width:min(680px, calc(100% - 64px)) !important;
+  }
+  body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab{
+    top:-82px !important;
+    width:min(680px, calc(100% - 64px)) !important;
+    height:94px !important;
+    min-height:94px !important;
+  }
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #141B — ALIGN COLLAPSED HOOD TO BOTTOM EDGE
+Scope: collapsed production hood vertical position only.
+===================================================== -->
+<style id="update141BCollapsedHoodBottomAlignmentCSS">
+/* Anchor the complete production hood to the viewport bottom only while the
+   dashboard is collapsed. The expanded Update #141A presentation is untouched. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboardTitleArtwork{
+  top:auto !important;
+  bottom:calc(100% - var(--dash-tab-height)) !important;
+}
+
+/* Keep the existing collapsed hover/click target aligned with the visible hood. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab{
+  top:auto !important;
+  bottom:calc(100% - var(--dash-tab-height)) !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #141C — PRESERVE GOLD DASHBOARD RAIL WHEN COLLAPSED
+Scope: collapsed dashboard shell presentation only.
+===================================================== -->
+<style id="update141CCollapsedGoldRailCSS">
+/* Keep a narrow section of the verified dashboard shell visible beneath the
+   production hood so the collapsed console remains visually anchored. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover){
+  --dash-tab-height:68px !important;
+  transform:translateY(calc(100% - var(--dash-tab-height))) !important;
+  border-style:solid !important;
+  border-width:7px 0 0 !important;
+  border-top-color:#d8aa35 !important;
+  border-right-color:transparent !important;
+  border-bottom-color:transparent !important;
+  border-left-color:transparent !important;
+  border-radius:18px 18px 0 0 !important;
+  background:
+    linear-gradient(180deg,
+      rgba(255,240,166,.58) 0 2px,
+      rgba(216,170,53,.96) 3px 6px,
+      rgba(126,78,9,.92) 7px 10px,
+      rgba(21,43,57,.98) 11px 16px,
+      transparent 17px 100%) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255,239,156,.46),
+    inset 0 6px 0 rgba(92,55,7,.42),
+    0 -2px 0 rgba(243,213,110,.90),
+    0 -7px 16px rgba(42,27,5,.30) !important;
+}
+
+/* The existing hidden-state rules continue to conceal all controls and content.
+   Keep the production hood and transparent interaction target aligned with the
+   new collapsed tab height without changing their size or horizontal position. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboardTitleArtwork,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab{
+  bottom:calc(100% - var(--dash-tab-height)) !important;
+}
+</style>
+
+
+<!-- =====================================================
+UPDATE #141D — REDUCE COLLAPSED HOOD SCALE
+Scope: collapsed production hood artwork scale only.
+===================================================== -->
+<style id="update141DCollapsedHoodScaleCSS">
+/* Reduce only the visible PNG artwork while the dashboard is collapsed.
+   The full-size transparent hover/click target and expanded state remain unchanged. */
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboardTitleArtwork{
+  transform:translateX(-50%) scale(.80) !important;
+  transform-origin:bottom center !important;
+  transition:transform .22s ease !important;
 }
 </style>
 
