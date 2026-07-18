@@ -3574,7 +3574,7 @@ Scope: Workshop area created in Update #140 only.
 ===================================================== -->
 <style id="update141WorkshopBackgroundCSS">
 body:not(.starterScreenActive) #thinkerBobWorkshop {
-  background-image: url("assets/images/industrial workshop background.png") !important;
+  background-image: url("assets/images/Industrial workshop background.png") !important;
   background-size: cover !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;
@@ -3674,7 +3674,7 @@ Future extraction target: dashboard HTML/CSS/JS.
 <div class="dashboardTickerAssembly" aria-hidden="true">
 <img alt="" aria-hidden="true" class="dashboardTitleArtwork" src="assets/images/dashboard/dashboard-ticker-bezel-cropped.png"/>
 <div class="dashboardTickerWindow">
-<div class="dashboardTickerText">THINKamigBOB STEM BUILDER • THINK • BUILD • DISCOVER •</div>
+<div class="dashboardTickerText">WELCOME TO THINK-AMIG-BOB STEM BUILDER • SELECT A TOOL TO BEGIN •</div>
 </div>
 </div>
 <div data-placeholder="true" id="worldTitle" class="missionDataStore" aria-hidden="true"></div>
@@ -4260,7 +4260,7 @@ HTML SECTION: LEFT CURRENT MISSION PANEL
 JS SECTION 01: THREE.JS / MAIN BUILDER SCRIPT
 Preserved from working file. Future edits should target by section.
 ===================================================== -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js">
+<script src="assets/vendor/three.min.js">
 /* UPDATE #58: Neutralized ignored inline starter-page duplicate inside external Three.js script tag. */
 </script>
 <!-- =====================================================
@@ -8819,18 +8819,31 @@ function setSpaceStationEnvironment(){
   
 function checkBadge(){
 
+  let earnedBadgeTier = 0;
+  let earnedBadgeName = "";
+
   if(blocks.length >= 80){
     document.getElementById("badgeMessage").innerHTML =
       "<b>Badge Earned:</b> 🏆 Master Builder!";
+    earnedBadgeTier = 3;
+    earnedBadgeName = "MASTER BUILDER";
   } else if(blocks.length >= 50){
     document.getElementById("badgeMessage").innerHTML =
       "<b>Badge Earned:</b> 🧙 Castle Creator!";
+    earnedBadgeTier = 2;
+    earnedBadgeName = "CASTLE CREATOR";
   } else if(blocks.length >= 30){
     document.getElementById("badgeMessage").innerHTML =
       "<b>Badge Earned:</b> ⭐ Builder Apprentice!";
+    earnedBadgeTier = 1;
+    earnedBadgeName = "BUILDER APPRENTICE";
   } else {
     document.getElementById("badgeMessage").innerHTML =
       "<b>Badge:</b> Keep building!";
+  }
+
+  if(window.updateDashboardBadgeTicker){
+    window.updateDashboardBadgeTicker(earnedBadgeTier, earnedBadgeName);
   }
 
   // Update floating mission tracker
@@ -18338,13 +18351,14 @@ body:not(.starterScreenActive) #buildBar:hover .dashboardTickerAssembly .dashboa
   visibility:visible !important;
   pointer-events:none !important;
   filter:none !important;
+  z-index:1 !important;
 }
 
 /* Live text is clipped to the black center LED matrix in the production artwork. */
 body:not(.starterScreenActive) #buildBar .dashboardTickerWindow{
   position:absolute !important;
-  left:16.7% !important;
-  right:16.7% !important;
+  left:20.5% !important;
+  right:20.5% !important;
   top:24% !important;
   bottom:24% !important;
   display:flex !important;
@@ -18358,7 +18372,7 @@ body:not(.starterScreenActive) #buildBar .dashboardTickerWindow{
 body:not(.starterScreenActive) #buildBar .dashboardTickerText{
   display:inline-block !important;
   min-width:max-content !important;
-  padding-left:100% !important;
+  padding-left:5% !important;
   white-space:nowrap !important;
   color:#8ff6ff !important;
   font-family:"Courier New",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace !important;
@@ -18368,14 +18382,14 @@ body:not(.starterScreenActive) #buildBar .dashboardTickerText{
   letter-spacing:.12em !important;
   text-transform:uppercase !important;
   text-shadow:0 0 4px rgba(92,235,255,.95),0 0 10px rgba(41,181,255,.72) !important;
-  animation:dashboardTickerScroll 15s linear infinite !important;
+  animation:dashboardTickerScroll 32s linear infinite !important;
   will-change:transform !important;
   pointer-events:none !important;
 }
 
 @keyframes dashboardTickerScroll{
   from{transform:translateX(0);}
-  to{transform:translateX(-100%);}
+  to{transform:translateX(-25%);}
 }
 
 /* Hovering the dashboard pauses the message while preserving the existing open behavior. */
@@ -18489,8 +18503,8 @@ body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly{
 /* Use more of the longer black LED matrix while retaining safe clearance
    from both speaker housings, the gold trim, screws, and blue status LEDs. */
 body:not(.starterScreenActive) #buildBar .dashboardTickerWindow{
-  left:15.5% !important;
-  right:15.5% !important;
+  left:20.5% !important;
+  right:20.5% !important;
   top:25% !important;
   bottom:25% !important;
 }
@@ -18624,6 +18638,97 @@ body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashbo
   }
 }
 </style>
+
+<!-- =====================================================
+UPDATE #151 — LIVE DASHBOARD NEWS TICKER
+Scope: dashboard ticker messages and badge-earned celebration only.
+===================================================== -->
+<script id="liveDashboardTickerScript">
+(function(){
+  const DEFAULT_MESSAGE = "WELCOME TO THINK-AMIG-BOB STEM BUILDER • SELECT A TOOL TO BEGIN";
+  const LOOP_COUNT = 4;
+  const CELEBRATION_DURATION = 8000;
+  let lastContextMessage = DEFAULT_MESSAGE;
+  let highestBadgeTier = 0;
+  let celebrationTimer = null;
+
+  function getTicker(){
+    return document.querySelector(".dashboardTickerText");
+  }
+
+  function restartTicker(ticker){
+    ticker.style.animation = "none";
+    void ticker.offsetWidth;
+    ticker.style.animation = "";
+  }
+
+  function writeTicker(message){
+    const ticker = getTicker();
+    if(!ticker || !message) return;
+
+    const cleanMessage = String(message).replace(/\s+/g, " ").trim();
+    ticker.textContent = (" " + cleanMessage + " •").repeat(LOOP_COUNT);
+    restartTicker(ticker);
+  }
+
+  function showContextMessage(message){
+    lastContextMessage = message || DEFAULT_MESSAGE;
+    if(!celebrationTimer) writeTicker(lastContextMessage);
+  }
+
+  window.updateDashboardBadgeTicker = function(tier, badgeName){
+    if(!tier){
+      highestBadgeTier = 0;
+      return;
+    }
+    if(tier <= highestBadgeTier) return;
+
+    highestBadgeTier = tier;
+    clearTimeout(celebrationTimer);
+    writeTicker("🎉 BADGE EARNED • " + badgeName + " • KEEP BUILDING, CREATOR! 🎉");
+    celebrationTimer = setTimeout(function(){
+      celebrationTimer = null;
+      writeTicker(lastContextMessage);
+    }, CELEBRATION_DURATION);
+  };
+
+  function installTicker(){
+    const toolMessage = document.getElementById("toolMessage");
+    const shapeSelect = document.getElementById("blockShape");
+    const colorBar = document.getElementById("colorSwatchBar");
+
+    writeTicker(DEFAULT_MESSAGE);
+
+    if(toolMessage){
+      new MutationObserver(function(){
+        const message = toolMessage.textContent.trim();
+        if(message && message !== "Tool message will show here."){
+          showContextMessage(message);
+        }
+      }).observe(toolMessage, {childList:true, characterData:true, subtree:true});
+    }
+
+    if(shapeSelect){
+      shapeSelect.addEventListener("change", function(){
+        const shape = shapeSelect.options[shapeSelect.selectedIndex].textContent.trim();
+        showContextMessage("SHAPE SELECTED • " + shape + " • CLICK THE GRID TO BUILD");
+      });
+    }
+
+    if(colorBar){
+      colorBar.addEventListener("click", function(){
+        showContextMessage("COLOR SELECTED • READY TO BUILD");
+      });
+    }
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", installTicker, {once:true});
+  }else{
+    installTicker();
+  }
+})();
+</script>
 
 </body>
 </html>

@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## Update #151 — Finished Dashboard and Live Ticker Master Build
+**Status:** VERIFIED ✅
+
+### Dashboard
+- Finalized the compact hidden ticker, flush to the viewport bottom, and the full-size ticker seated against the expanded dashboard rail.
+- Improved Utilities label contrast and shifted the tool-message strip clear of the color scrollbar.
+
+### Live Ticker
+- Added the default welcome message, tool and color/shape context messages, and badge-earned celebrations with 🎉.
+- Corrected ticker layering so text renders above the bezel artwork.
+- Limited the text window to the center LED matrix and slowed scrolling to a readable 32-second loop.
+
+### Reliability
+- Bundled Three.js locally so the Builder and View cube render without an external CDN.
+- Corrected the workshop background asset filename casing for reliable deployment.
+
+### Verification
+- Confirmed Builder rendering, image assets, dashboard controls, ticker text, message updates, badge ticker behavior, and responsive ticker alignment.
+
 ## Update #150F — Dashboard Ticker and Readability Polish
 **Status:** VERIFIED ✅
 
