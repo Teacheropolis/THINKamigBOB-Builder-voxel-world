@@ -19035,6 +19035,315 @@ Scope: dashboard ticker messages and badge-earned celebration only.
 </script>
 
 <!-- =====================================================
+UPDATE #157 — SQUARE MISSION RETURN + CLEAR READER DOCK
+Scope: strengthen mission navigation and keep floating reader controls out of
+the ticker/dashboard assembly in both open and collapsed dashboard states.
+===================================================== -->
+<style id="clearReaderDockAndMissionSquareCSS">
+body:not(.starterScreenActive) .dashboard139MainGrid{
+  grid-template-columns:126px minmax(295px,1.62fr) minmax(142px,.72fr) minmax(315px,1.42fr) minmax(138px,.64fr) !important;
+}
+body:not(.starterScreenActive) #returnMissionsButton{
+  width:108px !important;
+  height:88px !important;
+  min-height:88px !important;
+  margin:7px auto 0 !important;
+  padding:8px 15px 8px 25px !important;
+  font-size:12px !important;
+  line-height:1.14 !important;
+  text-align:center !important;
+}
+body:not(.starterScreenActive) #returnMissionsButton::before{left:11px !important;}
+
+/* JavaScript computes the safe top/left coordinates; these declarations stop
+   the legacy reader script from returning the controls to the dashboard. */
+body:not(.starterScreenActive) #floatingReaderControls{
+  z-index:2200 !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:none !important;
+}
+@media(max-width:1180px){
+  body:not(.starterScreenActive) .dashboard139MainGrid{
+    grid-template-columns:118px minmax(250px,1.5fr) minmax(128px,.72fr) minmax(268px,1.32fr) minmax(124px,.62fr) !important;
+  }
+  body:not(.starterScreenActive) #returnMissionsButton{width:102px !important;height:82px !important;min-height:82px !important;font-size:10px !important;}
+}
+</style>
+<script id="clearReaderDockAndMissionSquareScript">
+(function(){
+  function placeReaderAboveTicker(){
+    var controls=document.getElementById("floatingReaderControls");
+    var ticker=document.querySelector("#buildBar .dashboardTickerAssembly");
+    if(!controls || !ticker){ return; }
+
+    var tickerRect=ticker.getBoundingClientRect();
+    var controlWidth=controls.offsetWidth || 154;
+    var controlHeight=controls.offsetHeight || 64;
+    if(tickerRect.width < 30 || tickerRect.height < 20){ return; }
+
+    /* Keep the audio dock in the world space, directly above the ticker. */
+    var safeTop=Math.max(16, tickerRect.top - controlHeight - 14);
+    var safeLeft=Math.max(16, Math.min(window.innerWidth - controlWidth - 16,
+      Math.round((window.innerWidth - controlWidth) / 2)));
+
+    controls.style.setProperty("left",safeLeft + "px","important");
+    controls.style.setProperty("top",safeTop + "px","important");
+    controls.style.setProperty("right","auto","important");
+    controls.style.setProperty("bottom","auto","important");
+    controls.style.setProperty("transform","none","important");
+  }
+
+  window.positionFloatingReaderAboveTicker=placeReaderAboveTicker;
+  window.addEventListener("resize",placeReaderAboveTicker);
+  document.addEventListener("DOMContentLoaded",placeReaderAboveTicker);
+  window.addEventListener("load",placeReaderAboveTicker);
+
+  /* Older voice updates reposition this element during every speech boundary.
+     Refresh its safe dock while it is visible/active. */
+  window.setInterval(function(){
+    var controls=document.getElementById("floatingReaderControls");
+    if(controls && controls.style.display !== "none") placeReaderAboveTicker();
+  },120);
+})();
+</script>
+
+<!-- =====================================================
+UPDATE #156 — CHROMEBOOK DASHBOARD REFLOW
+Scope: move mission launchers to ticker pods; widen colors and utilities;
+keep every existing dashboard action and its JavaScript connection intact.
+===================================================== -->
+<style id="chromebookDashboardReflowCSS">
+/* Ticker speaker pods become the home for the two occasional-use launchers. */
+body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton,
+body:not(.starterScreenActive) #tickerLibraryPod.tickerPodButton{
+  position:absolute;
+  z-index:83;
+  bottom:calc(100% + 31px);
+  width:clamp(112px,10.5vw,150px);
+  height:48px;
+  margin:0;
+  padding:4px 8px;
+  border:1px solid #c9952b;
+  border-radius:12px;
+  color:#f5f6ef;
+  -webkit-text-fill-color:#f5f6ef;
+  background:linear-gradient(180deg,#283c47 0%,#101d25 58%,#07131a 100%);
+  box-shadow:inset 0 1px 0 rgba(255,235,154,.42),0 2px 5px rgba(0,0,0,.44);
+  font-family:"Lexend",Arial,sans-serif;
+  font-size:11px;
+  font-weight:900;
+  line-height:1.05;
+  text-align:center;
+  cursor:pointer;
+}
+body:not(.starterScreenActive) #buildBar .tickerPodButton:hover{filter:brightness(1.14);transform:translateY(-1px);}
+body:not(.starterScreenActive) #buildBar .tickerPodButton:focus-visible{outline:3px solid #44dfff;outline-offset:3px;}
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .tickerPodButton{
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+body:not(.starterScreenActive) #buildBar .tickerPassportPod{
+  left:calc(50% - min(540px, calc((100% - 48px) / 2)) + 20px);
+}
+body:not(.starterScreenActive) #buildBar .tickerLibraryPod{
+  right:calc(50% - min(540px, calc((100% - 48px) / 2)) + 20px);
+}
+body:not(.starterScreenActive) #buildBar .tickerPodButton span{display:block;font-size:9px;color:#b9f548;-webkit-text-fill-color:#b9f548;margin-top:1px;}
+
+/* Four compact zones make room for colors and utilities. */
+body:not(.starterScreenActive) .dashboard139MainGrid{
+  grid-template-columns:150px minmax(295px,1.62fr) minmax(142px,.72fr) minmax(315px,1.42fr) minmax(138px,.64fr) !important;
+  height:132px !important;
+  min-height:132px !important;
+  gap:7px !important;
+}
+body:not(.starterScreenActive) .dashboard139MissionZone{padding:17px 5px 5px !important;}
+body:not(.starterScreenActive) .dashboard139MissionZone .dashboard139ZoneLabel{display:none !important;}
+body:not(.starterScreenActive) .dashboard139MissionButtons{
+  position:absolute !important;
+  inset:0 auto auto 0 !important;
+  width:1px !important;
+  height:1px !important;
+  min-width:1px !important;
+  min-height:1px !important;
+  overflow:visible !important;
+}
+body:not(.starterScreenActive) #missionPassportButton{display:none !important;}
+body:not(.starterScreenActive) #returnMissionsButton{
+  height:86px !important;
+  min-height:86px !important;
+  margin:8px 0 0 !important;
+  padding:8px 24px !important;
+  white-space:normal !important;
+  font-size:12px !important;
+  line-height:1.13 !important;
+}
+
+/* Keep the original library in the document for its existing scripts, but
+   open its menu as a floating panel from the new ticker launcher. */
+body:not(.starterScreenActive) #floatingToolbox{
+  position:fixed !important;
+  left:-10000px !important;
+  top:-10000px !important;
+  width:1px !important;
+  height:1px !important;
+  min-width:1px !important;
+  min-height:1px !important;
+  overflow:visible !important;
+  opacity:1 !important;
+  visibility:visible !important;
+}
+body:not(.starterScreenActive) #toolboxButton{display:none !important;}
+body:not(.starterScreenActive) #floatingToolbox #toolbox{
+  position:fixed !important;
+  right:18px !important;
+  left:auto !important;
+  bottom:184px !important;
+  width:min(315px,calc(100vw - 36px)) !important;
+  max-height:min(400px,calc(100vh - 210px)) !important;
+  z-index:1900 !important;
+}
+
+/* A real, high-contrast color track makes the hidden swatches discoverable. */
+body:not(.starterScreenActive) .dashboard139ShapeZone .colorScrollWrap{
+  display:grid !important;
+  grid-template-columns:34px minmax(0,1fr) 34px !important;
+  align-items:center !important;
+  gap:5px !important;
+  width:100% !important;
+}
+body:not(.starterScreenActive) #colorSwatchBar{
+  grid-column:2 !important;
+  min-height:44px !important;
+  padding:2px 4px 9px !important;
+  scrollbar-width:auto !important;
+  scrollbar-color:#48e7ff #0b2635 !important;
+}
+body:not(.starterScreenActive) #colorSwatchBar::-webkit-scrollbar{height:11px !important;}
+body:not(.starterScreenActive) #colorSwatchBar::-webkit-scrollbar-track{background:#0b2635;border:1px solid #d3a734;border-radius:8px;}
+body:not(.starterScreenActive) #colorSwatchBar::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#a8fbff,#19b9df);border:2px solid #0b2635;border-radius:8px;}
+body:not(.starterScreenActive) .colorScrollArrow{
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:31px;
+  padding:0;
+  border:1px solid #83580a;
+  border-radius:7px;
+  color:#fff0a4;
+  -webkit-text-fill-color:#fff0a4;
+  background:linear-gradient(180deg,#926313,#3b2202);
+  box-shadow:inset 0 1px rgba(255,238,151,.55),0 2px 3px rgba(0,0,0,.38);
+  font-size:17px;
+  font-weight:900;
+  cursor:pointer;
+}
+body:not(.starterScreenActive) .colorScrollArrow:hover{filter:brightness(1.15);}
+body:not(.starterScreenActive) .colorScrollArrow:first-child{grid-column:1;}
+body:not(.starterScreenActive) .colorScrollArrow:last-child{grid-column:3;}
+body:not(.starterScreenActive) #colorSwatchBar button,
+body:not(.starterScreenActive) #colorSwatchBar .colorSwatch{width:38px !important;min-width:38px !important;height:38px !important;min-height:38px !important;}
+
+/* Build controls become a compact two-by-two group; utilities gain the room. */
+body:not(.starterScreenActive) #bottomBuildTools.dashboardGreenTools{
+  grid-template-columns:repeat(2,minmax(62px,1fr)) !important;
+  gap:5px !important;
+}
+body:not(.starterScreenActive) #bottomBuildTools.dashboardGreenTools button{
+  height:34px !important;
+  min-height:34px !important;
+  padding:3px 2px !important;
+  font-size:9px !important;
+  line-height:1.03 !important;
+}
+body:not(.starterScreenActive) .dashboardUtilityButtons{
+  grid-template-columns:repeat(4,minmax(56px,1fr)) !important;
+  gap:6px !important;
+}
+body:not(.starterScreenActive) .dashboardUtilityButtons button{
+  height:33px !important;
+  min-height:33px !important;
+  padding:3px 4px !important;
+  font-size:10px !important;
+}
+body:not(.starterScreenActive) #engineeringGridToggle{grid-column:3 / 5 !important;}
+body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboard139MessageStrip,
+body:not(.starterScreenActive) #buildBar:hover .dashboard139MessageStrip{
+  left:49% !important;
+  width:32% !important;
+}
+
+@media(max-width:1180px){
+  body:not(.starterScreenActive) .dashboard139MainGrid{
+    grid-template-columns:132px minmax(250px,1.5fr) minmax(128px,.72fr) minmax(268px,1.32fr) minmax(124px,.62fr) !important;
+    gap:5px !important;
+  }
+  body:not(.starterScreenActive) #buildBar .tickerPassportPod{left:calc(50% - min(450px, calc((100% - 40px) / 2)) + 14px);}
+  body:not(.starterScreenActive) #buildBar .tickerLibraryPod{right:calc(50% - min(450px, calc((100% - 40px) / 2)) + 14px);}
+  body:not(.starterScreenActive) #buildBar .tickerPodButton{width:112px;height:43px;font-size:9px;}
+  body:not(.starterScreenActive) #colorSwatchBar button,
+  body:not(.starterScreenActive) #colorSwatchBar .colorSwatch{width:33px !important;min-width:33px !important;height:33px !important;min-height:33px !important;}
+  body:not(.starterScreenActive) .dashboardUtilityButtons button{font-size:8px !important;}
+}
+</style>
+<script id="chromebookDashboardReflowScript">
+(function(){
+  function clickExisting(id){
+    var control=document.getElementById(id);
+    if(control) control.click();
+  }
+  function installChromebookControls(){
+    var bar=document.getElementById("buildBar");
+    var ticker=bar && bar.querySelector(".dashboardTickerAssembly");
+    var colorWrap=document.querySelector(".colorScrollWrap");
+    var colorBar=document.getElementById("colorSwatchBar");
+    if(!bar || !ticker || !colorWrap || !colorBar) return;
+
+    if(!document.getElementById("tickerPassportPod")){
+      var passport=document.createElement("button");
+      passport.type="button";
+      passport.id="tickerPassportPod";
+      passport.className="tickerPodButton tickerPassportPod";
+      passport.setAttribute("aria-label","Open Mission Passport");
+      passport.innerHTML='<span class="tickerPodAction">OPEN PASSPORT <b aria-hidden="true">&#9654;</b></span>';
+      passport.addEventListener("click",function(){clickExisting("missionPassportButton");});
+      bar.appendChild(passport);
+    }
+    if(!document.getElementById("tickerLibraryPod")){
+      var library=document.createElement("button");
+      library.type="button";
+      library.id="tickerLibraryPod";
+      library.className="tickerPodButton tickerLibraryPod";
+      library.setAttribute("aria-label","Open Object Library");
+      library.innerHTML='<span class="tickerPodAction">OPEN LIBRARY <b aria-hidden="true">&#9654;</b></span>';
+      library.addEventListener("click",function(){clickExisting("toolboxButton");});
+      bar.appendChild(library);
+    }
+    if(!colorWrap.querySelector(".colorScrollArrow")){
+      var back=document.createElement("button");
+      back.type="button";
+      back.className="colorScrollArrow";
+      back.setAttribute("aria-label","Show previous colors");
+      back.textContent=String.fromCharCode(0x2039);
+      var forward=document.createElement("button");
+      forward.type="button";
+      forward.className="colorScrollArrow";
+      forward.setAttribute("aria-label","Show more colors");
+      forward.textContent=String.fromCharCode(0x203A);
+      back.addEventListener("click",function(){colorBar.scrollBy({left:-180,behavior:"smooth"});});
+      forward.addEventListener("click",function(){colorBar.scrollBy({left:180,behavior:"smooth"});});
+      colorWrap.insertBefore(back,colorBar);
+      colorWrap.appendChild(forward);
+    }
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",installChromebookControls,{once:true});
+  else installChromebookControls();
+})();
+</script>
+
+<!-- =====================================================
 UPDATE #155 — COMPACT RETURN TO MISSIONS PLATE
 Scope: replace the old image-based control with a legible brass mission plate
 that fits the existing Mission & Library dashboard slot.
@@ -19095,6 +19404,470 @@ body:not(.starterScreenActive) #returnMissionsButton:active{
   transform:translateY(2px) !important;
   box-shadow:inset 0 2px 5px rgba(67,34,0,.62), 0 1px 0 #432400 !important;
 }
+</style>
+
+<!-- Final cascade position for the square mission plate. -->
+<style id="finalMissionSquareCascadeCSS">
+body:not(.starterScreenActive) .dashboard139MainGrid{
+  grid-template-columns:126px minmax(295px,1.62fr) minmax(142px,.72fr) minmax(315px,1.42fr) minmax(138px,.64fr) !important;
+}
+body:not(.starterScreenActive) #returnMissionsButton{
+  width:108px !important;
+  height:88px !important;
+  min-height:88px !important;
+  margin:7px auto 0 !important;
+  padding:8px 15px 8px 25px !important;
+  font-size:12px !important;
+  line-height:1.14 !important;
+  text-align:center !important;
+}
+body:not(.starterScreenActive) #returnMissionsButton::before{left:11px !important;}
+@media(max-width:1180px){
+  body:not(.starterScreenActive) .dashboard139MainGrid{
+    grid-template-columns:118px minmax(250px,1.5fr) minmax(128px,.72fr) minmax(268px,1.32fr) minmax(124px,.62fr) !important;
+  }
+  body:not(.starterScreenActive) #returnMissionsButton{width:102px !important;height:82px !important;min-height:82px !important;font-size:10px !important;}
+}
+</style>
+
+<!-- =====================================================
+UPDATE #158 — STEADY READER DOCK + HIGH-VISIBILITY CONTROLS
+Keeps reader transport controls stable while speech is active, promotes
+dashboard labels, and anchors Passport/Library in the ticker speakers.
+===================================================== -->
+<style id="steadyReaderAndTickerControlsCSS">
+/* Clearer labels throughout the compact Chromebook dashboard. */
+body:not(.starterScreenActive) #returnMissionsButton{
+  width:114px !important;
+  height:94px !important;
+  min-height:94px !important;
+  padding:8px 13px 8px 26px !important;
+  font-size:15px !important;
+  line-height:1.08 !important;
+  letter-spacing:.01em !important;
+}
+body:not(.starterScreenActive) #returnMissionsButton::before{font-size:15px !important;}
+body:not(.starterScreenActive) #bottomBuildTools.dashboardGreenTools button{
+  font-size:11px !important;
+  font-weight:900 !important;
+  overflow-wrap:anywhere;
+}
+body:not(.starterScreenActive) .dashboardUtilityButtons button{
+  font-size:11px !important;
+  font-weight:900 !important;
+  letter-spacing:.01em !important;
+}
+body:not(.starterScreenActive) .dashboard139VoiceZone button,
+body:not(.starterScreenActive) .dashboard139VoiceZone select{
+  font-size:10px !important;
+  font-weight:800 !important;
+}
+body:not(.starterScreenActive) .dashboard139ShapeZone select{
+  font-size:13px !important;
+  font-weight:800 !important;
+}
+
+/* The mission controls are brass speaker-console buttons, not floating labels. */
+body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton,
+body:not(.starterScreenActive) #tickerLibraryPod.tickerPodButton{
+  position:fixed !important;
+  /* The ticker artwork is in its own high stacking layer. */
+  z-index:2500 !important;
+  display:grid !important;
+  place-content:center !important;
+  width:132px !important;
+  height:58px !important;
+  margin:0 !important;
+  padding:5px 18px !important;
+  overflow:hidden !important;
+  color:#fff5bd !important;
+  -webkit-text-fill-color:#fff5bd !important;
+  font-family:"Lexend",Arial,sans-serif !important;
+  font-size:13px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  letter-spacing:.01em !important;
+  text-align:center !important;
+  text-shadow:0 1px 1px #000,0 0 6px rgba(155,245,69,.45) !important;
+  border:2px solid #9a6b19 !important;
+  border-radius:14px !important;
+  background:
+    radial-gradient(circle at 9px 9px,#f7e9a1 0 1px,#714308 1.5px 3px,#160d02 3.5px 4.5px,transparent 4.8px),
+    radial-gradient(circle at calc(100% - 9px) 9px,#f7e9a1 0 1px,#714308 1.5px 3px,#160d02 3.5px 4.5px,transparent 4.8px),
+    radial-gradient(circle at 9px calc(100% - 9px),#f7e9a1 0 1px,#714308 1.5px 3px,#160d02 3.5px 4.5px,transparent 4.8px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px),#f7e9a1 0 1px,#714308 1.5px 3px,#160d02 3.5px 4.5px,transparent 4.8px),
+    linear-gradient(180deg,#29495a 0%,#102734 47%,#06141d 100%) !important;
+  box-shadow:inset 0 1px 0 rgba(197,241,255,.32),inset 0 -2px 0 rgba(0,0,0,.74),0 3px 7px rgba(0,0,0,.54) !important;
+  cursor:pointer !important;
+  transition:filter .15s ease,transform .15s ease !important;
+}
+body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton span,
+body:not(.starterScreenActive) #tickerLibraryPod.tickerPodButton span{
+  display:block !important;
+  margin-top:3px !important;
+  color:#b9f548 !important;
+  -webkit-text-fill-color:#b9f548 !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  letter-spacing:.03em !important;
+  text-shadow:0 0 5px rgba(150,255,35,.42) !important;
+}
+body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton:hover,
+body:not(.starterScreenActive) #tickerLibraryPod.tickerPodButton:hover{
+  filter:brightness(1.18) !important;
+  transform:translateY(-1px) !important;
+}
+body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton:active,
+body:not(.starterScreenActive) #tickerLibraryPod.tickerPodButton:active{
+  transform:translateY(1px) !important;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.78),0 1px 3px rgba(0,0,0,.5) !important;
+}
+/* Dedicated button art keeps the two ticker controls polished and identifiable. */
+body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton{
+  place-content:end center !important;
+  padding:4px 6px 27px !important;
+  border:0 !important;
+  background:url("assets/images/dashboard/ticker-controls/mission-passport-endcap.png") center/100% 100% no-repeat transparent !important;
+  box-shadow:none !important;
+  white-space:nowrap !important;
+  font-size:12px !important;
+}
+body:not(.starterScreenActive) #tickerLibraryPod.tickerPodButton{
+  place-content:end center !important;
+  padding:4px 6px 27px !important;
+  border:0 !important;
+  background:url("assets/images/dashboard/ticker-controls/object-library-endcap.png") center/100% 100% no-repeat transparent !important;
+  box-shadow:none !important;
+  white-space:nowrap !important;
+  font-size:12px !important;
+}
+/* Simple action wording stays readable without adding another button shape. */
+body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton .tickerPodAction,
+body:not(.starterScreenActive) #tickerLibraryPod.tickerPodButton .tickerPodAction{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:7px !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  color:#fff2b5 !important;
+  -webkit-text-fill-color:#fff2b5 !important;
+  background:none !important;
+  box-shadow:none !important;
+  font-family:"Lexend",Arial,sans-serif !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  letter-spacing:.04em !important;
+  text-shadow:0 1px 1px #000 !important;
+  white-space:nowrap !important;
+}
+body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton .tickerPodAction b,
+body:not(.starterScreenActive) #tickerLibraryPod.tickerPodButton .tickerPodAction b{
+  display:inline !important;
+  margin:0 !important;
+  color:#baff42 !important;
+  -webkit-text-fill-color:#baff42 !important;
+  font-size:12px !important;
+  text-shadow:0 0 5px rgba(163,255,45,.54) !important;
+}
+
+/* The end-cap controls float over the ticker.  Treat their hover as a control
+   interaction, not as a request to reveal the dashboard underneath. */
+@supports selector(body:has(#tickerPassportPod:hover)){
+  body:not(.starterScreenActive):has(#tickerPassportPod:hover) #buildBar:not(.dashboardOpen),
+  body:not(.starterScreenActive):has(#tickerLibraryPod:hover) #buildBar:not(.dashboardOpen){
+    transform:translateY(calc(100% - var(--dash-tab-height))) !important;
+    background:transparent !important;
+    background-image:none !important;
+    border-color:transparent !important;
+    border-width:0 !important;
+    box-shadow:none !important;
+  }
+  body:not(.starterScreenActive):has(#tickerPassportPod:hover) #buildBar:not(.dashboardOpen) .dashboard139MainGrid,
+  body:not(.starterScreenActive):has(#tickerPassportPod:hover) #buildBar:not(.dashboardOpen) .dashboard139MessageStrip,
+  body:not(.starterScreenActive):has(#tickerLibraryPod:hover) #buildBar:not(.dashboardOpen) .dashboard139MainGrid,
+  body:not(.starterScreenActive):has(#tickerLibraryPod:hover) #buildBar:not(.dashboardOpen) .dashboard139MessageStrip{
+    opacity:0 !important;
+    visibility:hidden !important;
+    pointer-events:none !important;
+  }
+  body:not(.starterScreenActive):has(#tickerPassportPod:hover) #buildBar:not(.dashboardOpen) .dashboardTickerAssembly,
+  body:not(.starterScreenActive):has(#tickerLibraryPod:hover) #buildBar:not(.dashboardOpen) .dashboardTickerAssembly{
+    bottom:calc(100% - var(--dash-tab-height) + var(--dashboard-ticker-viewport-gap)) !important;
+    transform:translateX(-50%) scale(.8) !important;
+  }
+}
+
+/* Fallback for embedded Chromebook browsers: the ticker controls set this
+   class from JavaScript while they are being touched, so the dashboard's
+   broad hover target can never expand beneath a mission-control click. */
+body:not(.starterScreenActive) #buildBar.tickerControlHoverLock:not(.dashboardOpen){
+  transform:translateY(calc(100% - var(--dash-tab-height))) !important;
+  background:transparent !important;
+  background-image:none !important;
+  border-color:transparent !important;
+  border-width:0 !important;
+  box-shadow:none !important;
+}
+body:not(.starterScreenActive) #buildBar.tickerControlHoverLock:not(.dashboardOpen) .dashboard139MainGrid,
+body:not(.starterScreenActive) #buildBar.tickerControlHoverLock:not(.dashboardOpen) .dashboard139MessageStrip{
+  opacity:0 !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+body:not(.starterScreenActive) #buildBar.tickerControlHoverLock:not(.dashboardOpen) .dashboardTickerAssembly{
+  bottom:calc(100% - var(--dash-tab-height) + var(--dashboard-ticker-viewport-gap)) !important;
+  transform:translateX(-50%) scale(.8) !important;
+}
+body:not(.starterScreenActive) #buildBar.tickerControlHoverLock #dashboardHoverTab{
+  pointer-events:none !important;
+}
+
+/* No flicker: while a read is active, the dock stays present in its safe sky lane. */
+body:not(.starterScreenActive) #floatingReaderControls[data-reader-dock-active="true"]{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+@media(max-width:1180px){
+  body:not(.starterScreenActive) #returnMissionsButton{
+    width:108px !important;
+    height:88px !important;
+    min-height:88px !important;
+    font-size:13px !important;
+  }
+  body:not(.starterScreenActive) #bottomBuildTools.dashboardGreenTools button{font-size:10px !important;}
+  body:not(.starterScreenActive) .dashboardUtilityButtons button{font-size:10px !important;}
+  body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton,
+  body:not(.starterScreenActive) #tickerLibraryPod.tickerPodButton{width:112px !important;height:50px !important;font-size:11px !important;}
+  body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton span,
+  body:not(.starterScreenActive) #tickerLibraryPod.tickerPodButton span{font-size:9px !important;}
+}
+</style>
+
+<!-- Final ticker-control state: plain speakers while collapsed; controls only
+     live inside those speakers when the dashboard is intentionally expanded. -->
+<style id="expandedTickerMissionControlsCSS">
+body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly .tickerPodButton{
+  position:absolute !important;
+  z-index:8 !important;
+  display:none !important;
+  pointer-events:auto !important;
+  width:18.8% !important;
+  height:56% !important;
+  top:22% !important;
+  margin:0 !important;
+  transform:none !important;
+}
+body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly #tickerPassportPod{
+  left:1.1% !important;
+  right:auto !important;
+  bottom:auto !important;
+}
+body:not(.starterScreenActive) #buildBar .dashboardTickerAssembly #tickerLibraryPod{
+  right:1.1% !important;
+  left:auto !important;
+  bottom:auto !important;
+}
+body:not(.starterScreenActive) #buildBar.dashboardOpen .dashboardTickerAssembly .tickerPodButton,
+body:not(.starterScreenActive) #buildBar:hover .dashboardTickerAssembly .tickerPodButton{
+  display:grid !important;
+}
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboardTickerAssembly .tickerPodButton{
+  display:none !important;
+  pointer-events:none !important;
+}
+</style>
+<script id="steadyReaderAndTickerControlsScript">
+(function(){
+  var lastReadingAt=0;
+  var activeRequested=false;
+
+  function readerIsActive(){
+    return !!(window.speechSynthesis && (speechSynthesis.speaking || speechSynthesis.pending || speechSynthesis.paused));
+  }
+  function positionTickerPods(){
+    /* Passport and Library are now part of the expanded ticker itself.
+       CSS positions them relative to its speaker ends, so the collapsed
+       ticker stays completely plain and never changes while it is hovered. */
+    return;
+  }
+  function positionReaderDock(){
+    var controls=document.getElementById("floatingReaderControls");
+    var ticker=document.querySelector("#buildBar .dashboardTickerAssembly");
+    if(!controls || !ticker) return;
+    var tickerRect=ticker.getBoundingClientRect();
+    var controlWidth=controls.offsetWidth || 178;
+    var controlHeight=controls.offsetHeight || 62;
+    var top=Math.max(16,Math.round(tickerRect.top-controlHeight-14));
+    controls.style.setProperty("left",Math.round((window.innerWidth-controlWidth)/2)+"px","important");
+    controls.style.setProperty("top",top+"px","important");
+    controls.style.setProperty("right","auto","important");
+    controls.style.setProperty("bottom","auto","important");
+    controls.style.setProperty("transform","none","important");
+  }
+  function keepReaderDockSteady(){
+    var controls=document.getElementById("floatingReaderControls");
+    if(!controls) return;
+    var now=Date.now();
+    if(readerIsActive()){
+      lastReadingAt=now;
+      activeRequested=true;
+    }
+    if(activeRequested && now-lastReadingAt<900){
+      controls.dataset.readerDockActive="true";
+      controls.style.setProperty("display","flex","important");
+      positionReaderDock();
+    }else if(activeRequested){
+      activeRequested=false;
+      controls.dataset.readerDockActive="false";
+    }
+  }
+  function markReaderDockActive(){
+    activeRequested=true;
+    lastReadingAt=Date.now();
+    var controls=document.getElementById("floatingReaderControls");
+    if(controls){
+      controls.dataset.readerDockActive="true";
+      controls.style.setProperty("display","flex","important");
+    }
+    requestAnimationFrame(function(){positionReaderDock();});
+  }
+  function install(){
+    var passport=document.getElementById("tickerPassportPod");
+    var library=document.getElementById("tickerLibraryPod");
+    /* The dashboard uses a transform while it opens and closes.  Keeping the
+       pods on the page layer lets their fixed coordinates stay in the ticker. */
+    var ticker=document.querySelector("#buildBar .dashboardTickerAssembly");
+    if(ticker && passport && passport.parentElement!==ticker) ticker.appendChild(passport);
+    if(ticker && library && library.parentElement!==ticker) ticker.appendChild(library);
+    var buildBar=document.getElementById("buildBar");
+    var hoverLockTimer=0;
+    function lockTickerControls(){
+      if(hoverLockTimer) window.clearTimeout(hoverLockTimer);
+      if(buildBar) buildBar.classList.remove("tickerControlHoverLock");
+    }
+    function releaseTickerControls(){
+      if(hoverLockTimer) window.clearTimeout(hoverLockTimer);
+      hoverLockTimer=window.setTimeout(function(){
+        if(buildBar) buildBar.classList.remove("tickerControlHoverLock");
+      },0);
+    }
+    [passport,library].forEach(function(control){
+      if(!control || control.__tickerControlLockInstalled) return;
+      /* Stop the pointer sequence from bubbling into the dashboard hover tab.
+         This is especially important in embedded Chrome/Google Sites views. */
+      ["pointerenter","pointermove","pointerdown","touchstart","focusin"].forEach(function(eventName){
+        control.addEventListener(eventName,function(event){
+          lockTickerControls();
+          if(eventName==="pointerdown" || eventName==="touchstart") event.stopPropagation();
+        },{passive:eventName!=="touchstart"});
+      });
+      ["pointerleave","touchend","touchcancel","focusout"].forEach(function(eventName){
+        control.addEventListener(eventName,releaseTickerControls,{passive:true});
+      });
+      control.addEventListener("click",function(event){
+        lockTickerControls();
+        event.stopPropagation();
+        releaseTickerControls();
+      });
+      control.__tickerControlLockInstalled=true;
+    });
+    positionTickerPods();
+    var originalShow=window.showFloatingReaderControlsForSpeech;
+    if(typeof originalShow==="function" && !originalShow.__steadyReaderDock){
+      window.showFloatingReaderControlsForSpeech=function(){
+        markReaderDockActive();
+        var result=originalShow.apply(this,arguments);
+        requestAnimationFrame(function(){markReaderDockActive();});
+        return result;
+      };
+      window.showFloatingReaderControlsForSpeech.__steadyReaderDock=true;
+    }
+    var controls=document.getElementById("floatingReaderControls");
+    if(controls && !controls.__steadyReaderObserver){
+      new MutationObserver(function(){
+        if(activeRequested && Date.now()-lastReadingAt<900){
+          controls.dataset.readerDockActive="true";
+          controls.style.setProperty("display","flex","important");
+          positionReaderDock();
+        }
+      }).observe(controls,{attributes:true,attributeFilter:["style"]});
+      controls.__steadyReaderObserver=true;
+    }
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",install,{once:true});
+  else install();
+  window.addEventListener("resize",function(){positionTickerPods();positionReaderDock();});
+  window.setInterval(function(){positionTickerPods();keepReaderDockSteady();},180);
+})();
+</script>
+
+<!-- =====================================================
+UPDATE #160 — TRANSPARENT PNG DASHBOARD BUTTON FACES
+The image faces contain the visible labels; the original HTML labels remain
+for screen readers and existing button behavior.
+===================================================== -->
+<style id="dashboardButtonFaceAssetsCSS">
+body:not(.starterScreenActive) #returnMissionsButton,
+body:not(.starterScreenActive) #bottomBuildTools.dashboardGreenTools button,
+body:not(.starterScreenActive) .dashboardUtilityButtons button,
+body:not(.starterScreenActive) #voiceControls .voiceButton{
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  text-shadow:none !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background-color:transparent !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  background-size:100% 100% !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+}
+body:not(.starterScreenActive) #returnMissionsButton{
+  background-image:url("assets/images/dashboard/button-faces/return-to-missions.png") !important;
+}
+body:not(.starterScreenActive) #returnMissionsButton::before,
+body:not(.starterScreenActive) #returnMissionsButton::after{content:none !important;display:none !important;}
+
+body:not(.starterScreenActive) #bottomBuildTools.dashboardGreenTools button:nth-child(1){background-image:url("assets/images/dashboard/button-faces/select.png") !important;}
+body:not(.starterScreenActive) #bottomBuildTools.dashboardGreenTools button:nth-child(2){background-image:url("assets/images/dashboard/button-faces/move.png") !important;}
+body:not(.starterScreenActive) #bottomBuildTools.dashboardGreenTools button:nth-child(3){background-image:url("assets/images/dashboard/button-faces/delete.png") !important;}
+body:not(.starterScreenActive) #bottomBuildTools.dashboardGreenTools button:nth-child(4){background-image:url("assets/images/dashboard/button-faces/foundation.png") !important;}
+
+body:not(.starterScreenActive) .dashboardUtilityButtons button:nth-child(1){background-image:url("assets/images/dashboard/button-faces/undo.png") !important;}
+body:not(.starterScreenActive) .dashboardUtilityButtons button:nth-child(2){background-image:url("assets/images/dashboard/button-faces/redo.png") !important;}
+body:not(.starterScreenActive) .dashboardUtilityButtons button:nth-child(3){background-image:url("assets/images/dashboard/button-faces/save.png") !important;}
+body:not(.starterScreenActive) .dashboardUtilityButtons button:nth-child(4){background-image:url("assets/images/dashboard/button-faces/load.png") !important;}
+body:not(.starterScreenActive) .dashboardUtilityButtons button:nth-child(5){background-image:url("assets/images/dashboard/button-faces/reset.png") !important;}
+body:not(.starterScreenActive) .dashboardUtilityButtons button:nth-child(6){background-image:url("assets/images/dashboard/button-faces/screenshot.png") !important;}
+body:not(.starterScreenActive) #engineeringGridToggle{background-image:url("assets/images/dashboard/button-faces/grid.png") !important;}
+
+body:not(.starterScreenActive) #voiceControls .voiceButton:nth-child(1){background-image:url("assets/images/dashboard/button-faces/play.png") !important;}
+body:not(.starterScreenActive) #voiceControls .voiceButton:nth-child(2){background-image:url("assets/images/dashboard/button-faces/pause.png") !important;}
+body:not(.starterScreenActive) #voiceControls .voiceButton:nth-child(3){background-image:url("assets/images/dashboard/button-faces/stop.png") !important;}
+body:not(.starterScreenActive) #bottomBuildTools.dashboardGreenTools button:hover,
+body:not(.starterScreenActive) .dashboardUtilityButtons button:hover,
+body:not(.starterScreenActive) #voiceControls .voiceButton:hover,
+body:not(.starterScreenActive) #returnMissionsButton:hover{
+  filter:brightness(1.13) saturate(1.08) !important;
+  transform:translateY(-1px) !important;
+}
+body:not(.starterScreenActive) #bottomBuildTools.dashboardGreenTools button:active,
+body:not(.starterScreenActive) .dashboardUtilityButtons button:active,
+body:not(.starterScreenActive) #voiceControls .voiceButton:active,
+body:not(.starterScreenActive) #returnMissionsButton:active{
+  filter:brightness(.88) !important;
+  transform:translateY(1px) !important;
+}
+body:not(.starterScreenActive) .dashboardUtilityButtons button:disabled{opacity:.48 !important;filter:grayscale(.55) brightness(.7) !important;}
 </style>
 
 </body>
