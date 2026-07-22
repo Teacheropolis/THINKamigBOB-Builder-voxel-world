@@ -4245,6 +4245,21 @@ Future extraction target: STEM Coach and read-aloud UI.
 <div id="thinkerBobWorkshop" aria-hidden="true">
   <!-- THINKer Bob rig integration: the articulated SVG is mounted here at runtime. -->
   <div id="thinkerBobRigMount" aria-label="THINKer BOB in the workshop"></div>
+  <!-- Inline fallback keeps Bob available when this page is opened with file://. -->
+  <template id="thinkerBobRigTemplate"><svg xmlns="http://www.w3.org/2000/svg" width="389" height="582" viewBox="0 0 389 582" role="img"><style>
+    .joint { transform-box: view-box; transform: rotate(var(--rotation, 0deg)); } .layer { pointer-events: none; }
+    #antenna { transform-origin: 198px 57px; } #head { transform-origin: 196px 185px; }
+    #eyes { transform-origin: 198px 128px; transform: translate(var(--eyes-x, 0px), var(--eyes-y, 0px)) scaleY(var(--blink, 1)); } #mouth { transform-origin: 196px 160px; transform: scaleY(var(--mouth-open, 1)); }
+    #right-shoulder { transform-origin: 134px 220px; } #right-upper-arm { transform-origin: 107px 234px; } #right-lower-arm { transform-origin: 94px 268px; } #right-hand { transform-origin: 61px 338px; }
+    #left-shoulder { transform-origin: 256px 220px; } #left-upper-arm { transform-origin: 283px 234px; } #left-lower-arm { transform-origin: 296px 268px; } #left-hand { transform-origin: 328px 338px; }
+    #right-upper-leg { transform-origin: 170px 334px; } #right-knee { transform-origin: 146px 402px; } #right-lower-leg { transform-origin: 143px 431px; } #right-foot { transform-origin: 143px 496px; }
+    #left-upper-leg { transform-origin: 219px 334px; } #left-knee { transform-origin: 246px 402px; } #left-lower-leg { transform-origin: 248px 431px; } #left-foot { transform-origin: 249px 496px; }
+  </style><g id="rig" data-canvas="389 582">
+    <g id="legs"><g id="right-leg"><g id="right-upper-leg" class="joint"><image class="layer" href="assets/Bob_0008_upper-right-leg.png" width="389" height="582"/><g id="right-knee" class="joint"><image class="layer" href="assets/Bob_0009_right-knee.png" width="389" height="582"/><g id="right-lower-leg" class="joint"><image class="layer" href="assets/Bob_0010_lower-right-leg.png" width="389" height="582"/><g id="right-foot" class="joint"><image class="layer" href="assets/Bob_0011_right-foot.png" width="389" height="582"/></g></g></g></g></g><g id="left-leg"><g id="left-upper-leg" class="joint"><image class="layer" href="assets/Bob_0012_upper-left-leg.png" width="389" height="582"/><g id="left-knee" class="joint"><image class="layer" href="assets/Bob_0013_left-knee.png" width="389" height="582"/><g id="left-lower-leg" class="joint"><image class="layer" href="assets/Bob_0014_lower-left-leg.png" width="389" height="582"/><g id="left-foot" class="joint"><image class="layer" href="assets/Bob_0015_left-foot.png" width="389" height="582"/></g></g></g></g></g></g>
+    <g id="arms"><g id="right-arm"><g id="right-shoulder" class="joint"><image class="layer" href="assets/Bob_0016_right-shoulder.png" width="389" height="582"/><g id="right-upper-arm" class="joint"><image class="layer" href="assets/Bob_0017_upper-right-arm.png" width="389" height="582"/><g id="right-lower-arm" class="joint"><image class="layer" href="assets/Bob_0018_lower-right-arm.png" width="389" height="582"/><g id="right-hand" class="joint"><image class="layer" href="assets/Bob_0019_right-hand.png" width="389" height="582"/></g></g></g></g></g><g id="left-arm"><g id="left-shoulder" class="joint"><image class="layer" href="assets/Bob_0020_left-shoulder.png" width="389" height="582"/><g id="left-upper-arm" class="joint"><image class="layer" href="assets/Bob_0021_upper-left-arm.png" width="389" height="582"/><g id="left-lower-arm" class="joint"><image class="layer" href="assets/Bob_0022_lower-left-arm.png" width="389" height="582"/><g id="left-hand" class="joint"><image class="layer" href="assets/Bob_0023_left-hand.png" width="389" height="582"/></g></g></g></g></g></g>
+    <g id="body"><image id="hips" class="layer" href="assets/Bob_0007_hips.png" width="389" height="582"/><image id="tummy" class="layer" href="assets/Bob_0006_tummy.png" width="389" height="582"/><image id="chest" class="layer" href="assets/Bob_0005_chest.png" width="389" height="582"/><image id="neck" class="layer" href="assets/Bob_0004_neck.png" width="389" height="582"/></g>
+    <g id="head" class="joint"><image id="head-shell" class="layer" href="assets/Bob_0003_head.png" width="389" height="582"/><image id="eyes" class="layer" href="assets/Bob_0002_eyes.png" width="389" height="582"/><image id="mouth" class="layer" href="assets/Bob_0001_mouth.png" width="389" height="582"/><g id="antenna" class="joint"><image class="layer" href="assets/Bob_0000_antenna.png" width="389" height="582"/></g></g>
+  </g></svg></template>
   <div class="thinkerBobWorkshopBackboard">
     <div class="thinkerBobSeatPlaceholder"></div>
     <div class="thinkerBobPropPlaceholder"></div>
@@ -22303,10 +22318,12 @@ Scope: Inline articulated workshop character. No workshop scenery is replaced.
 body:not(.starterScreenActive) #thinkerBobWorkshop #thinkerBobRigMount{
   position:absolute;
   z-index:3;
-  left:7%;
-  bottom:-11px;
-  width:86px;
-  height:129px;
+  /* Foreground character layer: stand Bob in the open workshop space rather
+     than tucking him into the side tool wall. */
+  left:50%;
+  bottom:-20px;
+  width:90px;
+  height:135px;
   display:block !important;
   transform-origin:center bottom;
   animation:thinkerBobWorkshopIdle 4.4s ease-in-out infinite;
@@ -22325,10 +22342,10 @@ body:not(.starterScreenActive) #thinkerBobWorkshop #thinkerBobRigMount > svg{
 body.calmMode #thinkerBobRigMount{animation:none !important;}
 @media(max-width:760px){
   body:not(.starterScreenActive) #thinkerBobWorkshop #thinkerBobRigMount{
-    left:5%;
-    bottom:-9px;
-    width:76px;
-    height:115px;
+    left:48%;
+    bottom:-14px;
+    width:84px;
+    height:126px;
   }
 }
 </style>
@@ -22406,13 +22423,15 @@ body.calmMode #thinkerBobRigMount{animation:none !important;}
     greetingPlaying=true;
     clearWaveTimers();
     /* Bob's anatomical right arm is on the viewer's left in this rig. */
-    setJointRotation("right-shoulder",-54);
-    setJointRotation("right-upper-arm",-20);
-    setJointRotation("right-lower-arm",38);
-    setJointRotation("right-hand",10);
-    queueWave(410,function(){ setJointRotation("right-lower-arm",17); setJointRotation("right-hand",-18); });
-    queueWave(760,function(){ setJointRotation("right-lower-arm",42); setJointRotation("right-hand",16); });
-    queueWave(1110,function(){ setJointRotation("right-lower-arm",17); setJointRotation("right-hand",-18); });
+    /* SVG coordinates grow downward: a positive shoulder rotation lifts Bob's
+       viewer-left hand beside his head instead of dropping it behind his body. */
+    setJointRotation("right-shoulder",110);
+    setJointRotation("right-upper-arm",0);
+    setJointRotation("right-lower-arm",-12);
+    setJointRotation("right-hand",18);
+    queueWave(410,function(){ setJointRotation("right-lower-arm",-30); setJointRotation("right-hand",-14); });
+    queueWave(760,function(){ setJointRotation("right-lower-arm",8); setJointRotation("right-hand",18); });
+    queueWave(1110,function(){ setJointRotation("right-lower-arm",-30); setJointRotation("right-hand",-14); });
     queueWave(1470,function(){
       ["right-shoulder","right-upper-arm","right-lower-arm","right-hand"].forEach(function(id){ setJointRotation(id,0); });
       greetingPlaying=false;
@@ -22429,37 +22448,45 @@ body.calmMode #thinkerBobRigMount{animation:none !important;}
     },850);
   }
 
+  function mountThinkerBobRig(svg,mount){
+    if(!svg || svg.nodeName.toLowerCase()!=="svg") throw new Error("THINKer Bob rig is not valid SVG.");
+    Array.prototype.forEach.call(svg.querySelectorAll("image"),function(image){
+      var reference=image.getAttribute("href") || image.getAttribute("xlink:href") || "";
+      if(reference && !/^(?:data:|https?:|\/)/i.test(reference)){
+        image.setAttribute("href",RIG_ASSET_BASE+reference.replace(/^\.\//,""));
+        image.removeAttribute("xlink:href");
+      }
+    });
+    svg.setAttribute("id","thinkerBobRigSvg");
+    svg.setAttribute("preserveAspectRatio","xMidYMax meet");
+    svg.setAttribute("aria-hidden","true");
+    mount.replaceChildren(document.importNode(svg,true));
+    window.setThinkerBobNeutral();
+    scheduleBlink();
+    if(workshopIsOpen() && !workshopGreetingPlayed){
+      workshopGreetingPlayed=true;
+      window.setTimeout(window.playThinkerBobGreeting,260);
+    }
+    return rigRoot();
+  }
+
   window.loadThinkerBobRig=function(){
     var mount=document.getElementById("thinkerBobRigMount");
     if(!mount) return Promise.resolve(null);
     if(rigRoot()) return Promise.resolve(rigRoot());
     if(rigLoadPromise) return rigLoadPromise;
+    var template=document.getElementById("thinkerBobRigTemplate");
+    var templateSvg=template && template.content && template.content.querySelector("svg");
+    if(templateSvg){
+      try{ return Promise.resolve(mountThinkerBobRig(templateSvg.cloneNode(true),mount)); }
+      catch(error){ console.error("THINKer Bob inline rig fallback failed:",error); }
+    }
     rigLoadPromise=window.fetch(RIG_URL).then(function(response){
       if(!response.ok) throw new Error("Could not load THINKer Bob's workshop rig.");
       return response.text();
     }).then(function(source){
       var documentNode=new DOMParser().parseFromString(source,"image/svg+xml");
-      var svg=documentNode.documentElement;
-      if(!svg || svg.nodeName.toLowerCase()!=="svg") throw new Error("THINKer Bob rig is not valid SVG.");
-      Array.prototype.forEach.call(svg.querySelectorAll("image"),function(image){
-        var reference=image.getAttribute("href") || image.getAttribute("xlink:href") || "";
-        if(reference && !/^(?:data:|https?:|\/)/i.test(reference)){
-          var resolved=RIG_ASSET_BASE+reference.replace(/^\.\//,"");
-          image.setAttribute("href",resolved);
-          image.removeAttribute("xlink:href");
-        }
-      });
-      svg.setAttribute("id","thinkerBobRigSvg");
-      svg.setAttribute("preserveAspectRatio","xMidYMax meet");
-      svg.setAttribute("aria-hidden","true");
-      mount.replaceChildren(document.importNode(svg,true));
-      window.setThinkerBobNeutral();
-      scheduleBlink();
-      if(workshopIsOpen() && !workshopGreetingPlayed){
-        workshopGreetingPlayed=true;
-        window.setTimeout(window.playThinkerBobGreeting,260);
-      }
-      return rigRoot();
+      return mountThinkerBobRig(documentNode.documentElement,mount);
     }).catch(function(error){
       rigLoadPromise=null;
       console.error("THINKer Bob rig integration failed:",error);

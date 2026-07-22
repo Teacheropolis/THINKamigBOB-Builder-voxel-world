@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## Update #155 — THINKer Bob Workshop Rig Checkpoint
+**Status:** VERIFIED ✅
+
+### Added
+- Integrated THINKer Bob as an articulated foreground character in the existing STEM Coach workshop.
+- Added gentle idle movement, automatic blinking, one greeting wave per workshop opening, and a neutral reset.
+- Connected speech Play to a subtle head tilt and speech Stop to the neutral pose.
+- Added an inline rig fallback so Bob also appears when the Builder is opened directly from a local `file://` link.
+
+### Verified
+- Confirmed all 24 PNG rig layers resolve and render.
+- Confirmed the opening/reopening wave, blink, speech tilt, and Stop reset.
+- Kept the workshop background, workbench, dashboard, mission HUD, and Coach content unchanged.
+
+
 ## Update #154 — Grade 5 Moon/Mars Colony and Mission Banner Vehicles
 **Status:** VERIFIED ✅
 
