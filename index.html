@@ -4196,7 +4196,13 @@ Nature ▶
     <div class="readToBobFeedbackLabel">BOB’S FEEDBACK</div>
     <p id="readToBobFeedbackText"></p>
   </div>
-  <div id="readToBobCountdown" hidden aria-live="assertive" aria-label="Reading start countdown"></div>
+  <div id="readToBobCountdownPopup" hidden role="dialog" aria-modal="true" aria-labelledby="readToBobCountdownLabel">
+    <div class="readToBobCountdownCard">
+      <div id="readToBobCountdownLabel">Get ready to read</div>
+      <div id="readToBobCountdown" aria-live="assertive" aria-atomic="true"></div>
+      <button id="readToBobCountdownCancelButton" type="button" onclick="stopReadToBobListening()">Cancel</button>
+    </div>
+  </div>
   <div class="readToBobListeningControls">
     <button id="readToBobListenButton" type="button" onclick="startReadToBobListening()">🎙 Start Reading</button>
     <button id="readToBobStopButton" type="button" onclick="stopReadToBobListening()" disabled>Stop</button>
@@ -7858,6 +7864,8 @@ function chooseMissionPopupReading(mode){
   const note = document.getElementById("missionReadingChoiceNote");
   const popupSpeech = buildMissionPopupSpeech();
   currentThinkerBobSpeech = popupSpeech;
+
+  if(typeof window.cancelReadToBobStartup === "function") window.cancelReadToBobStartup();
 
   if(mode === "bob"){
     if(choice) choice.hidden = true;
@@ -21537,16 +21545,67 @@ body:not(.starterScreenActive) .readToBobListeningControls{
   gap:6px;
   margin-top:8px;
 }
-body:not(.starterScreenActive) #readToBobCountdown{
-  margin:7px auto 1px;
-  min-height:38px;
-  color:#ffe16a;
-  font-size:32px;
-  font-weight:1000;
-  line-height:1;
-  letter-spacing:.08em;
+body:not(.starterScreenActive) #readToBobCountdownPopup{
+  position:fixed;
+  inset:0;
+  z-index:3900;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:rgba(0,10,19,.78);
+}
+body:not(.starterScreenActive) #readToBobCountdownPopup[hidden]{display:none !important;}
+body:not(.starterScreenActive) .readToBobCountdownCard{
+  width:min(360px,calc(100vw - 40px));
+  padding:22px 20px 18px;
+  border:2px solid #48e6ff;
+  border-radius:16px;
+  color:#f6fbff;
+  background:linear-gradient(180deg,#123f58,#061d2d);
+  box-shadow:0 18px 48px rgba(0,0,0,.58),0 0 24px rgba(72,230,255,.26),inset 0 1px 0 rgba(255,255,255,.12);
   text-align:center;
+}
+body:not(.starterScreenActive) #readToBobCountdownLabel{
+  color:#aef65c;
+  font-family:monospace;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+}
+body:not(.starterScreenActive) #readToBobCountdown{
+  margin:16px auto;
+  min-height:76px;
+  display:grid;
+  place-items:center;
+  color:#ffe16a;
+  font-size:48px;
+  font-weight:1000;
+  line-height:1.15;
+  letter-spacing:.04em;
+  text-align:center;
+  white-space:pre-line;
   text-shadow:0 0 12px rgba(255,196,45,.95);
+}
+body:not(.starterScreenActive) #readToBobCountdown.readToBobReadyCue{
+  color:#aef65c;
+  font-size:24px;
+  line-height:1.35;
+  text-shadow:0 0 12px rgba(174,246,92,.55);
+}
+body:not(.starterScreenActive) #readToBobCountdownCancelButton{
+  min-width:100px;
+  min-height:34px;
+  border:1px solid rgba(255,225,106,.78);
+  border-radius:8px;
+  color:#ffe16a;
+  background:#102f43;
+  font-weight:900;
+  cursor:pointer;
+}
+@media(prefers-reduced-motion:reduce){
+  body:not(.starterScreenActive) .readToBobCountdownCard,
+  body:not(.starterScreenActive) #readToBobCountdown{animation:none !important;transition:none !important;}
 }
 body:not(.starterScreenActive) .readToBobListeningControls button{
   min-height:32px;
@@ -21610,6 +21669,10 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   var countingDown=false;
   var countdownTimer=null;
   var countdownAudioContext=null;
+  var recognitionStarting=false;
+  var readToBobCueComplete=false;
+  var readToBobAttemptToken=0;
+  var readToBobCountdownReturnFocus=null;
   var stopping=false;
   var finalTranscript="";
   var latestTranscript="";
@@ -21661,11 +21724,65 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   function clearPhoneticHelpTimer(){
     if(phoneticHelpTimer){ window.clearTimeout(phoneticHelpTimer); phoneticHelpTimer=null; }
   }
+  function isUsableReadToBobFocusTarget(element){
+    return !!(element && element.isConnected && !element.disabled &&
+      typeof element.focus === "function" &&
+      element.matches("button,input,select,textarea,[href],[tabindex]") &&
+      !element.closest("[hidden]") && element.getClientRects().length);
+  }
+  function captureReadToBobCountdownFocus(){
+    var active=document.activeElement;
+    var popup=byReadToBobId("readToBobCountdownPopup");
+    if(isUsableReadToBobFocusTarget(active) && (!popup || !popup.contains(active))){
+      readToBobCountdownReturnFocus=active;
+    }
+  }
+  function restoreReadToBobCountdownFocus(){
+    var preferred=readToBobCountdownReturnFocus;
+    readToBobCountdownReturnFocus=null;
+    window.requestAnimationFrame(function(){
+      var panel=byReadToBobId("readToBobPractice");
+      if(!panel || panel.hidden) return;
+      var current=document.activeElement;
+      var popup=byReadToBobId("readToBobCountdownPopup");
+      var currentIsInPopup=!!(popup && current && popup.contains(current));
+      if(current && current !== document.body && current !== document.documentElement &&
+        !currentIsInPopup && isUsableReadToBobFocusTarget(current)) return;
+      var target=isUsableReadToBobFocusTarget(preferred) ? preferred : null;
+      if(!target && listening && readToBobCueComplete){
+        var stop=byReadToBobId("readToBobStopButton");
+        if(isUsableReadToBobFocusTarget(stop)) target=stop;
+      }
+      if(!target){
+        var start=byReadToBobId("readToBobListenButton");
+        if(isUsableReadToBobFocusTarget(start)) target=start;
+      }
+      if(!target){
+        var close=byReadToBobId("readToBobCloseButton");
+        if(isUsableReadToBobFocusTarget(close)) target=close;
+      }
+      if(target) target.focus();
+    });
+  }
   function setReadToBobCountdown(value){
     var countdown=byReadToBobId("readToBobCountdown");
-    if(!countdown) return;
-    countdown.hidden=!value;
-    countdown.textContent=value || "";
+    var popup=byReadToBobId("readToBobCountdownPopup");
+    var popupWasHidden=!popup || popup.hidden;
+    if(countdown){
+      countdown.textContent=value || "";
+      countdown.classList.toggle("readToBobReadyCue",!!value && String(value).indexOf("BOB IS LISTENING") >= 0);
+    }
+    if(popup){
+      popup.hidden=!value;
+      if(value && popupWasHidden){
+        captureReadToBobCountdownFocus();
+        window.requestAnimationFrame(function(){
+          var cancelButton=byReadToBobId("readToBobCountdownCancelButton");
+          if(cancelButton && !popup.hidden) cancelButton.focus();
+        });
+      }
+      else if(!value && !popupWasHidden) restoreReadToBobCountdownFocus();
+    }
   }
   function playReadToBobCountdownTone(step){
     try{
@@ -21689,22 +21806,29 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     }
     readingMicrophoneStream=null;
   }
-  function prepareReadToBobMicrophone(){
+  function prepareReadToBobMicrophone(attemptToken){
     if(readingMicrophoneStream && readingMicrophoneStream.active) return Promise.resolve(true);
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Promise.resolve(true);
     requestingMicrophone=true;
     updateListeningButtons();
     setReadToBobStatus("Allow the microphone once, then BOB will begin the countdown.");
     return navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      if(attemptToken !== readToBobAttemptToken){
+        if(stream && stream.getTracks) stream.getTracks().forEach(function(track){ track.stop(); });
+        return false;
+      }
       readingMicrophoneStream=stream;
-      setReadToBobStatus("Microphone ready. BOB’s countdown is starting.");
+      setReadToBobStatus("Microphone ready. BOB is starting to listen.");
       return true;
     }).catch(function(){
+      if(attemptToken !== readToBobAttemptToken) return false;
       setReadToBobStatus("Microphone permission was not allowed. Ask your teacher, then allow the microphone and try again.");
       return false;
     }).finally(function(){
-      requestingMicrophone=false;
-      updateListeningButtons();
+      if(attemptToken === readToBobAttemptToken){
+        requestingMicrophone=false;
+        updateListeningButtons();
+      }
     });
   }
   window.hideReadToBobPhoneticHelp=function(){
@@ -21810,8 +21934,8 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   function updateListeningButtons(){
     var start=byReadToBobId("readToBobListenButton");
     var stop=byReadToBobId("readToBobStopButton");
-    if(start) start.disabled=listening || countingDown || requestingMicrophone;
-    if(stop) stop.disabled=!listening && !countingDown && !requestingMicrophone;
+    if(start) start.disabled=listening || recognitionStarting || countingDown || requestingMicrophone;
+    if(stop) stop.disabled=!listening && !recognitionStarting && !countingDown && !requestingMicrophone;
   }
   function recognitionErrorMessage(error){
     if(error === "not-allowed" || error === "service-not-allowed") return "Microphone permission was not allowed. Ask your teacher, then allow the microphone and try again.";
@@ -21820,19 +21944,42 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     if(error === "network") return "Speech recognition needs an internet connection. Check your connection and try again.";
     return "BOB could not start listening. Please try again.";
   }
+  function cancelReadToBobStartup(options){
+    options=options || {};
+    readToBobAttemptToken++;
+    countingDown=false;
+    readToBobCueComplete=false;
+    recognitionStarting=false;
+    requestingMicrophone=false;
+    if(countdownTimer){ window.clearTimeout(countdownTimer); countdownTimer=null; }
+    var countdownPopup=byReadToBobId("readToBobCountdownPopup");
+    var countdownPopupWasVisible=!!(countdownPopup && !countdownPopup.hidden);
+    setReadToBobCountdown("");
+    if(!countdownPopupWasVisible) restoreReadToBobCountdownFocus();
+    clearPhoneticHelpTimer();
+    var activeRecognition=recognition;
+    recognition=null;
+    listening=false;
+    if(activeRecognition && options.abortRecognition !== false){
+      try{ activeRecognition.abort(); }catch(error){}
+    }
+    if(options.releaseMicrophone !== false) releaseReadToBobMicrophone();
+    updateListeningButtons();
+    if(options.status) setReadToBobStatus(options.status,!!options.warning);
+  }
+  window.cancelReadToBobStartup=function(){
+    if(!requestingMicrophone && !recognitionStarting && !countingDown && !listening && !recognition) return;
+    cancelReadToBobStartup({
+      status:"Listening stopped. BOB will still help you begin again.",
+      abortRecognition:true,
+      releaseMicrophone:true
+    });
+  };
   function resetReadToBobPractice(){
     window.readToBobPracticeActive=false;
     document.body.classList.remove("readToBobPracticeActive");
     stopping=true;
-    countingDown=false;
-    if(countdownTimer){ window.clearTimeout(countdownTimer); countdownTimer=null; }
-    setReadToBobCountdown("");
-    if(recognition){
-      try{ recognition.abort(); }catch(error){}
-    }
-    recognition=null;
-    releaseReadToBobMicrophone();
-    listening=false;
+    cancelReadToBobStartup({abortRecognition:true,releaseMicrophone:true});
     finalTranscript="";
     latestTranscript="";
     recognizedPassageWordIndices={};
@@ -22104,7 +22251,41 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     }
     return "Take your time. Try the short passage again, and BOB will help one part at a time.";
   }
-  function beginReadToBobListening(){
+  function beginReadToBobCountdown(attemptToken){
+    if(attemptToken !== readToBobAttemptToken || !recognition || !listening) return;
+    countingDown=true;
+    readToBobCueComplete=false;
+    updateListeningButtons();
+    var seconds=3;
+    function countDown(){
+      if(attemptToken !== readToBobAttemptToken || !countingDown) return;
+      setReadToBobCountdown(String(seconds));
+      setReadToBobStatus("Get ready. BOB is listening. Start reading after the final cue.");
+      seconds--;
+      if(seconds > 0){
+        countdownTimer=window.setTimeout(countDown,1000);
+        return;
+      }
+      countdownTimer=window.setTimeout(function(){
+        if(attemptToken !== readToBobAttemptToken || !countingDown) return;
+        setReadToBobCountdown("🎙 BOB IS LISTENING\nStart Reading");
+        setReadToBobStatus("🎙 BOB IS LISTENING — Start Reading");
+        countdownTimer=window.setTimeout(function(){
+          if(attemptToken !== readToBobAttemptToken || !countingDown) return;
+          countdownTimer=null;
+          countingDown=false;
+          attemptStartedAt=Date.now();
+          setReadToBobCountdown("");
+          readToBobCueComplete=true;
+          updateListeningButtons();
+          setReadToBobStatus(resumePassageWordIndex > 0 ? "🎙 BOB IS LISTENING… Continue with the aqua word and read to the end." : "🎙 BOB IS LISTENING… Read the practice passage aloud.");
+          schedulePhoneticHelp();
+        },900);
+      },1000);
+    }
+    countDown();
+  }
+  function beginReadToBobListening(attemptToken){
     var Recognition=window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!Recognition){
       setReadToBobStatus("Speech recognition is not available here. Use Chrome on a Chromebook, then try again.");
@@ -22114,32 +22295,41 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       setReadToBobStatus("Microphone practice needs the published secure Builder link. Open the GitHub Pages version and try again.");
       return;
     }
-    if(listening) return;
-    countingDown=false;
+    if(attemptToken !== readToBobAttemptToken || listening || recognitionStarting) return;
     setReadToBobCountdown("");
+    readToBobCueComplete=false;
     finalTranscript="";
     latestTranscript="";
     finalizedRecognitionResultIndices={};
     readingAnchorIndex=Math.max(0,resumePassageWordIndex-1);
     stopping=false;
-    attemptStartedAt=Date.now();
+    attemptStartedAt=0;
     setReadToBobTranscript("");
     highlightReadToBobWords([]);
     window.hideReadToBobPhoneticHelp();
     hideReadToBobPaceWarning();
-    setReadToBobStatus(resumePassageWordIndex > 0 ? "🎙 BOB IS LISTENING… Continue with the aqua word and read to the end." : "🎙 BOB IS LISTENING… Read the practice passage aloud.");
+    setReadToBobStatus("BOB is turning on the microphone…");
     try{
-      recognition=new Recognition();
-      recognition.lang="en-US";
-      recognition.continuous=true;
-      recognition.interimResults=true;
-      recognition.maxAlternatives=1;
-      recognition.onstart=function(){
+      var activeRecognition=new Recognition();
+      recognition=activeRecognition;
+      recognitionStarting=true;
+      updateListeningButtons();
+      activeRecognition.lang="en-US";
+      activeRecognition.continuous=true;
+      activeRecognition.interimResults=true;
+      activeRecognition.maxAlternatives=1;
+      activeRecognition.onstart=function(){
+        if(attemptToken !== readToBobAttemptToken || recognition !== activeRecognition){
+          try{ activeRecognition.abort(); }catch(error){}
+          return;
+        }
+        recognitionStarting=false;
         listening=true;
         updateListeningButtons();
-        schedulePhoneticHelp();
+        beginReadToBobCountdown(attemptToken);
       };
-      recognition.onresult=function(event){
+      activeRecognition.onresult=function(event){
+        if(attemptToken !== readToBobAttemptToken || recognition !== activeRecognition || !readToBobCueComplete) return;
         var interim="";
         var helpRequested=false;
         for(var index=event.resultIndex; index<event.results.length; index++){
@@ -22181,15 +22371,22 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         setReadToBobTranscript(liveTranscript);
         if(!helpRequested) schedulePhoneticHelp();
       };
-      recognition.onerror=function(event){
-        listening=false;
+      activeRecognition.onerror=function(event){
+        if(attemptToken !== readToBobAttemptToken || recognition !== activeRecognition) return;
+        var errorMessage=recognitionErrorMessage(event.error);
+        cancelReadToBobStartup({abortRecognition:true,releaseMicrophone:true});
         window.hideReadToBobPhoneticHelp();
-        updateListeningButtons();
-        setReadToBobStatus(recognitionErrorMessage(event.error));
+        setReadToBobStatus(errorMessage);
       };
-      recognition.onend=function(){
+      activeRecognition.onend=function(){
+        if(attemptToken !== readToBobAttemptToken || recognition !== activeRecognition) return;
         var wasStopped=stopping;
         var stoppedTranscript=latestTranscript.trim();
+        if(countdownTimer){ window.clearTimeout(countdownTimer); countdownTimer=null; }
+        countingDown=false;
+        readToBobCueComplete=false;
+        recognitionStarting=false;
+        setReadToBobCountdown("");
         listening=false;
         window.hideReadToBobPhoneticHelp();
         recognition=null;
@@ -22213,11 +22410,10 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         else setReadToBobStatus("Nice try! No words were captured yet. Select Start Reading when you are ready.");
         stopping=false;
       };
-      recognition.start();
+      activeRecognition.start();
     }catch(error){
-      listening=false;
-      recognition=null;
-      updateListeningButtons();
+      if(attemptToken !== readToBobAttemptToken) return;
+      cancelReadToBobStartup({abortRecognition:true,releaseMicrophone:true});
       setReadToBobStatus("BOB could not start listening. Please try again.");
     }
   }
@@ -22231,43 +22427,21 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       setReadToBobStatus("Microphone practice needs the published secure Builder link. Open the GitHub Pages version and try again.");
       return;
     }
-    if(listening || countingDown || requestingMicrophone) return;
-    if(!(await prepareReadToBobMicrophone())) return;
-    if(listening || countingDown) return;
-    countingDown=true;
-    updateListeningButtons();
-    var seconds=3;
-    function countDown(){
-      if(!countingDown) return;
-      setReadToBobCountdown(String(seconds));
-      setReadToBobStatus("Get ready. BOB’s microphone starts in "+seconds+"…");
-      playReadToBobCountdownTone(seconds);
-      seconds--;
-      if(seconds > 0){
-        countdownTimer=window.setTimeout(countDown,1000);
-        return;
-      }
-      countdownTimer=window.setTimeout(function(){
-        if(!countingDown) return;
-        setReadToBobCountdown("GO!");
-        setReadToBobStatus("GO! BOB is turning on the microphone…");
-        playReadToBobCountdownTone("GO!");
-        countdownTimer=window.setTimeout(function(){
-          if(!countingDown) return;
-          countdownTimer=null;
-          beginReadToBobListening();
-        },350);
-      },1000);
-    }
-    countDown();
+    if(listening || recognitionStarting || countingDown || requestingMicrophone) return;
+    captureReadToBobCountdownFocus();
+    var attemptToken=++readToBobAttemptToken;
+    readToBobCueComplete=false;
+    if(!(await prepareReadToBobMicrophone(attemptToken))) return;
+    if(attemptToken !== readToBobAttemptToken || listening || recognitionStarting || countingDown) return;
+    beginReadToBobListening(attemptToken);
   };
   window.stopReadToBobListening=function(){
-    if(countingDown){
-      countingDown=false;
-      if(countdownTimer){ window.clearTimeout(countdownTimer); countdownTimer=null; }
-      setReadToBobCountdown("");
-      updateListeningButtons();
-      setReadToBobStatus("Countdown stopped. Select Start Reading when you are ready.");
+    if(requestingMicrophone || recognitionStarting || countingDown || !readToBobCueComplete){
+      cancelReadToBobStartup({
+        status:"Listening stopped. BOB will still help you begin again.",
+        abortRecognition:true,
+        releaseMicrophone:true
+      });
       return;
     }
     stopping=true;
