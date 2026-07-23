@@ -21739,6 +21739,9 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   var readToBobPanelMouseActive=false;
   var suppressReadToBobPanelCompatibility=false;
   var suppressReadToBobPanelCompatibilityTimer=null;
+  var readToBobSessionClosed=true;
+  var readToBobSpeechGeneration=0;
+  var activeReadToBobUtterance=null;
   var stopping=false;
   var finalTranscript="";
   var latestTranscript="";
@@ -21916,6 +21919,28 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   function setReadToBobTranscript(text){
     var transcript=byReadToBobId("readToBobTranscript");
     if(transcript) transcript.textContent=text || "Your words will appear here while BOB listens.";
+  }
+  function isCurrentReadToBobSession(){
+    return !readToBobSessionClosed && isReadToBobPracticePanelVisible();
+  }
+  function cancelReadToBobSpeech(){
+    readToBobSpeechGeneration++;
+    if(activeReadToBobUtterance){
+      activeReadToBobUtterance.onboundary=null;
+      activeReadToBobUtterance.onend=null;
+      activeReadToBobUtterance.onerror=null;
+      activeReadToBobUtterance=null;
+    }
+    if(window.speechSynthesis){
+      try{ window.speechSynthesis.cancel(); }catch(error){}
+    }
+  }
+  function clearReadToBobFeedbackUI(){
+    var box=byReadToBobId("readToBobFeedback");
+    var text=byReadToBobId("readToBobFeedbackText");
+    if(box) box.hidden=true;
+    if(text) text.textContent="";
+    setReadToBobFeedbackActive(false);
   }
   function clearPhoneticHelpTimer(){
     if(phoneticHelpTimer){ window.clearTimeout(phoneticHelpTimer); phoneticHelpTimer=null; }
@@ -22290,7 +22315,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     if(help) help.hidden=true;
   };
   window.hearReadToBobHelpWord=function(){
-    if(!phoneticHelpWord) return;
+    if(!phoneticHelpWord || !isCurrentReadToBobSession()) return;
     if(typeof window.isVoiceReaderOn === "function" && !window.isVoiceReaderOn()){
       setReadToBobStatus("Turn on Voice Reader in the dashboard to hear BOB say the word.");
       return;
@@ -22315,8 +22340,16 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     utterance.rate=.72;
     utterance.pitch=.92;
     utterance.volume=1;
+    var speechGeneration=++readToBobSpeechGeneration;
+    activeReadToBobUtterance=utterance;
     utterance.onend=function(){
+      if(speechGeneration !== readToBobSpeechGeneration ||
+        activeReadToBobUtterance !== utterance || !isCurrentReadToBobSession()) return;
+      activeReadToBobUtterance=null;
       setReadToBobStatus("BOB said “"+phoneticHelpWord+".” Press Start Reading when you are ready to try again.");
+    };
+    utterance.onerror=function(){
+      if(activeReadToBobUtterance === utterance) activeReadToBobUtterance=null;
     };
     setReadToBobStatus("🔊 BOB is saying “"+phoneticHelpWord+".”");
     window.speechSynthesis.cancel();
@@ -22358,7 +22391,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     return !!phoneticHelpWord;
   }
   function showPhoneticHelpForCurrentWord(reason){
-    if(!listening) return;
+    if(!listening || !isCurrentReadToBobSession()) return;
     var current=document.querySelector("#readToBobSentencePreview .readToBobWordCurrent");
     if(!current) return;
     var currentIndex=parseInt(current.getAttribute("data-passage-word-index"),10);
@@ -22378,7 +22411,12 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     if(!listening) return;
     var current=document.querySelector("#readToBobSentencePreview .readToBobWordCurrent");
     if(!current) return;
-    phoneticHelpTimer=window.setTimeout(function(){ showPhoneticHelpForCurrentWord("delayed"); },6000);
+    var attemptToken=readToBobAttemptToken;
+    phoneticHelpTimer=window.setTimeout(function(){
+      phoneticHelpTimer=null;
+      if(attemptToken !== readToBobAttemptToken || !isCurrentReadToBobSession()) return;
+      showPhoneticHelpForCurrentWord("delayed");
+    },6000);
   }
   function isReadToBobHelpRequest(words){
     var phrase=(words || []).join(" ");
@@ -22430,10 +22468,15 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     });
   };
   function resetReadToBobPractice(){
+    /* Closing the panel is cancellation, not Stop. Invalidate the session
+       before aborting recognition so no synchronous or delayed callback can
+       produce feedback for a reader that is already closing. */
+    readToBobSessionClosed=true;
     window.readToBobPracticeActive=false;
     document.body.classList.remove("readToBobPracticeActive");
     stopping=true;
     cancelReadToBobStartup({abortRecognition:true,releaseMicrophone:true});
+    cancelReadToBobSpeech();
     finalTranscript="";
     latestTranscript="";
     recognizedPassageWordIndices={};
@@ -22446,7 +22489,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     missionPracticePassageOverride="";
     window.hideReadToBobPhoneticHelp();
     hideReadToBobPaceWarning();
-    setReadToBobFeedbackActive(false);
+    clearReadToBobFeedbackUI();
     updateListeningButtons();
     setReadToBobStatus("Select Start Reading when you are ready.");
     setReadToBobTranscript("");
@@ -22618,7 +22661,10 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     });
   }
   function giveReadToBobFeedback(message,progress){
+    if(!isCurrentReadToBobSession()) return;
+    var feedbackAttemptToken=readToBobAttemptToken;
     var words=renderReadToBobFeedback(message);
+    if(feedbackAttemptToken !== readToBobAttemptToken || !isCurrentReadToBobSession()) return;
     saveReadToBobFeedbackSnapshot(message,progress);
     setReadToBobStatus(message);
     if(!words.length) return;
@@ -22639,17 +22685,32 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     utterance.rate=.88;
     utterance.pitch=.92;
     utterance.volume=1;
+    var speechGeneration=++readToBobSpeechGeneration;
+    activeReadToBobUtterance=utterance;
     utterance.onboundary=function(event){
+      if(feedbackAttemptToken !== readToBobAttemptToken ||
+        speechGeneration !== readToBobSpeechGeneration ||
+        activeReadToBobUtterance !== utterance || !isCurrentReadToBobSession()) return;
       if(event.name && event.name !== "word") return;
       var before=message.slice(0,event.charIndex).trim();
       var index=before ? before.split(/\s+/).length : 0;
       highlightReadToBobFeedback(index);
     };
     utterance.onend=function(){
+      if(feedbackAttemptToken !== readToBobAttemptToken ||
+        speechGeneration !== readToBobSpeechGeneration ||
+        activeReadToBobUtterance !== utterance || !isCurrentReadToBobSession()) return;
+      activeReadToBobUtterance=null;
       highlightReadToBobFeedback(words.length);
       setReadToBobFeedbackActive(false);
     };
-    utterance.onerror=function(){ setReadToBobFeedbackActive(false); };
+    utterance.onerror=function(){
+      if(feedbackAttemptToken !== readToBobAttemptToken ||
+        speechGeneration !== readToBobSpeechGeneration ||
+        activeReadToBobUtterance !== utterance || !isCurrentReadToBobSession()) return;
+      activeReadToBobUtterance=null;
+      setReadToBobFeedbackActive(false);
+    };
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   }
@@ -22832,14 +22893,16 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         if(!helpRequested) schedulePhoneticHelp();
       };
       activeRecognition.onerror=function(event){
-        if(attemptToken !== readToBobAttemptToken || recognition !== activeRecognition) return;
+        if(attemptToken !== readToBobAttemptToken || recognition !== activeRecognition ||
+          !isCurrentReadToBobSession()) return;
         var errorMessage=recognitionErrorMessage(event.error);
         cancelReadToBobStartup({abortRecognition:true,releaseMicrophone:true});
         window.hideReadToBobPhoneticHelp();
         setReadToBobStatus(errorMessage);
       };
       activeRecognition.onend=function(){
-        if(attemptToken !== readToBobAttemptToken || recognition !== activeRecognition) return;
+        if(attemptToken !== readToBobAttemptToken || recognition !== activeRecognition ||
+          !isCurrentReadToBobSession()) return;
         if(!readToBobCueComplete && !stopping){
           cancelReadToBobStartup({
             status:"BOB could not start listening. Please try again.",
@@ -22897,7 +22960,8 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       setReadToBobStatus("Microphone practice needs the published secure Builder link. Open the GitHub Pages version and try again.");
       return;
     }
-    if(listening || recognitionStarting || countingDown || requestingMicrophone) return;
+    if(listening || recognitionStarting || countingDown || requestingMicrophone ||
+      !isCurrentReadToBobSession()) return;
     captureReadToBobCountdownFocus();
     var attemptToken=++readToBobAttemptToken;
     readToBobCueComplete=false;
@@ -22947,6 +23011,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     button.setAttribute("aria-expanded",opening ? "true" : "false");
     button.textContent=opening ? "🎙 Close Read to BOB Practice" : "🎙 Read to BOB Practice";
     if(opening){
+      readToBobSessionClosed=false;
       setReadToBobTickerPaused(true);
       preparePracticePassage();
       window.requestAnimationFrame(positionReadToBobPractice);
