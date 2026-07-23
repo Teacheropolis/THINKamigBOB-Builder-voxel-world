@@ -6244,6 +6244,7 @@ function viewFromDiceFace(materialIndex){
 }
 
 viewCubeCanvas.addEventListener("click", function(event){
+  if(window.isReadToBobModalInteractionBlocked && window.isReadToBobModalInteractionBlocked()) return;
   if(viewDiceMoved){
     viewDiceMoved = false;
     return;
@@ -6265,6 +6266,7 @@ viewCubeCanvas.addEventListener("click", function(event){
 });
 
 viewCubeCanvas.addEventListener("dblclick", function(){
+  if(window.isReadToBobModalInteractionBlocked && window.isReadToBobModalInteractionBlocked()) return;
   setView("home");
 });
 
@@ -6274,6 +6276,10 @@ let viewDiceLastX = 0;
 let viewDiceLastY = 0;
 
 viewCubeCanvas.addEventListener("mousedown", function(event){
+  if(window.isReadToBobModalInteractionBlocked && window.isReadToBobModalInteractionBlocked()){
+    viewDiceDragging = false;
+    return;
+  }
   viewDiceDragging = true;
   viewDiceMoved = false;
   viewDiceLastX = event.clientX;
@@ -6281,6 +6287,10 @@ viewCubeCanvas.addEventListener("mousedown", function(event){
 });
 
 document.addEventListener("mousemove", function(event){
+  if(window.isReadToBobModalInteractionBlocked && window.isReadToBobModalInteractionBlocked()){
+    viewDiceDragging = false;
+    return;
+  }
   if(!viewDiceDragging){
     return;
   }
@@ -6329,6 +6339,11 @@ function updateCamera(){
 }
 
 document.addEventListener('mousedown', (event)=>{
+  if(window.isReadToBobModalInteractionBlocked && window.isReadToBobModalInteractionBlocked()){
+    isDragging = false;
+    mouseMoved = false;
+    return;
+  }
   isDragging = true;
   mouseMoved = false;
   previousMouseX = event.clientX;
@@ -6355,6 +6370,11 @@ document.addEventListener("keydown", (event) => {
 });
   
 document.addEventListener('mousemove', (event)=>{
+
+  if(window.isReadToBobModalInteractionBlocked && window.isReadToBobModalInteractionBlocked()){
+    isDragging = false;
+    return;
+  }
 
   if(isDragging){
 
@@ -6389,6 +6409,11 @@ document.addEventListener('mousemove', (event)=>{
 // Two-finger touchpad zoom on Chromebook
 
 document.addEventListener('wheel', (event) => {
+
+  if(window.isReadToBobModalInteractionBlocked && window.isReadToBobModalInteractionBlocked()){
+    event.preventDefault();
+    return;
+  }
 
   // Allow scrolling inside the menu panel
 if(
@@ -6427,6 +6452,8 @@ if(
 
 // Arrow key camera controls
 document.addEventListener('keydown', (event)=>{
+
+  if(window.isReadToBobModalInteractionBlocked && window.isReadToBobModalInteractionBlocked()) return;
 
   // Rotate left
   if(event.key === "ArrowLeft"){
@@ -6514,6 +6541,8 @@ function clickedUI(event){
 
 document.addEventListener('click', (event)=>{
 
+  if(window.isReadToBobModalInteractionBlocked && window.isReadToBobModalInteractionBlocked()) return;
+
   if(window.readToBobFeedbackActive) return;
 
   if(clickedUI(event)){
@@ -6599,6 +6628,8 @@ if(moveSelectedMode && hit === ground){
 document.addEventListener('contextmenu', (event)=>{
 
   event.preventDefault();
+
+  if(window.isReadToBobModalInteractionBlocked && window.isReadToBobModalInteractionBlocked()) return;
 
   if(window.readToBobFeedbackActive) return;
 
@@ -19391,6 +19422,7 @@ Scope: dashboard ticker messages and badge-earned celebration only.
   }
 
   function restartTicker(ticker){
+    if(document.body.classList.contains("readToBobCountdownActive")) return;
     ticker.style.animation = "none";
     void ticker.offsetWidth;
     ticker.style.animation = "";
@@ -20813,10 +20845,13 @@ body.calmMode #floatingReaderControls{display:none !important;}
 body.calmMode #badgeMessage,
 body.calmMode #floatingBadge{filter:none !important;transform:none !important;}
 
-/* Reading practice is a focused moment: leave the Builder scene exactly where
-   it was and pause the flying banner and ticker until the popup closes. */
-body.readToBobPracticeActive #skyBannerPlane,
-body.readToBobPracticeActive .dashboardTickerText{
+/* Reading practice keeps the flying banner still.  The ticker pauses only for
+   the short countdown modal, using enough specificity to override its
+   animation shorthand without restarting the animation. */
+body.readToBobPracticeActive #skyBannerPlane{
+  animation-play-state:paused !important;
+}
+body.readToBobCountdownActive:not(.starterScreenActive) #buildBar .dashboardTickerText{
   animation-play-state:paused !important;
 }
 body.calmMode #buildBar button,
@@ -21553,6 +21588,9 @@ body:not(.starterScreenActive) #readToBobCountdownPopup{
   place-items:center;
   padding:20px;
   background:rgba(0,10,19,.78);
+  pointer-events:auto;
+  touch-action:none;
+  overscroll-behavior:contain;
 }
 body:not(.starterScreenActive) #readToBobCountdownPopup[hidden]{display:none !important;}
 body:not(.starterScreenActive) .readToBobCountdownCard{
@@ -21602,6 +21640,7 @@ body:not(.starterScreenActive) #readToBobCountdownCancelButton{
   background:#102f43;
   font-weight:900;
   cursor:pointer;
+  touch-action:manipulation;
 }
 @media(prefers-reduced-motion:reduce){
   body:not(.starterScreenActive) .readToBobCountdownCard,
@@ -21673,6 +21712,13 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   var readToBobCueComplete=false;
   var readToBobAttemptToken=0;
   var readToBobCountdownReturnFocus=null;
+  var preCueRecognitionResultIndices={};
+  var readToBobModalPointerIds={};
+  var readToBobModalTouchIds={};
+  var readToBobModalMouseActive=false;
+  var readToBobModalKeys={};
+  var suppressReadToBobTrailingClick=false;
+  var suppressReadToBobTrailingClickTimer=null;
   var stopping=false;
   var finalTranscript="";
   var latestTranscript="";
@@ -21764,10 +21810,186 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       if(target) target.focus();
     });
   }
+  function isReadToBobCountdownPopupVisible(){
+    var popup=byReadToBobId("readToBobCountdownPopup");
+    return !!(popup && !popup.hidden);
+  }
+  function isReadToBobCountdownCancelTarget(target){
+    var cancel=byReadToBobId("readToBobCountdownCancelButton");
+    return !!(cancel && target && (target === cancel || cancel.contains(target)));
+  }
+  function blockReadToBobModalEvent(event){
+    if(event.cancelable) event.preventDefault();
+    event.stopPropagation();
+    if(typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+  }
+  function hasActiveReadToBobModalPhysicalInput(){
+    return Object.keys(readToBobModalPointerIds).length > 0 ||
+      Object.keys(readToBobModalTouchIds).length > 0;
+  }
+  function clearReadToBobTrailingClickBlock(){
+    suppressReadToBobTrailingClick=false;
+    if(suppressReadToBobTrailingClickTimer){
+      window.clearTimeout(suppressReadToBobTrailingClickTimer);
+      suppressReadToBobTrailingClickTimer=null;
+    }
+  }
+  function scheduleReadToBobTrailingClickBlock(){
+    /* Pointer and Touch events may represent the same Chromebook contact.
+       Do not start compatibility-event cleanup until every representation of
+       the physical interaction has ended. */
+    if(hasActiveReadToBobModalPhysicalInput()) return;
+    suppressReadToBobTrailingClick=true;
+    if(suppressReadToBobTrailingClickTimer) window.clearTimeout(suppressReadToBobTrailingClickTimer);
+    suppressReadToBobTrailingClickTimer=window.setTimeout(function(){
+      suppressReadToBobTrailingClickTimer=null;
+      if(hasActiveReadToBobModalPhysicalInput() || readToBobModalMouseActive){
+        scheduleReadToBobTrailingClickBlock();
+        return;
+      }
+      clearReadToBobTrailingClickBlock();
+    },2500);
+  }
+  function hasReadToBobModalOriginatedInput(){
+    return hasActiveReadToBobModalPhysicalInput() ||
+      readToBobModalMouseActive || suppressReadToBobTrailingClick;
+  }
+  window.isReadToBobModalInteractionBlocked=function(){
+    return isReadToBobCountdownPopupVisible() || hasReadToBobModalOriginatedInput();
+  };
+  document.addEventListener("pointerdown",function(event){
+    var popupVisible=isReadToBobCountdownPopupVisible();
+    if(!popupVisible && readToBobModalPointerIds[event.pointerId]){
+      delete readToBobModalPointerIds[event.pointerId];
+    }
+    if(!popupVisible && !hasActiveReadToBobModalPhysicalInput()) readToBobModalMouseActive=false;
+    if(!popupVisible && !hasActiveReadToBobModalPhysicalInput() &&
+      !readToBobModalMouseActive && suppressReadToBobTrailingClick){
+      clearReadToBobTrailingClickBlock();
+    }
+    if(popupVisible || hasReadToBobModalOriginatedInput()){
+      readToBobModalPointerIds[event.pointerId]=true;
+      if(!isReadToBobCountdownCancelTarget(event.target)) blockReadToBobModalEvent(event);
+      return;
+    }
+  },true);
+  ["pointermove","pointerup","pointercancel"].forEach(function(eventName){
+    document.addEventListener(eventName,function(event){
+      if(!readToBobModalPointerIds[event.pointerId]) return;
+      var popupVisible=isReadToBobCountdownPopupVisible();
+      var allowCancel=popupVisible && isReadToBobCountdownCancelTarget(event.target);
+      if(eventName === "pointerup" || eventName === "pointercancel"){
+        delete readToBobModalPointerIds[event.pointerId];
+        scheduleReadToBobTrailingClickBlock();
+      }
+      if(!allowCancel) blockReadToBobModalEvent(event);
+    },{capture:true,passive:false});
+  });
+  document.addEventListener("touchstart",function(event){
+    if(!isReadToBobCountdownPopupVisible()){
+      Array.prototype.forEach.call(event.changedTouches || [],function(touch){
+        if(readToBobModalTouchIds[touch.identifier]) delete readToBobModalTouchIds[touch.identifier];
+      });
+      if(!hasActiveReadToBobModalPhysicalInput()) readToBobModalMouseActive=false;
+      if(!hasActiveReadToBobModalPhysicalInput() && !readToBobModalMouseActive &&
+        suppressReadToBobTrailingClick) clearReadToBobTrailingClickBlock();
+    }
+    var blockSequence=isReadToBobCountdownPopupVisible() || hasReadToBobModalOriginatedInput();
+    Array.prototype.forEach.call(event.changedTouches || [],function(touch){
+      if(blockSequence) readToBobModalTouchIds[touch.identifier]=true;
+      else if(readToBobModalTouchIds[touch.identifier]) delete readToBobModalTouchIds[touch.identifier];
+    });
+    if(blockSequence && !isReadToBobCountdownCancelTarget(event.target)) blockReadToBobModalEvent(event);
+  },{capture:true,passive:false});
+  ["touchmove","touchend","touchcancel"].forEach(function(eventName){
+    document.addEventListener(eventName,function(event){
+      var tracked=false;
+      Array.prototype.forEach.call(event.changedTouches || [],function(touch){
+        if(readToBobModalTouchIds[touch.identifier]) tracked=true;
+      });
+      if(!tracked) return;
+      var popupVisible=isReadToBobCountdownPopupVisible();
+      var allowCancel=popupVisible && isReadToBobCountdownCancelTarget(event.target);
+      if(eventName === "touchend" || eventName === "touchcancel"){
+        Array.prototype.forEach.call(event.changedTouches || [],function(touch){
+          delete readToBobModalTouchIds[touch.identifier];
+        });
+        scheduleReadToBobTrailingClickBlock();
+      }
+      if(!allowCancel) blockReadToBobModalEvent(event);
+    },{capture:true,passive:false});
+  });
+  document.addEventListener("mousedown",function(event){
+    if(isReadToBobCountdownPopupVisible() || hasReadToBobModalOriginatedInput()){
+      readToBobModalMouseActive=true;
+      if(!isReadToBobCountdownCancelTarget(event.target)) blockReadToBobModalEvent(event);
+      return;
+    }
+    readToBobModalMouseActive=false;
+  },true);
+  ["mousemove","mouseup"].forEach(function(eventName){
+    document.addEventListener(eventName,function(event){
+      if(!readToBobModalMouseActive) return;
+      var popupVisible=isReadToBobCountdownPopupVisible();
+      var allowCancel=popupVisible && isReadToBobCountdownCancelTarget(event.target);
+      if(eventName === "mouseup"){
+        readToBobModalMouseActive=false;
+        if(typeof isDragging !== "undefined") isDragging=false;
+        if(typeof viewDiceDragging !== "undefined") viewDiceDragging=false;
+        scheduleReadToBobTrailingClickBlock();
+      }
+      if(!allowCancel) blockReadToBobModalEvent(event);
+    },true);
+  });
+  document.addEventListener("click",function(event){
+    var popup=byReadToBobId("readToBobCountdownPopup");
+    if(popup && !popup.hidden){
+      if(isReadToBobCountdownCancelTarget(event.target)){
+        /* Keep the Cancel click quarantined after its inline handler hides the
+           popup and before the same event reaches Builder document handlers. */
+        scheduleReadToBobTrailingClickBlock();
+      }
+      else blockReadToBobModalEvent(event);
+      return;
+    }
+    if(suppressReadToBobTrailingClick){
+      clearReadToBobTrailingClickBlock();
+      blockReadToBobModalEvent(event);
+    }
+  },true);
+  document.addEventListener("contextmenu",function(event){
+    if(window.isReadToBobModalInteractionBlocked()){
+      if(suppressReadToBobTrailingClick && !hasActiveReadToBobModalPhysicalInput() &&
+        !readToBobModalMouseActive) clearReadToBobTrailingClickBlock();
+      blockReadToBobModalEvent(event);
+    }
+  },true);
+  document.addEventListener("keydown",function(event){
+    if(!isReadToBobCountdownPopupVisible()) return;
+    readToBobModalKeys[event.code || event.key]=true;
+    var popup=byReadToBobId("readToBobCountdownPopup");
+    if(event.key === "Tab"){
+      blockReadToBobModalEvent(event);
+      var cancel=byReadToBobId("readToBobCountdownCancelButton");
+      if(cancel) cancel.focus();
+      return;
+    }
+    if(!popup || !popup.contains(event.target)) blockReadToBobModalEvent(event);
+  },true);
+  document.addEventListener("keyup",function(event){
+    var key=event.code || event.key;
+    if(!readToBobModalKeys[key]) return;
+    delete readToBobModalKeys[key];
+    var popupVisible=isReadToBobCountdownPopupVisible();
+    var allowCancel=popupVisible && isReadToBobCountdownCancelTarget(event.target);
+    if(!popupVisible) scheduleReadToBobTrailingClickBlock();
+    if(!allowCancel) blockReadToBobModalEvent(event);
+  },true);
   function setReadToBobCountdown(value){
     var countdown=byReadToBobId("readToBobCountdown");
     var popup=byReadToBobId("readToBobCountdownPopup");
     var popupWasHidden=!popup || popup.hidden;
+    if(value) document.body.classList.add("readToBobCountdownActive");
     if(countdown){
       countdown.textContent=value || "";
       countdown.classList.toggle("readToBobReadyCue",!!value && String(value).indexOf("BOB IS LISTENING") >= 0);
@@ -21782,7 +22004,9 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         });
       }
       else if(!value && !popupWasHidden) restoreReadToBobCountdownFocus();
+      if(!value) document.body.classList.remove("readToBobCountdownActive");
     }
+    else if(!value) document.body.classList.remove("readToBobCountdownActive");
   }
   function playReadToBobCountdownTone(step){
     try{
@@ -21949,6 +22173,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     readToBobAttemptToken++;
     countingDown=false;
     readToBobCueComplete=false;
+    preCueRecognitionResultIndices={};
     recognitionStarting=false;
     requestingMicrophone=false;
     if(countdownTimer){ window.clearTimeout(countdownTimer); countdownTimer=null; }
@@ -22298,6 +22523,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     if(attemptToken !== readToBobAttemptToken || listening || recognitionStarting) return;
     setReadToBobCountdown("");
     readToBobCueComplete=false;
+    preCueRecognitionResultIndices={};
     finalTranscript="";
     latestTranscript="";
     finalizedRecognitionResultIndices={};
@@ -22329,10 +22555,20 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         beginReadToBobCountdown(attemptToken);
       };
       activeRecognition.onresult=function(event){
-        if(attemptToken !== readToBobAttemptToken || recognition !== activeRecognition || !readToBobCueComplete) return;
+        if(attemptToken !== readToBobAttemptToken || recognition !== activeRecognition) return;
+        if(!readToBobCueComplete){
+          /* Chromium may repeat these same cumulative result slots after the
+             cue. Permanently quarantine every slot observed before readiness,
+             including an interim slot that later becomes final. */
+          for(var preCueIndex=0; preCueIndex<event.results.length; preCueIndex++){
+            preCueRecognitionResultIndices[preCueIndex]=true;
+          }
+          return;
+        }
         var interim="";
         var helpRequested=false;
         for(var index=event.resultIndex; index<event.results.length; index++){
+          if(preCueRecognitionResultIndices[index]) continue;
           var spoken=event.results[index][0] && event.results[index][0].transcript || "";
           if(event.results[index].isFinal){
             /* Only finalized speech moves the aqua reading marker. This avoids
@@ -22408,6 +22644,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         }
         else if(!wasStopped) setReadToBobStatus("BOB stopped listening. Select Start Reading when you are ready.");
         else setReadToBobStatus("Nice try! No words were captured yet. Select Start Reading when you are ready.");
+        preCueRecognitionResultIndices={};
         stopping=false;
       };
       activeRecognition.start();
@@ -22431,6 +22668,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     captureReadToBobCountdownFocus();
     var attemptToken=++readToBobAttemptToken;
     readToBobCueComplete=false;
+    preCueRecognitionResultIndices={};
     if(!(await prepareReadToBobMicrophone(attemptToken))) return;
     if(attemptToken !== readToBobAttemptToken || listening || recognitionStarting || countingDown) return;
     beginReadToBobListening(attemptToken);
@@ -22445,6 +22683,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       return;
     }
     stopping=true;
+    preCueRecognitionResultIndices={};
     if(recognition){
       try{ recognition.stop(); }catch(error){}
     }
