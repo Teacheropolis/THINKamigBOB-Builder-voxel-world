@@ -707,7 +707,7 @@ Preserved from working file. Future edits should target by section.
   text-align:center;
 }
 #missionReadingChoice strong{display:block;color:#063d57;margin-bottom:8px;}
-.missionReadingChoiceButtons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.missionReadingChoiceButtons{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
 .missionReadingChoiceButtons button{
   min-height:48px;
   padding:7px;
@@ -4192,10 +4192,16 @@ Nature ▶
     </div>
   </div>
   <p id="readToBobAdaptiveNote">BOB will keep the full passage when your reading is steady.</p>
+  <div id="readToBobFluencyIndicator" role="note" aria-label="Period pause coaching is on">
+    <strong>Period pause coaching is on.</strong>
+    <span><span class="readToBobFluencyLegendHelpful" aria-hidden="true">●</span> helpful pause</span>
+    <span><span class="readToBobFluencyLegendTry" aria-hidden="true">●</span> try a short pause</span>
+  </div>
   <div id="readToBobFeedback" hidden aria-live="polite">
     <div class="readToBobFeedbackLabel">BOB’S FEEDBACK</div>
     <p id="readToBobFeedbackText"></p>
   </div>
+  <div id="readToBobFluencyFeedback" hidden role="status" aria-live="polite"></div>
   <div id="readToBobCountdownPopup" hidden role="dialog" aria-modal="true" aria-labelledby="readToBobCountdownLabel">
     <div class="readToBobCountdownCard">
       <div id="readToBobCountdownLabel">Get ready to read</div>
@@ -4282,7 +4288,7 @@ Future extraction target: STEM Coach and read-aloud UI.
 <p><b class="coachMottoOxanium">Think • Build • Discover</b></p>
 </div>
 </div>
-<button id="readToBobPracticeButton" type="button" aria-expanded="false" aria-controls="readToBobPractice" onclick="toggleReadToBobPractice()">🎙 Read to BOB Practice</button>
+<button id="readToBobPracticeButton" type="button" aria-expanded="false" aria-controls="readToBobPractice" onclick="startStemCoachReadToBob()">🎙️ Read to BOB</button>
 <button id="reopenLibraryFromCoach" type="button" onclick="reopenObjectLibraryFromCoach(event)">↗ Reopen Library</button>
 </div>
 </div>
@@ -4323,9 +4329,8 @@ HTML SECTION: MISSION POPUP
 <section id="missionReadingChoice" aria-label="Choose how to read this mission">
   <strong>How would you like to read this mission?</strong>
   <div class="missionReadingChoiceButtons">
-    <button type="button" onclick="chooseMissionPopupReading('bob')">🔊 BOB reads aloud</button>
-    <button type="button" onclick="chooseMissionPopupReading('student')">🎙 Read aloud to BOB</button>
-    <button type="button" onclick="chooseMissionPopupReading('self')">📖 Read to myself</button>
+    <button type="button" onclick="chooseMissionPopupReading('bob')">🔊 Read to Me</button>
+    <button type="button" onclick="chooseMissionPopupReading('self')">📖 Read to Self</button>
   </div>
   <p id="missionReadingChoiceNote">Choose one to begin.</p>
 </section>
@@ -21472,7 +21477,57 @@ body:not(.starterScreenActive) .readToBobPassageWord.readToBobWordCurrent{
   background:#48e6ff;
   box-shadow:0 0 0 2px #fff7bd,0 0 12px rgba(72,230,255,.85);
 }
+body:not(.starterScreenActive) .readToBobPassageWord.readToBobWordOptional{
+  text-decoration:underline dotted rgba(215,180,255,.95);
+  text-underline-offset:3px;
+}
+body:not(.starterScreenActive) #readToBobFluencyIndicator{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:5px 10px;
+  margin:6px 5px 3px;
+  padding:7px 9px;
+  border:1px solid rgba(133,219,255,.55);
+  border-radius:7px;
+  color:#dff8ff;
+  background:rgba(10,37,55,.76);
+  font-size:11px;
+  line-height:1.3;
+}
+body:not(.starterScreenActive) #readToBobFluencyIndicator strong{color:#fff7bd;}
+body:not(.starterScreenActive) .readToBobFluencyLegendHelpful{color:#7fe85a;}
+body:not(.starterScreenActive) .readToBobFluencyLegendTry{color:#ffd65a;}
+body:not(.starterScreenActive) .readToBobSentencePunctuation{
+  border-radius:2px;
+  text-decoration-thickness:2px;
+  text-underline-offset:3px;
+}
+body:not(.starterScreenActive) .readToBobSentencePunctuation.readToBobPeriodPauseHelpful{
+  color:#d9ffb7;
+  text-decoration-line:underline;
+  text-decoration-color:#7fe85a;
+  text-shadow:0 0 7px rgba(127,232,90,.72);
+}
+body:not(.starterScreenActive) .readToBobSentencePunctuation.readToBobPeriodReadThrough{
+  color:#fff2a8;
+  text-decoration-line:underline;
+  text-decoration-color:#ffd65a;
+  text-shadow:0 0 7px rgba(255,214,90,.68);
+}
 body.calmMode .readToBobPassageWord{transition:none !important;}
+body:not(.starterScreenActive) #readToBobFluencyFeedback{
+  margin:7px 5px 2px;
+  padding:8px 10px;
+  border:1px solid rgba(255,225,106,.78);
+  border-radius:7px;
+  color:#fff7bd;
+  background:rgba(13,35,51,.94);
+  font-size:12px;
+  font-weight:850;
+  line-height:1.35;
+}
+body:not(.starterScreenActive) #readToBobFluencyFeedback[hidden]{display:none !important;}
 body:not(.starterScreenActive) #readToBobPaceWarning{
   margin:7px 5px 5px;
   padding:7px 9px;
@@ -21746,11 +21801,18 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   var finalTranscript="";
   var latestTranscript="";
   var recognizedPassageWordIndices={};
+  var readToBobReachedPassageEnd=false;
+  var readToBobCompletionStopRequested=false;
   var finalizedRecognitionResultIndices={};
   var readingAnchorIndex=0;
   var currentPracticeSentences=[];
-  /* Set only when Read to BOB is chosen from a new mission popup.  It makes
-     BOB's spoken, self-read, and student-read options use one identical text. */
+  var readToBobSentenceMetadata=[];
+  var readToBobFinalizedChunkObservations=[];
+  var readToBobFluencyEvaluated=false;
+  var lastReadToBobInterimActivityText="";
+  var lastReadToBobInterimActivityTimestamp=null;
+  var lastReadToBobFinalizedCallbackTimestamp=null;
+  /* Set when Read to BOB begins from the STEM Coach Library. */
   var missionPracticePassageOverride="";
   var adaptiveStartIndex=0;
   var adaptiveWindowSize=0;
@@ -21941,6 +22003,44 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     if(box) box.hidden=true;
     if(text) text.textContent="";
     setReadToBobFeedbackActive(false);
+  }
+  function clearReadToBobFluencyPresentation(){
+    var feedback=byReadToBobId("readToBobFluencyFeedback");
+    if(feedback){
+      feedback.hidden=true;
+      feedback.textContent="";
+    }
+    document.querySelectorAll("#readToBobSentencePreview .readToBobSentencePunctuation").forEach(function(punctuation){
+      punctuation.classList.remove("readToBobPeriodPauseHelpful","readToBobPeriodReadThrough");
+      punctuation.removeAttribute("title");
+    });
+  }
+  function resetReadToBobFluencyState(options){
+    options=options || {};
+    readToBobFinalizedChunkObservations=[];
+    readToBobFluencyEvaluated=false;
+    lastReadToBobInterimActivityText="";
+    lastReadToBobInterimActivityTimestamp=null;
+    lastReadToBobFinalizedCallbackTimestamp=null;
+    readToBobSentenceMetadata.forEach(function(sentence){
+      sentence.firstMatchedTimestamp=null;
+      sentence.lastMatchedTimestamp=null;
+      sentence.reachedEndTimestamp=null;
+      sentence.reachedEndChunkIndex=null;
+      sentence.periodEndingChunkTranscript="";
+      sentence.preFinalizationInterimExtended=false;
+      sentence.preFinalizationInterimTimestamp=null;
+      sentence.interimActivitySinceEnd=false;
+      sentence.lastInterimActivityTimestamp=null;
+      sentence.finalizedChunkIndexes=[];
+      sentence.finalizedChunkCrossedIntoNextSentence=false;
+      sentence.approximateBoundaryInterval=null;
+      sentence.possibleHelpfulPeriodPause=false;
+      sentence.possiblePeriodReadThrough=false;
+      sentence.fluencyObservationState="unassessed";
+    });
+    if(options.clearMetadata) readToBobSentenceMetadata=[];
+    if(!options.preservePresentation) clearReadToBobFluencyPresentation();
   }
   function clearPhoneticHelpTimer(){
     if(phoneticHelpTimer){ window.clearTimeout(phoneticHelpTimer); phoneticHelpTimer=null; }
@@ -22456,6 +22556,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       try{ activeRecognition.abort(); }catch(error){}
     }
     if(options.releaseMicrophone !== false) releaseReadToBobMicrophone();
+    resetReadToBobFluencyState();
     updateListeningButtons();
     if(options.status) setReadToBobStatus(options.status,!!options.warning);
   }
@@ -22480,6 +22581,8 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     finalTranscript="";
     latestTranscript="";
     recognizedPassageWordIndices={};
+    readToBobReachedPassageEnd=false;
+    readToBobCompletionStopRequested=false;
     finalizedRecognitionResultIndices={};
     readingAnchorIndex=0;
     attemptStartedAt=0;
@@ -22490,6 +22593,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     window.hideReadToBobPhoneticHelp();
     hideReadToBobPaceWarning();
     clearReadToBobFeedbackUI();
+    resetReadToBobFluencyState({clearMetadata:true});
     updateListeningButtons();
     setReadToBobStatus("Select Start Reading when you are ready.");
     setReadToBobTranscript("");
@@ -22524,6 +22628,35 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   window.setReadToBobMissionPassage=function(passage){
     missionPracticePassageOverride=cleanPracticeSentence(passage);
   };
+  function currentStemCoachReadToBobPassage(){
+    var panel=byReadToBobId("thinkerBobPanel");
+    if(!panel) return "";
+    var labels=["STEM Fact","Think About It","Builder Challenge"];
+    return labels.map(function(label){
+      var paragraph=Array.from(panel.querySelectorAll("p")).find(function(item){
+        var heading=item.querySelector("b");
+        return !!heading && heading.textContent.replace(/[^\w\s]/g,"").trim().toLowerCase() === label.toLowerCase();
+      });
+      if(!paragraph) return "";
+      var content=paragraph.cloneNode(true);
+      var heading=content.querySelector("b");
+      if(heading) heading.remove();
+      return cleanPracticeSentence(content.textContent);
+    }).filter(Boolean).join(" ");
+  }
+  window.startStemCoachReadToBob=function(){
+    var passage=currentStemCoachReadToBobPassage();
+    if(!passage){
+      var message=byReadToBobId("toolMessage");
+      if(message) message.textContent="Choose an object in the STEM Coach Library before selecting Read to BOB.";
+      return;
+    }
+    var practice=byReadToBobId("readToBobPractice");
+    if(practice && !practice.hidden) window.toggleReadToBobPractice();
+    window.setReadToBobMissionPassage(passage);
+    if(typeof window.stopThinkerBob === "function") window.stopThinkerBob();
+    window.toggleReadToBobPractice();
+  };
   function preparePracticePassage(){
     var sentences=practiceSentences();
     if(!sentences.length) sentences=["I am ready to read my STEM mission to BOB."];
@@ -22542,12 +22675,82 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   function renderPracticePassage(sentences){
     var preview=byReadToBobId("readToBobSentencePreview");
     if(!preview) return;
-    var words=sentences.join(" ").split(/\s+/).filter(Boolean);
-    preview.innerHTML=words.map(function(word,index){
-      return '<span class="readToBobPassageWord" data-passage-word-index="'+index+'">'+escapePracticeHtml(word)+'</span>';
-    }).join(" ");
+    resetReadToBobFluencyState({clearMetadata:true});
+    var globalWordIndex=0;
+    var renderedWords=[];
+    sentences.forEach(function(sentenceText,sentenceIndex){
+      var sentenceWords=String(sentenceText || "").split(/\s+/).filter(Boolean);
+      var startWordIndex=globalWordIndex;
+      var endingMatch=String(sentenceText || "").trim().match(/([.!?]+)$/);
+      var endingPunctuation=endingMatch ? endingMatch[1].slice(-1) : "";
+      sentenceWords.forEach(function(word,localWordIndex){
+        var isLastWord=localWordIndex === sentenceWords.length-1;
+        var punctuationMatch=isLastWord ? word.match(/([.!?]+)$/) : null;
+        var punctuation=punctuationMatch ? punctuationMatch[1] : "";
+        var wordCore=punctuation ? word.slice(0,-punctuation.length) : word;
+        var optionalWord=/^thinkamigbob$/i.test(wordCore.replace(/[^A-Za-z0-9]/g,""));
+        var rendered=escapePracticeHtml(wordCore);
+        if(punctuation){
+          rendered+='<span class="readToBobSentencePunctuation" data-ending-punctuation="'+
+            escapePracticeHtml(punctuation.slice(-1))+'">'+escapePracticeHtml(punctuation)+"</span>";
+        }
+        renderedWords.push('<span class="readToBobPassageWord'+
+          (optionalWord ? ' readToBobWordOptional' : '')+
+          '" data-passage-word-index="'+globalWordIndex+'" data-sentence-index="'+sentenceIndex+'"'+
+          (optionalWord ? ' data-read-to-bob-optional="true" title="This name is optional and is not required for completion."' : '')+
+          ">"+rendered+"</span>");
+        globalWordIndex++;
+      });
+      readToBobSentenceMetadata.push({
+        index:sentenceIndex,
+        originalText:String(sentenceText || ""),
+        startWordIndex:startWordIndex,
+        endWordIndex:globalWordIndex-1,
+        endingPunctuation:endingPunctuation,
+        firstMatchedTimestamp:null,
+        lastMatchedTimestamp:null,
+        reachedEndTimestamp:null,
+        reachedEndChunkIndex:null,
+        periodEndingChunkTranscript:"",
+        preFinalizationInterimExtended:false,
+        preFinalizationInterimTimestamp:null,
+        interimActivitySinceEnd:false,
+        lastInterimActivityTimestamp:null,
+        finalizedChunkIndexes:[],
+        finalizedChunkCrossedIntoNextSentence:false,
+        approximateBoundaryInterval:null,
+        possibleHelpfulPeriodPause:false,
+        possiblePeriodReadThrough:false,
+        fluencyObservationState:"unassessed"
+      });
+    });
+    preview.innerHTML=renderedWords.join(" ");
     recognizedPassageWordIndices={};
+    readToBobReachedPassageEnd=false;
+    readToBobCompletionStopRequested=false;
     readingAnchorIndex=0;
+  }
+  function isOptionalReadToBobWord(node){
+    return !!(node && node.getAttribute("data-read-to-bob-optional") === "true");
+  }
+  function requiredReadToBobWordEntries(){
+    return Array.from(document.querySelectorAll("#readToBobSentencePreview .readToBobPassageWord"))
+      .map(function(node,index){ return {node:node,index:index}; })
+      .filter(function(entry){ return !isOptionalReadToBobWord(entry.node); });
+  }
+  function updateReadToBobEndReached(matchedWordIndexes){
+    var required=requiredReadToBobWordEntries();
+    if(!required.length){
+      readToBobReachedPassageEnd=true;
+      return;
+    }
+    var tail=required.slice(-3).map(function(entry){ return entry.index; });
+    var matchedTail=tail.filter(function(index){ return matchedWordIndexes.indexOf(index) >= 0; });
+    var finalRequiredIndex=required[required.length-1].index;
+    if(matchedWordIndexes.indexOf(finalRequiredIndex) >= 0 ||
+      matchedTail.length >= Math.min(2,tail.length)){
+      readToBobReachedPassageEnd=true;
+    }
   }
   function expectedPassageWords(){
     return Array.from(document.querySelectorAll("#readToBobSentencePreview .readToBobPassageWord")).map(function(node){
@@ -22588,32 +22791,282 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     var spoken=Array.isArray(spokenChunk) ? spokenChunk : normalizedWords(spokenChunk);
     var expected=expectedPassageWords();
     var matched=0;
+    var matchedWordIndexes=[];
     spoken.forEach(function(spokenWord,wordOffset){
       var matchIndex=findContextualPassageMatch(spoken,wordOffset,expected);
       if(matchIndex >= 0){
         recognizedPassageWordIndices[matchIndex]=true;
         readingAnchorIndex=matchIndex;
+        matchedWordIndexes.push(matchIndex);
         matched++;
       }
     });
+    updateReadToBobEndReached(matchedWordIndexes);
     wordNodes.forEach(function(node,index){
       node.classList.toggle("readToBobWordRead",index < resumePassageWordIndex || !!recognizedPassageWordIndices[index]);
       node.classList.remove("readToBobWordCurrent");
     });
-    var next=wordNodes.find(function(node,nodeIndex){ return nodeIndex >= resumePassageWordIndex && !recognizedPassageWordIndices[nodeIndex]; });
+    var next=wordNodes.find(function(node,nodeIndex){
+      return nodeIndex >= resumePassageWordIndex &&
+        !isOptionalReadToBobWord(node) &&
+        !recognizedPassageWordIndices[nodeIndex];
+    });
     if(next) next.classList.add("readToBobWordCurrent");
-    return {heard:spoken.length,matched:matched};
+    var sentenceIndexes=matchedWordIndexes.map(function(wordIndex){
+      var sentence=readToBobSentenceMetadata.find(function(item){
+        return wordIndex >= item.startWordIndex && wordIndex <= item.endWordIndex;
+      });
+      return sentence ? sentence.index : -1;
+    }).filter(function(sentenceIndex,index,all){
+      return sentenceIndex >= 0 && all.indexOf(sentenceIndex) === index;
+    }).sort(function(a,b){ return a-b; });
+    var crossedWrittenPeriodBoundary=readToBobSentenceMetadata.some(function(sentence){
+      return sentence.endingPunctuation === "." &&
+        matchedWordIndexes.some(function(index){ return index <= sentence.endWordIndex; }) &&
+        matchedWordIndexes.some(function(index){ return index > sentence.endWordIndex; });
+    });
+    return {
+      heard:spoken.length,
+      matched:matched,
+      matchedWordIndexes:matchedWordIndexes,
+      lowestMatchedWordIndex:matchedWordIndexes.length ? Math.min.apply(Math,matchedWordIndexes) : -1,
+      highestMatchedWordIndex:matchedWordIndexes.length ? Math.max.apply(Math,matchedWordIndexes) : -1,
+      sentenceIndexes:sentenceIndexes,
+      crossedWrittenPeriodBoundary:crossedWrittenPeriodBoundary
+    };
+  }
+  function readToBobObservationNow(){
+    return window.performance && typeof window.performance.now === "function"
+      ? window.performance.now()
+      : Date.now();
+  }
+  function recordReadToBobInterimActivity(interimTranscript){
+    if(!isCurrentReadToBobSession()) return;
+    var normalizedInterim=normalizedWords(interimTranscript).join(" ");
+    if(!normalizedInterim || normalizedInterim === lastReadToBobInterimActivityText) return;
+    lastReadToBobInterimActivityText=normalizedInterim;
+    var activityTime=readToBobObservationNow();
+    lastReadToBobInterimActivityTimestamp=activityTime;
+    readToBobSentenceMetadata.forEach(function(sentence){
+      if(sentence.endingPunctuation !== "." || sentence.reachedEndTimestamp === null ||
+        sentence.fluencyObservationState !== "unassessed") return;
+      var nextSentence=readToBobSentenceMetadata[sentence.index+1];
+      if(!nextSentence || recognizedPassageWordIndices[nextSentence.startWordIndex]) return;
+      sentence.interimActivitySinceEnd=true;
+      sentence.lastInterimActivityTimestamp=activityTime;
+    });
+  }
+  function readToBobInterimExtendedBeyondFinalizedChunk(finalizedTranscript,previousFinalizedTimestamp){
+    if(!lastReadToBobInterimActivityText || lastReadToBobInterimActivityTimestamp === null) return false;
+    if(previousFinalizedTimestamp !== null &&
+      lastReadToBobInterimActivityTimestamp <= previousFinalizedTimestamp) return false;
+    var finalizedWords=normalizedWords(finalizedTranscript);
+    var interimWords=normalizedWords(lastReadToBobInterimActivityText);
+    if(!finalizedWords.length || interimWords.length <= finalizedWords.length) return false;
+    var tailLength=Math.min(3,finalizedWords.length);
+    var finalizedTail=finalizedWords.slice(finalizedWords.length-tailLength);
+    for(var start=0; start<=interimWords.length-tailLength; start++){
+      var tailMatches=finalizedTail.every(function(word,offset){
+        return interimWords[start+offset] === word;
+      });
+      if(tailMatches && start+tailLength < interimWords.length) return true;
+    }
+    return false;
+  }
+  function indexesAppearInOrder(indexes,requiredIndexes){
+    var cursor=-1;
+    return requiredIndexes.every(function(requiredIndex){
+      cursor=indexes.indexOf(requiredIndex,cursor+1);
+      return cursor >= 0;
+    });
+  }
+  function hasReadToBobBoundaryRepetitionAmbiguity(sentence,nextSentence,matching,spokenText,requirePeriodInChunk){
+    var expected=expectedPassageWords();
+    var periodWord=expected[sentence.endWordIndex] || "";
+    var precedingWord=expected[sentence.endWordIndex-1] || "";
+    var nextFirstWord=expected[nextSentence.startWordIndex] || "";
+    var nextSecondWord=expected[nextSentence.startWordIndex+1] || "";
+    var spokenWords=normalizedWords(spokenText);
+    var matchedIndexes=matching && matching.matchedWordIndexes || [];
+    var matchedCount=matching && Number(matching.matched) || 0;
+    var heardCount=matching && Number(matching.heard) || spokenWords.length;
+    if(sentence.endWordIndex <= sentence.startWordIndex ||
+      nextSentence.startWordIndex >= nextSentence.endWordIndex) return true;
+    if(!periodWord || !precedingWord || !nextFirstWord || !nextSecondWord) return true;
+    if(periodWord === nextFirstWord ||
+      [precedingWord,periodWord,nextFirstWord,nextSecondWord].filter(function(word,index,all){
+        return all.indexOf(word) === index;
+      }).length < 3) return true;
+    var required=requirePeriodInChunk
+      ? [sentence.endWordIndex-1,sentence.endWordIndex,nextSentence.startWordIndex,nextSentence.startWordIndex+1]
+      : [nextSentence.startWordIndex,nextSentence.startWordIndex+1];
+    if(!indexesAppearInOrder(matchedIndexes,required)) return true;
+    if(matchedIndexes.some(function(wordIndex,index){
+      return index > 0 && wordIndex <= matchedIndexes[index-1];
+    })) return true;
+    if(heardCount-matchedCount > 1 || (heardCount && matchedCount/heardCount < .75)) return true;
+    var boundaryWords=[precedingWord,periodWord,nextFirstWord,nextSecondWord];
+    if(boundaryWords.some(function(boundaryWord){
+      return spokenWords.filter(function(word){ return word === boundaryWord; }).length > 1;
+    })) return true;
+    if(spokenWords.some(function(word,index){
+      return index > 0 && word === spokenWords[index-1];
+    })) return true;
+    var repeatedWordCount=spokenWords.length-new Set(spokenWords).size;
+    if(repeatedWordCount >= 2 || (spokenWords.length >= 4 && repeatedWordCount/spokenWords.length >= .25)) return true;
+    if(spokenWords.some(function(word){
+      return /^(um|uh|er|erm|hmm|hm|like)$/.test(word) ||
+        (word.length <= 2 && spokenWords.filter(function(item){ return item === word; }).length > 1);
+    })) return true;
+    if((nextFirstWord.length <= 3 || isSimplePracticeWord(nextFirstWord)) &&
+      matchedIndexes.indexOf(nextSentence.startWordIndex+1) < 0) return true;
+    return false;
+  }
+  function recordReadToBobFinalizedChunk(resultIndex,spoken,matching,callbackTime,previousFinalizedTimestamp){
+    if(!isCurrentReadToBobSession() || !matching || !matching.matchedWordIndexes.length) return;
+    var matchedIndexes=matching.matchedWordIndexes.slice().sort(function(a,b){ return a-b; });
+    var observation={
+      resultIndex:resultIndex,
+      callbackTime:callbackTime,
+      transcript:String(spoken || ""),
+      matchedWordIndexes:matchedIndexes,
+      lowestMatchedWordIndex:matching.lowestMatchedWordIndex,
+      highestMatchedWordIndex:matching.highestMatchedWordIndex,
+      firstSentenceIndex:matching.sentenceIndexes.length ? matching.sentenceIndexes[0] : -1,
+      lastSentenceIndex:matching.sentenceIndexes.length ? matching.sentenceIndexes[matching.sentenceIndexes.length-1] : -1,
+      crossedWrittenPeriodBoundary:!!matching.crossedWrittenPeriodBoundary
+    };
+    readToBobFinalizedChunkObservations.push(observation);
+    readToBobSentenceMetadata.forEach(function(sentence){
+      var matchedInSentence=matchedIndexes.filter(function(wordIndex){
+        return wordIndex >= sentence.startWordIndex && wordIndex <= sentence.endWordIndex;
+      });
+      if(matchedInSentence.length){
+        if(sentence.firstMatchedTimestamp === null) sentence.firstMatchedTimestamp=callbackTime;
+        sentence.lastMatchedTimestamp=callbackTime;
+        if(sentence.finalizedChunkIndexes.indexOf(resultIndex) < 0){
+          sentence.finalizedChunkIndexes.push(resultIndex);
+        }
+      }
+      if(matchedIndexes.indexOf(sentence.endWordIndex) >= 0 && sentence.reachedEndTimestamp === null){
+        sentence.reachedEndTimestamp=callbackTime;
+        sentence.reachedEndChunkIndex=resultIndex;
+        sentence.periodEndingChunkTranscript=String(spoken || "");
+        if(sentence.endingPunctuation === "." &&
+          readToBobInterimExtendedBeyondFinalizedChunk(spoken,previousFinalizedTimestamp)){
+          sentence.preFinalizationInterimExtended=true;
+          sentence.preFinalizationInterimTimestamp=lastReadToBobInterimActivityTimestamp;
+          sentence.fluencyObservationState="ambiguous";
+        }
+      }
+    });
+    readToBobSentenceMetadata.forEach(function(sentence){
+      if(sentence.endingPunctuation !== ".") return;
+      var nextSentence=readToBobSentenceMetadata[sentence.index+1];
+      if(!nextSentence) return;
+      var reachedPeriodInChunk=matchedIndexes.indexOf(sentence.endWordIndex) >= 0;
+      var enteredNextSentenceInChunk=matchedIndexes.some(function(wordIndex){
+        return wordIndex >= nextSentence.startWordIndex && wordIndex <= nextSentence.endWordIndex;
+      });
+      var periodWasConfidentlyReached=!!recognizedPassageWordIndices[sentence.endWordIndex] &&
+        (sentence.endWordIndex === sentence.startWordIndex ||
+          !!recognizedPassageWordIndices[sentence.endWordIndex-1]);
+      var enteredAtNextStart=matchedIndexes.indexOf(nextSentence.startWordIndex) >= 0;
+      if(reachedPeriodInChunk && enteredNextSentenceInChunk){
+        sentence.finalizedChunkCrossedIntoNextSentence=true;
+        var crossingIsAmbiguous=sentence.preFinalizationInterimExtended ||
+          hasReadToBobBoundaryRepetitionAmbiguity(
+            sentence,nextSentence,matching,spoken,true
+          );
+        if(periodWasConfidentlyReached && enteredAtNextStart && !crossingIsAmbiguous){
+          sentence.possiblePeriodReadThrough=true;
+          sentence.fluencyObservationState="possible-read-through";
+        }
+        else sentence.fluencyObservationState="ambiguous";
+        return;
+      }
+      if(!sentence.reachedEndTimestamp || sentence.reachedEndChunkIndex === resultIndex ||
+        !enteredAtNextStart || !periodWasConfidentlyReached) return;
+      var timingEvidenceIsAmbiguous=sentence.preFinalizationInterimExtended ||
+        sentence.interimActivitySinceEnd ||
+        hasReadToBobBoundaryRepetitionAmbiguity(
+          sentence,nextSentence,matching,
+          sentence.periodEndingChunkTranscript+" "+String(spoken || ""),false
+        );
+      if(timingEvidenceIsAmbiguous){
+        sentence.fluencyObservationState="ambiguous";
+        return;
+      }
+      var approximateInterval=callbackTime-sentence.reachedEndTimestamp;
+      sentence.approximateBoundaryInterval=approximateInterval;
+      if(approximateInterval >= 400 && approximateInterval <= 1200){
+        sentence.possibleHelpfulPeriodPause=true;
+        sentence.fluencyObservationState="possible-helpful-pause";
+      }
+      else if(approximateInterval < 350){
+        sentence.possiblePeriodReadThrough=true;
+        sentence.fluencyObservationState="possible-read-through";
+      }
+    });
+  }
+  function evaluateReadToBobPeriodFluency(){
+    if(readToBobFluencyEvaluated || !isCurrentReadToBobSession()) return null;
+    readToBobFluencyEvaluated=true;
+    var helpful=readToBobSentenceMetadata.find(function(sentence){
+      return sentence.endingPunctuation === "." && sentence.possibleHelpfulPeriodPause;
+    });
+    if(helpful){
+      return {
+        sentenceIndex:helpful.index,
+        state:"helpful",
+        message:"Bob noticed a helpful stop at the period. That sentence sounded complete."
+      };
+    }
+    var readThrough=readToBobSentenceMetadata.find(function(sentence){
+      return sentence.endingPunctuation === "." && sentence.possiblePeriodReadThrough;
+    });
+    if(readThrough){
+      return {
+        sentenceIndex:readThrough.index,
+        state:"read-through",
+        message:"It sounded like those sentences ran together. Try a small pause at the period so each sentence sounds complete."
+      };
+    }
+    return null;
+  }
+  function presentReadToBobPeriodFluency(observation){
+    if(!observation || !isCurrentReadToBobSession()) return;
+    var punctuation=document.querySelector(
+      '#readToBobSentencePreview .readToBobPassageWord[data-sentence-index="'+
+      observation.sentenceIndex+'"] .readToBobSentencePunctuation[data-ending-punctuation="."]'
+    );
+    if(punctuation){
+      punctuation.classList.add(observation.state === "helpful"
+        ? "readToBobPeriodPauseHelpful"
+        : "readToBobPeriodReadThrough");
+      punctuation.title=observation.state === "helpful"
+        ? "Bob noticed a helpful sentence pause."
+        : "Bob suggests trying a short pause here.";
+    }
+    var feedback=byReadToBobId("readToBobFluencyFeedback");
+    if(feedback){
+      feedback.textContent=observation.message;
+      feedback.hidden=false;
+    }
   }
   function firstUnreadPassageWordIndex(){
     var wordNodes=Array.from(document.querySelectorAll("#readToBobSentencePreview .readToBobPassageWord"));
-    var index=wordNodes.findIndex(function(node,nodeIndex){ return !recognizedPassageWordIndices[nodeIndex]; });
+    var index=wordNodes.findIndex(function(node,nodeIndex){
+      return !isOptionalReadToBobWord(node) && !recognizedPassageWordIndices[nodeIndex];
+    });
     return index < 0 ? 0 : index;
   }
   function unreadWordsBehindReadingAnchor(){
     var words=Array.from(document.querySelectorAll("#readToBobSentencePreview .readToBobPassageWord"));
     return words.filter(function(word,index){
       var clean=word.textContent.replace(/[^A-Za-z']/g,"");
-      return index < readingAnchorIndex && !recognizedPassageWordIndices[index] && !isSimplePracticeWord(clean);
+      return index < readingAnchorIndex && !isOptionalReadToBobWord(word) &&
+        !recognizedPassageWordIndices[index] && !isSimplePracticeWord(clean);
     }).length;
   }
   function setReadToBobFeedbackActive(active){
@@ -22640,10 +23093,15 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   }
   function currentReadToBobProgress(){
     var passageWords=Array.from(document.querySelectorAll("#readToBobSentencePreview .readToBobPassageWord"));
+    var requiredWords=passageWords.filter(function(word){ return !isOptionalReadToBobWord(word); });
+    var matchedRequiredCount=passageWords.filter(function(word,index){
+      return !isOptionalReadToBobWord(word) &&
+        (index < resumePassageWordIndex || !!recognizedPassageWordIndices[index]);
+    }).length;
     return {
       passage:passageWords.map(function(word){ return word.textContent; }).join(" ").trim(),
-      completed:passageWords.filter(function(word,index){ return index < resumePassageWordIndex || !!recognizedPassageWordIndices[index]; }).length,
-      total:passageWords.length,
+      completed:readToBobReachedPassageEnd ? requiredWords.length : matchedRequiredCount,
+      total:requiredWords.length,
       missionName:(document.getElementById("worldTitle") || {}).textContent || "Reading practice"
     };
   }
@@ -22729,6 +23187,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   window.getReadToBobPracticeText=function(){
     var words=Array.from(document.querySelectorAll("#readToBobSentencePreview .readToBobPassageWord"))
       .slice(Math.max(0,resumePassageWordIndex))
+      .filter(function(word){ return !isOptionalReadToBobWord(word); })
       .map(function(word){ return word.textContent; });
     return words.join(" ").trim();
   };
@@ -22852,6 +23311,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         }
         var interim="";
         var helpRequested=false;
+        var processedFinalChunk=false;
         for(var index=event.resultIndex; index<event.results.length; index++){
           if(preCueRecognitionResultIndices[index]) continue;
           var spoken=event.results[index][0] && event.results[index][0].transcript || "";
@@ -22860,6 +23320,10 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
                reacting to changing interim guesses from the microphone. */
             if(!finalizedRecognitionResultIndices[index]){
               finalizedRecognitionResultIndices[index]=true;
+              processedFinalChunk=true;
+              var previousFinalizedCallbackTimestamp=lastReadToBobFinalizedCallbackTimestamp;
+              var finalizedCallbackTimestamp=readToBobObservationNow();
+              lastReadToBobFinalizedCallbackTimestamp=finalizedCallbackTimestamp;
               finalTranscript+=spoken + " ";
               var spokenWords=normalizedWords(spoken);
               if(isReadToBobHelpRequest(spokenWords)){
@@ -22869,6 +23333,9 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
               }
               else{
                 var matching=highlightReadToBobWords(spokenWords);
+                recordReadToBobFinalizedChunk(
+                  index,spoken,matching,finalizedCallbackTimestamp,previousFinalizedCallbackTimestamp
+                );
                 var elapsedMinutes=Math.max(.01,(Date.now()-attemptStartedAt)/60000);
                 var wordsPerMinute=normalizedWords(finalTranscript).length/elapsedMinutes;
                 var missedBehind=unreadWordsBehindReadingAnchor();
@@ -22887,10 +23354,21 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
           }
           else interim+=spoken;
         }
+        if(processedFinalChunk && !normalizedWords(interim).length){
+          lastReadToBobInterimActivityText="";
+        }
+        recordReadToBobInterimActivity(interim);
         var liveTranscript=(finalTranscript + interim).trim();
         latestTranscript=liveTranscript;
         setReadToBobTranscript(liveTranscript);
-        if(!helpRequested) schedulePhoneticHelp();
+        if(readToBobReachedPassageEnd && !readToBobCompletionStopRequested){
+          readToBobCompletionStopRequested=true;
+          clearPhoneticHelpTimer();
+          releaseReadToBobMicrophone();
+          setReadToBobStatus("BOB heard you reach the end. Preparing your feedback…");
+          try{ activeRecognition.stop(); }catch(error){}
+        }
+        else if(!helpRequested) schedulePhoneticHelp();
       };
       activeRecognition.onerror=function(event){
         if(attemptToken !== readToBobAttemptToken || recognition !== activeRecognition ||
@@ -22914,6 +23392,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         }
         var wasStopped=stopping;
         var stoppedTranscript=latestTranscript.trim();
+        var fluencyObservation=evaluateReadToBobPeriodFluency();
         if(countdownTimer){ window.clearTimeout(countdownTimer); countdownTimer=null; }
         countingDown=false;
         readToBobCueComplete=false;
@@ -22925,21 +23404,25 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         updateListeningButtons();
         if(!wasStopped && finalTranscript.trim()){
           var finishedProgress=currentReadToBobProgress();
-          var feedback=adaptPracticePassage();
+          var feedback=readToBobReachedPassageEnd
+            ? "Nice reading! BOB may not have heard every word, but you reached the end of the passage."
+            : adaptPracticePassage();
           resumePassageWordIndex=0;
           giveReadToBobFeedback(feedback,finishedProgress);
         }
         else if(wasStopped && stoppedTranscript){
-          var wordNodes=Array.from(document.querySelectorAll("#readToBobSentencePreview .readToBobPassageWord"));
-          var completed=Object.keys(recognizedPassageWordIndices).length;
-          var total=wordNodes.length;
-          resumePassageWordIndex=firstUnreadPassageWordIndex();
-          giveReadToBobFeedback(completed >= total
-            ? "Wonderful work! You completed the whole reading passage."
+          var stoppedProgress=currentReadToBobProgress();
+          var completed=stoppedProgress.completed;
+          var total=stoppedProgress.total;
+          resumePassageWordIndex=readToBobReachedPassageEnd ? 0 : firstUnreadPassageWordIndex();
+          giveReadToBobFeedback(readToBobReachedPassageEnd
+            ? "Nice reading! BOB may not have heard every word, but you reached the end of the passage."
             : "Great effort! BOB heard "+completed+" of "+total+" words. You are making progress. Continue with the aqua word when you are ready.");
         }
         else if(!wasStopped) setReadToBobStatus("BOB stopped listening. Select Start Reading when you are ready.");
         else setReadToBobStatus("Nice try! No words were captured yet. Select Start Reading when you are ready.");
+        presentReadToBobPeriodFluency(fluencyObservation);
+        resetReadToBobFluencyState({preservePresentation:true});
         preCueRecognitionResultIndices={};
         stopping=false;
       };
@@ -22964,12 +23447,15 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       !isCurrentReadToBobSession()) return;
     captureReadToBobCountdownFocus();
     var attemptToken=++readToBobAttemptToken;
+    resetReadToBobFluencyState();
     readToBobCueComplete=false;
     preCueRecognitionResultIndices={};
     if(!(await prepareReadToBobMicrophone(attemptToken))) return;
     if(attemptToken !== readToBobAttemptToken || listening || recognitionStarting || countingDown) return;
     finalTranscript="";
     latestTranscript="";
+    readToBobReachedPassageEnd=false;
+    readToBobCompletionStopRequested=false;
     finalizedRecognitionResultIndices={};
     readingAnchorIndex=Math.max(0,resumePassageWordIndex-1);
     stopping=false;
@@ -23009,7 +23495,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     window.readToBobPracticeActive=opening;
     document.body.classList.toggle("readToBobPracticeActive",opening);
     button.setAttribute("aria-expanded",opening ? "true" : "false");
-    button.textContent=opening ? "🎙 Close Read to BOB Practice" : "🎙 Read to BOB Practice";
+    button.textContent=opening ? "🎙️ Close Read to BOB" : "🎙️ Read to BOB";
     if(opening){
       readToBobSessionClosed=false;
       setReadToBobTickerPaused(true);
