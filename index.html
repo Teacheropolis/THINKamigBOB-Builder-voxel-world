@@ -4305,7 +4305,7 @@ Future extraction target: STEM Coach and read-aloud UI.
 </div>
 </div>
 <button id="readToBobPracticeButton" type="button" aria-expanded="false" aria-controls="readToBobPractice" onclick="startStemCoachReadToBob()">🎙️ Read to BOB</button>
-<button id="reopenLibraryFromCoach" type="button" onclick="reopenObjectLibraryFromCoach(event)">↗ REOPEN LIBRARY</button>
+<button id="reopenLibraryFromCoach" type="button" onclick="reopenObjectLibraryFromCoach(event)">↗ OPEN LIBRARY</button>
 </div>
 </div>
 <!-- =====================================================
@@ -6445,6 +6445,7 @@ document.addEventListener('wheel', (event) => {
 if(
   event.target.closest("#info") ||
   event.target.closest("#floatingToolbox") ||
+  event.target.closest("#toolbox") ||
   event.target.closest("#missionCard") ||
   event.target.closest("#stemCoach") ||
   event.target.closest("#buildBar") ||
@@ -20614,6 +20615,9 @@ body:not(.starterScreenActive) #challengeChecklist label:first-child.starterNote
     toolbox.style.setProperty("z-index","3200","important");
     toolbox.style.setProperty("pointer-events","auto","important");
     if(originalButton){ originalButton.setAttribute("aria-expanded","true"); }
+    if(typeof window.markObjectLibraryOpenedForMission === "function"){
+      window.markObjectLibraryOpenedForMission();
+    }
     if(typeof window.positionRightPanels === "function"){
       try{ window.positionRightPanels(); }catch(error){}
     }
@@ -20693,6 +20697,140 @@ body:not(.starterScreenActive) #reopenLibraryFromCoach{
 body:not(.starterScreenActive) #reopenLibraryFromCoach:hover{filter:brightness(1.13) !important;transform:translateY(-1px) !important;}
 body:not(.starterScreenActive) #reopenLibraryFromCoach:active{filter:brightness(.88) !important;transform:translateY(1px) !important;}
 </style>
+
+<style id="objectLibraryScrolling206ACSS">
+/* Object Library only: visible engineering-green scrollbar and contained
+   wheel/trackpad/touch movement.  The STEM Coach scrollbar is not targeted. */
+body:not(.starterScreenActive) #toolbox{
+  overflow-y:auto !important;
+  overscroll-behavior:contain !important;
+  touch-action:pan-y !important;
+  -webkit-overflow-scrolling:touch !important;
+  scrollbar-width:auto !important;
+  scrollbar-color:#65ff68 #092331 !important;
+}
+body:not(.starterScreenActive) #toolbox::-webkit-scrollbar{
+  width:14px;
+}
+body:not(.starterScreenActive) #toolbox::-webkit-scrollbar-track{
+  border-radius:9px;
+  background:#092331;
+  box-shadow:inset 0 0 0 1px rgba(108,226,174,.18);
+}
+body:not(.starterScreenActive) #toolbox::-webkit-scrollbar-thumb{
+  min-height:36px;
+  border:3px solid #092331;
+  border-radius:9px;
+  background:linear-gradient(180deg,#b9f548 0%,#65ff68 48%,#24b960 100%);
+  box-shadow:inset 0 1px rgba(255,255,255,.38),0 0 7px rgba(101,255,104,.44);
+}
+body:not(.starterScreenActive) #toolbox::-webkit-scrollbar-thumb:hover{
+  background:linear-gradient(180deg,#dcff84 0%,#86ff87 48%,#35d774 100%);
+  box-shadow:inset 0 1px rgba(255,255,255,.48),0 0 10px rgba(101,255,104,.72);
+}
+</style>
+
+<script id="objectLibraryAccessAndScrolling206AScript">
+(function(){
+  "use strict";
+
+  var libraryOpenedForMission=false;
+  var currentLibraryMissionKey="";
+
+  function libraryMissionKey(){
+    var title=document.getElementById("worldTitle");
+    return title ? String(title.textContent || "").replace(/\s+/g," ").trim().toLowerCase() : "";
+  }
+
+  function updateLibraryAccessLabel(){
+    var button=document.getElementById("reopenLibraryFromCoach");
+    if(button) button.textContent=libraryOpenedForMission ? "↗ REOPEN LIBRARY" : "↗ OPEN LIBRARY";
+  }
+
+  function resetLibraryAccessForMissionIfNeeded(){
+    var nextKey=libraryMissionKey();
+    if(!nextKey || nextKey === currentLibraryMissionKey) return;
+    currentLibraryMissionKey=nextKey;
+    libraryOpenedForMission=false;
+    updateLibraryAccessLabel();
+  }
+
+  window.markObjectLibraryOpenedForMission=function(){
+    var toolbox=document.getElementById("toolbox");
+    if(!toolbox || window.getComputedStyle(toolbox).display === "none") return false;
+    libraryOpenedForMission=true;
+    updateLibraryAccessLabel();
+    return true;
+  };
+
+  function installLibraryScrollIsolation(){
+    var toolbox=document.getElementById("toolbox");
+    if(!toolbox || toolbox.dataset.scrollIsolation206A === "true") return;
+    toolbox.dataset.scrollIsolation206A="true";
+
+    toolbox.addEventListener("wheel",function(event){
+      if(window.getComputedStyle(toolbox).display === "none") return;
+      var delta=event.deltaY;
+      if(event.deltaMode === 1) delta*=20;
+      else if(event.deltaMode === 2) delta*=Math.max(1,toolbox.clientHeight);
+      if(delta) toolbox.scrollTop+=delta;
+      event.preventDefault();
+      event.stopPropagation();
+    },{passive:false});
+
+    ["touchstart","touchmove","touchend","touchcancel"].forEach(function(eventName){
+      toolbox.addEventListener(eventName,function(event){
+        event.stopPropagation();
+      },{passive:true});
+    });
+  }
+
+  function observeSuccessfulLibraryOpening(){
+    var wrapper=document.getElementById("floatingToolbox");
+    var toolbox=document.getElementById("toolbox");
+    if(!wrapper || !toolbox || wrapper.dataset.libraryOpenObserver206A === "true") return;
+    wrapper.dataset.libraryOpenObserver206A="true";
+    var confirmVisibleOpen=function(){
+      window.requestAnimationFrame(function(){
+        if(wrapper.classList.contains("objectLibraryOpen") &&
+          window.getComputedStyle(toolbox).display !== "none"){
+          window.markObjectLibraryOpenedForMission();
+        }
+      });
+    };
+    new MutationObserver(confirmVisibleOpen).observe(wrapper,{
+      attributes:true,
+      attributeFilter:["class"]
+    });
+    new MutationObserver(confirmVisibleOpen).observe(toolbox,{
+      attributes:true,
+      attributeFilter:["style"]
+    });
+  }
+
+  function install(){
+    updateLibraryAccessLabel();
+    resetLibraryAccessForMissionIfNeeded();
+    installLibraryScrollIsolation();
+    observeSuccessfulLibraryOpening();
+    var title=document.getElementById("worldTitle");
+    if(title && title.dataset.libraryMissionObserver206A !== "true"){
+      title.dataset.libraryMissionObserver206A="true";
+      new MutationObserver(resetLibraryAccessForMissionIfNeeded).observe(title,{
+        childList:true,
+        characterData:true,
+        subtree:true
+      });
+    }
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded",install,{once:true});
+  }else{
+    install();
+  }
+})();
+</script>
 
 <!-- Chromebook browsers can reserve top space for the bookmarks bar.  Keep the
      fixed builder HUD clear of that area without changing the desktop layout. -->
