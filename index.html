@@ -4176,6 +4176,8 @@ Nature ▶
 <div class="dashboard139MessageStrip"><span class="bottomToolMessage" id="toolMessage">Tool message will show here.</span></div>
 </div>
 
+<div id="builderMissionTitleOverlay" aria-hidden="true" hidden></div>
+
 <section id="readToBobPractice" hidden role="dialog" aria-modal="false" aria-label="Read to BOB practice">
   <button id="readToBobCloseButton" type="button" aria-label="Close Read to BOB practice" onclick="toggleReadToBobPractice()">×</button>
   <div class="readToBobPracticeTitle">🎙 READ TO BOB</div>
@@ -4297,6 +4299,32 @@ Future extraction target: STEM Coach and read-aloud UI.
   </div>
 </div>
 
+<section id="stemCoachActionGroup" aria-label="STEM Coach actions">
+  <button id="reopenLibraryFromCoach" type="button" onclick="reopenObjectLibraryFromCoach(event)">↗ OPEN LIBRARY</button>
+  <button id="readToBobPracticeButton" type="button" aria-expanded="false" aria-controls="readToBobPractice" onclick="startStemCoachReadToBob()">🎙️ Read to BOB</button>
+</section>
+<section id="readToBobStatsPanel" aria-labelledby="readToBobStatsHeader">
+  <div id="readToBobStatsHeader">🎙️ READ TO BOB STATS</div>
+  <div class="readToBobStatsSummary">
+    <div class="readToBobStatsGearTotal">
+      <span class="readToBobStatsGearIcon" aria-hidden="true">⚙️</span>
+      <strong id="readToBobStatsGears">0 GEARS</strong>
+    </div>
+    <div id="readToBobStatsReadings">📚 0 READINGS COMPLETED</div>
+  </div>
+  <div class="readToBobStatsProgressGrid">
+    <div class="readToBobStatsProgressCard">
+      <strong>⭐ STAR LEVEL <b id="readToBobStatsStarLevel">1</b></strong>
+      <span id="readToBobStatsStarSymbols" aria-hidden="true">□ □ □</span>
+      <small id="readToBobStatsStarCount">0 OF 3</small>
+    </div>
+    <div class="readToBobStatsProgressCard">
+      <strong>⛑️ SAFETY LEVEL <b id="readToBobStatsSafetyLevel">1</b></strong>
+      <span id="readToBobStatsSafetySymbols" aria-hidden="true">□ □ □</span>
+      <small id="readToBobStatsSafetyCount">0 OF 3</small>
+    </div>
+  </div>
+</section>
 <div id="stemCoachContent">
 <div id="thinkerBobPanel">
 <p><b class="coachWelcomeOxanium">Welcome, Builder!</b></p>
@@ -4304,8 +4332,6 @@ Future extraction target: STEM Coach and read-aloud UI.
 <p><b class="coachMottoOxanium">Think • Build • Discover</b></p>
 </div>
 </div>
-<button id="readToBobPracticeButton" type="button" aria-expanded="false" aria-controls="readToBobPractice" onclick="startStemCoachReadToBob()">🎙️ Read to BOB</button>
-<button id="reopenLibraryFromCoach" type="button" onclick="reopenObjectLibraryFromCoach(event)">↗ OPEN LIBRARY</button>
 </div>
 </div>
 <!-- =====================================================
@@ -4826,12 +4852,19 @@ function toggleStemCoach(){
 
   const button =
     document.getElementById("stemCoachToggle");
+  const stats =
+    document.getElementById("readToBobStatsPanel");
 
   if(content.style.display === "none"){
     content.style.display = "block";
+    if(stats) stats.hidden = false;
+    if(typeof window.updateReadToBobStats === "function"){
+      window.updateReadToBobStats();
+    }
     button.innerHTML = "THINKer BOB — STEM Coach ▼";
   } else {
     content.style.display = "none";
+    if(stats) stats.hidden = true;
     button.innerHTML = "🤔 THINKer BOB — The STEM Coach ▶";
   }
 
@@ -20661,17 +20694,168 @@ body:not(.starterScreenActive) #missionPassportPanel::-webkit-scrollbar-track{ba
 body:not(.starterScreenActive) #missionPassportPanel::-webkit-scrollbar-thumb{background:linear-gradient(#f3cf68,#9c6512);border:2px solid #0c2637;border-radius:8px;}
 </style>
 
+<style id="readToBobStatsPanel205BCSS">
+body:not(.starterScreenActive) #stemCoachActionGroup{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:7px;
+  margin:8px 0 5px;
+  padding:0;
+  border:0;
+}
+body:not(.starterScreenActive) #stemCoachContent > #stemCoachActionGroup{
+  margin:11px 0 6px;
+  padding:0 0 6px;
+}
+body:not(.starterScreenActive) #rightHudColumn{
+  bottom:10px !important;
+  height:auto !important;
+  max-height:none !important;
+}
+body:not(.starterScreenActive) #rightHudColumn > #stemCoach{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  height:auto !important;
+  overflow-y:auto !important;
+}
+body:not(.starterScreenActive) #readToBobStatsPanel{
+  display:block;
+  margin:5px 0 6px;
+  padding:4px 6px 5px;
+  box-sizing:border-box;
+  border:1px solid rgba(101,255,104,.52);
+  border-radius:9px;
+  color:#eefaff;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,rgba(0,0,0,.025) 1px 3px),
+    linear-gradient(160deg,rgba(29,67,82,.98),rgba(7,28,40,.99));
+  box-shadow:
+    inset 0 1px rgba(214,246,255,.14),
+    inset 0 -8px 14px rgba(0,0,0,.16),
+    0 0 0 1px rgba(101,255,104,.12),
+    0 0 12px rgba(101,255,104,.24);
+  overflow:visible;
+}
+body:not(.starterScreenActive) #readToBobStatsPanel[hidden]{display:none !important;}
+body:not(.starterScreenActive) #readToBobStatsHeader{
+  margin-bottom:3px;
+  color:#b9f548;
+  font-family:"SFMono-Regular",Menlo,Consolas,monospace;
+  font-size:10px;
+  line-height:11px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-align:center;
+  text-shadow:0 0 6px rgba(101,255,104,.38);
+}
+body:not(.starterScreenActive) .readToBobStatsSummary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  min-height:21px;
+  padding:2px 6px;
+  border-radius:6px;
+  background:rgba(3,20,29,.70);
+}
+body:not(.starterScreenActive) .readToBobStatsGearTotal{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  min-width:0;
+}
+body:not(.starterScreenActive) .readToBobStatsGearIcon{
+  color:#dff8ff;
+  font-size:18px;
+  line-height:18px;
+  text-shadow:
+    0 0 3px #fff,
+    0 0 7px rgba(72,230,255,.98),
+    0 0 13px rgba(37,137,255,.82);
+}
+body:not(.starterScreenActive) #readToBobStatsGears{
+  color:#b9f548;
+  font-size:16px;
+  line-height:18px;
+  font-weight:950;
+  white-space:nowrap;
+  text-shadow:0 0 8px rgba(101,255,104,.58);
+}
+body:not(.starterScreenActive) #readToBobStatsReadings{
+  min-width:0;
+  color:#dff8ff;
+  font-size:9px;
+  line-height:11px;
+  font-weight:900;
+  text-align:right;
+}
+body:not(.starterScreenActive) .readToBobStatsProgressGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4px;
+  margin-top:3px;
+}
+body:not(.starterScreenActive) .readToBobStatsProgressCard{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:3px;
+  min-width:0;
+  min-height:22px;
+  padding:2px 4px;
+  border:1px solid rgba(126,207,232,.23);
+  border-radius:6px;
+  background:rgba(4,24,35,.58);
+}
+body:not(.starterScreenActive) .readToBobStatsProgressCard strong{
+  color:#fff7bd;
+  font-size:8.5px;
+  line-height:15px;
+  font-weight:950;
+  white-space:nowrap;
+}
+body:not(.starterScreenActive) .readToBobStatsProgressCard strong b{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:17px;
+  min-height:17px;
+  margin-left:2px;
+  padding:0 3px;
+  box-sizing:border-box;
+  border:1px solid rgba(185,245,72,.62);
+  border-radius:5px;
+  color:#f5ffca;
+  background:rgba(16,52,61,.88);
+  box-shadow:inset 0 1px rgba(255,255,255,.14),0 0 7px rgba(101,255,104,.34);
+  font-size:14px;
+  line-height:15px;
+  font-weight:1000;
+  text-shadow:0 0 5px rgba(185,245,72,.58);
+}
+body:not(.starterScreenActive) .readToBobStatsProgressCard span{
+  color:#fff;
+  font-size:13px;
+  line-height:16px;
+  white-space:nowrap;
+}
+body:not(.starterScreenActive) .readToBobStatsProgressCard small{
+  display:none;
+}
+</style>
+
 <!-- A persistent Library shortcut lives below the coach's scrollable advice. -->
 <style id="stemCoachReopenLibraryButtonCSS">
 body:not(.starterScreenActive) #reopenLibraryFromCoach{
-  position:sticky !important;
-  bottom:0 !important;
+  position:static !important;
+  bottom:auto !important;
   display:flex !important;
   align-items:center !important;
   justify-content:center !important;
-  width:calc(100% - 22px) !important;
+  width:100% !important;
   min-height:48px !important;
-  margin:8px 11px 10px !important;
+  margin:0 !important;
   padding:9px 14px !important;
   box-sizing:border-box !important;
   color:#b9f548 !important;
@@ -20738,13 +20922,47 @@ body:not(.starterScreenActive) #toolbox::-webkit-scrollbar-thumb:hover{
   var currentLibraryMissionKey="";
 
   function libraryMissionKey(){
+    var selectedMission=String(window.selectedStartWorld || "").trim();
+    if(selectedMission) return "selected:"+selectedMission;
     var title=document.getElementById("worldTitle");
-    return title ? String(title.textContent || "").replace(/\s+/g," ").trim().toLowerCase() : "";
+    var titleKey=title ? String(title.textContent || "").replace(/\s+/g," ").trim().toLowerCase() : "";
+    return titleKey ? "title:"+titleKey : "";
+  }
+
+  function resetStemCoachScrollForMission(){
+    var coach=document.getElementById("stemCoach");
+    var content=document.getElementById("stemCoachContent");
+    if(coach) coach.scrollTop=0;
+    if(content) content.scrollTop=0;
+    window.requestAnimationFrame(function(){
+      if(coach) coach.scrollTop=0;
+      if(content) content.scrollTop=0;
+    });
+  }
+
+  function updateLibraryActionPlacement(){
+    var group=document.getElementById("stemCoachActionGroup");
+    var coach=document.getElementById("stemCoach");
+    var content=document.getElementById("stemCoachContent");
+    var stats=document.getElementById("readToBobStatsPanel");
+    if(!group || !coach || !content || !stats) return;
+    if(libraryOpenedForMission){
+      if(group.parentElement !== content || group !== content.lastElementChild){
+        content.appendChild(group);
+      }
+      group.dataset.libraryActionPlacement="content-bottom";
+    }else{
+      if(group.parentElement !== coach || group.nextElementSibling !== stats){
+        coach.insertBefore(group,stats);
+      }
+      group.dataset.libraryActionPlacement="mission-start";
+    }
   }
 
   function updateLibraryAccessLabel(){
     var button=document.getElementById("reopenLibraryFromCoach");
     if(button) button.textContent=libraryOpenedForMission ? "↗ REOPEN LIBRARY" : "↗ OPEN LIBRARY";
+    updateLibraryActionPlacement();
   }
 
   function resetLibraryAccessForMissionIfNeeded(){
@@ -20753,6 +20971,7 @@ body:not(.starterScreenActive) #toolbox::-webkit-scrollbar-thumb:hover{
     currentLibraryMissionKey=nextKey;
     libraryOpenedForMission=false;
     updateLibraryAccessLabel();
+    resetStemCoachScrollForMission();
   }
 
   window.markObjectLibraryOpenedForMission=function(){
@@ -20822,6 +21041,14 @@ body:not(.starterScreenActive) #toolbox::-webkit-scrollbar-thumb:hover{
         subtree:true
       });
     }
+    var content=document.getElementById("stemCoachContent");
+    if(content && content.dataset.libraryActionPlacementObserver205B3 !== "true"){
+      content.dataset.libraryActionPlacementObserver205B3="true";
+      new MutationObserver(updateLibraryActionPlacement).observe(content,{
+        childList:true,
+        subtree:true
+      });
+    }
   }
 
   if(document.readyState === "loading"){
@@ -20849,6 +21076,211 @@ body:not(.starterScreenActive) #toolbox::-webkit-scrollbar-thumb:hover{
   }
 }
 </style>
+
+<style id="stemCoachViewportHeight205B3CSS">
+/* Keep the Coach inside a top-and-bottom bounded column. On Chromebook-sized
+   viewports, apply the existing safe-area offset to the column instead of
+   translating the Coach beyond the viewport. */
+body:not(.starterScreenActive) #rightHudColumn > #stemCoach{
+  translate:0 0 !important;
+}
+@media (max-width:1400px), (max-height:820px){
+  body:not(.starterScreenActive) #rightHudColumn{
+    top:50px !important;
+    bottom:10px !important;
+  }
+}
+</style>
+
+<style id="persistentMissionTitleOverlay207ACSS">
+body:not(.starterScreenActive) #builderMissionTitleOverlay{
+  position:fixed;
+  top:18px;
+  left:50%;
+  z-index:80;
+  width:max-content;
+  max-width:min(620px,calc(100vw - 700px));
+  overflow:hidden;
+  transform:translateX(-50%);
+  padding:0;
+  border:0;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+  background:
+    radial-gradient(circle at center,
+      #8ff6ff 0 1px,
+      rgba(143,246,255,.84) 1.1px 1.45px,
+      transparent 1.55px) 0 0 / 3px 3px;
+  -webkit-background-clip:text;
+  background-clip:text;
+  box-shadow:none;
+  font-family:Lexend,Arial,Helvetica,sans-serif;
+  font-size:18px;
+  line-height:1.1;
+  font-weight:900;
+  letter-spacing:.10em;
+  text-align:center;
+  text-overflow:ellipsis;
+  text-transform:uppercase;
+  filter:
+    drop-shadow(0 0 1px rgba(92,235,255,.95))
+    drop-shadow(0 0 4px rgba(41,181,255,.72))
+    drop-shadow(0 1px 1px rgba(0,0,0,.48));
+  opacity:.78;
+  white-space:nowrap;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  cursor:default;
+  animation:builderMissionTitleWhiteLed207D 3.5s ease-in-out infinite;
+}
+body:not(.starterScreenActive) #builderMissionTitleOverlay::before{
+  content:none;
+  display:none;
+}
+body:not(.starterScreenActive) #builderMissionTitleOverlay[data-title-size="short"]{font-size:18px;}
+body:not(.starterScreenActive) #builderMissionTitleOverlay[data-title-size="medium"]{font-size:18px;}
+body:not(.starterScreenActive) #builderMissionTitleOverlay[data-title-size="long"]{font-size:17px;}
+body.starterScreenActive #builderMissionTitleOverlay,
+#builderMissionTitleOverlay[hidden]{
+  display:none !important;
+}
+@keyframes builderMissionTitleWhiteLed207D{
+  0%,100%{
+    opacity:.72;
+    filter:
+      brightness(.88)
+      drop-shadow(0 0 1px rgba(92,235,255,.78))
+      drop-shadow(0 0 3px rgba(41,181,255,.42))
+      drop-shadow(0 1px 1px rgba(0,0,0,.48));
+  }
+  50%{
+    opacity:1;
+    filter:
+      brightness(1.16)
+      drop-shadow(0 0 2px rgba(143,246,255,1))
+      drop-shadow(0 0 7px rgba(41,181,255,.88))
+      drop-shadow(0 1px 1px rgba(0,0,0,.48));
+  }
+}
+@media(max-width:1400px){
+  body:not(.starterScreenActive) #builderMissionTitleOverlay{
+    top:50px;
+    left:calc((100vw - 315px)/2);
+    max-width:calc(100vw - 380px);
+  }
+}
+@media(max-width:1150px){
+  body:not(.starterScreenActive) #builderMissionTitleOverlay{
+    left:calc((100vw - 295px)/2);
+    max-width:calc(100vw - 350px);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body:not(.starterScreenActive) #builderMissionTitleOverlay{
+    animation:none;
+    opacity:1;
+    filter:
+      brightness(1)
+      drop-shadow(0 0 1px rgba(92,235,255,.95))
+      drop-shadow(0 0 4px rgba(41,181,255,.72))
+      drop-shadow(0 1px 1px rgba(0,0,0,.48));
+  }
+}
+</style>
+
+<script id="persistentMissionTitleOverlay207AScript">
+(function(){
+  "use strict";
+
+  var missionLabels={
+    buildCastle:"CASTLE BUILDER",
+    buildPlayground:"PLAYGROUND BUILDER",
+    buildHabitat:"HABITAT BUILDER",
+    buildDragonLair:"DRAGON LAIR BUILDER",
+    buildFutureCity:"FUTURE CITY BUILDER",
+    buildWeatherWorld:"WEATHER STATION BUILDER",
+    buildEnergyCity:"ENERGY CITY BUILDER",
+    buildSpaceColony:"MOON OR MARS COLONY BUILDER",
+    buildMoonColony:"MOON COLONY BUILDER",
+    buildMarsColony:"MARS COLONY BUILDER",
+    buildEngineeringWorld:"ENGINEERING CHALLENGE BUILDER",
+    buildCellWorld:"CELL LAB BUILDER"
+  };
+
+  function fallbackMissionLabel(){
+    var source=document.getElementById("worldTitle");
+    var label=source ? String(source.textContent || "") : "";
+    label=label
+      .replace(/THINKamigBOB/gi,"")
+      .replace(/Grade\s*\\d+\\s*:/gi,"")
+      .replace(/[^A-Za-z0-9' -]+/g," ")
+      .replace(/\\s+/g," ")
+      .trim()
+      .toUpperCase();
+    return label && !/\\bBUILDER$/.test(label) ? label+" BUILDER" : label;
+  }
+
+  function fullScreenBuilderModalIsOpen(){
+    var missionPopup=document.getElementById("missionPopup");
+    var destinationChooser=document.getElementById("spaceDestinationChooser");
+    return !!(
+      (missionPopup && window.getComputedStyle(missionPopup).display !== "none") ||
+      (destinationChooser && !destinationChooser.hidden)
+    );
+  }
+
+  function syncPersistentMissionTitle(){
+    var overlay=document.getElementById("builderMissionTitleOverlay");
+    if(!overlay) return;
+    var missionKey=String(window.selectedStartWorld || "").trim();
+    var label=missionLabels[missionKey] || fallbackMissionLabel();
+    var shouldHide=document.body.classList.contains("starterScreenActive") ||
+      fullScreenBuilderModalIsOpen() || !label;
+    overlay.hidden=shouldHide;
+    if(shouldHide) return;
+    overlay.textContent=label;
+    overlay.dataset.titleSize=label.length <= 16 ? "short" :
+      (label.length <= 24 ? "medium" : "long");
+  }
+
+  function observeOverlayState(){
+    var title=document.getElementById("worldTitle");
+    var missionPopup=document.getElementById("missionPopup");
+    var destinationChooser=document.getElementById("spaceDestinationChooser");
+    if(title){
+      new MutationObserver(syncPersistentMissionTitle).observe(title,{
+        childList:true,
+        characterData:true,
+        subtree:true
+      });
+    }
+    if(missionPopup){
+      new MutationObserver(syncPersistentMissionTitle).observe(missionPopup,{
+        attributes:true,
+        attributeFilter:["style","hidden"]
+      });
+    }
+    if(destinationChooser){
+      new MutationObserver(syncPersistentMissionTitle).observe(destinationChooser,{
+        attributes:true,
+        attributeFilter:["hidden"]
+      });
+    }
+    new MutationObserver(syncPersistentMissionTitle).observe(document.body,{
+      attributes:true,
+      attributeFilter:["class"]
+    });
+    syncPersistentMissionTitle();
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded",observeOverlayState,{once:true});
+  }else{
+    observeOverlayState();
+  }
+})();
+</script>
 
 <!-- A Chromebook may occasionally resume with a stale failed image request.
      Retry each project image once with a fresh URL; permanent failures are not
@@ -21526,23 +21958,42 @@ body.calmMode .readWord[role="button"]:focus-visible{
 /* Read-to-BOB Version 1, Step 1: a compact setup card only.  It deliberately
    has no microphone control yet, so opening it cannot prompt for permission. */
 body:not(.starterScreenActive) #readToBobPracticeButton{
-  width:100%;
-  margin:8px 0 0;
-  min-height:34px;
-  border:1px solid rgba(72,230,255,.62);
-  border-radius:9px;
-  color:#48e6ff;
-  background:linear-gradient(180deg,rgba(18,57,78,.96),rgba(8,34,51,.98));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 3px 8px rgba(0,0,0,.24);
-  font-weight:900;
-  letter-spacing:.035em;
-  cursor:pointer;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  min-height:48px !important;
+  margin:0 !important;
+  padding:9px 14px !important;
+  box-sizing:border-box !important;
+  border:2px solid #48e6ff !important;
+  border-radius:8px !important;
+  color:#dffbff !important;
+  background:linear-gradient(180deg,#27485c 0%,#0b293a 54%,#061722 100%) !important;
+  box-shadow:
+    inset 0 1px rgba(214,246,255,.28),
+    inset 0 -2px rgba(0,0,0,.6),
+    0 0 0 1px rgba(72,230,255,.30),
+    0 0 12px rgba(72,230,255,.85),
+    0 0 24px rgba(37,137,255,.48),
+    0 3px 6px rgba(0,0,0,.38) !important;
+  font-family:"SFMono-Regular",Menlo,Consolas,monospace !important;
+  font-size:14px !important;
+  font-weight:900 !important;
+  letter-spacing:.07em !important;
+  text-shadow:0 1px #000,0 0 5px rgba(72,230,255,.46) !important;
+  cursor:pointer !important;
 }
 body:not(.starterScreenActive) #readToBobPracticeButton:hover,
 body:not(.starterScreenActive) #readToBobPracticeButton:focus-visible{
-  filter:brightness(1.16);
-  outline:2px solid #ffe16a;
-  outline-offset:2px;
+  filter:brightness(1.16) !important;
+  outline:2px solid #dffbff !important;
+  outline-offset:2px !important;
+  transform:translateY(-1px) !important;
+}
+body:not(.starterScreenActive) #readToBobPracticeButton:active{
+  filter:brightness(.88) !important;
+  transform:translateY(1px) !important;
 }
 body:not(.starterScreenActive) #readToBobPractice{
   position:fixed;
@@ -22364,6 +22815,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   function hideReadToBobRewardPopup(){
     var popup=byReadToBobId("readToBobRewardPopup");
     if(popup) popup.hidden=true;
+    if(typeof window.updateReadToBobStats === "function") window.updateReadToBobStats();
   }
   function clearReadToBobFluencyPresentation(){
     var coach=byReadToBobId("readToBobFluencyIndicator");
@@ -23623,6 +24075,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     if(!stored || typeof stored !== "object" || Array.isArray(stored)) stored={};
     return {
       gears:readToBobSafeStoredNumber(stored.gears),
+      readingsCompleted:readToBobSafeStoredNumber(stored.readingsCompleted),
       star:{
         progress:Math.min(2,readToBobSafeStoredNumber(stored.star && stored.star.progress)),
         level:readToBobSafeStoredNumber(stored.star && stored.star.level)
@@ -23737,7 +24190,10 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     }
     var targetBase=type === "star" ? 3 : 1;
     var baseAward=Math.max(0,targetBase-readToBobSafeStoredNumber(passageReward.baseValue));
-    if(baseAward) passageReward.baseValue=Math.max(targetBase,readToBobSafeStoredNumber(passageReward.baseValue));
+    if(baseAward){
+      passageReward.baseValue=Math.max(targetBase,readToBobSafeStoredNumber(passageReward.baseValue));
+      progress.readingsCompleted++;
+    }
     var levelUp=false;
     var levelBonus=0;
     if(baseAward && !passageReward.progressAwarded[type]){
@@ -23755,6 +24211,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     sessionRewards[passageKey]=passageReward;
     saveReadToBobRewardProgress(progress);
     saveReadToBobSessionRewards(sessionRewards);
+    if(typeof window.updateReadToBobStats === "function") window.updateReadToBobStats(progress);
     return {
       awardedGears:awardedGears,
       baseAward:baseAward,
@@ -23797,6 +24254,28 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     for(var index=0; index<3; index++) symbols.push(index<count ? symbol : "□");
     return symbols.join(" ");
   }
+  window.updateReadToBobStats=function(progress){
+    progress=progress || loadReadToBobRewardProgress();
+    var gears=byReadToBobId("readToBobStatsGears");
+    var starLevel=byReadToBobId("readToBobStatsStarLevel");
+    var starSymbols=byReadToBobId("readToBobStatsStarSymbols");
+    var starCount=byReadToBobId("readToBobStatsStarCount");
+    var safetyLevel=byReadToBobId("readToBobStatsSafetyLevel");
+    var safetySymbols=byReadToBobId("readToBobStatsSafetySymbols");
+    var safetyCount=byReadToBobId("readToBobStatsSafetyCount");
+    var readings=byReadToBobId("readToBobStatsReadings");
+    if(gears) gears.textContent=progress.gears+" GEAR"+(progress.gears === 1 ? "" : "S");
+    if(starLevel) starLevel.textContent=progress.star.level+1;
+    if(starSymbols) starSymbols.textContent=progressSymbolsForReadToBobReward("star",progress.star.progress);
+    if(starCount) starCount.textContent=progress.star.progress+" OF 3";
+    if(safetyLevel) safetyLevel.textContent=progress.helmet.level+1;
+    if(safetySymbols) safetySymbols.textContent=progressSymbolsForReadToBobReward("helmet",progress.helmet.progress);
+    if(safetyCount) safetyCount.textContent=progress.helmet.progress+" OF 3";
+    if(readings){
+      readings.textContent="📚 "+progress.readingsCompleted+" READING"+
+        (progress.readingsCompleted === 1 ? "" : "S")+" COMPLETED";
+    }
+  };
   function presentReadToBobReward(progress){
     if(!isCurrentReadToBobSession() || !readToBobReachedPassageEnd ||
       readToBobRewardPresentedForAttempt) return;
@@ -24277,6 +24756,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     panel.style.top=Math.round(top)+"px";
   }
   window.addEventListener("resize",positionReadToBobPractice);
+  window.updateReadToBobStats();
 })();
 </script>
 
