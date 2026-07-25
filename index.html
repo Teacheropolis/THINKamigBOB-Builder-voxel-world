@@ -4182,6 +4182,7 @@ Nature ▶
   <p class="readToBobPracticeIntro"><strong>1.</strong> Press Start Reading and wait for BOB’s 3–2–1 countdown. <strong>2.</strong> Read only the glowing passage below.</p>
   <div class="readToBobPassageCard" aria-label="Your reading passage">
     <div class="readToBobPassageLabel">YOUR READING PASSAGE</div>
+    <div id="readToBobFluencyIndicator" hidden role="status" aria-live="polite" aria-label="Punctuation coaching"></div>
     <p id="readToBobSentencePreview" aria-live="polite"></p>
     <div id="readToBobPaceWarning" hidden role="alert" aria-live="assertive"></div>
     <div id="readToBobPhoneticHelp" hidden role="status" aria-live="polite">
@@ -4192,11 +4193,6 @@ Nature ▶
     </div>
   </div>
   <p id="readToBobAdaptiveNote">BOB will keep the full passage when your reading is steady.</p>
-  <div id="readToBobFluencyIndicator" role="note" aria-label="Period pause coaching is on">
-    <strong>Period pause coaching is on.</strong>
-    <span><span class="readToBobFluencyLegendHelpful" aria-hidden="true">●</span> helpful pause</span>
-    <span><span class="readToBobFluencyLegendTry" aria-hidden="true">●</span> try a short pause</span>
-  </div>
   <div id="readToBobFeedback" hidden aria-live="polite">
     <div class="readToBobFeedbackLabel">BOB’S FEEDBACK</div>
     <p id="readToBobFeedbackText"></p>
@@ -4207,6 +4203,26 @@ Nature ▶
       <div id="readToBobCountdownLabel">Get ready to read</div>
       <div id="readToBobCountdown" aria-live="assertive" aria-atomic="true"></div>
       <button id="readToBobCountdownCancelButton" type="button" onclick="stopReadToBobListening()">Cancel</button>
+    </div>
+  </div>
+  <div id="readToBobRewardPopup" hidden role="dialog" aria-modal="true" aria-labelledby="readToBobRewardHeader">
+    <div class="readToBobRewardCard">
+      <div id="readToBobRewardHeader">READ TO BOB REWARD</div>
+      <div id="readToBobRewardSymbol" aria-hidden="true"></div>
+      <div id="readToBobRewardTitle"></div>
+      <p id="readToBobRewardMessage"></p>
+      <div id="readToBobGearReward" aria-live="polite"></div>
+      <div id="readToBobRewardLevelUp" hidden></div>
+      <div class="readToBobRewardProgress">
+        <div id="readToBobRewardProgressLabel"></div>
+        <div id="readToBobRewardProgressSymbols" aria-hidden="true"></div>
+        <div id="readToBobRewardProgressText"></div>
+      </div>
+      <div id="readToBobRewardRetryHint" hidden>TRY AGAIN FOR A STAR AND MORE GEARS</div>
+      <div class="readToBobRewardButtons">
+        <button id="readToBobRewardTryAgainButton" type="button" onclick="retryReadToBobRewardPassage()">TRY AGAIN</button>
+        <button id="readToBobRewardBackButton" type="button" onclick="closeReadToBobRewardToBuilder()">BACK TO BUILDER</button>
+      </div>
     </div>
   </div>
   <div class="readToBobListeningControls">
@@ -21483,6 +21499,174 @@ body:not(.starterScreenActive) .readToBobPassageWord.readToBobWordCurrent{
   background:#48e6ff;
   box-shadow:0 0 0 2px #fff7bd,0 0 12px rgba(72,230,255,.85);
 }
+body:not(.starterScreenActive) .readToBobPassageWord.readToBobReadingStrand1{
+  color:#071923;
+  background:#7ce8ff;
+  box-shadow:0 0 0 1px rgba(124,232,255,.68),0 0 7px rgba(124,232,255,.34);
+}
+body:not(.starterScreenActive) .readToBobPassageWord.readToBobReadingStrand2{
+  color:#142107;
+  background:#b9f56b;
+  box-shadow:0 0 0 1px rgba(185,245,107,.68),0 0 7px rgba(185,245,107,.30);
+}
+body:not(.starterScreenActive) .readToBobPassageWord.readToBobReadingStrand3{
+  color:#211605;
+  background:#ffd978;
+  box-shadow:0 0 0 1px rgba(255,217,120,.68),0 0 7px rgba(255,217,120,.30);
+}
+body:not(.starterScreenActive) .readToBobPassageWord.readToBobReadingStrand4{
+  color:#170d25;
+  background:#d8b1ff;
+  box-shadow:0 0 0 1px rgba(216,177,255,.68),0 0 7px rgba(216,177,255,.30);
+}
+body:not(.starterScreenActive) .readToBobPassageWord.readToBobReadingStrand5{
+  color:#082018;
+  background:#82edc2;
+  box-shadow:0 0 0 1px rgba(130,237,194,.68),0 0 7px rgba(130,237,194,.30);
+}
+body:not(.starterScreenActive) .readToBobPassageWord.readToBobWordCurrent{
+  color:#061421 !important;
+  background:#48e6ff !important;
+  box-shadow:0 0 0 2px #fff7bd,0 0 12px rgba(72,230,255,.85) !important;
+}
+body:not(.starterScreenActive) .readToBobInlinePunctuationFeedback{
+  display:inline-block;
+  margin-left:3px;
+  font-size:1.05em;
+  line-height:1;
+  vertical-align:baseline;
+}
+body:not(.starterScreenActive) .readToBobInlinePunctuationStar{
+  filter:drop-shadow(0 0 4px rgba(255,225,106,.78));
+}
+body:not(.starterScreenActive) .readToBobInlinePunctuationHelmet{
+  filter:drop-shadow(0 0 3px rgba(108,226,174,.58));
+}
+body:not(.starterScreenActive) #readToBobRewardPopup{
+  position:absolute;
+  z-index:8;
+  inset:38px 8px 8px;
+  display:grid;
+  place-items:center;
+  padding:8px;
+  border-radius:11px;
+  background:rgba(1,12,20,.92);
+  overscroll-behavior:contain;
+}
+body:not(.starterScreenActive) #readToBobRewardPopup[hidden]{display:none !important;}
+body:not(.starterScreenActive) .readToBobRewardCard{
+  width:min(430px,100%);
+  padding:13px 15px;
+  border:2px solid #65ff68;
+  border-radius:14px;
+  color:#f4fbff;
+  background:
+    linear-gradient(145deg,rgba(20,57,72,.99),rgba(4,20,31,.99)),
+    repeating-linear-gradient(90deg,transparent 0 18px,rgba(255,255,255,.025) 19px 20px);
+  box-shadow:
+    inset 0 1px rgba(214,246,255,.20),
+    0 0 0 1px rgba(101,255,104,.28),
+    0 0 22px rgba(101,255,104,.48),
+    0 12px 30px rgba(0,0,0,.58);
+  text-align:center;
+}
+body:not(.starterScreenActive) #readToBobRewardHeader{
+  color:#b9f548;
+  font-family:monospace;
+  font-size:13px;
+  font-weight:950;
+  letter-spacing:.12em;
+}
+body:not(.starterScreenActive) #readToBobRewardSymbol{
+  margin:3px 0 0;
+  font-size:50px;
+  line-height:1.05;
+  filter:drop-shadow(0 0 9px rgba(255,225,106,.72));
+}
+body:not(.starterScreenActive) #readToBobRewardTitle{
+  color:#fff7bd;
+  font-size:22px;
+  font-weight:950;
+  letter-spacing:.06em;
+  text-shadow:0 0 8px rgba(255,225,106,.42);
+}
+body:not(.starterScreenActive) #readToBobRewardMessage{
+  margin:5px 0 7px;
+  color:#e9f7ff;
+  font-size:13px;
+  font-weight:750;
+}
+body:not(.starterScreenActive) #readToBobGearReward{
+  margin:5px auto;
+  padding:7px 12px;
+  width:max-content;
+  max-width:100%;
+  border:1px solid rgba(101,255,104,.68);
+  border-radius:10px;
+  color:#b9f548;
+  background:rgba(4,25,34,.82);
+  box-shadow:0 0 14px rgba(101,255,104,.44),inset 0 1px rgba(255,255,255,.12);
+  font-size:18px;
+  font-weight:950;
+}
+body:not(.starterScreenActive) #readToBobRewardLevelUp{
+  margin:5px 0;
+  color:#ffe16a;
+  font-size:16px;
+  font-weight:950;
+  text-shadow:0 0 8px rgba(255,225,106,.65);
+}
+body:not(.starterScreenActive) #readToBobRewardLevelUp[hidden],
+body:not(.starterScreenActive) #readToBobRewardRetryHint[hidden]{display:none !important;}
+body:not(.starterScreenActive) .readToBobRewardProgress{
+  margin:6px 0;
+  padding:6px;
+  border-radius:8px;
+  background:rgba(0,0,0,.22);
+}
+body:not(.starterScreenActive) #readToBobRewardProgressLabel,
+body:not(.starterScreenActive) #readToBobRewardProgressText{
+  color:#dff8ff;
+  font-family:monospace;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.05em;
+}
+body:not(.starterScreenActive) #readToBobRewardProgressSymbols{
+  margin:2px 0;
+  font-size:22px;
+  letter-spacing:.18em;
+}
+body:not(.starterScreenActive) #readToBobRewardRetryHint{
+  margin:5px 0;
+  color:#b9f548;
+  font-size:11px;
+  font-weight:950;
+}
+body:not(.starterScreenActive) .readToBobRewardButtons{
+  display:flex;
+  justify-content:center;
+  gap:9px;
+  margin-top:7px;
+}
+body:not(.starterScreenActive) .readToBobRewardButtons button{
+  min-height:44px;
+  padding:8px 12px;
+  border:2px solid #65ff68;
+  border-radius:9px;
+  color:#eaffd1;
+  background:linear-gradient(#16495b,#082b3b);
+  box-shadow:0 0 9px rgba(101,255,104,.35),inset 0 1px rgba(255,255,255,.16);
+  font-size:12px;
+  font-weight:950;
+  cursor:pointer;
+}
+body:not(.starterScreenActive) .readToBobRewardButtons button:hover,
+body:not(.starterScreenActive) .readToBobRewardButtons button:focus-visible{
+  filter:brightness(1.15);
+  outline:2px solid #ffe16a;
+  outline-offset:2px;
+}
 body:not(.starterScreenActive) .readToBobPassageWord.readToBobWordOptional{
   text-decoration:underline dotted rgba(215,180,255,.95);
   text-underline-offset:3px;
@@ -21491,19 +21675,40 @@ body:not(.starterScreenActive) #readToBobFluencyIndicator{
   display:flex;
   align-items:center;
   flex-wrap:wrap;
-  gap:5px 10px;
-  margin:6px 5px 3px;
-  padding:7px 9px;
+  gap:6px 8px;
+  margin:6px 0 5px;
+  padding:6px 8px;
   border:1px solid rgba(133,219,255,.55);
   border-radius:7px;
   color:#dff8ff;
   background:rgba(10,37,55,.76);
-  font-size:11px;
+  font-size:12px;
   line-height:1.3;
 }
-body:not(.starterScreenActive) #readToBobFluencyIndicator strong{color:#fff7bd;}
-body:not(.starterScreenActive) .readToBobFluencyLegendHelpful{color:#7fe85a;}
-body:not(.starterScreenActive) .readToBobFluencyLegendTry{color:#ffd65a;}
+body:not(.starterScreenActive) #readToBobFluencyIndicator[hidden]{display:none !important;}
+body:not(.starterScreenActive) .readToBobPunctuationCoachLabel{
+  color:#dff8ff;
+  font-weight:850;
+}
+body:not(.starterScreenActive) .readToBobPunctuationCoachItem{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  padding:2px 6px;
+  border-radius:999px;
+  font-weight:950;
+  background:rgba(5,24,36,.74);
+}
+body:not(.starterScreenActive) .readToBobPunctuationCoachStar{
+  color:#fff7bd;
+  border:1px solid rgba(255,225,106,.58);
+  box-shadow:0 0 7px rgba(255,225,106,.34);
+}
+body:not(.starterScreenActive) .readToBobPunctuationCoachHelmet{
+  color:#dff8ff;
+  border:1px solid rgba(108,226,174,.58);
+  box-shadow:0 0 6px rgba(108,226,174,.25);
+}
 body:not(.starterScreenActive) .readToBobSentencePunctuation{
   border-radius:2px;
   text-decoration-thickness:2px;
@@ -21815,6 +22020,14 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
   var readToBobSentenceMetadata=[];
   var readToBobFinalizedChunkObservations=[];
   var readToBobFluencyEvaluated=false;
+  var readToBobPunctuationEvidence={};
+  var readToBobPunctuationOccurrenceEvidence={};
+  var readToBobPendingPunctuationBoundary=null;
+  var readToBobReadingStrandIndex=0;
+  var readToBobConfidentStrandCount=0;
+  var readToBobRewardPresentedForAttempt=false;
+  var READ_TO_BOB_REWARD_PROGRESS_KEY="thinkamigbobReadToBobRewardProgress01";
+  var READ_TO_BOB_SESSION_REWARDS_KEY="thinkamigbobReadToBobSessionRewards01";
   var lastReadToBobInterimActivityText="";
   var lastReadToBobInterimActivityTimestamp=null;
   var lastReadToBobFinalizedCallbackTimestamp=null;
@@ -22010,7 +22223,16 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     if(text) text.textContent="";
     setReadToBobFeedbackActive(false);
   }
+  function hideReadToBobRewardPopup(){
+    var popup=byReadToBobId("readToBobRewardPopup");
+    if(popup) popup.hidden=true;
+  }
   function clearReadToBobFluencyPresentation(){
+    var coach=byReadToBobId("readToBobFluencyIndicator");
+    if(coach){
+      coach.hidden=true;
+      coach.textContent="";
+    }
     var feedback=byReadToBobId("readToBobFluencyFeedback");
     if(feedback){
       feedback.hidden=true;
@@ -22020,11 +22242,28 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       punctuation.classList.remove("readToBobPeriodPauseHelpful","readToBobPeriodReadThrough");
       punctuation.removeAttribute("title");
     });
+    document.querySelectorAll("#readToBobSentencePreview .readToBobInlinePunctuationFeedback").forEach(function(symbol){
+      symbol.remove();
+    });
+    document.querySelectorAll("#readToBobSentencePreview .readToBobPassageWord").forEach(function(word){
+      word.classList.remove(
+        "readToBobReadingStrand1",
+        "readToBobReadingStrand2",
+        "readToBobReadingStrand3",
+        "readToBobReadingStrand4",
+        "readToBobReadingStrand5"
+      );
+    });
   }
   function resetReadToBobFluencyState(options){
     options=options || {};
     readToBobFinalizedChunkObservations=[];
     readToBobFluencyEvaluated=false;
+    readToBobPunctuationEvidence={};
+    readToBobPunctuationOccurrenceEvidence={};
+    readToBobPendingPunctuationBoundary=null;
+    readToBobReadingStrandIndex=0;
+    readToBobConfidentStrandCount=0;
     lastReadToBobInterimActivityText="";
     lastReadToBobInterimActivityTimestamp=null;
     lastReadToBobFinalizedCallbackTimestamp=null;
@@ -22589,6 +22828,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     recognizedPassageWordIndices={};
     readToBobReachedPassageEnd=false;
     readToBobCompletionStopRequested=false;
+    readToBobRewardPresentedForAttempt=false;
     finalizedRecognitionResultIndices={};
     readingAnchorIndex=0;
     attemptStartedAt=0;
@@ -22598,6 +22838,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     missionPracticePassageOverride="";
     window.hideReadToBobPhoneticHelp();
     hideReadToBobPaceWarning();
+    hideReadToBobRewardPopup();
     clearReadToBobFeedbackUI();
     resetReadToBobFluencyState({clearMetadata:true});
     updateListeningButtons();
@@ -22713,6 +22954,8 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       var endingPunctuation=endingMatch ? endingMatch[1].slice(-1) : "";
       sentenceWords.forEach(function(word,localWordIndex){
         var isLastWord=localWordIndex === sentenceWords.length-1;
+        var trailingPunctuationMatch=word.match(/([,.?!]+)$/);
+        var trailingPunctuation=trailingPunctuationMatch ? trailingPunctuationMatch[1].slice(-1) : "";
         var punctuationMatch=isLastWord ? word.match(/([.!?]+)$/) : null;
         var punctuation=punctuationMatch ? punctuationMatch[1] : "";
         var wordCore=punctuation ? word.slice(0,-punctuation.length) : word;
@@ -22725,6 +22968,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         renderedWords.push('<span class="readToBobPassageWord'+
           (optionalWord ? ' readToBobWordOptional' : '')+
           '" data-passage-word-index="'+globalWordIndex+'" data-sentence-index="'+sentenceIndex+'"'+
+          (trailingPunctuation ? ' data-trailing-punctuation="'+escapePracticeHtml(trailingPunctuation)+'"' : '')+
           (optionalWord ? ' data-read-to-bob-optional="true" title="This name is optional and is not required for completion."' : '')+
           ">"+rendered+"</span>");
         globalWordIndex++;
@@ -23037,6 +23281,113 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       }
     });
   }
+  function readToBobPunctuationAtWordIndex(wordIndex){
+    var node=document.querySelector(
+      '#readToBobSentencePreview .readToBobPassageWord[data-passage-word-index="'+wordIndex+'"]'
+    );
+    var mark=node ? node.getAttribute("data-trailing-punctuation") || "" : "";
+    return /^[,.?!]$/.test(mark) ? mark : "";
+  }
+  function setReadToBobPunctuationEvidence(mark,state,wordIndex){
+    if(!/^[,.?!]$/.test(mark) || (state !== "star" && state !== "helmet")) return;
+    if(state === "helmet" || !readToBobPunctuationEvidence[mark]){
+      readToBobPunctuationEvidence[mark]=state;
+    }
+    if(Number.isInteger(wordIndex) &&
+      (state === "helmet" || !readToBobPunctuationOccurrenceEvidence[wordIndex])){
+      readToBobPunctuationOccurrenceEvidence[wordIndex]={
+        mark:mark,
+        state:state
+      };
+    }
+  }
+  function isConfidentReadToBobPunctuationBatch(matching,spokenWords){
+    var indexes=matching && matching.matchedWordIndexes || [];
+    var heard=matching ? Number(matching.heard) || 0 : 0;
+    var matched=matching ? Number(matching.matched) || 0 : 0;
+    if(!indexes.length || !heard || heard-matched > 1 || matched/heard < .75) return false;
+    if(indexes.some(function(wordIndex,index){
+      return index > 0 && wordIndex <= indexes[index-1];
+    })) return false;
+    if(spokenWords.some(function(word){
+      return /^(um|uh|er|erm|hmm|hm|like)$/.test(word);
+    })) return false;
+    if(spokenWords.some(function(word,index){
+      return index > 0 && word === spokenWords[index-1];
+    })) return false;
+    if(spokenWords.some(function(word,index,all){
+      return all.indexOf(word) !== index;
+    })) return false;
+    return true;
+  }
+  function applyReadToBobReadingStrand(matching,spokenWords){
+    if(!isConfidentReadToBobPunctuationBatch(matching,spokenWords)) return;
+    var indexes=matching.matchedWordIndexes || [];
+    if(!indexes.length) return;
+    readToBobConfidentStrandCount++;
+    readToBobReadingStrandIndex=(readToBobReadingStrandIndex%5)+1;
+    var strandClass="readToBobReadingStrand"+readToBobReadingStrandIndex;
+    indexes.forEach(function(wordIndex){
+      var node=document.querySelector(
+        '#readToBobSentencePreview .readToBobPassageWord[data-passage-word-index="'+wordIndex+'"]'
+      );
+      if(node) node.classList.add(strandClass);
+    });
+  }
+  function readToBobBatchHasStrongPunctuationCrossing(indexes,boundaryIndex,mark,totalWords){
+    var required=[];
+    if(boundaryIndex-1 >= 0) required.push(boundaryIndex-1);
+    required.push(boundaryIndex);
+    if(boundaryIndex+1 < totalWords) required.push(boundaryIndex+1);
+    if(mark === ","){
+      if(boundaryIndex-2 >= 0) required.unshift(boundaryIndex-2);
+      if(boundaryIndex+2 < totalWords) required.push(boundaryIndex+2);
+    }
+    else if(boundaryIndex+2 < totalWords) required.push(boundaryIndex+2);
+    return required.length >= 3 && indexesAppearInOrder(indexes,required);
+  }
+  function recordReadToBobPunctuationBatch(matching,spokenWords){
+    if(!isCurrentReadToBobSession()) return;
+    var indexes=matching && matching.matchedWordIndexes || [];
+    if(!isConfidentReadToBobPunctuationBatch(matching,spokenWords)){
+      readToBobPendingPunctuationBoundary=null;
+      return;
+    }
+    var wordNodes=Array.from(
+      document.querySelectorAll("#readToBobSentencePreview .readToBobPassageWord")
+    );
+    if(readToBobPendingPunctuationBoundary){
+      var pending=readToBobPendingPunctuationBoundary;
+      if(indexes[0] === pending.wordIndex+1){
+        setReadToBobPunctuationEvidence(pending.mark,"star",pending.wordIndex);
+      }
+      readToBobPendingPunctuationBoundary=null;
+    }
+    wordNodes.forEach(function(node,boundaryIndex){
+      var mark=node.getAttribute("data-trailing-punctuation") || "";
+      if(!/^[,.?!]$/.test(mark)) return;
+      var boundaryPosition=indexes.indexOf(boundaryIndex);
+      var crossed=boundaryPosition >= 0 && indexes.slice(boundaryPosition+1).some(function(wordIndex){
+        return wordIndex > boundaryIndex;
+      });
+      if(crossed &&
+        readToBobBatchHasStrongPunctuationCrossing(indexes,boundaryIndex,mark,wordNodes.length)){
+        setReadToBobPunctuationEvidence(mark,"helmet",boundaryIndex);
+      }
+    });
+    var finalMatchedIndex=indexes[indexes.length-1];
+    var endingMark=readToBobPunctuationAtWordIndex(finalMatchedIndex);
+    if(!endingMark) return;
+    if(finalMatchedIndex === wordNodes.length-1){
+      setReadToBobPunctuationEvidence(endingMark,"star",finalMatchedIndex);
+    }
+    else{
+      readToBobPendingPunctuationBoundary={
+        wordIndex:finalMatchedIndex,
+        mark:endingMark
+      };
+    }
+  }
   function evaluateReadToBobPeriodFluency(){
     if(readToBobFluencyEvaluated || !isCurrentReadToBobSession()) return null;
     readToBobFluencyEvaluated=true;
@@ -23062,25 +23413,15 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     }
     return null;
   }
-  function presentReadToBobPeriodFluency(observation){
-    if(!observation || !isCurrentReadToBobSession()) return;
-    var punctuation=document.querySelector(
-      '#readToBobSentencePreview .readToBobPassageWord[data-sentence-index="'+
-      observation.sentenceIndex+'"] .readToBobSentencePunctuation[data-ending-punctuation="."]'
-    );
-    if(punctuation){
-      punctuation.classList.add(observation.state === "helpful"
-        ? "readToBobPeriodPauseHelpful"
-        : "readToBobPeriodReadThrough");
-      punctuation.title=observation.state === "helpful"
-        ? "Bob noticed a helpful sentence pause."
-        : "Bob suggests trying a short pause here.";
+  function presentReadToBobPeriodFluency(){
+    var coach=byReadToBobId("readToBobFluencyIndicator");
+    if(coach){
+      coach.replaceChildren();
+      coach.hidden=true;
     }
-    var feedback=byReadToBobId("readToBobFluencyFeedback");
-    if(feedback){
-      feedback.textContent=observation.message;
-      feedback.hidden=false;
-    }
+    document.querySelectorAll("#readToBobSentencePreview .readToBobInlinePunctuationFeedback").forEach(function(symbol){
+      symbol.remove();
+    });
   }
   function firstUnreadPassageWordIndex(){
     var wordNodes=Array.from(document.querySelectorAll("#readToBobSentencePreview .readToBobPassageWord"));
@@ -23133,6 +23474,255 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       missionName:(document.getElementById("worldTitle") || {}).textContent || "Reading practice"
     };
   }
+  function readToBobSafeStoredNumber(value){
+    value=Number(value);
+    return Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+  }
+  function loadReadToBobRewardProgress(){
+    var stored={};
+    try{ stored=JSON.parse(localStorage.getItem(READ_TO_BOB_REWARD_PROGRESS_KEY) || "{}"); }
+    catch(error){ stored={}; }
+    if(!stored || typeof stored !== "object" || Array.isArray(stored)) stored={};
+    return {
+      gears:readToBobSafeStoredNumber(stored.gears),
+      star:{
+        progress:Math.min(2,readToBobSafeStoredNumber(stored.star && stored.star.progress)),
+        level:readToBobSafeStoredNumber(stored.star && stored.star.level)
+      },
+      helmet:{
+        progress:Math.min(2,readToBobSafeStoredNumber(stored.helmet && stored.helmet.progress)),
+        level:readToBobSafeStoredNumber(stored.helmet && stored.helmet.level)
+      }
+    };
+  }
+  function saveReadToBobRewardProgress(progress){
+    try{ localStorage.setItem(READ_TO_BOB_REWARD_PROGRESS_KEY,JSON.stringify(progress)); }
+    catch(error){}
+  }
+  function loadReadToBobSessionRewards(){
+    try{
+      var stored=JSON.parse(sessionStorage.getItem(READ_TO_BOB_SESSION_REWARDS_KEY) || "{}");
+      return stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+    }catch(error){
+      return {};
+    }
+  }
+  function saveReadToBobSessionRewards(rewards){
+    try{ sessionStorage.setItem(READ_TO_BOB_SESSION_REWARDS_KEY,JSON.stringify(rewards)); }
+    catch(error){}
+  }
+  function hashReadToBobRewardText(value){
+    var hash=2166136261;
+    value=String(value || "");
+    for(var index=0; index<value.length; index++){
+      hash^=value.charCodeAt(index);
+      hash=Math.imul(hash,16777619);
+    }
+    return (hash>>>0).toString(36);
+  }
+  function currentReadToBobRewardPassageKey(progress){
+    var panel=byReadToBobId("thinkerBobPanel");
+    var objectHeading=panel && panel.querySelector("h3");
+    var vocabulary=currentStemCoachSelectedVocabulary();
+    var source=[
+      objectHeading ? cleanPracticeSentence(objectHeading.textContent) : "",
+      vocabulary ? vocabulary.word : "",
+      progress && progress.passage || ""
+    ].join("|").toLowerCase();
+    return "rtb-"+hashReadToBobRewardText(source);
+  }
+  function evaluateReadToBobRewardResult(){
+    var required=requiredReadToBobWordEntries();
+    var matchedPositions=[];
+    required.forEach(function(entry,position){
+      if(recognizedPassageWordIndices[entry.index]) matchedPositions.push(position);
+    });
+    var total=required.length;
+    var matched=matchedPositions.length;
+    var ratio=total ? matched/total : 0;
+    var meaningfulMinimum=Math.min(total,Math.max(4,Math.ceil(total*.65)));
+    var broadForwardProgress=!!matchedPositions.length &&
+      matchedPositions[0] <= Math.floor(Math.max(0,total-1)*.25) &&
+      matchedPositions[matchedPositions.length-1] >= Math.floor(Math.max(0,total-1)*.75);
+    var punctuationEvidence=Object.keys(readToBobPunctuationOccurrenceEvidence).map(function(wordIndex){
+      return readToBobPunctuationOccurrenceEvidence[wordIndex];
+    });
+    var hasHelmetEvidence=punctuationEvidence.some(function(evidence){
+      return evidence && evidence.state === "helmet";
+    });
+    var hasStarEvidence=punctuationEvidence.some(function(evidence){
+      return evidence && evidence.state === "star";
+    });
+    var strong=readToBobReachedPassageEnd &&
+      matched >= meaningfulMinimum &&
+      ratio >= .70 &&
+      broadForwardProgress &&
+      readToBobConfidentStrandCount > 0 &&
+      hasStarEvidence &&
+      !hasHelmetEvidence;
+    return {
+      type:strong ? "star" : "helmet",
+      matched:matched,
+      total:total,
+      ratio:ratio,
+      meaningful:matched >= meaningfulMinimum,
+      broadForwardProgress:broadForwardProgress,
+      hasHelmetEvidence:hasHelmetEvidence,
+      hasStarEvidence:hasStarEvidence
+    };
+  }
+  function readToBobLevelBonus(type,newLevel){
+    if(type === "star"){
+      if(newLevel === 1) return 3;
+      if(newLevel === 2) return 5;
+      return 7;
+    }
+    if(newLevel === 1) return 2;
+    if(newLevel === 2) return 3;
+    return 4;
+  }
+  function awardReadToBobReward(type,passageKey){
+    var progress=loadReadToBobRewardProgress();
+    var sessionRewards=loadReadToBobSessionRewards();
+    var passageReward=sessionRewards[passageKey];
+    if(!passageReward || typeof passageReward !== "object"){
+      passageReward={baseValue:0,progressAwarded:{star:false,helmet:false}};
+    }
+    if(!passageReward.progressAwarded || typeof passageReward.progressAwarded !== "object"){
+      passageReward.progressAwarded={star:false,helmet:false};
+    }
+    else{
+      passageReward.progressAwarded={
+        star:passageReward.progressAwarded.star === true,
+        helmet:passageReward.progressAwarded.helmet === true
+      };
+    }
+    var targetBase=type === "star" ? 3 : 1;
+    var baseAward=Math.max(0,targetBase-readToBobSafeStoredNumber(passageReward.baseValue));
+    if(baseAward) passageReward.baseValue=Math.max(targetBase,readToBobSafeStoredNumber(passageReward.baseValue));
+    var levelUp=false;
+    var levelBonus=0;
+    if(baseAward && !passageReward.progressAwarded[type]){
+      passageReward.progressAwarded[type]=true;
+      progress[type].progress++;
+      if(progress[type].progress >= 3){
+        progress[type].progress=0;
+        progress[type].level++;
+        levelUp=true;
+        levelBonus=readToBobLevelBonus(type,progress[type].level);
+      }
+    }
+    var awardedGears=baseAward+levelBonus;
+    progress.gears+=awardedGears;
+    sessionRewards[passageKey]=passageReward;
+    saveReadToBobRewardProgress(progress);
+    saveReadToBobSessionRewards(sessionRewards);
+    return {
+      awardedGears:awardedGears,
+      baseAward:baseAward,
+      levelBonus:levelBonus,
+      levelUp:levelUp,
+      progress:progress[type].progress,
+      level:progress[type].level,
+      totalGears:progress.gears
+    };
+  }
+  function chooseReadToBobRewardMessage(type){
+    var pools={
+      star:[
+        "You kept your reading moving!",
+        "Nice steady reading!",
+        "Great job working through the passage!",
+        "Your reading powered up BOB!",
+        "You showed strong reading focus!",
+        "You stayed with the passage from beginning to end!",
+        "BOB detected strong reading progress!",
+        "Your reading helped power the workshop!"
+      ],
+      helmet:[
+        "Great effort—careful readers keep practicing!",
+        "You completed the reading and found something to practice!",
+        "Nice persistence! Try again for a Star.",
+        "Your reading powered up BOB. One more try may earn a Star!",
+        "Careful readers notice where they can improve.",
+        "You stayed with the challenge—try again for more gears!",
+        "Practice powers strong readers!",
+        "BOB is ready to listen again when you are!"
+      ]
+    };
+    var pool=pools[type] || pools.helmet;
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  function progressSymbolsForReadToBobReward(type,count){
+    var symbol=type === "star" ? "⭐" : "⛑️";
+    var symbols=[];
+    for(var index=0; index<3; index++) symbols.push(index<count ? symbol : "□");
+    return symbols.join(" ");
+  }
+  function presentReadToBobReward(progress){
+    if(!isCurrentReadToBobSession() || !readToBobReachedPassageEnd ||
+      readToBobRewardPresentedForAttempt) return;
+    readToBobRewardPresentedForAttempt=true;
+    presentReadToBobPeriodFluency();
+    var result=evaluateReadToBobRewardResult();
+    var reward=awardReadToBobReward(result.type,currentReadToBobRewardPassageKey(progress));
+    var isStar=result.type === "star";
+    var popup=byReadToBobId("readToBobRewardPopup");
+    if(!popup) return;
+    byReadToBobId("readToBobRewardSymbol").textContent=isStar ? "⭐" : "⛑️";
+    byReadToBobId("readToBobRewardTitle").textContent=isStar ? "STRONG READER" : "CAREFUL READER";
+    byReadToBobId("readToBobRewardMessage").textContent=chooseReadToBobRewardMessage(result.type);
+    var gearText=reward.awardedGears
+      ? "⚙️ +"+reward.awardedGears+" STEAM GEAR"+(reward.awardedGears === 1 ? "" : "S")
+      : "⚙️ REWARD SAVED • "+reward.totalGears+" TOTAL STEAM GEARS";
+    byReadToBobId("readToBobGearReward").textContent=gearText;
+    var levelUp=byReadToBobId("readToBobRewardLevelUp");
+    levelUp.hidden=!reward.levelUp;
+    levelUp.textContent=reward.levelUp
+      ? (isStar ? "⭐ STAR LEVEL UP!" : "⛑️ SAFETY LEVEL UP!")+" +"+reward.levelBonus+" BONUS GEARS"
+      : "";
+    byReadToBobId("readToBobRewardProgressLabel").textContent=isStar ? "STAR PROGRESS" : "SAFETY PROGRESS";
+    byReadToBobId("readToBobRewardProgressSymbols").textContent=
+      progressSymbolsForReadToBobReward(result.type,reward.progress);
+    byReadToBobId("readToBobRewardProgressText").textContent=
+      reward.progress+" OF 3 TO "+(isStar ? "STAR" : "SAFETY")+" LEVEL UP";
+    var retryHint=byReadToBobId("readToBobRewardRetryHint");
+    retryHint.hidden=isStar;
+    var retryButton=byReadToBobId("readToBobRewardTryAgainButton");
+    retryButton.textContent=isStar ? "READ AGAIN" : "TRY AGAIN";
+    popup.hidden=false;
+    window.requestAnimationFrame(function(){
+      if(!popup.hidden && retryButton) retryButton.focus();
+    });
+  }
+  window.retryReadToBobRewardPassage=function(){
+    if(!isCurrentReadToBobSession()) return;
+    hideReadToBobRewardPopup();
+    cancelReadToBobSpeech();
+    finalTranscript="";
+    latestTranscript="";
+    recognizedPassageWordIndices={};
+    readToBobReachedPassageEnd=false;
+    readToBobCompletionStopRequested=false;
+    finalizedRecognitionResultIndices={};
+    readingAnchorIndex=0;
+    resumePassageWordIndex=0;
+    attemptStartedAt=0;
+    readToBobRewardPresentedForAttempt=false;
+    clearReadToBobFeedbackUI();
+    resetReadToBobFluencyState();
+    renderPracticePassage(activePracticeSentences());
+    setReadToBobTranscript("");
+    setReadToBobStatus("Select Start Reading when you are ready.");
+    hideReadToBobPaceWarning();
+    window.requestAnimationFrame(function(){
+      if(isCurrentReadToBobSession()) window.startReadToBobListening();
+    });
+  };
+  window.closeReadToBobRewardToBuilder=function(){
+    hideReadToBobRewardPopup();
+    if(isReadToBobPracticePanelVisible()) window.toggleReadToBobPractice();
+  };
   function saveReadToBobFeedbackSnapshot(message,progress){
     if(typeof window.addReadToBobPassportRecord !== "function") return;
     progress=progress || currentReadToBobProgress();
@@ -23361,9 +23951,8 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
               }
               else{
                 var matching=highlightReadToBobWords(spokenWords);
-                recordReadToBobFinalizedChunk(
-                  index,spoken,matching,finalizedCallbackTimestamp,previousFinalizedCallbackTimestamp
-                );
+                applyReadToBobReadingStrand(matching,spokenWords);
+                recordReadToBobPunctuationBatch(matching,spokenWords);
                 var elapsedMinutes=Math.max(.01,(Date.now()-attemptStartedAt)/60000);
                 var wordsPerMinute=normalizedWords(finalTranscript).length/elapsedMinutes;
                 var missedBehind=unreadWordsBehindReadingAnchor();
@@ -23385,7 +23974,6 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         if(processedFinalChunk && !normalizedWords(interim).length){
           lastReadToBobInterimActivityText="";
         }
-        recordReadToBobInterimActivity(interim);
         var liveTranscript=(finalTranscript + interim).trim();
         latestTranscript=liveTranscript;
         setReadToBobTranscript(liveTranscript);
@@ -23420,7 +24008,6 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         }
         var wasStopped=stopping;
         var stoppedTranscript=latestTranscript.trim();
-        var fluencyObservation=evaluateReadToBobPeriodFluency();
         if(countdownTimer){ window.clearTimeout(countdownTimer); countdownTimer=null; }
         countingDown=false;
         readToBobCueComplete=false;
@@ -23449,7 +24036,8 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
         }
         else if(!wasStopped) setReadToBobStatus("BOB stopped listening. Select Start Reading when you are ready.");
         else setReadToBobStatus("Nice try! No words were captured yet. Select Start Reading when you are ready.");
-        presentReadToBobPeriodFluency(fluencyObservation);
+        presentReadToBobPeriodFluency();
+        if(readToBobReachedPassageEnd) presentReadToBobReward(currentReadToBobProgress());
         resetReadToBobFluencyState({preservePresentation:true});
         preCueRecognitionResultIndices={};
         stopping=false;
@@ -23482,6 +24070,8 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     if(attemptToken !== readToBobAttemptToken || listening || recognitionStarting || countingDown) return;
     finalTranscript="";
     latestTranscript="";
+    hideReadToBobRewardPopup();
+    readToBobRewardPresentedForAttempt=false;
     readToBobReachedPassageEnd=false;
     readToBobCompletionStopRequested=false;
     finalizedRecognitionResultIndices={};
