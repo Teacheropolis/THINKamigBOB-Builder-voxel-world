@@ -4268,9 +4268,12 @@ Future extraction target: STEM Coach and read-aloud UI.
 ===================================================== -->
 <div id="rightHudColumn">
 <div id="stemCoach">
-<button id="stemCoachToggle" onclick="toggleStemCoach()">
-    <span class="stemCoachThinkerBob">THINKer BOB</span><span class="stemCoachOxanium"> — STEM Coach</span> ▼
+<div id="stemCoachHeader">
+  <button id="stemCoachToggle" type="button" aria-expanded="true" aria-controls="thinkerBobWorkshop stemCoachActionGroup readToBobStatsPanel stemCoachContent" onclick="toggleStemCoach()">
+    <span class="stemCoachHeaderTitle"><span class="stemCoachThinkerBob">THINKer BOB</span><span class="stemCoachOxanium"> — STEM Coach</span></span>
+    <span class="stemCoachToggleIndicator" aria-hidden="true">▼</span>
   </button>
+</div>
 
 <div id="thinkerBobWorkshop" aria-hidden="true">
   <!-- THINKer Bob rig integration: the articulated SVG is mounted here at runtime. -->
@@ -4423,8 +4426,9 @@ HTML SECTION: LEFT CURRENT MISSION PANEL
 </div>
 <p><b>Want More Challenge?</b></p>
 <p id="moreChallenge">Add details, decorations, and a magical feature.</p>
-<p id="badgeMessage"><b>BADGE:</b> Keep building!</p>
-<button id="openPassportFromBadge" type="button">↗ Open Passport</button>
+<p id="badgeMessage"><b>OPEN BADGES</b></p>
+<button id="openPassportFromBadge" type="button">OPEN PASSPORT</button>
+<button id="helpButton" type="button" title="Open Builder Help" aria-label="Open Builder Help">? HELP</button>
 </div>
 <!-- =====================================================
 JS SECTION 01: THREE.JS / MAIN BUILDER SCRIPT
@@ -4847,25 +4851,22 @@ function positionRightPanels(){
 
 function toggleStemCoach(){
 
-  const content =
-    document.getElementById("stemCoachContent");
-
+  const coach =
+    document.getElementById("stemCoach");
   const button =
     document.getElementById("stemCoachToggle");
-  const stats =
-    document.getElementById("readToBobStatsPanel");
+  const indicator =
+    button && button.querySelector(".stemCoachToggleIndicator");
+  const isCollapsed =
+    coach.classList.toggle("coachCollapsed");
 
-  if(content.style.display === "none"){
-    content.style.display = "block";
-    if(stats) stats.hidden = false;
+  button.setAttribute("aria-expanded", String(!isCollapsed));
+  if(indicator) indicator.textContent = isCollapsed ? "▶" : "▼";
+
+  if(!isCollapsed){
     if(typeof window.updateReadToBobStats === "function"){
       window.updateReadToBobStats();
     }
-    button.innerHTML = "THINKer BOB — STEM Coach ▼";
-  } else {
-    content.style.display = "none";
-    if(stats) stats.hidden = true;
-    button.innerHTML = "🤔 THINKer BOB — The STEM Coach ▶";
   }
 
   positionRightPanels();
@@ -6693,7 +6694,7 @@ viewCubeCanvas.addEventListener("click", function(event){
 
   viewDiceRaycaster.setFromCamera(viewDiceMouse, viewCubeCamera);
 
-  const hits = viewDiceRaycaster.intersectObject(miniCube);
+  const hits = viewDiceRaycaster.intersectObject(miniCube, false);
 
   if(hits.length > 0){
     const faceIndex = hits[0].face.materialIndex;
@@ -9527,24 +9528,18 @@ function checkBadge(){
   let earnedBadgeName = "";
 
   if(blocks.length >= 80){
-    document.getElementById("badgeMessage").innerHTML =
-      "<b>BADGE</b> earned: 🏆 Master Builder!";
     earnedBadgeTier = 3;
     earnedBadgeName = "MASTER BUILDER";
   } else if(blocks.length >= 50){
-    document.getElementById("badgeMessage").innerHTML =
-      "<b>BADGE</b> earned: 🧙 Castle Creator!";
     earnedBadgeTier = 2;
     earnedBadgeName = "CASTLE CREATOR";
   } else if(blocks.length >= 30){
-    document.getElementById("badgeMessage").innerHTML =
-      "<b>BADGE</b> earned: ⭐ Builder Apprentice!";
     earnedBadgeTier = 1;
     earnedBadgeName = "BUILDER APPRENTICE";
-  } else {
-    document.getElementById("badgeMessage").innerHTML =
-      "<b>BADGE:</b> Keep building!";
   }
+
+  document.getElementById("badgeMessage").innerHTML =
+    "<b>OPEN BADGES</b>";
 
   if(window.updateDashboardBadgeTicker){
     window.updateDashboardBadgeTicker(earnedBadgeTier, earnedBadgeName);
@@ -14299,7 +14294,7 @@ Reader controls stay in one fixed place during read aloud.
 HTML/JS SECTION — HELP POPUP
 Small help modal kept inline for now.
 ===================================================== -->
-<button id="helpButton">?</button><div id="helpModal"><div id="helpBox"><h2>How to Use the Builder</h2><ol><li>Choose a world.</li><li>Select an object or block.</li><li>Build your idea.</li><li>Use the tools to move, rotate, or color objects.</li><li>Complete your mission.</li><li><strong>Reading with BOB:</strong> Press <strong>Tab</strong> to focus a reading word, then press <strong>Enter</strong> or <strong>Space</strong> to have BOB read from that word.</li></ol><button id="closeHelp">Close</button></div></div><script>document.addEventListener("DOMContentLoaded",()=>{const b=document.getElementById("helpButton"),m=document.getElementById("helpModal"),c=document.getElementById("closeHelp");b.onclick=()=>m.style.display="block";c.onclick=()=>m.style.display="none";m.onclick=e=>{if(e.target===m)m.style.display="none"}});</script>
+<div id="helpModal"><div id="helpBox"><h2>How to Use the Builder</h2><ol><li>Choose a world.</li><li>Select an object or block.</li><li>Build your idea.</li><li>Use the tools to move, rotate, or color objects.</li><li>Complete your mission.</li><li><strong>Reading with BOB:</strong> Press <strong>Tab</strong> to focus a reading word, then press <strong>Enter</strong> or <strong>Space</strong> to have BOB read from that word.</li></ol><button id="closeHelp">Close</button></div></div><script>document.addEventListener("DOMContentLoaded",()=>{const b=document.getElementById("helpButton"),m=document.getElementById("helpModal"),c=document.getElementById("closeHelp");b.onclick=()=>m.style.display="block";c.onclick=()=>m.style.display="none";m.onclick=e=>{if(e.target===m)m.style.display="none"}});</script>
 
 <!-- =====================================================
 CSS SECTION — MISSION PASSPORT SHELL
@@ -21810,6 +21805,424 @@ body:not(.starterScreenActive) #readToBobPracticeButton{
 }
 </style>
 
+<style id="constructedDiceSideBadgeButtonsCSS">
+/* Builder shortcuts use the same constructed metal language as the View Dice. */
+body:not(.starterScreenActive) #badgeMessage,
+body:not(.starterScreenActive) #openPassportFromBadge{
+  position:relative !important;
+  isolation:isolate !important;
+  min-height:54px !important;
+  padding:11px 34px !important;
+  border:2px solid #a87325 !important;
+  border-radius:10px !important;
+  clip-path:polygon(
+    7px 0,
+    calc(100% - 7px) 0,
+    100% 7px,
+    100% calc(100% - 7px),
+    calc(100% - 7px) 100%,
+    7px 100%,
+    0 calc(100% - 7px),
+    0 7px
+  ) !important;
+  background-color:#111a20 !important;
+  background-image:
+    radial-gradient(circle at 12px 12px,
+      #fff0b1 0 1px,#d39a3a 2px 4px,#5b350b 5px 7px,transparent 8px),
+    radial-gradient(circle at calc(100% - 12px) 12px,
+      #fff0b1 0 1px,#d39a3a 2px 4px,#5b350b 5px 7px,transparent 8px),
+    radial-gradient(circle at 12px calc(100% - 12px),
+      #fff0b1 0 1px,#d39a3a 2px 4px,#5b350b 5px 7px,transparent 8px),
+    radial-gradient(circle at calc(100% - 12px) calc(100% - 12px),
+      #fff0b1 0 1px,#d39a3a 2px 4px,#5b350b 5px 7px,transparent 8px),
+    linear-gradient(180deg,
+      rgba(255,238,178,.17) 0%,
+      rgba(255,255,255,.035) 16%,
+      rgba(255,255,255,0) 36%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,.018) 0 1px,
+      rgba(0,0,0,.03) 1px 3px),
+    linear-gradient(180deg,#294552 0%,#102834 48%,#071720 100%) !important;
+  box-shadow:
+    inset 0 0 0 3px #071016,
+    inset 0 0 0 5px rgba(190,133,39,.62),
+    inset 0 2px 0 rgba(255,236,169,.24),
+    inset 0 -8px 13px rgba(0,0,0,.34),
+    0 3px 0 #4a2e09,
+    0 7px 12px rgba(0,0,0,.38),
+    0 0 0 1px rgba(255,220,131,.20) !important;
+  text-shadow:
+    -1px -1px 0 rgba(255,255,255,.16),
+    1px 2px 0 rgba(0,0,0,.98),
+    0 3px 5px rgba(0,0,0,.65) !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage:hover,
+body:not(.starterScreenActive) #badgeMessage:focus-visible{
+  filter:brightness(1.08) saturate(1.05) !important;
+  outline:2px solid rgba(255,234,168,.92) !important;
+  outline-offset:2px !important;
+  transform:none !important;
+  animation:none !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage:active{
+  filter:brightness(.91) !important;
+  box-shadow:
+    inset 0 0 0 3px #071016,
+    inset 0 0 0 5px rgba(190,133,39,.58),
+    inset 0 5px 12px rgba(0,0,0,.48),
+    0 2px 0 #4a2e09,
+    0 4px 7px rgba(0,0,0,.34) !important;
+  transform:none !important;
+  animation:none !important;
+}
+
+body:not(.starterScreenActive) #openPassportFromBadge{
+  transition:filter .12s ease,transform .12s ease,box-shadow .12s ease !important;
+}
+
+body:not(.starterScreenActive) #openPassportFromBadge:hover,
+body:not(.starterScreenActive) #openPassportFromBadge:focus-visible{
+  filter:brightness(1.09) saturate(1.05) !important;
+  outline:2px solid rgba(255,234,168,.92) !important;
+  outline-offset:2px !important;
+  transform:translateY(-2px) !important;
+  box-shadow:
+    inset 0 0 0 3px #071016,
+    inset 0 0 0 5px rgba(207,151,51,.72),
+    inset 0 2px 0 rgba(255,236,169,.30),
+    inset 0 -8px 13px rgba(0,0,0,.30),
+    0 5px 0 #4a2e09,
+    0 10px 16px rgba(0,0,0,.42) !important;
+}
+
+body:not(.starterScreenActive) #openPassportFromBadge:active{
+  filter:brightness(.91) !important;
+  transform:translateY(2px) !important;
+  box-shadow:
+    inset 0 0 0 3px #071016,
+    inset 0 0 0 5px rgba(190,133,39,.58),
+    inset 0 6px 13px rgba(0,0,0,.50),
+    0 1px 0 #4a2e09,
+    0 3px 6px rgba(0,0,0,.32) !important;
+}
+</style>
+
+<style id="refinedDashboardPlateButtonsCSS">
+body:not(.starterScreenActive) #badgeMessage,
+body:not(.starterScreenActive) #openPassportFromBadge{
+  min-height:48px !important;
+  padding:9px 27px !important;
+  border:2px solid #9f7127 !important;
+  border-radius:10px !important;
+  clip-path:none !important;
+  white-space:nowrap !important;
+  background-color:#10232c !important;
+  background-image:
+    radial-gradient(circle at 13px 50%,
+      #fff0b5 0 1px,#c88d31 2px 3px,#4e2e09 4px 5px,transparent 6px),
+    radial-gradient(circle at calc(100% - 13px) 50%,
+      #fff0b5 0 1px,#c88d31 2px 3px,#4e2e09 4px 5px,transparent 6px),
+    linear-gradient(180deg,
+      rgba(255,244,202,.17) 0%,
+      rgba(255,255,255,.035) 14%,
+      rgba(255,255,255,0) 35%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,.01) 0 1px,
+      rgba(0,0,0,.016) 1px 4px),
+    linear-gradient(180deg,#28424e 0%,#112832 51%,#081820 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,239,181,.25),
+    inset 0 0 0 2px rgba(4,12,17,.78),
+    inset 0 -5px 8px rgba(0,0,0,.26),
+    0 4px 0 #3d270b,
+    0 8px 12px rgba(0,0,0,.32) !important;
+  text-shadow:
+    -1px -1px 0 rgba(255,255,255,.12),
+    1px 2px 0 rgba(0,0,0,.96),
+    0 3px 4px rgba(0,0,0,.55) !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage{
+  display:block !important;
+  line-height:26px !important;
+  overflow:hidden !important;
+  text-overflow:clip !important;
+  animation:none !important;
+  transition:none !important;
+  transform:none !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage::after{
+  display:inline !important;
+  margin-left:.45em !important;
+  white-space:nowrap !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage:hover,
+body:not(.starterScreenActive) #badgeMessage:focus-visible{
+  filter:brightness(1.07) !important;
+  transform:none !important;
+  animation:none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,239,181,.31),
+    inset 0 0 0 2px rgba(4,12,17,.76),
+    inset 0 -5px 8px rgba(0,0,0,.23),
+    0 4px 0 #3d270b,
+    0 8px 12px rgba(0,0,0,.34) !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage:active{
+  filter:brightness(.92) !important;
+  transform:none !important;
+  animation:none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,239,181,.20),
+    inset 0 5px 10px rgba(0,0,0,.38),
+    inset 0 0 0 2px rgba(4,12,17,.82),
+    0 3px 0 #3d270b,
+    0 6px 9px rgba(0,0,0,.30) !important;
+}
+
+body:not(.starterScreenActive) #openPassportFromBadge{
+  display:flex !important;
+  line-height:1.15 !important;
+}
+
+body:not(.starterScreenActive) #openPassportFromBadge:hover,
+body:not(.starterScreenActive) #openPassportFromBadge:focus-visible{
+  filter:brightness(1.08) !important;
+  transform:translateY(-1px) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,239,181,.32),
+    inset 0 0 0 2px rgba(4,12,17,.74),
+    inset 0 -5px 8px rgba(0,0,0,.22),
+    0 5px 0 #3d270b,
+    0 10px 14px rgba(0,0,0,.36) !important;
+}
+
+body:not(.starterScreenActive) #openPassportFromBadge:active{
+  filter:brightness(.91) !important;
+  transform:translateY(2px) !important;
+  box-shadow:
+    inset 0 5px 10px rgba(0,0,0,.40),
+    inset 0 0 0 2px rgba(4,12,17,.82),
+    0 1px 0 #3d270b,
+    0 4px 7px rgba(0,0,0,.28) !important;
+}
+</style>
+
+<style id="dashboardImageBadgePassportButtonsCSS">
+body:not(.starterScreenActive) #badgeMessage,
+body:not(.starterScreenActive) #openPassportFromBadge{
+  width:94% !important;
+  height:48px !important;
+  min-height:48px !important;
+  aspect-ratio:auto !important;
+  margin:7px auto 0 !important;
+  padding:0 !important;
+  border:0 !important;
+  outline:none !important;
+  outline-offset:0 !important;
+  border-radius:0 !important;
+  clip-path:none !important;
+  background-color:transparent !important;
+  background-image:url("assets/images/dashboard/button-faces/builder-shortcut-grid-frame-glow.png") !important;
+  background-repeat:no-repeat !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  box-shadow:none !important;
+  color:#8ff6ff !important;
+  -webkit-text-fill-color:#8ff6ff !important;
+  font-family:"Eurostile","Orbitron",Arial,sans-serif !important;
+  font-size:13px !important;
+  line-height:1 !important;
+  font-weight:600 !important;
+  letter-spacing:.12em !important;
+  text-align:center !important;
+  text-shadow:
+    0 2px 0 #001018,
+    0 0 4px rgba(92,235,255,.95),
+    0 0 10px rgba(41,181,255,.72) !important;
+  overflow:visible !important;
+  filter:drop-shadow(0 5px 5px rgba(0,0,0,.32)) !important;
+  position:relative !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  animation:none !important;
+  transition:none !important;
+  transform:none !important;
+}
+
+body:not(.starterScreenActive) #openPassportFromBadge{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  transition:filter .12s ease,transform .12s ease !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage b{
+  color:#8ff6ff !important;
+  -webkit-text-fill-color:#8ff6ff !important;
+  text-shadow:
+    0 2px 0 #001018,
+    0 0 4px rgba(92,235,255,.95),
+    0 0 10px rgba(41,181,255,.72) !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage::before,
+body:not(.starterScreenActive) #badgeMessage::after,
+body:not(.starterScreenActive) #openPassportFromBadge::before,
+body:not(.starterScreenActive) #openPassportFromBadge::after{
+  content:none !important;
+  display:none !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage:hover,
+body:not(.starterScreenActive) #badgeMessage:focus-visible{
+  filter:brightness(1.1) saturate(1.05) drop-shadow(0 6px 6px rgba(0,0,0,.34)) !important;
+  outline:none !important;
+  outline-offset:0 !important;
+  transform:none !important;
+  animation:none !important;
+}
+
+body:not(.starterScreenActive) #badgeMessage:active{
+  filter:brightness(.9) drop-shadow(0 3px 3px rgba(0,0,0,.28)) !important;
+  transform:none !important;
+  animation:none !important;
+}
+
+body:not(.starterScreenActive) #openPassportFromBadge:hover,
+body:not(.starterScreenActive) #openPassportFromBadge:focus-visible{
+  filter:brightness(1.1) saturate(1.05) drop-shadow(0 7px 7px rgba(0,0,0,.36)) !important;
+  outline:none !important;
+  outline-offset:0 !important;
+  transform:translateY(-1px) !important;
+}
+
+body:not(.starterScreenActive) #openPassportFromBadge:active{
+  filter:brightness(.88) drop-shadow(0 2px 3px rgba(0,0,0,.25)) !important;
+  transform:translateY(2px) !important;
+}
+</style>
+
+<style id="persistentStemCoachHeaderCSS">
+/* The Coach identity, Help, and disclosure control remain available in every state. */
+body:not(.starterScreenActive) #stemCoachHeader{
+  position:sticky !important;
+  top:0 !important;
+  z-index:20 !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  align-items:stretch !important;
+  gap:0 !important;
+  width:100% !important;
+  margin:0 0 8px !important;
+}
+
+body:not(.starterScreenActive) #info #helpButton{
+  position:relative !important;
+  inset:auto !important;
+  translate:none !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:94% !important;
+  min-width:0 !important;
+  height:40px !important;
+  min-height:40px !important;
+  margin:7px auto 0 !important;
+  padding:0 4px !important;
+  border:2px solid #9f7127 !important;
+  border-radius:12px !important;
+  outline:none !important;
+  color:#8ff6ff !important;
+  -webkit-text-fill-color:#8ff6ff !important;
+  background:
+    linear-gradient(180deg,rgba(24,62,82,.98),rgba(4,23,36,.99)) !important;
+  box-shadow:
+    inset 0 0 0 2px #071016,
+    inset 0 0 0 3px rgba(72,230,255,.72),
+    inset 0 1px 0 rgba(210,250,255,.26),
+    0 3px 0 #55360b,
+    0 0 8px rgba(72,230,255,.34) !important;
+  font-family:"Orbitron",sans-serif !important;
+  font-size:12px !important;
+  line-height:1 !important;
+  font-weight:800 !important;
+  letter-spacing:.04em !important;
+  text-shadow:0 0 4px rgba(92,235,255,.92) !important;
+  cursor:pointer !important;
+}
+
+body:not(.starterScreenActive) #info #helpButton:hover,
+body:not(.starterScreenActive) #info #helpButton:focus-visible{
+  filter:brightness(1.14) saturate(1.08) !important;
+  outline:none !important;
+}
+
+body:not(.starterScreenActive) #info #helpButton:active{
+  transform:translateY(2px) !important;
+  box-shadow:
+    inset 0 3px 8px rgba(0,0,0,.38),
+    inset 0 0 0 2px #071016,
+    inset 0 0 0 3px rgba(72,230,255,.70),
+    0 1px 0 #55360b !important;
+}
+
+body:not(.starterScreenActive) #stemCoachHeader #stemCoachToggle{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 24px !important;
+  align-items:center !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:56px !important;
+  margin:0 !important;
+  padding:0 10px 0 14px !important;
+  font-size:16px !important;
+  text-align:center !important;
+}
+
+body:not(.starterScreenActive) #stemCoachHeader .stemCoachHeaderTitle{
+  min-width:0 !important;
+  overflow:hidden !important;
+  white-space:nowrap !important;
+  text-overflow:ellipsis !important;
+}
+
+body:not(.starterScreenActive) #stemCoachHeader .stemCoachToggleIndicator{
+  justify-self:end !important;
+  color:#b7f34a !important;
+  -webkit-text-fill-color:#b7f34a !important;
+  font-size:22px !important;
+  line-height:1 !important;
+}
+
+body:not(.starterScreenActive) #rightHudColumn > #stemCoach.coachCollapsed{
+  flex:0 0 auto !important;
+  min-height:0 !important;
+  height:auto !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+
+body:not(.starterScreenActive) #rightHudColumn > #stemCoach.coachCollapsed > :not(#stemCoachHeader){
+  display:none !important;
+}
+
+body:not(.starterScreenActive) #rightHudColumn > #stemCoach.coachCollapsed #stemCoachHeader{
+  margin-bottom:0 !important;
+}
+</style>
+
 <style id="templateIncludesSkyContrastCSS">
 /* The template inventory heading changes with the world sky, so it stays
    readable in both daytime builder worlds and dark space worlds. */
@@ -25454,6 +25867,26 @@ body.calmMode #thinkerBobRigMount{animation:none !important;}
   }
 })();
 </script>
+
+<!-- Compact utility controls: keep Help content-sized and trim the View Dice footprint. -->
+<style id="compactHelpAndViewDiceCSS">
+body:not(.starterScreenActive) #info #helpButton{
+  width:max-content !important;
+  max-width:calc(100% - 16px) !important;
+  height:auto !important;
+  min-height:0 !important;
+  padding:10px 14px !important;
+}
+
+body:not(.starterScreenActive) #viewCubeBox{
+  width:172px !important;
+}
+
+body:not(.starterScreenActive) #viewCubeCanvas{
+  width:162px !important;
+  height:162px !important;
+}
+</style>
 
 </body>
 </html>
