@@ -4423,7 +4423,7 @@ HTML SECTION: LEFT CURRENT MISSION PANEL
 </div>
 <p><b>Want More Challenge?</b></p>
 <p id="moreChallenge">Add details, decorations, and a magical feature.</p>
-<p id="badgeMessage"><b>Badge:</b> Keep building!</p>
+<p id="badgeMessage"><b>BADGE:</b> Keep building!</p>
 <button id="openPassportFromBadge" type="button">↗ Open Passport</button>
 </div>
 <!-- =====================================================
@@ -6196,7 +6196,7 @@ const viewCubeCanvas =
 const viewCubeScene = new THREE.Scene();
 
 const viewCubeCamera =
-  new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  new THREE.PerspectiveCamera(34, 1, 0.1, 100);
 
 viewCubeCamera.position.set(3.2, 3.2, 5.4);
 viewCubeCamera.lookAt(0, 0, 0);
@@ -6213,74 +6213,449 @@ viewCubeRenderer.setClearColor(0x000000, 0);
 
 const viewCubeGroup = new THREE.Group();
 
-function createViewDiceFace(label, background, textColor = "#111111"){
+function createViewDiceFace(label, theme){
   const canvas = document.createElement("canvas");
   canvas.width = 512;
   canvas.height = 512;
 
   const ctx = canvas.getContext("2d");
 
-  const gradient = ctx.createLinearGradient(0, 0, 512, 512);
-  gradient.addColorStop(0, background);
-  gradient.addColorStop(0.65, background);
-  gradient.addColorStop(1, "#f7d86b");
+  function roundedRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.roundRect(x,y,w,h,r);
+  }
 
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 512, 512);
+  function drawGear(x,y,r,teeth){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.strokeStyle = theme.gold;
+    ctx.fillStyle = theme.dark;
+    ctx.lineWidth = 5;
+    ctx.shadowColor = "rgba(0,0,0,.85)";
+    ctx.shadowBlur = 5;
+    ctx.beginPath();
+    for(let i=0;i<teeth*2;i++){
+      const angle = i*Math.PI/teeth;
+      const radius = i%2 ? r*.78 : r;
+      const px = Math.cos(angle)*radius;
+      const py = Math.sin(angle)*radius;
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0,0,r*.55,0,Math.PI*2);
+    ctx.stroke();
+    for(let i=0;i<8;i++){
+      const angle=i*Math.PI/4;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle)*r*.22,Math.sin(angle)*r*.22);
+      ctx.lineTo(Math.cos(angle)*r*.52,Math.sin(angle)*r*.52);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(0,0,r*.15,0,Math.PI*2);
+    ctx.fillStyle=theme.gold;
+    ctx.fill();
+    ctx.restore();
+  }
 
-  ctx.strokeStyle = "rgba(0,0,0,.75)";
-  ctx.lineWidth = 20;
-  ctx.strokeRect(20, 20, 472, 472);
+  const shell = ctx.createLinearGradient(0,0,512,512);
+  shell.addColorStop(0,theme.highlight);
+  shell.addColorStop(.12,theme.base);
+  shell.addColorStop(.68,theme.base);
+  shell.addColorStop(1,theme.shadow);
+  ctx.fillStyle=shell;
+  ctx.fillRect(0,0,512,512);
 
-  ctx.fillStyle = "rgba(255,255,255,.25)";
-  ctx.fillRect(42, 42, 428, 60);
+  ctx.save();
+  ctx.globalAlpha=.08;
+  for(let y=0;y<512;y+=5){
+    ctx.fillStyle=y%10===0?"#fff":"#000";
+    ctx.fillRect(0,y,512,1);
+  }
+  ctx.restore();
 
-  ctx.shadowColor = "rgba(0,0,0,.65)";
-  ctx.shadowBlur = 8;
-  ctx.shadowOffsetX = 3;
-  ctx.shadowOffsetY = 3;
+  ctx.fillStyle="rgba(5,7,7,.72)";
+  roundedRect(22,22,468,468,34);
+  ctx.fill();
+  ctx.strokeStyle=theme.gold;
+  ctx.lineWidth=7;
+  ctx.stroke();
 
-  ctx.fillStyle = textColor;
-  ctx.font = "bold 72px Arial";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, 256, 256);
+  const panel=ctx.createLinearGradient(60,48,450,470);
+  panel.addColorStop(0,theme.panelHighlight);
+  panel.addColorStop(.24,theme.panel);
+  panel.addColorStop(.76,theme.panel);
+  panel.addColorStop(1,theme.panelShadow);
+  ctx.fillStyle=panel;
+  roundedRect(48,48,416,416,26);
+  ctx.fill();
+  ctx.strokeStyle="rgba(0,0,0,.92)";
+  ctx.lineWidth=11;
+  ctx.stroke();
+  ctx.strokeStyle=theme.gold;
+  ctx.lineWidth=4;
+  ctx.stroke();
+  ctx.strokeStyle="rgba(255,231,154,.55)";
+  ctx.lineWidth=2;
+  roundedRect(58,58,396,396,20);
+  ctx.stroke();
+
+  ctx.save();
+  ctx.strokeStyle=theme.trace;
+  ctx.fillStyle=theme.trace;
+  ctx.lineWidth=3;
+  ctx.globalAlpha=.86;
+  [[88,126,174,126,174,92],[424,126,338,126,338,92],
+   [88,386,174,386,174,420],[424,386,338,386,338,420],
+   [82,206,132,206,132,174],[430,206,380,206,380,174],
+   [82,310,132,310,132,342],[430,310,380,310,380,342]].forEach(function(p){
+    ctx.beginPath();
+    ctx.moveTo(p[0],p[1]);
+    ctx.lineTo(p[2],p[3]);
+    ctx.lineTo(p[4],p[5]);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(p[0],p[1],5,0,Math.PI*2);
+    ctx.fill();
+  });
+  ctx.restore();
+
+  ctx.strokeStyle=theme.gold;
+  ctx.lineWidth=4;
+  roundedRect(104,194,304,132,15);
+  ctx.stroke();
+  ctx.strokeStyle="rgba(0,0,0,.8)";
+  ctx.lineWidth=9;
+  roundedRect(112,202,288,116,11);
+  ctx.stroke();
+
+  drawGear(256,112,41,12);
+  drawGear(256,400,35,12);
+
+  [[60,60],[452,60],[60,452],[452,452]].forEach(function(point){
+    const rivet=ctx.createRadialGradient(point[0]-5,point[1]-6,2,point[0],point[1],17);
+    rivet.addColorStop(0,"#fff7ce");
+    rivet.addColorStop(.18,theme.rivet);
+    rivet.addColorStop(.55,theme.gold);
+    rivet.addColorStop(.78,"#4b2605");
+    rivet.addColorStop(1,"#080604");
+    ctx.fillStyle=rivet;
+    ctx.beginPath();
+    ctx.arc(point[0],point[1],17,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle="#110b05";
+    ctx.lineWidth=3;
+    ctx.stroke();
+  });
+
+  const glint=ctx.createLinearGradient(50,45,405,290);
+  glint.addColorStop(0,"rgba(255,255,255,.22)");
+  glint.addColorStop(.22,"rgba(255,255,255,.04)");
+  glint.addColorStop(.46,"rgba(255,255,255,0)");
+  ctx.fillStyle=glint;
+  roundedRect(48,48,416,416,26);
+  ctx.fill();
+
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.font="900 67px Georgia, serif";
+  ctx.shadowColor="rgba(0,0,0,.95)";
+  ctx.shadowBlur=8;
+  ctx.shadowOffsetX=4;
+  ctx.shadowOffsetY=5;
+  ctx.strokeStyle="#281405";
+  ctx.lineWidth=12;
+  ctx.strokeText(label,256,261);
+  ctx.fillStyle=theme.goldText;
+  ctx.fillText(label,256,261);
+  ctx.strokeStyle="rgba(255,239,165,.58)";
+  ctx.lineWidth=2;
+  ctx.strokeText(label,256,259);
 
   const texture = new THREE.CanvasTexture(canvas);
-  texture.anisotropy = 8;
+  if(THREE.sRGBEncoding) texture.encoding = THREE.sRGBEncoding;
+  texture.anisotropy = Math.min(
+    8,
+    viewCubeRenderer.capabilities.getMaxAnisotropy()
+  );
+  texture.needsUpdate = true;
   return texture;
 }
 
-const cubeMaterial = [
-  new THREE.MeshLambertMaterial({ map:createViewDiceFace("RIGHT", "#E0A800", "#111111") }),
-  new THREE.MeshLambertMaterial({ map:createViewDiceFace("LEFT", "#B88900", "#111111") }),
-  new THREE.MeshLambertMaterial({ map:createViewDiceFace("TOP", "#F4F0D0", "#111111") }),
-  new THREE.MeshLambertMaterial({ map:createViewDiceFace("BOTTOM", "#888888", "#111111") }),
-  new THREE.MeshLambertMaterial({ map:createViewDiceFace("FRONT", "#0B5CAD", "#ffffff") }),
-  new THREE.MeshLambertMaterial({ map:createViewDiceFace("BACK", "#3E9EDB", "#111111") })
+function configureViewDiceTexture(texture){
+  if(THREE.sRGBEncoding) texture.encoding=THREE.sRGBEncoding;
+  texture.anisotropy=Math.min(
+    8,
+    viewCubeRenderer.capabilities.getMaxAnisotropy()
+  );
+  texture.minFilter=THREE.LinearMipmapLinearFilter;
+  texture.magFilter=THREE.LinearFilter;
+  texture.needsUpdate=true;
+  return texture;
+}
+
+function createFlatViewDiceFace(label,theme){
+  const canvas=document.createElement("canvas");
+  canvas.width=512;
+  canvas.height=512;
+  const ctx=canvas.getContext("2d");
+
+  const metal=ctx.createLinearGradient(0,0,512,512);
+  metal.addColorStop(0,theme.highlight);
+  metal.addColorStop(.22,theme.base);
+  metal.addColorStop(.72,theme.base);
+  metal.addColorStop(1,theme.shadow);
+  ctx.fillStyle=metal;
+  ctx.fillRect(0,0,512,512);
+
+  const sheen=ctx.createLinearGradient(0,0,420,260);
+  sheen.addColorStop(0,"rgba(255,255,255,.32)");
+  sheen.addColorStop(.3,"rgba(255,255,255,.06)");
+  sheen.addColorStop(.56,"rgba(255,255,255,0)");
+  ctx.fillStyle=sheen;
+  ctx.fillRect(0,0,512,512);
+
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.font="900 78px Georgia, serif";
+  ctx.shadowColor="rgba(0,0,0,.82)";
+  ctx.shadowBlur=10;
+  ctx.shadowOffsetX=4;
+  ctx.shadowOffsetY=5;
+  ctx.strokeStyle="rgba(18,10,3,.9)";
+  ctx.lineWidth=12;
+  ctx.strokeText(label,256,260);
+  ctx.fillStyle=theme.goldText;
+  ctx.fillText(label,256,260);
+  ctx.strokeStyle="rgba(255,242,178,.55)";
+  ctx.lineWidth=2;
+  ctx.strokeText(label,256,258);
+
+  return configureViewDiceTexture(
+    new THREE.CanvasTexture(canvas)
+  );
+}
+
+function createViewDiceMaterial(label,theme,assetPath){
+  let material;
+  const faceTexture=configureViewDiceTexture(
+    new THREE.TextureLoader().load(
+      assetPath,
+      function(texture){
+        configureViewDiceTexture(texture);
+        if(material) material.needsUpdate=true;
+      },
+      undefined,
+      function(){
+        const fallbackTexture=createFlatViewDiceFace(label,theme);
+        material.map=fallbackTexture;
+        material.bumpMap=null;
+        material.needsUpdate=true;
+      }
+    )
+  );
+  material=new THREE.MeshPhysicalMaterial({
+    map:faceTexture,
+    bumpMap:faceTexture,
+    bumpScale:.045,
+    color:0xffffff,
+    metalness:.68,
+    roughness:.2,
+    clearcoat:.86,
+    clearcoatRoughness:.12,
+    reflectivity:.9,
+    emissive:0x090909,
+    emissiveIntensity:.12
+  });
+  return material;
+}
+
+const viewDiceThemes = {
+  titanium:{base:"#8d806b",highlight:"#ded1b4",shadow:"#4a4030",panel:"#9d8f72",panelHighlight:"#eee1c2",panelShadow:"#554936",gold:"#c8902d",goldText:"#f0c56a",trace:"#b77b21",rivet:"#ead8aa",dark:"#17120b"},
+  gunmetal:{base:"#252a2c",highlight:"#717779",shadow:"#0b0d0e",panel:"#202526",panelHighlight:"#5c6263",panelShadow:"#080a0a",gold:"#ba7a18",goldText:"#efbd55",trace:"#c58a25",rivet:"#d89a32",dark:"#0b0c0c"},
+  royalBlue:{base:"#082d50",highlight:"#236b9b",shadow:"#031323",panel:"#063c68",panelHighlight:"#227cad",panelShadow:"#021828",gold:"#c4821b",goldText:"#f2c15a",trace:"#dc9b2d",rivet:"#e1a33c",dark:"#071018"},
+  deepTeal:{base:"#064b43",highlight:"#16847d",shadow:"#01211e",panel:"#07564e",panelHighlight:"#169188",panelShadow:"#011c1a",gold:"#bc7d17",goldText:"#efbd55",trace:"#d2972d",rivet:"#dca13d",dark:"#07120f"},
+  bronze:{base:"#6f4514",highlight:"#c38427",shadow:"#271303",panel:"#70420d",panelHighlight:"#b9781d",panelShadow:"#241100",gold:"#d09222",goldText:"#efbd55",trace:"#e0a02e",rivet:"#edb451",dark:"#160c02"},
+  burgundy:{base:"#581522",highlight:"#a3404f",shadow:"#21050a",panel:"#651522",panelHighlight:"#a63d4b",panelShadow:"#200308",gold:"#c9871d",goldText:"#f0bd55",trace:"#df9c2c",rivet:"#e1a13a",dark:"#170608"}
+};
+
+function createConstructedDicePanelTexture(label,theme){
+  const canvas=document.createElement("canvas");
+  canvas.width=512;
+  canvas.height=512;
+  const ctx=canvas.getContext("2d");
+
+  const metal=ctx.createLinearGradient(20,10,490,500);
+  metal.addColorStop(0,theme.panelHighlight);
+  metal.addColorStop(.22,theme.panel);
+  metal.addColorStop(.7,theme.panel);
+  metal.addColorStop(1,theme.panelShadow);
+  ctx.fillStyle=metal;
+  ctx.fillRect(0,0,512,512);
+
+  ctx.save();
+  ctx.globalAlpha=.11;
+  for(let y=8;y<512;y+=7){
+    ctx.fillStyle=y%14===0?"#fff":"#000";
+    ctx.fillRect(0,y,512,1);
+  }
+  ctx.restore();
+
+  const softSheen=ctx.createLinearGradient(0,0,410,260);
+  softSheen.addColorStop(0,"rgba(255,255,255,.22)");
+  softSheen.addColorStop(.28,"rgba(255,255,255,.045)");
+  softSheen.addColorStop(.55,"rgba(255,255,255,0)");
+  ctx.fillStyle=softSheen;
+  ctx.fillRect(0,0,512,512);
+
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.font="900 82px Georgia, serif";
+  ctx.shadowColor="rgba(0,0,0,.9)";
+  ctx.shadowBlur=12;
+  ctx.shadowOffsetX=5;
+  ctx.shadowOffsetY=7;
+  ctx.strokeStyle="#281506";
+  ctx.lineWidth=14;
+  ctx.strokeText(label,256,264);
+  ctx.fillStyle=theme.goldText;
+  ctx.fillText(label,256,264);
+  ctx.shadowColor="rgba(255,235,158,.48)";
+  ctx.shadowBlur=4;
+  ctx.shadowOffsetX=-2;
+  ctx.shadowOffsetY=-2;
+  ctx.strokeStyle="rgba(255,239,175,.72)";
+  ctx.lineWidth=2;
+  ctx.strokeText(label,256,261);
+
+  return configureViewDiceTexture(new THREE.CanvasTexture(canvas));
+}
+
+function createConstructedDicePanel(label,theme,position,rotation){
+  const group=new THREE.Group();
+  group.position.copy(position);
+  group.rotation.set(rotation.x,rotation.y,rotation.z);
+
+  const panelTexture=createConstructedDicePanelTexture(label,theme);
+  const panelMaterial=new THREE.MeshPhysicalMaterial({
+    map:panelTexture,
+    color:0xffffff,
+    metalness:.55,
+    roughness:.36,
+    clearcoat:.28,
+    clearcoatRoughness:.32
+  });
+  const panel=new THREE.Mesh(
+    new THREE.BoxGeometry(2.28,2.28,.105),
+    panelMaterial
+  );
+  group.add(panel);
+
+  const innerEdge=new THREE.LineSegments(
+    new THREE.EdgesGeometry(panel.geometry),
+    new THREE.LineBasicMaterial({
+      color:0x8c6225,
+      transparent:true,
+      opacity:.82
+    })
+  );
+  innerEdge.scale.setScalar(1.006);
+  panel.add(innerEdge);
+
+  const bradGeometry=new THREE.SphereGeometry(.105,16,10);
+  const bradMaterial=new THREE.MeshStandardMaterial({
+    color:0xb47b26,
+    metalness:.82,
+    roughness:.25
+  });
+  [[-.91,.91],[.91,.91],[-.91,-.91],[.91,-.91]].forEach(function(point){
+    const brad=new THREE.Mesh(bradGeometry,bradMaterial);
+    brad.position.set(point[0],point[1],.105);
+    brad.scale.z=.52;
+    group.add(brad);
+  });
+
+  return group;
+}
+
+const diceBodyMaterial=new THREE.MeshStandardMaterial({
+  color:0x25282a,
+  metalness:.72,
+  roughness:.4
+});
+
+const cubeMaterial=[
+  diceBodyMaterial,diceBodyMaterial,diceBodyMaterial,
+  diceBodyMaterial,diceBodyMaterial,diceBodyMaterial
 ];
 
 const miniCube =
   new THREE.Mesh(
-    new THREE.BoxGeometry(2.25, 2.25, 2.25),
+    new THREE.BoxGeometry(2.72, 2.72, 2.72),
     cubeMaterial
   );
 
 viewCubeGroup.add(miniCube);
 
+const miniCubeEdgeLines =
+  new THREE.LineSegments(
+    new THREE.EdgesGeometry(miniCube.geometry),
+    new THREE.LineBasicMaterial({
+      color:0x76511d,
+      transparent:true,
+      opacity:.72
+    })
+  );
+
+miniCubeEdgeLines.scale.setScalar(1.008);
+miniCube.add(miniCubeEdgeLines);
+
+const panelOffset=1.405;
+miniCube.add(
+  createConstructedDicePanel("RIGHT",viewDiceThemes.deepTeal,
+    new THREE.Vector3(panelOffset,0,0),new THREE.Euler(0,Math.PI/2,0)),
+  createConstructedDicePanel("LEFT",viewDiceThemes.royalBlue,
+    new THREE.Vector3(-panelOffset,0,0),new THREE.Euler(0,-Math.PI/2,0)),
+  createConstructedDicePanel("TOP",viewDiceThemes.titanium,
+    new THREE.Vector3(0,panelOffset,0),new THREE.Euler(-Math.PI/2,0,0)),
+  createConstructedDicePanel("BOTTOM",viewDiceThemes.burgundy,
+    new THREE.Vector3(0,-panelOffset,0),new THREE.Euler(Math.PI/2,0,0)),
+  createConstructedDicePanel("FRONT",viewDiceThemes.gunmetal,
+    new THREE.Vector3(0,0,panelOffset),new THREE.Euler(0,0,0)),
+  createConstructedDicePanel("BACK",viewDiceThemes.bronze,
+    new THREE.Vector3(0,0,-panelOffset),new THREE.Euler(0,Math.PI,0))
+);
+
 viewCubeScene.add(viewCubeGroup);
 
 const viewCubeLight =
-  new THREE.DirectionalLight(0xffffff, 1);
+  new THREE.DirectionalLight(0xffe4b8, 1.25);
 
 viewCubeLight.position.set(3, 5, 4);
 
 viewCubeScene.add(viewCubeLight);
 
 const viewCubeAmbient =
-  new THREE.AmbientLight(0xffffff, 0.7);
+  new THREE.AmbientLight(0xffffff, .9);
 
 viewCubeScene.add(viewCubeAmbient);
+
+const viewCubeRimLight =
+  new THREE.DirectionalLight(0x69c7e8, .55);
+
+viewCubeRimLight.position.set(-4, 1.5, -3);
+
+viewCubeScene.add(viewCubeRimLight);
+
+const viewCubeHighlight =
+  new THREE.PointLight(0xffc86b, .45, 12);
+
+viewCubeHighlight.position.set(-1.8, 3.5, 4.5);
+
+viewCubeScene.add(viewCubeHighlight);
 
 const viewDiceRaycaster = new THREE.Raycaster();
 const viewDiceMouse = new THREE.Vector2();
@@ -9153,22 +9528,22 @@ function checkBadge(){
 
   if(blocks.length >= 80){
     document.getElementById("badgeMessage").innerHTML =
-      "<b>Badge Earned:</b> 🏆 Master Builder!";
+      "<b>BADGE</b> earned: 🏆 Master Builder!";
     earnedBadgeTier = 3;
     earnedBadgeName = "MASTER BUILDER";
   } else if(blocks.length >= 50){
     document.getElementById("badgeMessage").innerHTML =
-      "<b>Badge Earned:</b> 🧙 Castle Creator!";
+      "<b>BADGE</b> earned: 🧙 Castle Creator!";
     earnedBadgeTier = 2;
     earnedBadgeName = "CASTLE CREATOR";
   } else if(blocks.length >= 30){
     document.getElementById("badgeMessage").innerHTML =
-      "<b>Badge Earned:</b> ⭐ Builder Apprentice!";
+      "<b>BADGE</b> earned: ⭐ Builder Apprentice!";
     earnedBadgeTier = 1;
     earnedBadgeName = "BUILDER APPRENTICE";
   } else {
     document.getElementById("badgeMessage").innerHTML =
-      "<b>Badge:</b> Keep building!";
+      "<b>BADGE:</b> Keep building!";
   }
 
   if(window.updateDashboardBadgeTicker){
@@ -17578,13 +17953,13 @@ body:not(.starterScreenActive) #readerProgressFill{
 
 /* ===== UPDATE #128 — THEME THE VIEW PANEL ===== */
 body:not(.starterScreenActive) #viewCubeBox{
-  background:linear-gradient(180deg,rgba(20,34,48,.94),rgba(8,18,29,.94)) !important;
+  background:linear-gradient(180deg,rgba(20,34,48,.18),rgba(8,18,29,.12)) !important;
   border:1px solid rgba(202,164,53,.58) !important;
   border-radius:14px !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.10),
-    inset 0 -12px 22px rgba(0,0,0,.20),
-    0 7px 18px rgba(0,0,0,.30),
+    inset 0 -12px 22px rgba(0,0,0,.06),
+    0 7px 18px rgba(0,0,0,.24),
     0 0 0 1px rgba(72,142,176,.16) !important;
 }
 
@@ -17605,14 +17980,14 @@ body:not(.starterScreenActive) #viewCubeTitle{
 }
 
 body:not(.starterScreenActive) #viewCubeCanvas{
-  background:linear-gradient(180deg,rgba(5,15,24,.74),rgba(13,28,41,.70)) !important;
-  border:1px solid rgba(100,154,180,.27) !important;
+  background:linear-gradient(180deg,rgba(5,15,24,.08),rgba(13,28,41,.05)) !important;
+  border:1px solid rgba(100,154,180,.22) !important;
   border-radius:11px !important;
   box-sizing:border-box !important;
   box-shadow:
     inset 0 0 0 1px rgba(255,255,255,.025),
-    inset 0 8px 18px rgba(0,0,0,.28),
-    0 2px 7px rgba(0,0,0,.18) !important;
+    inset 0 8px 18px rgba(0,0,0,.03),
+    0 2px 7px rgba(0,0,0,.10) !important;
 }
 
 body:not(.starterScreenActive) #viewDiceHint{
@@ -21336,30 +21711,103 @@ body.starterScreenActive #builderMissionTitleOverlay,
 </script>
 
 <style id="badgePassportShortcutCSS">
+body:not(.starterScreenActive) #badgeMessage{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  min-height:48px !important;
+  margin:8px 0 0 !important;
+  padding:9px 14px !important;
+  box-sizing:border-box !important;
+  color:#eef8ff !important;
+  -webkit-text-fill-color:#eef8ff !important;
+  background:linear-gradient(180deg,#294b5b 0%,#0c2431 54%,#06151e 100%) !important;
+  border:2px solid rgba(255,255,255,.94) !important;
+  border-radius:8px !important;
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.34),
+    inset 0 -2px rgba(0,0,0,.60),
+    0 0 0 1px rgba(255,255,255,.24),
+    0 0 12px rgba(255,255,255,.78),
+    0 0 24px rgba(255,255,255,.38),
+    0 3px 6px rgba(0,0,0,.38) !important;
+  font-family:"SFMono-Regular",Menlo,Consolas,monospace !important;
+  font-size:14px !important;
+  line-height:1.2 !important;
+  font-weight:900 !important;
+  letter-spacing:.07em !important;
+  text-align:center !important;
+  text-shadow:0 1px #000,0 0 5px rgba(255,255,255,.58) !important;
+  cursor:pointer !important;
+  animation:none !important;
+  transition:none !important;
+  transform:none !important;
+}
+body:not(.starterScreenActive) #badgeMessage b{
+  color:#36d8ff !important;
+  -webkit-text-fill-color:#36d8ff !important;
+  text-shadow:0 1px #000,0 0 5px rgba(54,216,255,.54) !important;
+}
+body:not(.starterScreenActive) #badgeMessage::after{
+  content:"  ✨ CLICK" !important;
+  color:#e8c45b !important;
+  -webkit-text-fill-color:#e8c45b !important;
+  text-transform:uppercase !important;
+  text-shadow:0 1px #000,0 0 5px rgba(232,196,91,.48) !important;
+}
+body:not(.starterScreenActive) #badgeMessage:hover,
+body:not(.starterScreenActive) #badgeMessage:focus-visible{
+  filter:brightness(1.13) !important;
+  outline:2px solid #fff !important;
+  outline-offset:2px !important;
+  transform:none !important;
+}
+body:not(.starterScreenActive) #badgeMessage:active{
+  filter:brightness(.88) !important;
+  transform:none !important;
+}
 body:not(.starterScreenActive) #openPassportFromBadge{
   display:flex !important;
   align-items:center !important;
   justify-content:center !important;
   width:100% !important;
-  min-height:34px !important;
+  min-height:48px !important;
   margin:8px 0 0 !important;
-  padding:6px 10px !important;
+  padding:9px 14px !important;
   box-sizing:border-box !important;
   color:#48e6ff !important;
   -webkit-text-fill-color:#48e6ff !important;
   background:linear-gradient(180deg,#294b5b 0%,#0c2431 54%,#06151e 100%) !important;
-  border:1px solid #b98a22 !important;
+  border:2px solid rgba(255,255,255,.94) !important;
   border-radius:8px !important;
-  box-shadow:inset 0 1px rgba(214,246,255,.28),inset 0 -2px rgba(0,0,0,.6),0 2px 4px rgba(0,0,0,.3) !important;
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.34),
+    inset 0 -2px rgba(0,0,0,.60),
+    0 0 0 1px rgba(255,255,255,.24),
+    0 0 12px rgba(255,255,255,.78),
+    0 0 24px rgba(255,255,255,.38),
+    0 3px 6px rgba(0,0,0,.38) !important;
   font-family:"SFMono-Regular",Menlo,Consolas,monospace !important;
-  font-size:11px !important;
+  font-size:14px !important;
   font-weight:900 !important;
-  letter-spacing:.05em !important;
+  letter-spacing:.07em !important;
   text-shadow:0 1px #000,0 0 5px rgba(72,230,255,.54) !important;
   cursor:pointer !important;
+  text-transform:uppercase !important;
 }
-body:not(.starterScreenActive) #openPassportFromBadge:hover{filter:brightness(1.13) !important;transform:translateY(-1px) !important;}
+body:not(.starterScreenActive) #openPassportFromBadge:hover,
+body:not(.starterScreenActive) #openPassportFromBadge:focus-visible{
+  filter:brightness(1.13) !important;
+  outline:2px solid #fff !important;
+  outline-offset:2px !important;
+  transform:translateY(-1px) !important;
+}
 body:not(.starterScreenActive) #openPassportFromBadge:active{filter:brightness(.88) !important;transform:translateY(1px) !important;}
+body:not(.starterScreenActive) #reopenLibraryFromCoach,
+body:not(.starterScreenActive) #readToBobPracticeButton{
+  text-transform:uppercase !important;
+}
 </style>
 
 <style id="templateIncludesSkyContrastCSS">
