@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Phase 1.5 — Engineering Workspace Version 1
+**Status:** VERIFIED AND LOCKED ✅
+
+- Phase 1.5 Engineering Workspace Version 1 verified and locked.
+- Known non-blocking issue: native hover tooltips for disabled future-tool buttons are not visibly appearing.
+
 ## Update #155 — THINKer Bob Workshop Rig Checkpoint
 **Status:** VERIFIED ✅
 
