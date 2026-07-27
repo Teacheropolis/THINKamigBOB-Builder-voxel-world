@@ -4177,6 +4177,47 @@ Nature ▶
 </div>
 
 <div id="builderMissionTitleOverlay" aria-hidden="true" hidden></div>
+<!-- Empty Workshop layout regions reserve modular dashboard space without
+     reparenting or intercepting input from the existing build viewport. -->
+<section id="workshopRoot">
+  <aside id="workshopLeftRailShell" class="workshop-layout-region" data-workshop-region="left"></aside>
+  <section id="workshopViewportContainer" class="workshop-layout-region" data-workshop-region="viewport">
+    <!-- Horizontal rulers temporarily represent model X; vertical rulers
+         represent model Y. Model Z remains reserved for a later phase. -->
+    <div id="workshopRulerTop" class="workshop-ruler workshop-ruler-horizontal workshop-ruler-top" data-workshop-axis="x" aria-label="Top model X-axis ruler. Model Scale, centimeters with millimeter subdivisions.">
+      <div class="workshop-ruler-ticks" aria-hidden="true"></div>
+      <div id="workshopRulerTopSelection" class="workshop-ruler-layer workshop-ruler-selection" hidden aria-hidden="true"></div>
+      <div id="workshopRulerTopDesignRange" class="workshop-ruler-layer workshop-ruler-design-range" hidden aria-hidden="true"></div>
+      <div id="workshopRulerTopHandles" class="workshop-ruler-layer workshop-ruler-handles" aria-hidden="true"></div>
+    </div>
+    <div id="workshopRulerLeft" class="workshop-ruler workshop-ruler-vertical workshop-ruler-left" data-workshop-axis="y" aria-label="Left model Y-axis ruler. Model Scale, centimeters with millimeter subdivisions.">
+      <div class="workshop-ruler-ticks" aria-hidden="true"></div>
+      <div id="workshopRulerLeftSelection" class="workshop-ruler-layer workshop-ruler-selection" hidden aria-hidden="true"></div>
+      <div id="workshopRulerLeftDesignRange" class="workshop-ruler-layer workshop-ruler-design-range" hidden aria-hidden="true"></div>
+      <div id="workshopRulerLeftHandles" class="workshop-ruler-layer workshop-ruler-handles" aria-hidden="true"></div>
+    </div>
+    <div id="workshopViewportStage" aria-hidden="true"></div>
+    <div id="workshopRulerRight" class="workshop-ruler workshop-ruler-vertical workshop-ruler-right" data-workshop-axis="y" aria-label="Right model Y-axis ruler. Model Scale, centimeters with millimeter subdivisions.">
+      <div class="workshop-ruler-ticks" aria-hidden="true"></div>
+      <div id="workshopRulerRightSelection" class="workshop-ruler-layer workshop-ruler-selection" hidden aria-hidden="true"></div>
+      <div id="workshopRulerRightDesignRange" class="workshop-ruler-layer workshop-ruler-design-range" hidden aria-hidden="true"></div>
+      <div id="workshopRulerRightHandles" class="workshop-ruler-layer workshop-ruler-handles" aria-hidden="true"></div>
+    </div>
+    <div id="workshopRulerBottom" class="workshop-ruler workshop-ruler-horizontal workshop-ruler-bottom" data-workshop-axis="x" aria-label="Bottom model X-axis ruler. Model Scale, centimeters with millimeter subdivisions.">
+      <div class="workshop-ruler-ticks" aria-hidden="true"></div>
+      <div id="workshopRulerBottomSelection" class="workshop-ruler-layer workshop-ruler-selection" hidden aria-hidden="true"></div>
+      <div id="workshopRulerBottomDesignRange" class="workshop-ruler-layer workshop-ruler-design-range" hidden aria-hidden="true"></div>
+      <div id="workshopRulerBottomHandles" class="workshop-ruler-layer workshop-ruler-handles" aria-hidden="true"></div>
+    </div>
+  </section>
+  <aside id="workshopRightPanelShell" class="workshop-layout-region" data-workshop-region="right"></aside>
+  <footer id="workshopBottomDashboardShell" class="workshop-layout-region" data-workshop-region="bottom"></footer>
+</section>
+<div id="workshopHeader">
+  <img id="workshopLogo" src="assets/images/workshop/thinkamigbob-polished-transparent.png" alt="THINKamigBOB" />
+  <div id="workshopTitle" aria-hidden="true">STEM Workshop</div>
+</div>
+<div id="workshopPrecisionCursor" aria-hidden="true">Precision: 1 cm</div>
 
 <section id="readToBobPractice" hidden role="dialog" aria-modal="false" aria-label="Read to BOB practice">
   <button id="readToBobCloseButton" type="button" aria-label="Close Read to BOB practice" onclick="toggleReadToBobPractice()">×</button>
@@ -4243,6 +4284,78 @@ Future extraction target: view controls.
 <div id="viewCubeTitle">🧭 View</div>
 <canvas height="180" id="viewCubeCanvas" width="180"></canvas>
 <div id="viewDiceHint">Drag • Click face • Double-click Home</div>
+</div>
+<!-- =====================================================
+HTML SECTION 03A — MISSION / WORKSHOP MODE SWITCH
+This control is available only after a mission has started.
+===================================================== -->
+<div id="workspaceUtilityRail">
+  <button id="helpButton" type="button" title="Open Builder Help" aria-label="Open Builder Help">? HELP</button>
+  <button id="workspaceModeSwitch" type="button" aria-pressed="false" onclick="toggleWorkspaceMode()">
+    <span class="workspaceModeIcon" aria-hidden="true">🛠</span>
+    <span class="workspaceModeLabel">Open Workshop</span>
+  </button>
+</div>
+
+<div id="workshopDashboard" role="region" aria-label="Workshop dashboard">
+  <div id="workshopEngineeringDashboard">
+    <section class="workshop-dashboard-section" aria-labelledby="workshopSelectionToolsLabel">
+      <h2 id="workshopSelectionToolsLabel">Selection</h2>
+      <div class="workshop-dashboard-controls">
+        <button id="workshopSelectButton" type="button" onclick="startSelectMode()">Select</button>
+        <button id="workshopDeleteButton" type="button" onclick="deleteWorkshopSelectedStructure()">Delete</button>
+      </div>
+    </section>
+    <section class="workshop-dashboard-section" aria-labelledby="workshopBuildShapesLabel">
+      <h2 id="workshopBuildShapesLabel">Build</h2>
+      <div class="workshop-dashboard-controls workshop-shape-controls">
+        <button id="workshopShapeCube" type="button" data-workshop-shape="cube" aria-pressed="true" onclick="chooseWorkshopBuildShape('cube')">Cube</button>
+        <button id="workshopShapeSphere" type="button" data-workshop-shape="sphere" aria-pressed="false" onclick="chooseWorkshopBuildShape('sphere')">Sphere</button>
+        <button id="workshopShapeWedge" type="button" data-workshop-shape="trianglePrism" aria-pressed="false" onclick="chooseWorkshopBuildShape('trianglePrism')">Wedge</button>
+      </div>
+    </section>
+    <section class="workshop-dashboard-section" aria-labelledby="workshopEditToolsLabel">
+      <h2 id="workshopEditToolsLabel">Edit</h2>
+      <div class="workshop-dashboard-controls">
+        <button id="workshopUndoButton" type="button" onclick="undoLast()" disabled>Undo</button>
+        <button id="workshopRedoButton" type="button" onclick="redoLast()" disabled>Redo</button>
+      </div>
+    </section>
+    <section class="workshop-dashboard-section workshop-engineering-controls" aria-labelledby="workshopEngineeringControlsLabel">
+      <h2 id="workshopEngineeringControlsLabel">Engineering</h2>
+      <div class="workshop-dashboard-controls workshop-engineering-status">
+        <button id="workshopGridButton" type="button" aria-pressed="true" onclick="toggleEngineeringGrid()">Grid: On</button>
+        <button id="workshopSnapStatus" type="button" aria-pressed="true" title="Voxel snapping is always enabled in Workshop." disabled>Snap: On</button>
+        <span id="workshopDashboardPrecision" role="status" aria-live="polite">Precision: 1 cm</span>
+      </div>
+      <div id="workshopMeasurementControls" aria-label="Workshop model measurement scale">
+        <div id="workshopMeasurementKey" role="status" aria-live="polite" aria-atomic="true" aria-label="Grid Precision. One square equals one centimeter." data-workshop-unit="cm">
+          <span class="workshopGridSample" aria-hidden="true"><span class="workshopPrecisionGrid"><span id="workshopMeasurementPreviewLabel">1 cm</span></span></span>
+          <span><strong>Grid Precision</strong><span id="workshopMeasurementKeyValue">One square = 1 centimeter</span></span>
+        </div>
+        <div id="workshopMeasurementSwitch" role="group" aria-label="Workshop model measurement units">
+          <button id="workshopUnitMm" type="button" data-workshop-unit="mm" aria-pressed="false">mm</button>
+          <button id="workshopUnitCm" type="button" data-workshop-unit="cm" aria-pressed="true">cm</button>
+        </div>
+      </div>
+    </section>
+    <section class="workshop-dashboard-section workshop-future-tools" aria-labelledby="workshopFutureToolsLabel">
+      <h2 id="workshopFutureToolsLabel">Future Tools</h2>
+      <div class="workshop-dashboard-controls">
+        <button type="button" disabled title="Coming in a future Workshop update.">Move</button>
+        <button type="button" disabled title="Coming in a future Workshop update.">Resize</button>
+        <button type="button" disabled title="Coming in a future Workshop update.">Rotate</button>
+        <button type="button" disabled title="Coming in a future Workshop update.">Duplicate</button>
+        <button type="button" disabled title="Coming in a future Workshop update.">Align</button>
+        <button type="button" disabled title="Coming in a future Workshop update.">Mirror</button>
+        <button type="button" disabled title="Coming in a future Workshop update.">Group</button>
+        <button type="button" disabled title="Coming in a future Workshop update.">Ungroup</button>
+        <button type="button" disabled title="Coming in a future Workshop update.">Measure</button>
+        <button type="button" disabled title="Coming in a future Workshop update.">Start Design Space</button>
+        <button type="button" disabled title="Coming in a future Workshop update.">End Design Space</button>
+      </div>
+    </section>
+  </div>
 </div>
 <!-- =====================================================
 HTML SECTION 04 — MISSION TRACKER / CHECKLIST
@@ -4428,7 +4541,6 @@ HTML SECTION: LEFT CURRENT MISSION PANEL
 <p id="moreChallenge">Add details, decorations, and a magical feature.</p>
 <p id="badgeMessage"><b>OPEN BADGES</b></p>
 <button id="openPassportFromBadge" type="button">OPEN PASSPORT</button>
-<button id="helpButton" type="button" title="Open Builder Help" aria-label="Open Builder Help">? HELP</button>
 </div>
 <!-- =====================================================
 JS SECTION 01: THREE.JS / MAIN BUILDER SCRIPT
@@ -4619,10 +4731,14 @@ function syncEngineeringGridStyle(grassIsActive){
 
 const blocks = [];
 const redoBlocks = [];
+const workshopDeletedSelectionUndo = [];
+const workshopDeletedSelectionRedo = [];
 
 function updateUndoRedoButtons(){
   const undoButton = document.getElementById("undoButton");
   const redoButton = document.getElementById("redoButton");
+  const workshopUndoButton = document.getElementById("workshopUndoButton");
+  const workshopRedoButton = document.getElementById("workshopRedoButton");
 
   if(undoButton){
     undoButton.disabled = blocks.length === 0;
@@ -4630,6 +4746,16 @@ function updateUndoRedoButtons(){
 
   if(redoButton){
     redoButton.disabled = redoBlocks.length === 0;
+  }
+
+  if(workshopUndoButton){
+    workshopUndoButton.disabled =
+      blocks.length === 0 && workshopDeletedSelectionUndo.length === 0;
+  }
+
+  if(workshopRedoButton){
+    workshopRedoButton.disabled =
+      redoBlocks.length === 0 && workshopDeletedSelectionRedo.length === 0;
   }
 }
 
@@ -4643,6 +4769,25 @@ if(blockShapeSelect){
   selectedBlockShape = blockShapeSelect.value || "cube";
   blockShapeSelect.addEventListener("change", function(){
     selectedBlockShape = this.value || "cube";
+  });
+}
+
+function chooseWorkshopBuildShape(shape){
+  const requestedShape =
+    shape === "sphere" || shape === "trianglePrism" ? shape : "cube";
+  const shapeSelect = document.getElementById("blockShape");
+  if(shapeSelect){
+    shapeSelect.value = requestedShape;
+    shapeSelect.dispatchEvent(new Event("change", {bubbles:true}));
+  }else{
+    selectedBlockShape = requestedShape;
+  }
+
+  document.querySelectorAll("[data-workshop-shape]").forEach(button => {
+    button.setAttribute(
+      "aria-pressed",
+      button.dataset.workshopShape === requestedShape ? "true" : "false"
+    );
   });
 }
 
@@ -6160,6 +6305,22 @@ function buildStarterGrid(){
 function toggleEngineeringGrid(){
   if(!engineeringGrid) return;
 
+  if(document.body.classList.contains("workshopMode")){
+    engineeringGrid.visible = true;
+
+    const workshopToggleButton = document.getElementById("engineeringGridToggle");
+    const workshopDashboardGridButton = document.getElementById("workshopGridButton");
+    if(workshopToggleButton){
+      workshopToggleButton.textContent = "▦ Grid: On";
+      workshopToggleButton.setAttribute("aria-pressed", "true");
+    }
+    if(workshopDashboardGridButton){
+      workshopDashboardGridButton.textContent = "Grid: On";
+      workshopDashboardGridButton.setAttribute("aria-pressed", "true");
+    }
+    return;
+  }
+
   engineeringGrid.visible = !engineeringGrid.visible;
 
   const toggleButton = document.getElementById("engineeringGridToggle");
@@ -6934,6 +7095,138 @@ document.addEventListener('keydown', (event)=>{
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+function workshopPrecisionSnappingActive(){
+  return document.body.classList.contains("workshopMode") &&
+    typeof window.snapWorkshopValue === "function";
+}
+
+function snapGroundBuildCoordinate(value){
+  return workshopPrecisionSnappingActive()
+    ? window.snapWorkshopValue(value)
+    : Math.round(value);
+}
+
+function snapWorkshopPlacementCoordinate(value){
+  return workshopPrecisionSnappingActive()
+    ? window.snapWorkshopValue(value)
+    : value;
+}
+
+function getWorkshopGeometryBounds(mesh){
+  if(!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+  const bounds = mesh.geometry.boundingBox.clone();
+  const size = bounds.getSize(new THREE.Vector3());
+  return {
+    bounds,
+    halfSize: size.multiplyScalar(0.5)
+  };
+}
+
+function createWorkshopCandidateBounds(mesh, position){
+  const geometryBounds = getWorkshopGeometryBounds(mesh).bounds;
+  return new THREE.Box3(
+    geometryBounds.min.clone().add(position),
+    geometryBounds.max.clone().add(position)
+  );
+}
+
+const WORKSHOP_PLACEMENT_EPSILON = 1e-5;
+
+function workshopBoundsOverlap(
+  candidateBounds,
+  existingBounds,
+  epsilon = WORKSHOP_PLACEMENT_EPSILON
+){
+  const overlapX =
+    Math.min(candidateBounds.max.x, existingBounds.max.x) -
+    Math.max(candidateBounds.min.x, existingBounds.min.x);
+  const overlapY =
+    Math.min(candidateBounds.max.y, existingBounds.max.y) -
+    Math.max(candidateBounds.min.y, existingBounds.min.y);
+  const overlapZ =
+    Math.min(candidateBounds.max.z, existingBounds.max.z) -
+    Math.max(candidateBounds.min.z, existingBounds.min.z);
+
+  return overlapX > epsilon && overlapY > epsilon && overlapZ > epsilon;
+}
+
+function calculateWorkshopPlacementCandidate(intersection, newBlock){
+  const isVoxelCube = newBlock.userData.builderShape === "cube";
+  // Voxel cubes always use the approved one-unit lattice in every precision mode.
+  // Future non-voxel engineering tools may use the active cm/mm precision state.
+  const increment = isVoxelCube ? 1 : window.getWorkshopSnapIncrement();
+  const snapCandidateValue = function(value, offset){
+    if(isVoxelCube){
+      return Number(Math.round(value).toFixed(4));
+    }
+    return window.snapWorkshopValue(value, offset);
+  };
+  const hit = intersection.object;
+  const geometryData = getWorkshopGeometryBounds(newBlock);
+  const halfSize = geometryData.halfSize;
+  const position = new THREE.Vector3();
+  let contactAxis = null;
+
+  if(hit === ground){
+    const groundBounds = new THREE.Box3().setFromObject(ground);
+    position.set(
+      intersection.point.x,
+      groundBounds.max.y + halfSize.y,
+      intersection.point.z
+    );
+    ["x","y","z"].forEach(function(axis){
+      position[axis] = snapCandidateValue(position[axis], 0);
+    });
+  }else{
+    const hitBounds = new THREE.Box3().setFromObject(hit);
+    const contactedCenter = hitBounds.getCenter(new THREE.Vector3());
+    const alignmentOffset = {
+      x:contactedCenter.x,
+      y:contactedCenter.y,
+      z:contactedCenter.z
+    };
+    const normal = intersection.face
+      ? intersection.face.normal.clone().transformDirection(hit.matrixWorld).normalize()
+      : new THREE.Vector3(0,1,0);
+    const normalMagnitude = {
+      x:Math.abs(normal.x),
+      y:Math.abs(normal.y),
+      z:Math.abs(normal.z)
+    };
+
+    contactAxis = normalMagnitude.x >= normalMagnitude.y && normalMagnitude.x >= normalMagnitude.z
+      ? "x"
+      : normalMagnitude.y >= normalMagnitude.z
+        ? "y"
+        : "z";
+
+    position.copy(intersection.point);
+    ["x","y","z"].forEach(function(axis){
+      if(axis!==contactAxis){
+        position[axis] = snapCandidateValue(position[axis], alignmentOffset[axis]);
+      }
+    });
+    position[contactAxis] = Number((
+      normal[contactAxis] > 0
+        ? hitBounds.max[contactAxis] + halfSize[contactAxis]
+        : hitBounds.min[contactAxis] - halfSize[contactAxis]
+    ).toFixed(4));
+  }
+
+  const candidateBounds = createWorkshopCandidateBounds(newBlock, position);
+  const collidingBlock = blocks.find(function(existingBlock){
+    const existingBounds = new THREE.Box3().setFromObject(existingBlock);
+    return workshopBoundsOverlap(candidateBounds, existingBounds);
+  });
+
+  return {
+    position,
+    isValid:!collidingBlock,
+    snapIncrement:increment,
+    collidingBlock:collidingBlock || null
+  };
+}
+
 function clickedUI(event){
 
   return (
@@ -7006,23 +7299,39 @@ if(intersects.length > 0){
 
 if(moveSelectedMode && hit === ground){
 
-  const targetX = Math.round(intersects[0].point.x);
-  const targetZ = Math.round(intersects[0].point.z);
+  const targetX = snapGroundBuildCoordinate(intersects[0].point.x);
+  const targetZ = snapGroundBuildCoordinate(intersects[0].point.z);
 
-  let minX = Math.min(...selectedBlocks.map(block => Math.round(block.position.x)));
-  let minZ = Math.min(...selectedBlocks.map(block => Math.round(block.position.z)));
+  let minX = Math.min(...selectedBlocks.map(block =>
+    workshopPrecisionSnappingActive()
+      ? window.snapWorkshopValue(block.position.x)
+      : Math.round(block.position.x)
+  ));
+  let minZ = Math.min(...selectedBlocks.map(block =>
+    workshopPrecisionSnappingActive()
+      ? window.snapWorkshopValue(block.position.z)
+      : Math.round(block.position.z)
+  ));
 
   const changeX = targetX - minX;
   const changeZ = targetZ - minZ;
 
   selectedBlocks.forEach(block => {
-    block.position.x += changeX;
-    block.position.z += changeZ;
+    if(workshopPrecisionSnappingActive()){
+      block.position.x = window.snapWorkshopValue(block.position.x + changeX);
+      block.position.z = window.snapWorkshopValue(block.position.z + changeZ);
+    }else{
+      block.position.x += changeX;
+      block.position.z += changeZ;
+    }
     block.material.emissive = new THREE.Color(0x000000);
   });
 
   selectedBlocks = [];
   moveSelectedMode = false;
+  if(window.clearWorkshopRulerSelectionHighlight){
+    window.clearWorkshopRulerSelectionHighlight();
+  }
 
   document.getElementById("toolMessage").innerHTML =
     "✅ Structure moved!";
@@ -7036,20 +7345,30 @@ if(moveSelectedMode && hit === ground){
       Number(document.getElementById("blockColor").value)
     );
 
-    if(hit === ground){
+    if(workshopPrecisionSnappingActive()){
+      const candidate = calculateWorkshopPlacementCandidate(intersects[0], newBlock);
+      if(!candidate.isValid){
+        newBlock.geometry.dispose();
+        newBlock.material.dispose();
+        document.getElementById("toolMessage").textContent =
+          "⚠️ Placement blocked: choose an open grid position.";
+        return;
+      }
+      newBlock.position.copy(candidate.position);
+    }else if(hit === ground){
 
       newBlock.position.set(
-        Math.round(intersects[0].point.x),
+        snapGroundBuildCoordinate(intersects[0].point.x),
         0,
-        Math.round(intersects[0].point.z)
+        snapGroundBuildCoordinate(intersects[0].point.z)
       );
 
     } else {
 
       newBlock.position.set(
-        hit.position.x,
-        hit.position.y + 1,
-        hit.position.z
+        snapWorkshopPlacementCoordinate(hit.position.x),
+        snapWorkshopPlacementCoordinate(hit.position.y + 1),
+        snapWorkshopPlacementCoordinate(hit.position.z)
       );
     }
 
@@ -7081,6 +7400,9 @@ document.addEventListener('contextmenu', (event)=>{
     const blockToRemove = intersects[0].object;
 
     scene.remove(blockToRemove);
+    if(window.clearWorkshopRulerSelectionForObject){
+      window.clearWorkshopRulerSelectionForObject(blockToRemove);
+    }
 
     const index = blocks.indexOf(blockToRemove);
 
@@ -7094,35 +7416,42 @@ document.addEventListener('contextmenu', (event)=>{
 
 function animate(){
   requestAnimationFrame(animate);
+  if(window.refreshWorkshopRulerSelectionHighlight){
+    window.refreshWorkshopRulerSelectionHighlight();
+  }
 
   if(!window.calmMode && !window.readToBobFeedbackActive && !window.readToBobPracticeActive){
-  stars.forEach(star => {
+  if(!document.body.classList.contains("workshopMode")){
+    stars.forEach(star => {
 
-  star.material.opacity =
-    0.3 + Math.random() * 0.7;
-});
+      star.material.opacity =
+        0.3 + Math.random() * 0.7;
+    });
+  }
 
-spinningTurbines.forEach(turbine => {
-  turbine.rotation.z += 0.03;
-});
-  
-  atmosphereObjects.forEach(object => {
-    if(object.userData.type === "cloud"){
-      object.position.x += 0.01;
-
-      if(object.position.x > 25){
-        object.position.x = -25;
-      }
-    }
-
-    if(object.userData.type === "smoke"){
-      object.position.y += object.userData.floatSpeed;
-
-      if(object.position.y > 10){
-      object.position.y = 3;
-      }
-    }
+  spinningTurbines.forEach(turbine => {
+    turbine.rotation.z += 0.03;
   });
+  
+  if(!document.body.classList.contains("workshopMode")){
+    atmosphereObjects.forEach(object => {
+      if(object.userData.type === "cloud"){
+        object.position.x += 0.01;
+
+        if(object.position.x > 25){
+          object.position.x = -25;
+        }
+      }
+
+      if(object.userData.type === "smoke"){
+        object.position.y += object.userData.floatSpeed;
+
+        if(object.position.y > 10){
+          object.position.y = 3;
+        }
+      }
+    });
+  }
   }
 
   // Update view dice to match the camera instead of spinning automatically
@@ -7249,6 +7578,21 @@ function saveImage(){
   
 function undoLast(){
 
+  if(document.body.classList.contains("workshopMode") &&
+     workshopDeletedSelectionUndo.length > 0){
+    const restoredSelection = workshopDeletedSelectionUndo.pop();
+    restoredSelection.forEach(block => {
+      if(!blocks.includes(block)) blocks.push(block);
+      scene.add(block);
+    });
+    workshopDeletedSelectionRedo.push(restoredSelection);
+    document.getElementById("toolMessage").innerHTML =
+      "↩️ Deleted selection restored.";
+    checkBadge();
+    updateUndoRedoButtons();
+    return;
+  }
+
   if(blocks.length === 0){
     document.getElementById("toolMessage").innerHTML =
       "Nothing to undo.";
@@ -7259,6 +7603,9 @@ function undoLast(){
   const lastBlock = blocks.pop();
 
   scene.remove(lastBlock);
+  if(window.clearWorkshopRulerSelectionForObject){
+    window.clearWorkshopRulerSelectionForObject(lastBlock);
+  }
   redoBlocks.push(lastBlock);
 
   document.getElementById("toolMessage").innerHTML =
@@ -7269,6 +7616,25 @@ function undoLast(){
 }
 
 function redoLast(){
+
+  if(document.body.classList.contains("workshopMode") &&
+     workshopDeletedSelectionRedo.length > 0){
+    const deletedSelection = workshopDeletedSelectionRedo.pop();
+    deletedSelection.forEach(block => {
+      scene.remove(block);
+      const blockIndex = blocks.indexOf(block);
+      if(blockIndex > -1) blocks.splice(blockIndex, 1);
+    });
+    workshopDeletedSelectionUndo.push(deletedSelection);
+    if(window.clearWorkshopRulerSelectionHighlight){
+      window.clearWorkshopRulerSelectionHighlight();
+    }
+    document.getElementById("toolMessage").innerHTML =
+      "↪️ Selection deleted again.";
+    checkBadge();
+    updateUndoRedoButtons();
+    return;
+  }
 
   if(redoBlocks.length === 0){
     document.getElementById("toolMessage").innerHTML =
@@ -7338,6 +7704,9 @@ redoBlocks.length = 0;
 selectedBlocks = [];
 selectMode = false;
 moveSelectedMode = false;
+if(window.clearWorkshopRulerSelectionHighlight){
+  window.clearWorkshopRulerSelectionHighlight();
+}
 
 clearAtmosphere();
 
@@ -7355,6 +7724,9 @@ function startSelectMode(){
 
   selectMode = true;
   moveSelectedMode = false;
+  if(window.clearWorkshopRulerSelectionHighlight){
+    window.clearWorkshopRulerSelectionHighlight();
+  }
 
   // Remove highlight from previously selected blocks
   selectedBlocks.forEach(block => {
@@ -7389,6 +7761,10 @@ function selectConnectedBlocks(startBlock){
   });
 
   selectMode = false;
+  if(document.body.classList.contains("workshopMode") &&
+     window.setWorkshopRulerSelectedObject){
+    window.setWorkshopRulerSelectedObject(startBlock);
+  }
 
 document.getElementById("toolMessage").innerHTML =
   "✅ Structure selected! Now click Move Selected.";
@@ -8282,11 +8658,24 @@ function deleteSelectedStructure(){
   });
 
   selectedBlocks = [];
+  if(window.clearWorkshopRulerSelectionHighlight){
+    window.clearWorkshopRulerSelectionHighlight();
+  }
 
   document.getElementById("toolMessage").innerHTML =
     "🗑️ Structure deleted.";
 
   checkBadge();
+}
+
+function deleteWorkshopSelectedStructure(){
+  const deletedSelection = selectedBlocks.slice();
+  deleteSelectedStructure();
+  if(deletedSelection.length === 0) return;
+
+  workshopDeletedSelectionUndo.push(deletedSelection);
+  workshopDeletedSelectionRedo.length = 0;
+  updateUndoRedoButtons();
 }
   
 function expandWorld(){
@@ -22424,7 +22813,7 @@ body.calmMode #reopenLibraryFromCoach{
     var shapeSelect=document.getElementById("blockShape");
     if(shapeSelect) shapeSelect.value=state.selectedShape || "cube";
     if(engineeringGrid){
-      engineeringGrid.visible=state.engineeringGridVisible !== false;
+      engineeringGrid.visible=document.body.classList.contains("workshopMode") || state.engineeringGridVisible !== false;
       var gridButton=document.getElementById("engineeringGridToggle");
       if(gridButton){
         gridButton.textContent=engineeringGrid.visible ? "▦ Grid: On" : "▦ Grid: Off";
@@ -25887,6 +26276,1672 @@ body:not(.starterScreenActive) #viewCubeCanvas{
   height:162px !important;
 }
 </style>
+
+<!-- =====================================================
+WORKSHOP MODE SHELL
+Mission and Workshop retain independent interface shells while sharing the
+existing Three.js workplane, camera, engineering grid, and View Dice.
+===================================================== -->
+<style id="workshopModeShellCSS">
+#workspaceUtilityRail,
+#workshopDashboard,
+#workshopHeader,
+#workshopRoot{
+  display:none;
+}
+
+/* Phase 1.5A empty layout framework. The live renderer remains attached to
+   body; these pointer-transparent regions only reserve future module areas. */
+body.workshopMode:not(.starterScreenActive) #workshopRoot{
+  position:fixed;
+  inset:42px 0 0;
+  z-index:20;
+  display:grid;
+  grid-template-columns:clamp(52px,4vw,72px) minmax(0,1fr) clamp(220px,18vw,320px);
+  grid-template-rows:minmax(0,1fr) 136px;
+  grid-template-areas:
+    "left viewport right"
+    "bottom bottom bottom";
+  width:100%;
+  height:calc(100% - 42px);
+  min-width:0;
+  overflow:hidden;
+  box-sizing:border-box;
+  pointer-events:none;
+}
+
+.workshop-layout-region{
+  min-width:0;
+  min-height:0;
+  border:0;
+  background:transparent;
+  pointer-events:none;
+}
+
+#workshopLeftRailShell{
+  grid-area:left;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopLeftRailShell{
+  align-self:end;
+  height:max(0px,calc(100% - 276px));
+}
+
+#workshopViewportContainer{
+  grid-area:viewport;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopViewportContainer{
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr) 36px;
+  grid-template-rows:32px minmax(0,1fr) 32px;
+  grid-template-areas:
+    "top top top"
+    "left stage right"
+    "bottom bottom bottom";
+  overflow:hidden;
+}
+
+#workshopViewportStage{
+  grid-area:stage;
+  min-width:0;
+  min-height:0;
+  pointer-events:none;
+}
+
+.workshop-ruler{
+  --workshop-ruler-line:rgba(207,239,247,.76);
+  --workshop-ruler-label:rgba(235,250,255,.88);
+  --workshop-ruler-selection-color:rgba(255,218,91,.42);
+  --workshop-ruler-design-color:rgba(54,216,255,.32);
+  position:relative;
+  z-index:1;
+  display:block;
+  overflow:hidden;
+  box-sizing:border-box;
+  color:var(--workshop-ruler-label);
+  background:rgba(13,29,40,.88);
+  border:1px solid rgba(117,178,198,.42);
+  font-family:"Lexend",Arial,sans-serif;
+  pointer-events:none;
+}
+
+.workshop-ruler-top{
+  grid-area:top;
+  border-width:0 0 1px;
+}
+
+.workshop-ruler-bottom{
+  grid-area:bottom;
+  border-width:1px 0 0;
+}
+
+.workshop-ruler-left{
+  grid-area:left;
+  border-width:0 1px 0 0;
+}
+
+.workshop-ruler-right{
+  grid-area:right;
+  border-width:0 0 0 1px;
+}
+
+.workshop-ruler-ticks,
+.workshop-ruler-layer{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.workshop-ruler-layer[hidden]{
+  display:none;
+}
+
+.workshop-ruler-selection{
+  z-index:3;
+  display:block;
+  box-sizing:border-box;
+  border:1px solid rgba(143,246,255,.94);
+  background:var(--workshop-ruler-selection-color);
+  box-shadow:
+    inset 0 0 5px rgba(143,246,255,.44),
+    0 0 7px rgba(54,216,255,.82);
+}
+
+.workshop-ruler-horizontal .workshop-ruler-selection{
+  top:16px;
+  bottom:auto;
+  height:10px;
+}
+
+.workshop-ruler-vertical .workshop-ruler-selection{
+  left:14px;
+  right:auto;
+  width:10px;
+}
+
+.workshop-ruler-measurement-label{
+  position:absolute;
+  z-index:4;
+  display:block;
+  box-sizing:border-box;
+  max-width:110px;
+  padding:1px 3px;
+  border-radius:3px;
+  color:#eaffff;
+  background:rgba(5,18,27,.92);
+  box-shadow:0 0 5px rgba(54,216,255,.64);
+  font:800 6px/1.15 "Lexend",Arial,sans-serif;
+  white-space:nowrap;
+  pointer-events:none;
+}
+
+.workshop-ruler-horizontal .workshop-ruler-measurement-label{
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+
+.workshop-ruler-vertical .workshop-ruler-measurement-label{
+  left:50%;
+  transform:translate(-50%,-50%) rotate(-90deg);
+  transform-origin:center;
+}
+
+.workshop-ruler-tick{
+  position:absolute;
+  display:block;
+  box-sizing:border-box;
+  pointer-events:none;
+}
+
+.workshop-ruler-horizontal .workshop-ruler-tick{
+  left:var(--workshop-ruler-position);
+  width:1px;
+  transform:translateX(-.5px);
+  border-left:1px solid var(--workshop-ruler-line);
+}
+
+.workshop-ruler-top .workshop-ruler-tick{
+  bottom:0;
+}
+
+.workshop-ruler-bottom .workshop-ruler-tick{
+  top:0;
+}
+
+.workshop-ruler-vertical .workshop-ruler-tick{
+  top:var(--workshop-ruler-position);
+  height:1px;
+  transform:translateY(-.5px);
+  border-top:1px solid var(--workshop-ruler-line);
+}
+
+.workshop-ruler-left .workshop-ruler-tick{
+  right:0;
+}
+
+.workshop-ruler-right .workshop-ruler-tick{
+  left:0;
+}
+
+.workshop-ruler-horizontal .workshop-ruler-tick-minor{
+  height:6px;
+  opacity:.34;
+}
+
+.workshop-ruler-horizontal .workshop-ruler-tick-medium{
+  height:10px;
+  opacity:.62;
+}
+
+.workshop-ruler-horizontal .workshop-ruler-tick-major{
+  height:15px;
+  border-left-width:2px;
+  opacity:.96;
+}
+
+.workshop-ruler-vertical .workshop-ruler-tick-minor{
+  width:6px;
+  opacity:.34;
+}
+
+.workshop-ruler-vertical .workshop-ruler-tick-medium{
+  width:11px;
+  opacity:.62;
+}
+
+.workshop-ruler-vertical .workshop-ruler-tick-major{
+  width:17px;
+  border-top-width:2px;
+  opacity:.96;
+}
+
+.workshop-ruler-label{
+  position:absolute;
+  display:block;
+  color:var(--workshop-ruler-label);
+  font:700 7px/1 "Lexend",Arial,sans-serif;
+  white-space:nowrap;
+  pointer-events:none;
+}
+
+.workshop-ruler-horizontal .workshop-ruler-label{
+  left:var(--workshop-ruler-position);
+  transform:translateX(-50%);
+}
+
+.workshop-ruler-top .workshop-ruler-label{
+  top:3px;
+}
+
+.workshop-ruler-bottom .workshop-ruler-label{
+  bottom:3px;
+}
+
+.workshop-ruler-horizontal .workshop-ruler-label.is-range-start{
+  transform:none;
+}
+
+.workshop-ruler-horizontal .workshop-ruler-label.is-range-end{
+  transform:translateX(-100%);
+}
+
+.workshop-ruler-vertical .workshop-ruler-label{
+  top:var(--workshop-ruler-position);
+  left:50%;
+  transform:translate(-50%,-50%) rotate(-90deg);
+  transform-origin:center;
+}
+
+.workshop-ruler-vertical .workshop-ruler-label.is-range-start{
+  transform:translate(-50%,0) rotate(-90deg);
+}
+
+.workshop-ruler-vertical .workshop-ruler-label.is-range-end{
+  transform:translate(-50%,-100%) rotate(-90deg);
+}
+
+@media(max-width:650px){
+  body.workshopMode:not(.starterScreenActive) #workshopViewportContainer{
+    grid-template-columns:32px minmax(0,1fr) 32px;
+    grid-template-rows:28px minmax(0,1fr) 28px;
+  }
+
+  .workshop-ruler-label{
+    font-size:6px;
+  }
+}
+
+#workshopRightPanelShell{
+  grid-area:right;
+}
+
+#workshopBottomDashboardShell{
+  grid-area:bottom;
+}
+
+@media(max-width:900px){
+  body.workshopMode:not(.starterScreenActive) #workshopRoot{
+    grid-template-columns:clamp(48px,5vw,60px) minmax(0,1fr) clamp(180px,20vw,240px);
+    grid-template-rows:minmax(0,1fr) 136px;
+  }
+}
+
+@media(max-width:650px){
+  body.workshopMode:not(.starterScreenActive) #workshopRoot{
+    grid-template-columns:44px minmax(0,1fr) minmax(138px,24vw);
+    grid-template-rows:minmax(0,1fr) 128px;
+  }
+}
+
+body:not(.starterScreenActive) #workspaceUtilityRail{
+  position:relative;
+  inset:auto;
+  z-index:1;
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
+  gap:7px;
+  width:100%;
+  margin:8px 0 0;
+  box-sizing:border-box;
+}
+
+body:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
+  position:relative !important;
+  inset:auto !important;
+  translate:none !important;
+  width:58px !important;
+  min-width:58px !important;
+  height:32px !important;
+  min-height:32px !important;
+  margin:0 !important;
+  padding:3px 5px !important;
+  box-sizing:border-box !important;
+  border:1px solid rgba(202,164,53,.72) !important;
+  border-radius:12px !important;
+  color:#f4f8fa !important;
+  background:linear-gradient(180deg,rgba(42,70,87,.98),rgba(13,29,42,.98)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 7px 18px rgba(0,0,0,.30) !important;
+  font:900 9px/1 "Lexend",Arial,sans-serif !important;
+  cursor:pointer !important;
+}
+
+body:not(.starterScreenActive) #workspaceUtilityRail #helpButton:hover{
+  color:#10202a !important;
+  background:linear-gradient(180deg,#ffe995,#d5aa31) !important;
+}
+
+body:not(.starterScreenActive) #workspaceUtilityRail #helpButton:focus-visible{
+  outline:3px solid #36d8ff !important;
+  outline-offset:3px !important;
+}
+
+#workspaceModeSwitch{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  width:142px;
+  height:32px;
+  min-height:32px;
+  padding:3px 7px;
+  box-sizing:border-box;
+  border:1px solid rgba(202,164,53,.72);
+  border-radius:12px;
+  color:#f4f8fa;
+  background:linear-gradient(180deg,rgba(15,31,45,.94),rgba(6,17,28,.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 7px 18px rgba(0,0,0,.30);
+  font:900 9px/1 "Lexend",Arial,sans-serif !important;
+  letter-spacing:.02em;
+  cursor:pointer;
+}
+
+#workspaceModeSwitch .workspaceModeIcon{
+  font-size:12px;
+}
+
+#workspaceModeSwitch:hover{
+  color:#10202a;
+  background:linear-gradient(180deg,#ffe995,#d5aa31);
+}
+
+#workspaceModeSwitch:focus-visible{
+  outline:3px solid #36d8ff;
+  outline-offset:3px;
+}
+
+body.workshopMode #workspaceModeSwitch{
+  border-color:#66deff;
+  background:linear-gradient(180deg,rgba(34,91,117,.98),rgba(8,38,55,.98));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 10px rgba(54,216,255,.25);
+}
+
+/* The mission panel overflows by about one pixel at the reference viewport.
+   Keep wheel/touch scrolling available on short screens without showing an
+   unnecessary scrollbar beside the controls. */
+body:not(.starterScreenActive) #info{
+  scrollbar-width:none;
+}
+
+body:not(.starterScreenActive) #info::-webkit-scrollbar{
+  display:none;
+}
+
+/* Workshop starts with the shared build surface and View Dice only. */
+body.workshopMode:not(.starterScreenActive) #buildBar,
+body.workshopMode:not(.starterScreenActive) #info,
+body.workshopMode:not(.starterScreenActive) #studentProjectBar,
+body.workshopMode:not(.starterScreenActive) #missionCard,
+body.workshopMode:not(.starterScreenActive) #rightHudColumn,
+body.workshopMode:not(.starterScreenActive) #floatingReaderControls,
+body.workshopMode:not(.starterScreenActive) #readToBobPractice,
+body.workshopMode:not(.starterScreenActive) #gameLogo,
+body.workshopMode:not(.starterScreenActive) #builderHeaderRobot,
+body.workshopMode:not(.starterScreenActive) #builderHeaderSign,
+body.workshopMode:not(.starterScreenActive) #skyBannerPlane,
+body.workshopMode:not(.starterScreenActive) #builderMissionTitleOverlay{
+  display:none !important;
+}
+
+body.workshopMode:not(.starterScreenActive) #skyBannerPlane{
+  animation:none !important;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox{
+  top:42px !important;
+  left:18px !important;
+  right:auto !important;
+  bottom:auto !important;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopHeader{
+  position:fixed;
+  inset:0;
+  z-index:30;
+  display:block;
+  pointer-events:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopLogo{
+  position:absolute;
+  top:-7px;
+  left:18px;
+  transform:none;
+  display:block;
+  width:182px;
+  max-width:none;
+  height:auto;
+  object-fit:contain;
+  flex:0 0 auto;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopTitle{
+  position:absolute;
+  top:5px;
+  left:50%;
+  display:block;
+  width:max-content;
+  max-width:none;
+  overflow:hidden;
+  transform:translateX(-50%);
+  transform-origin:center center;
+  margin:0;
+  padding:0;
+  border:0;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+  background:
+    radial-gradient(circle at center,
+      #8ff6ff 0 1px,
+      rgba(143,246,255,.84) 1.1px 1.45px,
+      transparent 1.55px) 0 0 / 3px 3px;
+  -webkit-background-clip:text;
+  background-clip:text;
+  box-shadow:none;
+  font-family:Lexend,Arial,Helvetica,sans-serif;
+  font-size:clamp(19px,1.35vw,24px);
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.10em;
+  text-align:center;
+  text-overflow:ellipsis;
+  text-transform:uppercase;
+  filter:
+    drop-shadow(0 0 1px rgba(92,235,255,.95))
+    drop-shadow(0 0 4px rgba(41,181,255,.72))
+    drop-shadow(0 1px 1px rgba(0,0,0,.48));
+  opacity:.78;
+  white-space:nowrap;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  cursor:default;
+  animation:builderMissionTitleWhiteLed207D 3.5s ease-in-out infinite;
+}
+
+@media(max-width:900px){
+  body.workshopMode:not(.starterScreenActive) #workshopTitle{
+    font-size:clamp(18px,2.3vw,22px);
+  }
+}
+
+@media(max-width:650px){
+  body.workshopMode:not(.starterScreenActive) #workshopTitle{
+    font-size:clamp(16px,3.5vw,19px);
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.workshopMode:not(.starterScreenActive) #workshopTitle{
+    animation:none;
+    opacity:1;
+    filter:
+      brightness(1)
+      drop-shadow(0 0 1px rgba(92,235,255,.95))
+      drop-shadow(0 0 4px rgba(41,181,255,.72))
+      drop-shadow(0 1px 1px rgba(0,0,0,.48));
+  }
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopDashboard{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:330;
+  display:block;
+  height:136px;
+  box-sizing:border-box;
+  border-top:2px solid rgba(255,220,103,.90);
+  background:
+    linear-gradient(90deg,
+      rgba(255,226,130,.12) 0,
+      transparent 7%,
+      transparent 93%,
+      rgba(99,59,5,.18) 100%),
+    linear-gradient(180deg,#364550 0,#1d2b35 18%,#101b24 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    inset 0 12px 26px rgba(255,255,255,.035),
+    0 -10px 24px rgba(0,0,0,.30);
+}
+
+#workshopEngineeringDashboard{
+  display:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
+  display:grid;
+  grid-template-columns:minmax(90px,.75fr) minmax(120px,1fr) minmax(82px,.7fr) minmax(270px,1.9fr) minmax(250px,2fr);
+  gap:6px;
+  width:100%;
+  height:100%;
+  padding:7px 9px;
+  box-sizing:border-box;
+  overflow:hidden;
+  font-family:"Lexend",Arial,sans-serif;
+}
+
+.workshop-dashboard-section{
+  min-width:0;
+  min-height:0;
+  padding:5px;
+  box-sizing:border-box;
+  border:1px solid rgba(103,190,220,.24);
+  border-radius:9px;
+  background:rgba(6,17,28,.48);
+  overflow:hidden;
+}
+
+.workshop-dashboard-section h2{
+  margin:0 0 4px;
+  color:#8ff6ff;
+  font:900 9px/1 "Lexend",Arial,sans-serif;
+  letter-spacing:.08em;
+  text-align:center;
+  text-transform:uppercase;
+}
+
+.workshop-dashboard-controls{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(42px,1fr));
+  gap:4px;
+  align-content:start;
+}
+
+.workshop-dashboard-controls button{
+  min-width:0;
+  min-height:25px;
+  padding:3px 4px;
+  box-sizing:border-box;
+  border:1px solid rgba(202,164,53,.72);
+  border-radius:7px;
+  color:#eef8ff;
+  background:linear-gradient(180deg,rgba(42,70,87,.98),rgba(13,29,42,.98));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+  font:800 8px/1 "Lexend",Arial,sans-serif;
+  cursor:pointer;
+}
+
+.workshop-dashboard-controls button:hover:not(:disabled),
+.workshop-dashboard-controls button:focus-visible:not(:disabled){
+  color:#10202a;
+  border-color:#ffe995;
+  background:linear-gradient(180deg,#ffe995,#d5aa31);
+}
+
+.workshop-dashboard-controls button[aria-pressed="true"]:not(:disabled){
+  color:#10202a;
+  border-color:#8ff6ff;
+  background:linear-gradient(180deg,#9ff7ff,#45cbe8);
+}
+
+.workshop-dashboard-controls button:disabled{
+  color:rgba(190,205,214,.46);
+  border-color:rgba(122,145,157,.25);
+  background:linear-gradient(180deg,rgba(41,55,64,.54),rgba(17,28,35,.58));
+  box-shadow:none;
+  cursor:not-allowed;
+  opacity:.62;
+}
+
+.workshop-engineering-status{
+  grid-template-columns:repeat(3,minmax(54px,1fr));
+  margin-bottom:4px;
+}
+
+#workshopDashboardPrecision{
+  display:grid;
+  place-items:center;
+  min-height:25px;
+  padding:3px 4px;
+  box-sizing:border-box;
+  border:1px solid rgba(143,246,255,.42);
+  border-radius:7px;
+  color:#d9fbff;
+  background:rgba(8,24,34,.72);
+  font:700 7px/1.1 "Lexend",Arial,sans-serif;
+  text-align:center;
+}
+
+.workshop-future-tools .workshop-dashboard-controls{
+  grid-template-columns:repeat(4,minmax(46px,1fr));
+  gap:3px;
+}
+
+.workshop-future-tools .workshop-dashboard-controls button{
+  min-height:18px;
+  padding:2px;
+  font-size:6px;
+}
+
+#workshopMeasurementControls{
+  display:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopMeasurementControls{
+  position:relative;
+  inset:auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  color:#eef8ff;
+  font-family:"Lexend",Arial,sans-serif;
+}
+
+body.workshopMode:not(.starterScreenActive) .workshop-engineering-controls #workshopMeasurementKey{
+  width:auto;
+  min-width:0;
+  flex:1 1 auto;
+  height:46px;
+  padding:7px;
+}
+
+body.workshopMode:not(.starterScreenActive) .workshop-engineering-controls #workshopMeasurementSwitch{
+  grid-template-columns:repeat(2,34px);
+  flex:0 0 auto;
+}
+
+body.workshopMode:not(.starterScreenActive) .workshop-engineering-controls #workshopMeasurementSwitch button{
+  min-height:32px;
+  padding:4px;
+}
+
+#workshopMeasurementKey{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  width:174px;
+  height:52.578125px;
+  min-width:174px;
+  padding:10px 12px;
+  border:1px solid rgba(202,164,53,.72);
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(42,70,87,.98),rgba(13,29,42,.98));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 7px 18px rgba(0,0,0,.30);
+  box-sizing:border-box;
+}
+
+#workshopMeasurementKey > span:last-child{
+  display:grid;
+  gap:2px;
+  min-width:0;
+  font-size:9px;
+  line-height:1.05;
+}
+
+#workshopMeasurementKey strong{
+  color:#8ff6ff;
+  font-size:12px;
+  letter-spacing:.04em;
+  white-space:nowrap;
+}
+
+.workshopGridSample{
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:28px;
+  height:28px;
+  flex:0 0 28px;
+  border:1px solid rgba(143,246,255,.34);
+  background:#05090c;
+  box-shadow:0 0 8px rgba(54,216,255,.26);
+  overflow:hidden;
+}
+
+.workshopPrecisionGrid{
+  position:relative;
+  width:24px;
+  height:24px;
+  border:1px solid #8ff6ff;
+  background:rgba(143,246,255,.12);
+  box-shadow:
+    inset 0 0 6px rgba(54,216,255,.22),
+    0 0 6px rgba(54,216,255,.42);
+  box-sizing:border-box;
+}
+
+.workshopPrecisionGrid::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(to right,rgba(143,246,255,.72) 1px,transparent 1px),
+    linear-gradient(to bottom,rgba(143,246,255,.72) 1px,transparent 1px);
+  background-size:10% 10%;
+  opacity:0;
+  transition:opacity 250ms ease;
+}
+
+.workshopPrecisionGrid::after{
+  content:"";
+  position:absolute;
+  top:20%;
+  left:20%;
+  width:10%;
+  height:10%;
+  background:#8ff6ff;
+  box-shadow:0 0 4px rgba(54,216,255,.95);
+  opacity:0;
+  transform:scale(2);
+  transform-origin:center;
+  transition:opacity 250ms ease,transform 250ms ease;
+}
+
+#workshopMeasurementPreviewLabel{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  color:#8ff6ff;
+  font:900 7px/1 "Lexend",Arial,sans-serif;
+  white-space:nowrap;
+  opacity:1;
+  transition:opacity 180ms ease;
+}
+
+#workshopMeasurementKeyValue{
+  display:block;
+}
+
+#workshopMeasurementKey[data-workshop-unit="mm"] .workshopPrecisionGrid::before,
+#workshopMeasurementKey[data-workshop-unit="mm"] .workshopPrecisionGrid::after{
+  opacity:1;
+}
+
+#workshopMeasurementKey[data-workshop-unit="mm"] .workshopPrecisionGrid::after{
+  transform:scale(1);
+}
+
+#workshopMeasurementKey[data-workshop-unit="mm"] #workshopMeasurementPreviewLabel{
+  opacity:0;
+}
+
+#workshopMeasurementSwitch{
+  display:grid;
+  grid-template-columns:repeat(2,48px);
+  gap:4px;
+  padding:4px;
+  border:1px solid rgba(202,164,53,.72);
+  border-radius:12px;
+  background:rgba(6,17,28,.92);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 7px 18px rgba(0,0,0,.30);
+}
+
+#workshopMeasurementSwitch button{
+  min-height:36px;
+  padding:6px 8px;
+  border:1px solid rgba(103,190,220,.32);
+  border-radius:8px;
+  color:#aebcc5;
+  background:linear-gradient(180deg,rgba(35,51,63,.96),rgba(13,25,34,.98));
+  font:900 12px/1 "Lexend",Arial,sans-serif;
+  cursor:pointer;
+}
+
+#workshopMeasurementSwitch button:hover{
+  color:#ffffff;
+  border-color:#8ff6ff;
+  filter:brightness(1.12);
+}
+
+#workshopMeasurementSwitch button:focus-visible{
+  outline:3px solid #36d8ff;
+  outline-offset:2px;
+}
+
+#workshopMeasurementSwitch button[aria-pressed="true"]{
+  color:#10202a;
+  border-color:#ffe995;
+  background:linear-gradient(180deg,#ffe995,#d5aa31);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.54),0 0 9px rgba(255,217,91,.24);
+}
+
+#workshopPrecisionCursor{
+  position:fixed;
+  left:0;
+  top:0;
+  z-index:80;
+  display:none;
+  padding:5px 8px;
+  border:1px solid rgba(143,246,255,.75);
+  border-radius:7px;
+  background:rgba(8,24,34,.90);
+  color:#d9fbff;
+  font:700 12px/1.1 "Lexend",Arial,sans-serif;
+  white-space:nowrap;
+  box-shadow:0 0 10px rgba(54,216,255,.24);
+  pointer-events:none;
+}
+
+#workshopPrecisionCursor.isVisible{
+  display:block;
+}
+
+body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
+  position:fixed;
+  left:18px;
+  top:auto;
+  bottom:148px;
+  z-index:340;
+  width:auto;
+  margin:0;
+}
+
+@media(max-width:700px){
+  body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
+    left:50%;
+    bottom:12px;
+    transform:translateX(-50%);
+  }
+
+  #workspaceModeSwitch{
+    width:142px;
+  }
+
+  body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
+    bottom:148px;
+  }
+
+  body.workshopMode:not(.starterScreenActive) #workshopMeasurementControls{
+    inset:auto;
+    gap:7px;
+  }
+
+  #workshopMeasurementKey{
+    min-width:146px;
+    padding:8px;
+  }
+}
+
+@media(max-width:900px){
+  body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
+    grid-template-columns:minmax(74px,.7fr) minmax(100px,.9fr) minmax(70px,.65fr) minmax(225px,1.75fr) minmax(190px,1.8fr);
+    gap:4px;
+    padding:6px;
+  }
+
+  .workshop-dashboard-section{
+    padding:4px;
+  }
+
+  .workshop-dashboard-controls{
+    gap:3px;
+  }
+
+  .workshop-dashboard-controls button{
+    min-height:22px;
+    font-size:7px;
+  }
+
+  .workshop-future-tools .workshop-dashboard-controls{
+    grid-template-columns:repeat(3,minmax(42px,1fr));
+  }
+}
+
+@media(max-width:650px){
+  body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
+    grid-template-columns:.7fr .9fr .65fr 1.75fr 1.8fr;
+    gap:3px;
+    padding:4px;
+  }
+
+  .workshop-dashboard-section{
+    padding:3px;
+    border-radius:6px;
+  }
+
+  .workshop-dashboard-section h2{
+    margin-bottom:3px;
+    font-size:6px;
+  }
+
+  .workshop-dashboard-controls{
+    grid-template-columns:1fr;
+    gap:2px;
+  }
+
+  .workshop-dashboard-controls button,
+  .workshop-future-tools .workshop-dashboard-controls button{
+    min-height:16px;
+    padding:1px 2px;
+    font-size:5px;
+  }
+
+  .workshop-engineering-status{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+
+  .workshop-future-tools .workshop-dashboard-controls{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:2px;
+  }
+
+  #workshopDashboardPrecision{
+    min-height:16px;
+    padding:1px;
+    font-size:5px;
+  }
+}
+</style>
+
+<script id="workshopModeShellScript">
+(function(){
+  var currentWorkspaceMode="mission";
+  var workshopBuildAreaSnapshot=null;
+  var builderSessionSnapshot=null;
+  var workshopMeasurementUnit="cm";
+  var workshopRulerConfig={
+    xMin:-25,
+    xMax:25,
+    yMin:0,
+    yMax:25,
+    centimetersPerMajorTick:1,
+    millimetersPerCentimeter:10
+  };
+  var workshopRulerState={
+    selectedBounds:null,
+    designSpace:{
+      enabled:false,
+      xStart:0,
+      xEnd:10,
+      yStart:0,
+      yEnd:10,
+      zStart:0,
+      zEnd:10
+    },
+    activeHandle:null
+  };
+
+  function normalizeWorkshopRulerValue(value){
+    return Number(Number(value).toFixed(4));
+  }
+
+  function getWorkshopRulerAxisRange(axis){
+    return axis==="y"
+      ? {min:workshopRulerConfig.yMin,max:workshopRulerConfig.yMax}
+      : {min:workshopRulerConfig.xMin,max:workshopRulerConfig.xMax};
+  }
+
+  function workshopModelToRulerPosition(value,axis,rulerElement){
+    var range=getWorkshopRulerAxisRange(axis);
+    var clamped=Math.max(range.min,Math.min(range.max,Number(value)));
+    var ratio=axis==="y"
+      ? (range.max-clamped)/(range.max-range.min)
+      : (clamped-range.min)/(range.max-range.min);
+    var renderedSize=axis==="y"
+      ? rulerElement.clientHeight
+      : rulerElement.clientWidth;
+    return normalizeWorkshopRulerValue(ratio*renderedSize);
+  }
+
+  function workshopRulerPositionToModel(position,axis,rulerElement){
+    var range=getWorkshopRulerAxisRange(axis);
+    var renderedSize=axis==="y"
+      ? rulerElement.clientHeight
+      : rulerElement.clientWidth;
+    if(renderedSize<=0) return range.min;
+    var clampedPosition=Math.max(0,Math.min(renderedSize,Number(position)));
+    var ratio=clampedPosition/renderedSize;
+    var value=axis==="y"
+      ? range.max-ratio*(range.max-range.min)
+      : range.min+ratio*(range.max-range.min);
+    return normalizeWorkshopRulerValue(value);
+  }
+
+  function renderWorkshopRulerTicks(rulerElement){
+    if(!rulerElement) return;
+    var tickGroup=rulerElement.querySelector(".workshop-ruler-ticks");
+    if(!tickGroup) return;
+
+    var axis=rulerElement.dataset.workshopAxis==="y" ? "y" : "x";
+    var range=getWorkshopRulerAxisRange(axis);
+    var subdivisions=workshopRulerConfig.millimetersPerCentimeter;
+    var minimumStep=Math.round(range.min*subdivisions);
+    var maximumStep=Math.round(range.max*subdivisions);
+    var fragment=document.createDocumentFragment();
+
+    for(var step=minimumStep;step<=maximumStep;step++){
+      var value=step/subdivisions;
+      var isMajor=step%subdivisions===0;
+      var isMedium=!isMajor && Math.abs(step)%subdivisions===subdivisions/2;
+      var ratio=axis==="y"
+        ? (range.max-value)/(range.max-range.min)
+        : (value-range.min)/(range.max-range.min);
+      var position=(ratio*100).toFixed(4)+"%";
+      var tick=document.createElement("span");
+
+      tick.className="workshop-ruler-tick "+
+        (isMajor
+          ? "workshop-ruler-tick-major"
+          : isMedium
+            ? "workshop-ruler-tick-medium"
+            : "workshop-ruler-tick-minor");
+      tick.style.setProperty("--workshop-ruler-position",position);
+      fragment.appendChild(tick);
+
+      if(isMajor){
+        var label=document.createElement("span");
+        label.className="workshop-ruler-label";
+        if(step===minimumStep) label.classList.add(axis==="y" ? "is-range-end" : "is-range-start");
+        if(step===maximumStep) label.classList.add(axis==="y" ? "is-range-start" : "is-range-end");
+        label.style.setProperty("--workshop-ruler-position",position);
+        label.textContent=String(normalizeWorkshopRulerValue(value));
+        fragment.appendChild(label);
+      }
+    }
+
+    tickGroup.replaceChildren(fragment);
+  }
+
+  function renderWorkshopRulers(){
+    [
+      "workshopRulerTop",
+      "workshopRulerBottom",
+      "workshopRulerLeft",
+      "workshopRulerRight"
+    ].forEach(function(id){
+      renderWorkshopRulerTicks(document.getElementById(id));
+    });
+  }
+
+  var workshopRulerSelectedObject=null;
+  var workshopRulerSelectedBoundsSignature="";
+
+  function formatWorkshopRulerCentimeters(value){
+    var normalized=normalizeWorkshopRulerValue(value);
+    return Number.isInteger(normalized)
+      ? String(normalized)
+      : String(Number(normalized.toFixed(2)));
+  }
+
+  function clearWorkshopRulerSelectionHighlight(){
+    workshopRulerSelectedObject=null;
+    workshopRulerSelectedBoundsSignature="";
+    workshopRulerState.selectedBounds=null;
+
+    [
+      "workshopRulerTopSelection",
+      "workshopRulerBottomSelection",
+      "workshopRulerLeftSelection",
+      "workshopRulerRightSelection"
+    ].forEach(function(id){
+      var layer=document.getElementById(id);
+      if(!layer) return;
+      layer.hidden=true;
+      layer.replaceChildren();
+      layer.removeAttribute("style");
+    });
+  }
+
+  function renderWorkshopRulerSelectionLayer(rulerId,layerId,axis,minimum,maximum,labelText,accessibleText){
+    var ruler=document.getElementById(rulerId);
+    var layer=document.getElementById(layerId);
+    if(!ruler || !layer) return;
+
+    var firstPosition=workshopModelToRulerPosition(minimum,axis,ruler);
+    var secondPosition=workshopModelToRulerPosition(maximum,axis,ruler);
+    var start=Math.min(firstPosition,secondPosition);
+    var end=Math.max(firstPosition,secondPosition);
+    var span=Math.max(1,end-start);
+    var rulerSize=axis==="y" ? ruler.clientHeight : ruler.clientWidth;
+
+    layer.hidden=false;
+    layer.replaceChildren();
+    if(axis==="y"){
+      layer.style.top=start+"px";
+      layer.style.height=span+"px";
+      layer.style.left="";
+      layer.style.width="";
+    }else{
+      layer.style.left=start+"px";
+      layer.style.width=span+"px";
+      layer.style.top="";
+      layer.style.height="";
+    }
+
+    var label=document.createElement("span");
+    label.className="workshop-ruler-measurement-label";
+    label.textContent=labelText;
+    label.setAttribute("aria-label",accessibleText);
+    layer.appendChild(label);
+
+    var labelHalf=Math.min(label.offsetWidth/2,rulerSize/2);
+    var desiredCenter=(start+end)/2;
+    var safeCenter=Math.max(labelHalf,Math.min(rulerSize-labelHalf,desiredCenter));
+    if(axis==="y"){
+      label.style.top=(safeCenter-start)+"px";
+    }else{
+      label.style.left=(safeCenter-start)+"px";
+    }
+  }
+
+  function renderWorkshopSelectedBounds(){
+    var selectedBounds=workshopRulerState.selectedBounds;
+    if(!selectedBounds){
+      clearWorkshopRulerSelectionHighlight();
+      return;
+    }
+
+    var widthText=formatWorkshopRulerCentimeters(selectedBounds.width);
+    var heightText=formatWorkshopRulerCentimeters(selectedBounds.height);
+    [
+      ["workshopRulerTop","workshopRulerTopSelection"],
+      ["workshopRulerBottom","workshopRulerBottomSelection"]
+    ].forEach(function(ids){
+      renderWorkshopRulerSelectionLayer(
+        ids[0],ids[1],"x",
+        selectedBounds.min.x,selectedBounds.max.x,
+        "Width: "+widthText+" cm",
+        "Selected object width: "+widthText+" centimeters"
+      );
+    });
+    [
+      ["workshopRulerLeft","workshopRulerLeftSelection"],
+      ["workshopRulerRight","workshopRulerRightSelection"]
+    ].forEach(function(ids){
+      renderWorkshopRulerSelectionLayer(
+        ids[0],ids[1],"y",
+        selectedBounds.min.y,selectedBounds.max.y,
+        "Height: "+heightText+" cm",
+        "Selected object height: "+heightText+" centimeters"
+      );
+    });
+  }
+
+  function refreshWorkshopRulerSelectionHighlight(){
+    if(!document.body.classList.contains("workshopMode") ||
+       !workshopRulerSelectedObject ||
+       !workshopRulerSelectedObject.parent){
+      if(workshopRulerState.selectedBounds) clearWorkshopRulerSelectionHighlight();
+      return;
+    }
+
+    if(typeof workshopRulerSelectedObject.updateWorldMatrix==="function"){
+      workshopRulerSelectedObject.updateWorldMatrix(true,true);
+    }else{
+      workshopRulerSelectedObject.updateMatrixWorld(true);
+    }
+
+    var bounds=new THREE.Box3().setFromObject(workshopRulerSelectedObject);
+    if(bounds.isEmpty()){
+      clearWorkshopRulerSelectionHighlight();
+      return;
+    }
+
+    var size=bounds.getSize(new THREE.Vector3());
+    var signature=[
+      bounds.min.x,bounds.min.y,bounds.min.z,
+      bounds.max.x,bounds.max.y,bounds.max.z
+    ].map(normalizeWorkshopRulerValue).join("|");
+    if(signature===workshopRulerSelectedBoundsSignature) return;
+
+    workshopRulerSelectedBoundsSignature=signature;
+    workshopRulerState.selectedBounds={
+      min:{
+        x:normalizeWorkshopRulerValue(bounds.min.x),
+        y:normalizeWorkshopRulerValue(bounds.min.y),
+        z:normalizeWorkshopRulerValue(bounds.min.z)
+      },
+      max:{
+        x:normalizeWorkshopRulerValue(bounds.max.x),
+        y:normalizeWorkshopRulerValue(bounds.max.y),
+        z:normalizeWorkshopRulerValue(bounds.max.z)
+      },
+      width:normalizeWorkshopRulerValue(size.x),
+      height:normalizeWorkshopRulerValue(size.y)
+    };
+    renderWorkshopSelectedBounds();
+  }
+
+  function setWorkshopRulerSelectedObject(object){
+    workshopRulerSelectedObject=object || null;
+    workshopRulerSelectedBoundsSignature="";
+    if(!workshopRulerSelectedObject){
+      clearWorkshopRulerSelectionHighlight();
+      return;
+    }
+    refreshWorkshopRulerSelectionHighlight();
+  }
+
+  function clearWorkshopRulerSelectionForObject(object){
+    if(object && object===workshopRulerSelectedObject){
+      clearWorkshopRulerSelectionHighlight();
+    }
+  }
+
+  function isStarterScreenActive(){
+    return document.body.classList.contains("starterScreenActive");
+  }
+
+  function getWorkshopSnapIncrement(){
+    return workshopMeasurementUnit==="mm" ? 0.1 : 1;
+  }
+
+  function snapWorkshopValue(value,offset){
+    var increment=getWorkshopSnapIncrement();
+    var alignmentOffset=typeof offset==="number" ? offset : 0;
+    var snapped=
+      Math.round((value-alignmentOffset)/increment)*increment+
+      alignmentOffset;
+    return Number(snapped.toFixed(4));
+  }
+
+  function updateWorkshopPrecisionCursorText(){
+    var cursor=document.getElementById("workshopPrecisionCursor");
+    var dashboardPrecision=document.getElementById("workshopDashboardPrecision");
+    if(cursor) cursor.textContent="Precision: 1 "+workshopMeasurementUnit;
+    if(dashboardPrecision) dashboardPrecision.textContent="Precision: 1 "+workshopMeasurementUnit;
+  }
+
+  function hideWorkshopPrecisionCursor(){
+    var cursor=document.getElementById("workshopPrecisionCursor");
+    if(cursor) cursor.classList.remove("isVisible");
+  }
+
+  function workshopBuildToolIsActive(){
+    return moveSelectedMode ||
+      (!selectMode && typeof selectedBlockShape==="string" && selectedBlockShape.length>0);
+  }
+
+  function workshopHasBlockingModal(){
+    if(window.readToBobFeedbackActive) return true;
+    return Array.from(document.querySelectorAll('[role="dialog"]')).some(function(dialog){
+      var rect=dialog.getBoundingClientRect();
+      return !dialog.hidden &&
+        dialog.getAttribute("aria-modal")==="true" &&
+        window.getComputedStyle(dialog).display!=="none" &&
+        rect.width>0 &&
+        rect.height>0;
+    });
+  }
+
+  function workshopPointerIsOverBuildViewport(event){
+    if(currentWorkspaceMode!=="workshop" ||
+       !document.body.classList.contains("workshopMode") ||
+       isStarterScreenActive() ||
+       !workshopBuildToolIsActive() ||
+       workshopHasBlockingModal()){
+      return false;
+    }
+
+    var target=event.target;
+    if(target && typeof target.closest==="function" && target.closest(
+      "#workshopDashboard,#workspaceUtilityRail,#viewCubeBox,#info,#stemCoach,"+
+      "#floatingToolbox,#toolbox,#buildBar,#studentProjectBar,#missionCard,[role='dialog']"
+    )){
+      return false;
+    }
+
+    var dashboard=document.getElementById("workshopDashboard");
+    if(dashboard){
+      var dashboardRect=dashboard.getBoundingClientRect();
+      if(event.clientY>=dashboardRect.top) return false;
+    }
+    return true;
+  }
+
+  function moveWorkshopPrecisionCursor(event){
+    var cursor=document.getElementById("workshopPrecisionCursor");
+    if(!cursor || !workshopPointerIsOverBuildViewport(event)){
+      hideWorkshopPrecisionCursor();
+      return;
+    }
+
+    cursor.classList.add("isVisible");
+    var cursorRect=cursor.getBoundingClientRect();
+    var left=event.clientX+14;
+    var top=event.clientY+16;
+
+    if(left+cursorRect.width>window.innerWidth-4){
+      left=event.clientX-cursorRect.width-14;
+    }
+    if(top+cursorRect.height>window.innerHeight-4){
+      top=event.clientY-cursorRect.height-16;
+    }
+
+    left=Math.max(4,Math.min(left,window.innerWidth-cursorRect.width-4));
+    top=Math.max(4,Math.min(top,window.innerHeight-cursorRect.height-4));
+    cursor.style.left=Math.round(left)+"px";
+    cursor.style.top=Math.round(top)+"px";
+  }
+
+  function updateModeControls(){
+    var modeSwitch=document.getElementById("workspaceModeSwitch");
+    var workshopIsActive=currentWorkspaceMode==="workshop";
+
+    if(!modeSwitch) return;
+    modeSwitch.setAttribute("aria-pressed",workshopIsActive ? "true" : "false");
+    modeSwitch.title=workshopIsActive ? "Return to Mission" : "Open Workshop";
+    modeSwitch.setAttribute("aria-label",workshopIsActive ? "Return to Mission" : "Open Workshop");
+
+    var icon=modeSwitch.querySelector(".workspaceModeIcon");
+    var label=modeSwitch.querySelector(".workspaceModeLabel");
+    if(icon) icon.textContent=workshopIsActive ? "🧱" : "🛠";
+    if(label) label.textContent=workshopIsActive ? "Return to Mission" : "Open Workshop";
+  }
+
+  function placeUtilityRail(mode){
+    var utilityRail=document.getElementById("workspaceUtilityRail");
+    if(!utilityRail) return;
+
+    if(mode==="workshop"){
+      document.body.appendChild(utilityRail);
+      return;
+    }
+
+    var passportButton=document.getElementById("openPassportFromBadge");
+    var missionPanel=document.getElementById("info");
+    if(passportButton && missionPanel && passportButton.parentElement===missionPanel){
+      passportButton.insertAdjacentElement("afterend",utilityRail);
+    }
+  }
+
+  function clearActiveWorkshopObjects(){
+    clearWorkshopRulerSelectionHighlight();
+    workshopDeletedSelectionUndo.length=0;
+    workshopDeletedSelectionRedo.length=0;
+    for(var index=blocks.length-1;index>=0;index--){
+      scene.remove(blocks[index]);
+    }
+    blocks.length=0;
+    redoBlocks.length=0;
+    selectedBlocks=[];
+    selectMode=false;
+    moveSelectedMode=false;
+    updateUndoRedoButtons();
+  }
+
+  function beginBlankWorkshopSession(){
+    clearWorkshopRulerSelectionHighlight();
+    if(!builderSessionSnapshot){
+      builderSessionSnapshot={
+        blocks:blocks.slice(),
+        redoBlocks:redoBlocks.slice(),
+        selectedBlocks:selectedBlocks.slice(),
+        selectMode:selectMode,
+        moveSelectedMode:moveSelectedMode
+      };
+
+      builderSessionSnapshot.blocks.forEach(function(block){
+        scene.remove(block);
+      });
+      blocks.length=0;
+      redoBlocks.length=0;
+      selectedBlocks=[];
+      selectMode=false;
+      moveSelectedMode=false;
+      updateUndoRedoButtons();
+      return;
+    }
+
+    clearActiveWorkshopObjects();
+  }
+
+  function restoreBuilderSession(){
+    if(!builderSessionSnapshot) return;
+
+    clearActiveWorkshopObjects();
+    builderSessionSnapshot.blocks.forEach(function(block){
+      scene.add(block);
+      blocks.push(block);
+    });
+    builderSessionSnapshot.redoBlocks.forEach(function(block){
+      redoBlocks.push(block);
+    });
+    selectedBlocks=builderSessionSnapshot.selectedBlocks;
+    selectMode=builderSessionSnapshot.selectMode;
+    moveSelectedMode=builderSessionSnapshot.moveSelectedMode;
+    builderSessionSnapshot=null;
+    checkBadge();
+    updateUndoRedoButtons();
+  }
+
+  function setWorkshopMeasurementUnit(unit){
+    var requestedUnit=unit==="mm" ? "mm" : "cm";
+    var mmButton=document.getElementById("workshopUnitMm");
+    var cmButton=document.getElementById("workshopUnitCm");
+    var measurementKey=document.getElementById("workshopMeasurementKey");
+    var previewLabel=document.getElementById("workshopMeasurementPreviewLabel");
+    var keyValue=document.getElementById("workshopMeasurementKeyValue");
+
+    workshopMeasurementUnit=requestedUnit;
+    if(mmButton) mmButton.setAttribute("aria-pressed",requestedUnit==="mm" ? "true" : "false");
+    if(cmButton) cmButton.setAttribute("aria-pressed",requestedUnit==="cm" ? "true" : "false");
+    if(measurementKey){
+      measurementKey.dataset.workshopUnit=requestedUnit;
+      measurementKey.setAttribute(
+        "aria-label",
+        requestedUnit==="mm"
+          ? "Grid Precision. One square equals one millimeter. One centimeter contains ten millimeters."
+          : "Grid Precision. One square equals one centimeter."
+      );
+    }
+    if(previewLabel) previewLabel.textContent="1 "+requestedUnit;
+    if(keyValue) keyValue.textContent="One square = 1 "+(requestedUnit==="mm" ? "millimeter" : "centimeter");
+    updateWorkshopPrecisionCursorText();
+
+    if(engineeringGrid){
+      engineeringGrid.userData.workshopMeasurementUnit=requestedUnit;
+      engineeringGrid.userData.workshopUnitsPerSquare=getWorkshopSnapIncrement();
+    }
+    return requestedUnit;
+  }
+
+  function applyWorkshopBuildAreaVisuals(workshopIsActive){
+    var gridButton=document.getElementById("engineeringGridToggle");
+
+    if(workshopIsActive){
+      if(!workshopBuildAreaSnapshot){
+        workshopBuildAreaSnapshot={
+          sceneBackground:scene.background ? scene.background.clone() : null,
+          groundMap:ground.material.map,
+          groundColor:ground.material.color.clone(),
+          gridVisible:engineeringGrid ? engineeringGrid.visible : true,
+          atmosphereVisibility:atmosphereObjects.map(function(object){
+            return {object:object,visible:object.visible};
+          }),
+          moonVisible:moon ? moon.visible : null,
+          earthVisible:earth ? earth.visible : null
+        };
+      }
+
+      scene.background=new THREE.Color(0xffffff);
+      ground.material.map=null;
+      ground.material.color.setHex(0x000000);
+      ground.material.needsUpdate=true;
+
+      atmosphereObjects.forEach(function(object){
+        object.visible=false;
+      });
+      if(moon) moon.visible=false;
+      if(earth) earth.visible=false;
+
+      if(engineeringGrid){
+        engineeringGrid.visible=true;
+        syncEngineeringGridStyle(true);
+      }
+      if(gridButton){
+        gridButton.textContent="▦ Grid: On";
+        gridButton.setAttribute("aria-pressed","true");
+      }
+      return;
+    }
+
+    if(!workshopBuildAreaSnapshot) return;
+
+    scene.background=workshopBuildAreaSnapshot.sceneBackground;
+    ground.material.map=workshopBuildAreaSnapshot.groundMap;
+    ground.material.color.copy(workshopBuildAreaSnapshot.groundColor);
+    ground.material.needsUpdate=true;
+
+    workshopBuildAreaSnapshot.atmosphereVisibility.forEach(function(state){
+      state.object.visible=state.visible;
+    });
+    if(moon && workshopBuildAreaSnapshot.moonVisible !== null){
+      moon.visible=workshopBuildAreaSnapshot.moonVisible;
+    }
+    if(earth && workshopBuildAreaSnapshot.earthVisible !== null){
+      earth.visible=workshopBuildAreaSnapshot.earthVisible;
+    }
+
+    if(engineeringGrid){
+      engineeringGrid.visible=workshopBuildAreaSnapshot.gridVisible;
+    }
+    if(gridButton){
+      gridButton.textContent=workshopBuildAreaSnapshot.gridVisible ? "▦ Grid: On" : "▦ Grid: Off";
+      gridButton.setAttribute("aria-pressed",String(workshopBuildAreaSnapshot.gridVisible));
+    }
+    syncEngineeringGridStyle(ground.material.map === grassTexture);
+    workshopBuildAreaSnapshot=null;
+  }
+
+  function setWorkspaceMode(mode){
+    var requestedMode=mode==="workshop" ? "workshop" : "mission";
+    if(requestedMode==="workshop" && isStarterScreenActive()) return false;
+
+    if(requestedMode==="workshop"){
+      beginBlankWorkshopSession();
+      setWorkshopMeasurementUnit("cm");
+    }else if(currentWorkspaceMode==="workshop"){
+      restoreBuilderSession();
+    }
+
+    currentWorkspaceMode=requestedMode;
+    document.body.classList.toggle("workshopMode",requestedMode==="workshop");
+    document.body.classList.toggle("missionMode",requestedMode==="mission");
+    if(requestedMode!=="workshop") hideWorkshopPrecisionCursor();
+    applyWorkshopBuildAreaVisuals(requestedMode==="workshop");
+    placeUtilityRail(requestedMode);
+    updateModeControls();
+
+    window.dispatchEvent(new CustomEvent("workspace-mode-change",{
+      detail:{mode:requestedMode}
+    }));
+    return true;
+  }
+
+  function stopBuilderClickThrough(element){
+    if(!element) return;
+    ["click","mousedown","pointerdown","touchstart"].forEach(function(eventName){
+      element.addEventListener(eventName,function(event){
+        event.stopPropagation();
+      },{passive:eventName==="touchstart"});
+    });
+  }
+
+  function installWorkshopModeSwitch(){
+    var utilityRail=document.getElementById("workspaceUtilityRail");
+    var switcher=document.getElementById("workspaceModeSwitch");
+    var workshopDashboard=document.getElementById("workshopDashboard");
+    var mmButton=document.getElementById("workshopUnitMm");
+    var cmButton=document.getElementById("workshopUnitCm");
+
+    renderWorkshopRulers();
+    stopBuilderClickThrough(utilityRail);
+    stopBuilderClickThrough(switcher);
+    stopBuilderClickThrough(workshopDashboard);
+
+    if(mmButton){
+      mmButton.addEventListener("click",function(){
+        setWorkshopMeasurementUnit("mm");
+      });
+    }
+    if(cmButton){
+      cmButton.addEventListener("click",function(){
+        setWorkshopMeasurementUnit("cm");
+      });
+    }
+
+    document.addEventListener("pointermove",moveWorkshopPrecisionCursor);
+    document.addEventListener("pointerout",function(event){
+      if(!event.relatedTarget) hideWorkshopPrecisionCursor();
+    });
+    window.addEventListener("blur",hideWorkshopPrecisionCursor);
+    window.addEventListener("resize",function(){
+      if(!workshopRulerState.selectedBounds) return;
+      window.requestAnimationFrame(renderWorkshopSelectedBounds);
+    });
+
+    if(switcher && !switcher.hasAttribute("onclick")){
+      switcher.addEventListener("click",function(){
+        setWorkspaceMode(currentWorkspaceMode==="workshop" ? "mission" : "workshop");
+      });
+    }
+
+    new MutationObserver(function(){
+      if(isStarterScreenActive() && currentWorkspaceMode!=="mission"){
+        setWorkspaceMode("mission");
+      }
+    }).observe(document.body,{attributes:true,attributeFilter:["class"]});
+
+    setWorkspaceMode("mission");
+  }
+
+  window.setWorkspaceMode=setWorkspaceMode;
+  window.openWorkshop=function(){ return setWorkspaceMode("workshop"); };
+  window.returnToMission=function(){ return setWorkspaceMode("mission"); };
+  window.toggleWorkspaceMode=function(){
+    return setWorkspaceMode(currentWorkspaceMode==="workshop" ? "mission" : "workshop");
+  };
+  window.setWorkshopMeasurementUnit=setWorkshopMeasurementUnit;
+  window.getWorkshopSnapIncrement=getWorkshopSnapIncrement;
+  window.snapWorkshopValue=snapWorkshopValue;
+  window.workshopRulerConfig=workshopRulerConfig;
+  window.workshopRulerState=workshopRulerState;
+  window.workshopModelToRulerPosition=workshopModelToRulerPosition;
+  window.workshopRulerPositionToModel=workshopRulerPositionToModel;
+  window.setWorkshopRulerSelectedObject=setWorkshopRulerSelectedObject;
+  window.clearWorkshopRulerSelectionHighlight=clearWorkshopRulerSelectionHighlight;
+  window.clearWorkshopRulerSelectionForObject=clearWorkshopRulerSelectionForObject;
+  window.refreshWorkshopRulerSelectionHighlight=refreshWorkshopRulerSelectionHighlight;
+  window.getWorkshopMeasurementUnit=function(){
+    return {
+      unit:workshopMeasurementUnit,
+      snapIncrement:getWorkshopSnapIncrement(),
+      centimeterWorldUnit:1,
+      gridIntervalsPerUnit:getWorkshopSnapIncrement(),
+      description:"Workshop model units; not physical screen calibration"
+    };
+  };
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",installWorkshopModeSwitch,{once:true});
+  }else{
+    installWorkshopModeSwitch();
+  }
+})();
+</script>
 
 </body>
 </html>
