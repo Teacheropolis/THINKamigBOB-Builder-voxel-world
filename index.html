@@ -4210,7 +4210,83 @@ Nature ▶
       <div id="workshopRulerBottomHandles" class="workshop-ruler-layer workshop-ruler-handles" aria-hidden="true"></div>
     </div>
   </section>
-  <aside id="workshopRightPanelShell" class="workshop-layout-region" data-workshop-region="right"></aside>
+  <aside id="workshopRightPanelShell" class="workshop-layout-region" data-workshop-region="right">
+    <section id="engineeringToolChest" aria-label="Engineering Tool Chest" data-cabinet-state="retracted">
+      <div id="engineeringToolChestCabinet">
+        <img class="engineering-tool-chest-frame" src="assets/images/workshop/production/engineering-tool-chest/engineering-tool-chest-frame.png" alt="" aria-hidden="true" />
+        <button id="engineeringToolChestHandle" type="button" aria-label="Open Engineering Tool Chest" aria-expanded="false" aria-controls="engineeringToolChestDrawers">
+          <img src="assets/images/workshop/production/engineering-tool-chest/cabinet-side-handle.png" alt="" aria-hidden="true" />
+        </button>
+        <div id="engineeringToolChestDrawers">
+          <div id="engineeringDrawerColorsMaterials" class="engineering-tool-chest-drawer" data-tool-chest-drawer="colors-materials" data-drawer-state="closed">
+            <button id="engineeringDrawerColorsMaterialsControl" class="engineering-tool-chest-drawer-control" type="button" aria-expanded="false" aria-controls="engineeringDrawerColorsMaterialsContent" aria-label="Open Colors &amp; Materials drawer">
+              <img class="engineering-drawer-shadow" src="assets/images/workshop/production/engineering-tool-chest/drawer-shadow.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-interior" src="assets/images/workshop/production/engineering-tool-chest/drawer-empty-interior.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-front" src="assets/images/workshop/production/engineering-tool-chest/drawer-colors-materials.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-highlight" src="assets/images/workshop/production/engineering-tool-chest/drawer-highlight.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-indicator" src="assets/images/workshop/production/engineering-tool-chest/indicator-red.png" alt="" aria-hidden="true" />
+            </button>
+            <div id="engineeringDrawerColorsMaterialsContent" class="engineering-drawer-content engineering-color-material-drawer" hidden>
+              <div id="workshopPlatformColorModePanel" hidden>
+                <strong>PLATFORM COLOR MODE</strong>
+                <p>Choose a color for the frosted build platform.</p>
+                <button id="workshopPlatformColorModeCancel" type="button">CANCEL PLATFORM COLOR</button>
+              </div>
+              <p id="workshopPlatformColorStatus" class="workshop-platform-color-status" role="status" aria-live="polite"></p>
+              <section class="engineering-drawer-section" aria-labelledby="engineeringSolidColorsHeading">
+                <h3 id="engineeringSolidColorsHeading">Solid Colors</h3>
+                <div id="engineeringDrawerSolidColors" class="engineering-object-tile-collection engineering-color-tile-collection" role="group" aria-label="Solid colors"></div>
+              </section>
+              <section class="engineering-drawer-section engineering-materials-future-section" aria-labelledby="engineeringMaterialsFutureHeading">
+                <h3 id="engineeringMaterialsFutureHeading">Materials — Future</h3>
+                <div id="engineeringDrawerFutureMaterials" class="engineering-object-tile-collection engineering-material-tile-collection" role="group" aria-label="Future materials"></div>
+              </section>
+            </div>
+          </div>
+          <div id="engineeringDrawerShapes" class="engineering-tool-chest-drawer" data-tool-chest-drawer="shapes" data-drawer-state="closed">
+            <button id="engineeringDrawerShapesControl" class="engineering-tool-chest-drawer-control" type="button" aria-expanded="false" aria-controls="engineeringDrawerShapesContent" aria-label="Open Shapes drawer">
+              <img class="engineering-drawer-shadow" src="assets/images/workshop/production/engineering-tool-chest/drawer-shadow.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-interior" src="assets/images/workshop/production/engineering-tool-chest/drawer-empty-interior.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-front" src="assets/images/workshop/production/engineering-tool-chest/drawer-shapes.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-highlight" src="assets/images/workshop/production/engineering-tool-chest/drawer-highlight.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-indicator" src="assets/images/workshop/production/engineering-tool-chest/indicator-red.png" alt="" aria-hidden="true" />
+            </button>
+            <div id="engineeringDrawerShapesContent" class="engineering-drawer-content" role="group" aria-label="Available shapes" hidden></div>
+          </div>
+          <div id="engineeringDrawerPartsObjects" class="engineering-tool-chest-drawer" data-tool-chest-drawer="parts-objects" data-drawer-state="closed">
+            <button id="engineeringDrawerPartsObjectsControl" class="engineering-tool-chest-drawer-control" type="button" aria-expanded="false" aria-controls="engineeringDrawerPartsObjectsContent" aria-label="Open Parts &amp; Objects drawer">
+              <img class="engineering-drawer-shadow" src="assets/images/workshop/production/engineering-tool-chest/drawer-shadow.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-interior" src="assets/images/workshop/production/engineering-tool-chest/drawer-empty-interior.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-front" src="assets/images/workshop/production/engineering-tool-chest/drawer-parts-objects.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-highlight" src="assets/images/workshop/production/engineering-tool-chest/drawer-highlight.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-indicator" src="assets/images/workshop/production/engineering-tool-chest/indicator-red.png" alt="" aria-hidden="true" />
+            </button>
+            <div id="engineeringDrawerPartsObjectsContent" class="engineering-drawer-content engineering-drawer-framework-message" hidden>
+              <p>Coming in a future Workshop update.</p>
+            </div>
+          </div>
+          <div id="engineeringDrawerFavorites" class="engineering-tool-chest-drawer" data-tool-chest-drawer="favorites" data-drawer-state="closed">
+            <button id="engineeringDrawerFavoritesControl" class="engineering-tool-chest-drawer-control" type="button" aria-expanded="false" aria-controls="engineeringDrawerFavoritesContent" aria-label="Open Favorites drawer">
+              <img class="engineering-drawer-shadow" src="assets/images/workshop/production/engineering-tool-chest/drawer-shadow.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-interior" src="assets/images/workshop/production/engineering-tool-chest/drawer-empty-interior.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-front" src="assets/images/workshop/production/engineering-tool-chest/drawer-favorites.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-highlight" src="assets/images/workshop/production/engineering-tool-chest/drawer-highlight.png" alt="" aria-hidden="true" />
+              <img class="engineering-drawer-indicator" src="assets/images/workshop/production/engineering-tool-chest/indicator-red.png" alt="" aria-hidden="true" />
+            </button>
+            <div id="engineeringDrawerFavoritesContent" class="engineering-drawer-content engineering-drawer-framework-message" hidden>
+              <p>Coming in a future Workshop update.</p>
+            </div>
+          </div>
+        </div>
+        <div id="engineeringToolChestAssetCache" hidden aria-hidden="true">
+          <img src="assets/images/workshop/production/engineering-tool-chest/indicator-blue.png" alt="" />
+          <img src="assets/images/workshop/production/engineering-tool-chest/indicator-yellow.png" alt="" />
+          <img src="assets/images/workshop/production/engineering-tool-chest/indicator-green.png" alt="" />
+          <img src="assets/images/workshop/production/engineering-tool-chest/tool-chest-handle.png" alt="" />
+        </div>
+      </div>
+    </section>
+  </aside>
   <footer id="workshopBottomDashboardShell" class="workshop-layout-region" data-workshop-region="bottom"></footer>
 </section>
 <div id="workshopHeader">
@@ -4284,6 +4360,27 @@ Future extraction target: view controls.
 <div id="viewCubeTitle">🧭 View</div>
 <canvas height="180" id="viewCubeCanvas" width="180"></canvas>
 <div id="viewDiceHint">Drag • Click face • Double-click Home</div>
+<div id="workshopEngineeringViewControls" aria-label="Engineering view controls">
+  <div id="workshopEngineeringViewRemoteTitle">VIEW REMOTE</div>
+  <button id="workshopViewTop" type="button" data-workshop-view="top" aria-label="Top View" aria-pressed="false" title="Top View (5)"><span>TOP</span><small>5</small></button>
+  <button id="workshopViewLeft" type="button" data-workshop-view="left" aria-label="Left View" aria-pressed="false" title="Left View (3)"><span>LEFT</span><small>3</small></button>
+  <button id="workshopViewFront" type="button" data-workshop-view="front" aria-label="Front View" aria-pressed="false" title="Front View (1)"><span>FRONT</span><small>1</small></button>
+  <button id="workshopViewRight" type="button" data-workshop-view="right" aria-label="Right View" aria-pressed="false" title="Right View (4)"><span>RIGHT</span><small>4</small></button>
+  <button id="workshopViewBack" type="button" data-workshop-view="back" aria-label="Back View" aria-pressed="false" title="Back View (2)"><span>BACK</span><small>2</small></button>
+  <button id="workshopViewBottom" type="button" data-workshop-view="bottom" aria-label="Bottom View" aria-pressed="false" title="Bottom View (6)"><span>BOTTOM</span><small>6</small></button>
+  <button id="workshopViewHome" type="button" data-workshop-view="home" aria-label="Home Perspective View" aria-pressed="false" title="Home Perspective View (0)"><span>HOME</span><small>0</small></button>
+  <button id="workshopPlatformColorButton" type="button" aria-label="Change Engineering Build Plane Color" title="Change Engineering Build Plane Color"><span>PLATFORM COLOR</span></button>
+</div>
+</div>
+<div id="workshopPlatformColorDialog" role="dialog" aria-modal="true" aria-labelledby="workshopPlatformColorDialogTitle" aria-describedby="workshopPlatformColorDialogDescription" hidden>
+  <div id="workshopPlatformColorDialogPanel">
+    <h2 id="workshopPlatformColorDialogTitle">CHANGE PLATFORM COLOR?</h2>
+    <p id="workshopPlatformColorDialogDescription">The build platform will stay frosted glass. Only its color will change.</p>
+    <div id="workshopPlatformColorDialogActions">
+      <button id="workshopPlatformColorConfirm" type="button">YES — CHOOSE COLOR</button>
+      <button id="workshopPlatformColorDialogCancel" type="button">CANCEL</button>
+    </div>
+  </div>
 </div>
 <!-- =====================================================
 HTML SECTION 03A — MISSION / WORKSHOP MODE SWITCH
@@ -4830,25 +4927,9 @@ updateUndoRedoButtons();
 // UPDATE #102B: Student building-shape selection.
 let selectedBlockShape = "cube";
 
-const blockShapeSelect = document.getElementById("blockShape");
-if(blockShapeSelect){
-  selectedBlockShape = blockShapeSelect.value || "cube";
-  blockShapeSelect.addEventListener("change", function(){
-    selectedBlockShape = this.value || "cube";
-  });
-}
-
-function chooseWorkshopBuildShape(shape){
+function syncWorkshopBuildShapeControls(shape){
   const requestedShape =
     shape === "sphere" || shape === "trianglePrism" ? shape : "cube";
-  const shapeSelect = document.getElementById("blockShape");
-  if(shapeSelect){
-    shapeSelect.value = requestedShape;
-    shapeSelect.dispatchEvent(new Event("change", {bubbles:true}));
-  }else{
-    selectedBlockShape = requestedShape;
-  }
-
   document.querySelectorAll("[data-workshop-shape]").forEach(button => {
     button.setAttribute(
       "aria-pressed",
@@ -4862,6 +4943,28 @@ function chooseWorkshopBuildShape(shape){
       "aria-pressed",
       requestedShape === "cube" ? "true" : "false"
     );
+  }
+}
+
+const blockShapeSelect = document.getElementById("blockShape");
+if(blockShapeSelect){
+  selectedBlockShape = blockShapeSelect.value || "cube";
+  blockShapeSelect.addEventListener("change", function(){
+    selectedBlockShape = this.value || "cube";
+    syncWorkshopBuildShapeControls(selectedBlockShape);
+  });
+}
+
+function chooseWorkshopBuildShape(shape){
+  const requestedShape =
+    shape === "sphere" || shape === "trianglePrism" ? shape : "cube";
+  const shapeSelect = document.getElementById("blockShape");
+  if(shapeSelect){
+    shapeSelect.value = requestedShape;
+    shapeSelect.dispatchEvent(new Event("change", {bubbles:true}));
+  }else{
+    selectedBlockShape = requestedShape;
+    syncWorkshopBuildShapeControls(requestedShape);
   }
 }
 
@@ -6952,6 +7055,10 @@ viewCubeCanvas.addEventListener("mousedown", function(event){
     viewDiceDragging = false;
     return;
   }
+  if(document.body.classList.contains("workshopMode") &&
+    typeof window.clearWorkshopEngineeringView === "function"){
+    window.clearWorkshopEngineeringView();
+  }
   viewDiceDragging = true;
   viewDiceMoved = false;
   viewDiceLastX = event.clientX;
@@ -6999,6 +7106,14 @@ function updateViewDice(){
   
 function updateCamera(){
 
+  if(document.body.classList.contains("workshopMode") &&
+    typeof window.applyWorkshopEngineeringView === "function" &&
+    window.applyWorkshopEngineeringView()){
+    return;
+  }
+
+  camera.up.set(0,1,0);
+
   camera.position.x =
     Math.sin(cameraAngle) * cameraDistance;
 
@@ -7015,6 +7130,10 @@ document.addEventListener('mousedown', (event)=>{
     isDragging = false;
     mouseMoved = false;
     return;
+  }
+  if(document.body.classList.contains("workshopMode") &&
+    typeof window.clearWorkshopEngineeringView === "function"){
+    window.clearWorkshopEngineeringView();
   }
   isDragging = true;
   mouseMoved = false;
@@ -7129,6 +7248,10 @@ document.addEventListener('keydown', (event)=>{
   // Rotate left
   if(event.key === "ArrowLeft"){
 
+    if(document.body.classList.contains("workshopMode") &&
+      typeof window.clearWorkshopEngineeringView === "function"){
+      window.clearWorkshopEngineeringView();
+    }
     cameraAngle -= 0.2;
     updateCamera();
   }
@@ -7136,6 +7259,10 @@ document.addEventListener('keydown', (event)=>{
   // Rotate right
   if(event.key === "ArrowRight"){
 
+    if(document.body.classList.contains("workshopMode") &&
+      typeof window.clearWorkshopEngineeringView === "function"){
+      window.clearWorkshopEngineeringView();
+    }
     cameraAngle += 0.2;
     updateCamera();
   }
@@ -7143,6 +7270,10 @@ document.addEventListener('keydown', (event)=>{
   // Raise camera
   if(event.key === "ArrowUp"){
 
+    if(document.body.classList.contains("workshopMode") &&
+      typeof window.clearWorkshopEngineeringView === "function"){
+      window.clearWorkshopEngineeringView();
+    }
     cameraHeight += 2;
 
     if(cameraHeight > 20){
@@ -7155,6 +7286,10 @@ document.addEventListener('keydown', (event)=>{
   // Lower camera
   if(event.key === "ArrowDown"){
 
+    if(document.body.classList.contains("workshopMode") &&
+      typeof window.clearWorkshopEngineeringView === "function"){
+      window.clearWorkshopEngineeringView();
+    }
     cameraHeight -= 2;
 
     if(cameraHeight < 2){
@@ -7536,7 +7671,11 @@ viewCubeRenderer.render(
   viewCubeCamera
 );
 
-  camera.lookAt(0, 0, 0);
+  if(!(document.body.classList.contains("workshopMode") &&
+    typeof window.applyWorkshopEngineeringView === "function" &&
+    window.applyWorkshopEngineeringView())){
+    camera.lookAt(0, 0, 0);
+  }
   renderer.render(scene, camera);
 }
 
@@ -10132,6 +10271,11 @@ checkBadge();
 animate();
   
 function setView(view){
+
+if(document.body.classList.contains("workshopMode") &&
+  typeof window.clearWorkshopEngineeringView === "function"){
+  window.clearWorkshopEngineeringView();
+}
 
 if(view === "home"){
   cameraAngle = 0;
@@ -26730,6 +26874,631 @@ body.workshopMode:not(.starterScreenActive) #workshopViewportContainer{
 
 #workshopRightPanelShell{
   grid-area:right;
+  position:relative;
+  z-index:5;
+  overflow:visible;
+}
+
+#engineeringToolChest{
+  position:absolute;
+  inset:0;
+  display:none;
+  overflow:visible;
+  pointer-events:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #engineeringToolChest{
+  display:block;
+}
+
+#engineeringToolChestCabinet{
+  position:absolute;
+  right:0;
+  bottom:8px;
+  width:min(100%,260px);
+  aspect-ratio:2/3;
+  transform:translateX(calc(100% - 10px));
+  transition:transform 280ms cubic-bezier(.2,.72,.2,1);
+  will-change:transform;
+  pointer-events:auto;
+}
+
+#engineeringToolChest[data-cabinet-state="expanded"] #engineeringToolChestCabinet{
+  transform:translateX(0);
+}
+
+.engineering-tool-chest-frame{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  pointer-events:none;
+  user-select:none;
+}
+
+#engineeringToolChestHandle{
+  position:absolute;
+  left:-34px;
+  top:-52px;
+  z-index:12;
+  width:42px;
+  height:52px;
+  padding:0;
+  border:0;
+  border-radius:9px;
+  background:linear-gradient(180deg,#48cfff 0%,#1679ee 32%,#0957c9 68%,#063b96 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(190,245,255,.82),
+    inset 0 0 0 1px rgba(105,221,255,.92),
+    inset 0 -2px 0 rgba(2,35,112,.72);
+  transition:filter 140ms ease;
+  cursor:pointer;
+  pointer-events:auto;
+  touch-action:manipulation;
+}
+
+#engineeringToolChestHandle img{
+  position:absolute;
+  left:-5px;
+  top:-13px;
+  width:52px;
+  height:78px;
+  object-fit:contain;
+  pointer-events:none;
+  filter:brightness(1.04) contrast(1.08) drop-shadow(0 2px 1px rgba(2,20,52,.72));
+  transition:filter 140ms ease;
+}
+
+#engineeringToolChestHandle:hover{
+  filter:brightness(1.07) contrast(1.03);
+}
+
+#engineeringToolChestHandle:hover img{
+  filter:brightness(1.1) contrast(1.12) drop-shadow(0 2px 1px rgba(2,20,52,.72));
+}
+
+#engineeringToolChestHandle:focus-visible{
+  outline-color:#ffdf62;
+}
+
+#engineeringToolChestHandle:focus-visible,
+.engineering-tool-chest-drawer-control:focus-visible,
+.engineering-object-tile:focus-visible{
+  outline:3px solid #36d8ff;
+  outline-offset:2px;
+}
+
+#engineeringToolChestDrawers{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.engineering-tool-chest-drawer{
+  position:absolute;
+  left:12%;
+  z-index:3;
+  width:76%;
+  height:14%;
+  transform:translateX(0);
+  transition:transform 280ms cubic-bezier(.2,.72,.2,1);
+  will-change:transform;
+  pointer-events:none;
+}
+
+.engineering-tool-chest-drawer:nth-child(1){ top:12%; }
+.engineering-tool-chest-drawer:nth-child(2){ top:32%; }
+.engineering-tool-chest-drawer:nth-child(3){ top:52%; }
+.engineering-tool-chest-drawer:nth-child(4){ top:72%; }
+
+.engineering-tool-chest-drawer.is-open,
+.engineering-tool-chest-drawer.is-opening{
+  z-index:8;
+  transform:translateX(-72%);
+}
+
+.engineering-tool-chest-drawer-control{
+  position:absolute;
+  inset:0;
+  z-index:3;
+  width:100%;
+  height:100%;
+  padding:0;
+  border:0;
+  background:transparent;
+  overflow:visible;
+  cursor:pointer;
+  pointer-events:auto;
+  touch-action:manipulation;
+}
+
+.engineering-tool-chest-drawer-control > img{
+  position:absolute;
+  left:0;
+  top:50%;
+  width:100%;
+  height:auto;
+  transform:translateY(-50%);
+  object-fit:contain;
+  pointer-events:none;
+  user-select:none;
+}
+
+.engineering-drawer-shadow{
+  z-index:0;
+  opacity:0;
+  transition:opacity 220ms ease;
+}
+
+.engineering-drawer-interior{
+  z-index:1;
+  opacity:0;
+  transition:opacity 240ms ease;
+}
+
+.engineering-drawer-front{
+  z-index:2;
+}
+
+.engineering-drawer-highlight{
+  z-index:4;
+  opacity:0;
+  transition:opacity 160ms ease;
+}
+
+.engineering-tool-chest-drawer-control:hover .engineering-drawer-highlight,
+.engineering-tool-chest-drawer-control:focus-visible .engineering-drawer-highlight{
+  opacity:.62;
+}
+
+.engineering-tool-chest-drawer.is-open .engineering-drawer-shadow,
+.engineering-tool-chest-drawer.is-opening .engineering-drawer-shadow{
+  opacity:.74;
+}
+
+.engineering-tool-chest-drawer.is-open .engineering-drawer-interior,
+.engineering-tool-chest-drawer.is-opening .engineering-drawer-interior{
+  opacity:1;
+}
+
+.engineering-drawer-indicator{
+  z-index:5;
+  left:auto !important;
+  right:5%;
+  width:10% !important;
+  max-width:22px;
+}
+
+.engineering-drawer-content{
+  position:absolute;
+  left:7%;
+  right:13%;
+  top:50%;
+  z-index:7;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(62px,1fr));
+  gap:7px;
+  min-height:154px;
+  padding:9px;
+  box-sizing:border-box;
+  transform:translateY(-50%);
+  border-radius:9px;
+  background:
+    linear-gradient(180deg,rgba(39,55,66,.96),rgba(13,23,30,.97)),
+    repeating-linear-gradient(90deg,transparent 0 12px,rgba(113,211,240,.04) 12px 13px);
+  box-shadow:
+    inset 0 1px 0 rgba(223,246,255,.28),
+    inset 0 0 0 1px rgba(92,153,176,.62),
+    0 5px 10px rgba(0,0,0,.28);
+  pointer-events:auto;
+}
+
+.engineering-drawer-content[hidden]{
+  display:none;
+}
+
+.engineering-object-tile{
+  position:relative;
+  display:grid;
+  grid-template-rows:minmax(44px,1fr) auto;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  min-width:62px;
+  min-height:66px;
+  padding:7px 6px 6px;
+  border:2px solid rgba(157,196,211,.58);
+  border-radius:8px;
+  color:#effaff;
+  background:linear-gradient(145deg,rgba(71,91,103,.98),rgba(22,34,42,.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 2px 4px rgba(0,0,0,.28);
+  font:800 9px/1 "Lexend",Arial,sans-serif;
+  cursor:pointer;
+  touch-action:manipulation;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+#engineeringDrawerShapesContent .engineering-object-tile:last-child,
+.engineering-material-tile-collection .engineering-object-tile:last-child{
+  grid-column:1/-1;
+  width:calc((100% - 7px)/2);
+  justify-self:center;
+}
+
+.engineering-object-tile:hover{
+  transform:translateY(-1px) scale(1.015);
+  border-color:#78ddff;
+  background:linear-gradient(145deg,rgba(82,111,126,.99),rgba(25,43,54,.99));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 4px 7px rgba(0,0,0,.32);
+}
+
+.engineering-object-tile[aria-pressed="true"]{
+  color:#f4fcff;
+  border-color:#42cfff;
+  background:linear-gradient(145deg,rgba(35,111,151,.98),rgba(10,47,78,.99));
+  box-shadow:
+    inset 0 1px 0 rgba(195,244,255,.5),
+    inset 0 0 0 1px rgba(89,220,255,.5),
+    0 0 0 1px rgba(9,89,153,.82),
+    0 3px 7px rgba(0,0,0,.34);
+}
+
+.engineering-object-tile-preview{
+  display:flex;
+  width:46px;
+  height:44px;
+  align-items:center;
+  justify-content:center;
+  border-radius:6px;
+  background:
+    linear-gradient(rgba(108,196,224,.1) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(108,196,224,.1) 1px,transparent 1px),
+    linear-gradient(180deg,rgba(7,18,25,.72),rgba(18,33,42,.42));
+  background-size:8px 8px,8px 8px,auto;
+  box-shadow:
+    inset 0 0 0 1px rgba(132,190,209,.28),
+    inset 0 -8px 14px rgba(0,0,0,.2);
+}
+
+.engineering-object-tile-thumbnail{
+  position:relative;
+  display:block;
+  width:30px;
+  height:30px;
+  filter:drop-shadow(0 3px 2px rgba(0,0,0,.48));
+}
+
+.engineering-object-tile-thumbnail-image{
+  object-fit:contain;
+}
+
+.engineering-shape-cube{
+  width:28px;
+  height:28px;
+  border:1px solid rgba(178,235,255,.72);
+  border-radius:3px;
+  box-sizing:border-box;
+  transform:rotate(-8deg) skewY(4deg);
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.42),transparent 32%),
+    linear-gradient(145deg,#58c9ee 0 52%,#1779b8 53% 100%);
+  box-shadow:
+    inset -6px -5px 8px rgba(3,44,91,.42),
+    inset 3px 3px 5px rgba(219,250,255,.28);
+}
+
+.engineering-shape-sphere{
+  width:30px;
+  height:30px;
+  border:1px solid rgba(198,241,255,.76);
+  border-radius:50%;
+  box-sizing:border-box;
+  background:
+    radial-gradient(circle at 31% 25%,rgba(255,255,255,.92) 0 7%,rgba(149,228,255,.72) 8% 18%,transparent 20%),
+    radial-gradient(circle at 35% 31%,#63d5f4 0 18%,#258fc9 44%,#0b477d 75%,#061f3f 100%);
+  box-shadow:
+    inset -5px -7px 9px rgba(1,18,51,.42),
+    inset 3px 3px 5px rgba(198,245,255,.22);
+}
+
+.engineering-shape-wedge{
+  width:32px;
+  height:27px;
+  clip-path:polygon(5% 92%,5% 55%,76% 5%,96% 18%,96% 92%);
+  background:
+    linear-gradient(150deg,rgba(255,255,255,.48),transparent 28%),
+    linear-gradient(145deg,#77ddf4 0 47%,#258dc4 48% 72%,#0a4a82 73% 100%);
+  box-shadow:inset -5px -5px 7px rgba(0,29,66,.42);
+}
+
+.engineering-object-tile-name{
+  letter-spacing:.03em;
+  text-shadow:0 1px 1px rgba(0,0,0,.7);
+}
+
+.engineering-object-tile-selected-indicator{
+  position:absolute;
+  top:3px;
+  right:4px;
+  display:none;
+  width:15px;
+  height:15px;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  color:#05243c;
+  background:#75e4ff;
+  box-shadow:0 1px 3px rgba(0,0,0,.45);
+  font:900 10px/1 Arial,sans-serif;
+}
+
+.engineering-object-tile[aria-pressed="true"] .engineering-object-tile-selected-indicator{
+  display:flex;
+}
+
+.engineering-object-tile-badges{
+  display:flex;
+  min-height:13px;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+}
+
+.engineering-object-tile-badges[hidden],
+.engineering-object-tile-metadata[hidden],
+.engineering-object-tile-badge[hidden],
+.engineering-object-tile-favorite[hidden]{
+  display:none;
+}
+
+.engineering-object-tile-badge,
+.engineering-object-tile-favorite{
+  border-radius:999px;
+  padding:2px 4px;
+  color:#06243a;
+  background:#8ce9ff;
+  font:900 7px/1 "Lexend",Arial,sans-serif;
+  letter-spacing:.02em;
+}
+
+.engineering-object-tile-metadata{
+  color:#afcedb;
+  font:700 7px/1.2 "Lexend",Arial,sans-serif;
+  text-align:center;
+}
+
+.engineering-color-material-drawer{
+  left:-80%;
+  right:100%;
+  display:block;
+  height:min(370px,calc(100vh - 180px));
+  min-height:250px;
+  padding:7px;
+  overflow-x:hidden;
+  overflow-y:auto;
+  scrollbar-color:#55cfee #102631;
+  scrollbar-width:thin;
+}
+
+.engineering-color-material-drawer[hidden]{
+  display:none;
+}
+
+.engineering-color-material-drawer.is-platform-color-mode{
+  border:2px solid #67ddf6;
+  box-shadow:
+    inset 0 0 0 1px rgba(168,244,255,.28),
+    0 0 0 2px rgba(39,164,203,.26),
+    0 8px 18px rgba(0,0,0,.38);
+}
+
+#workshopPlatformColorModePanel{
+  margin-bottom:8px;
+  padding:7px;
+  border:1px solid rgba(103,221,246,.78);
+  border-radius:7px;
+  color:#dffbff;
+  background:linear-gradient(180deg,rgba(20,73,94,.94),rgba(7,35,50,.96));
+  text-align:center;
+}
+
+#workshopPlatformColorModePanel[hidden]{
+  display:none;
+}
+
+#workshopPlatformColorModePanel strong{
+  display:block;
+  color:#aef4ff;
+  font:900 8px/1.1 "Lexend",Arial,sans-serif;
+  letter-spacing:.07em;
+}
+
+#workshopPlatformColorModePanel p{
+  margin:5px 0 7px;
+  font:700 7px/1.3 "Lexend",Arial,sans-serif;
+}
+
+#workshopPlatformColorModeCancel{
+  width:100%;
+  min-height:32px;
+  padding:5px;
+  font-size:7px;
+}
+
+.workshop-platform-color-status{
+  min-height:0;
+  margin:0;
+  color:#aef4ff;
+  font:800 7px/1.2 "Lexend",Arial,sans-serif;
+  text-align:center;
+}
+
+.engineering-color-material-drawer.is-platform-color-mode
+  .engineering-object-tile[data-platform-tint="true"]::after{
+  content:"PLATFORM";
+  position:absolute;
+  left:3px;
+  bottom:3px;
+  padding:2px 3px;
+  border:1px solid #8ff6ff;
+  border-radius:4px;
+  color:#06243a;
+  background:#aef4ff;
+  font:900 5px/1 "Lexend",Arial,sans-serif;
+  letter-spacing:.03em;
+}
+
+.engineering-drawer-section + .engineering-drawer-section{
+  margin-top:10px;
+  padding-top:9px;
+  border-top:1px solid rgba(111,207,235,.32);
+}
+
+.engineering-drawer-section h3{
+  margin:0 0 6px;
+  color:#a9edff;
+  font:900 8px/1.1 "Lexend",Arial,sans-serif;
+  letter-spacing:.06em;
+  text-align:center;
+  text-transform:uppercase;
+  text-shadow:0 1px 2px rgba(0,0,0,.75);
+}
+
+.engineering-object-tile-collection{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(50px,1fr));
+  gap:5px;
+}
+
+.engineering-object-tile-swatch,
+.engineering-object-tile-material{
+  min-width:50px;
+  min-height:58px;
+  padding:5px 4px;
+  font-size:7px;
+}
+
+.engineering-object-tile-swatch .engineering-object-tile-preview,
+.engineering-object-tile-material .engineering-object-tile-preview{
+  width:42px;
+  height:34px;
+}
+
+.engineering-object-color-swatch{
+  width:34px;
+  height:27px;
+  border:1px solid #9eb4bd;
+  border-radius:5px;
+  box-sizing:border-box;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.38),transparent 35%),
+    linear-gradient(0deg,rgba(0,0,0,.24),transparent 42%),
+    var(--engineering-object-color,#777);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.32),
+    inset 0 2px 2px rgba(255,255,255,.22),
+    0 2px 3px rgba(0,0,0,.4);
+  filter:none;
+}
+
+.engineering-material-preview{
+  width:32px;
+  height:25px;
+  border:1px solid rgba(188,211,220,.68);
+  border-radius:4px;
+  box-sizing:border-box;
+  background:linear-gradient(145deg,#87949b,#39464d);
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.38));
+}
+
+.engineering-material-preview-wood{ background:linear-gradient(145deg,#9b7758,#5b3e2c); }
+.engineering-material-preview-plastic{ background:linear-gradient(145deg,#89949e,#48535c); }
+.engineering-material-preview-glass{ background:linear-gradient(145deg,rgba(183,226,238,.72),rgba(73,111,124,.68)); }
+.engineering-material-preview-stone{ background:linear-gradient(145deg,#9b9b96,#515551); }
+
+.engineering-materials-future-section .engineering-object-tile-badge{
+  padding:2px 3px;
+  font-size:6px;
+}
+
+.engineering-object-tile:disabled,
+.engineering-object-tile[aria-disabled="true"]{
+  cursor:not-allowed;
+  filter:saturate(.35) !important;
+  opacity:.46;
+}
+
+.engineering-object-tile:disabled:hover,
+.engineering-object-tile[aria-disabled="true"]:hover{
+  transform:none !important;
+  border-color:rgba(157,196,211,.58);
+}
+
+.engineering-drawer-framework-message{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#eef8ff;
+  font:700 8px/1.25 "Lexend",Arial,sans-serif;
+  text-align:center;
+}
+
+.engineering-drawer-framework-message p{
+  margin:0;
+}
+
+@media(max-width:900px){
+  #engineeringToolChestCabinet{
+    width:min(100%,220px);
+  }
+
+  .engineering-tool-chest-drawer.is-open,
+  .engineering-tool-chest-drawer.is-opening{
+    transform:translateX(-62%);
+  }
+}
+
+@media(max-width:650px){
+  #engineeringToolChestCabinet{
+    width:max(150px,100%);
+    bottom:6px;
+  }
+
+  .engineering-tool-chest-drawer.is-open,
+  .engineering-tool-chest-drawer.is-opening{
+    transform:translateX(-48%);
+  }
+
+  .engineering-object-tile{
+    min-height:60px;
+    padding:5px 4px;
+    font-size:8px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  #engineeringToolChestCabinet,
+  #engineeringToolChestHandle,
+  #engineeringToolChestHandle img,
+  .engineering-tool-chest-drawer,
+  .engineering-drawer-shadow,
+  .engineering-drawer-interior,
+  .engineering-drawer-highlight{
+    transition-duration:1ms !important;
+  }
+
+  .engineering-object-tile{
+    transition-duration:1ms !important;
+  }
 }
 
 #workshopBottomDashboardShell{
@@ -26873,6 +27642,159 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox{
   left:18px !important;
   right:auto !important;
   bottom:auto !important;
+}
+
+#workshopEngineeringViewControls{
+  display:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls{
+  position:absolute;
+  top:20px;
+  left:calc(100% + 7px);
+  width:126px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:4px;
+  padding:6px;
+  border:1px solid rgba(210,171,56,.82);
+  border-radius:11px;
+  background:linear-gradient(180deg,rgba(34,55,68,.97),rgba(8,24,35,.98));
+  box-shadow:0 5px 14px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.12);
+  pointer-events:auto;
+}
+
+#workshopEngineeringViewRemoteTitle{
+  grid-column:1 / -1;
+  padding:2px 3px 4px;
+  border-bottom:1px solid rgba(143,246,255,.34);
+  color:#b8f4ff;
+  font:900 9px/1 "Lexend",Arial,sans-serif;
+  letter-spacing:.09em;
+  text-shadow:0 1px 2px rgba(0,0,0,.85);
+}
+
+#workshopEngineeringViewControls button{
+  min-width:0;
+  min-height:34px;
+  padding:3px 2px;
+  border:1px solid #9b7a28;
+  border-radius:7px;
+  color:#f4fbff;
+  background:linear-gradient(180deg,#294b5b,#0c2431 58%,#06151e);
+  box-shadow:inset 0 1px rgba(255,255,255,.12);
+  font:800 8px/1 Arial,sans-serif;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+
+#workshopEngineeringViewControls button span,
+#workshopEngineeringViewControls button small{
+  display:block;
+}
+
+#workshopEngineeringViewControls button small{
+  margin-top:2px;
+  color:#9ec7d5;
+  font-size:7px;
+  font-weight:700;
+}
+
+#workshopEngineeringViewControls button:hover{
+  border-color:#8ff6ff;
+  filter:brightness(1.12);
+}
+
+#workshopEngineeringViewControls button:focus-visible{
+  outline:3px solid #8ff6ff;
+  outline-offset:2px;
+}
+
+#workshopEngineeringViewControls button[aria-pressed="true"]{
+  border-color:#8ff6ff;
+  color:#ffffff;
+  background:linear-gradient(180deg,#15577a,#0a314b);
+  box-shadow:0 0 0 2px rgba(72,230,255,.28),inset 0 0 8px rgba(143,246,255,.24);
+}
+
+#workshopViewTop,
+#workshopViewBottom,
+#workshopViewHome,
+#workshopPlatformColorButton{
+  grid-column:1 / -1;
+}
+
+#workshopEngineeringViewControls #workshopPlatformColorButton{
+  min-height:38px;
+  margin-top:2px;
+  border-color:#46c9e8;
+  color:#dffbff;
+  background:linear-gradient(180deg,#184d67,#0a2f43 58%,#061c2b);
+  letter-spacing:.04em;
+}
+
+#workshopPlatformColorDialog{
+  position:fixed;
+  inset:0;
+  z-index:1200;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  box-sizing:border-box;
+  background:rgba(2,10,18,.68);
+}
+
+#workshopPlatformColorDialog[hidden]{
+  display:none;
+}
+
+#workshopPlatformColorDialogPanel{
+  width:min(420px,calc(100vw - 40px));
+  padding:20px;
+  box-sizing:border-box;
+  border:2px solid #caa13b;
+  border-radius:14px;
+  color:#f2fbff;
+  background:linear-gradient(180deg,#203b4b,#0b2231 58%,#06141e);
+  box-shadow:inset 0 1px rgba(255,255,255,.16),0 12px 30px rgba(0,0,0,.52);
+  text-align:center;
+}
+
+#workshopPlatformColorDialogTitle{
+  margin:0 0 10px;
+  color:#aef4ff;
+  font:900 18px/1.1 "Lexend",Arial,sans-serif;
+  letter-spacing:.05em;
+}
+
+#workshopPlatformColorDialogDescription{
+  margin:0 0 18px;
+  font:700 13px/1.45 "Lexend",Arial,sans-serif;
+}
+
+#workshopPlatformColorDialogActions{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+}
+
+#workshopPlatformColorDialogActions button,
+#workshopPlatformColorModeCancel{
+  min-height:40px;
+  padding:8px 12px;
+  border:1px solid #caa13b;
+  border-radius:8px;
+  color:#f3fbff;
+  background:linear-gradient(180deg,#294b5b,#0c2431);
+  font:900 10px/1.15 "Lexend",Arial,sans-serif;
+  cursor:pointer;
+}
+
+#workshopPlatformColorDialogActions button:focus-visible,
+#workshopPlatformColorModeCancel:focus-visible{
+  outline:3px solid #8ff6ff;
+  outline-offset:2px;
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopHeader{
@@ -27515,6 +28437,12 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
 (function(){
   var currentWorkspaceMode="mission";
   var workshopBuildAreaSnapshot=null;
+  var builderCameraSnapshot=null;
+  var activeWorkshopEngineeringView=null;
+  var activeWorkshopEngineeringTarget=null;
+  var platformColorModeActive=false;
+  var workshopPlatformTint=0x5f8fa8;
+  var platformColorDialogReturnFocus=null;
   var builderSessionSnapshot=null;
   var workshopMeasurementUnit="cm";
   var workshopConsoleModes={
@@ -27523,6 +28451,56 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
   };
   var workshopConsoleMode=workshopConsoleModes.grandMaster;
   var workshopConsoleTab="build";
+  var engineeringToolChestState={
+    cabinet:"retracted",
+    activeDrawer:null,
+    drawers:{
+      "colors-materials":"closed",
+      "shapes":"closed",
+      "parts-objects":"closed",
+      "favorites":"closed"
+    }
+  };
+  var engineeringToolChestIndicators={
+    closed:"assets/images/workshop/production/engineering-tool-chest/indicator-red.png",
+    open:"assets/images/workshop/production/engineering-tool-chest/indicator-green.png",
+    newContent:"assets/images/workshop/production/engineering-tool-chest/indicator-blue.png",
+    missionContent:"assets/images/workshop/production/engineering-tool-chest/indicator-yellow.png"
+  };
+  var engineeringShapeTileData=[
+    {
+      id:"engineeringDrawerShapeCube",
+      key:"cube",
+      name:"Cube",
+      action:"build-shape",
+      workshopShape:"cube",
+      previewClass:"engineering-shape-cube"
+    },
+    {
+      id:"engineeringDrawerShapeSphere",
+      key:"sphere",
+      name:"Sphere",
+      action:"build-shape",
+      workshopShape:"sphere",
+      previewClass:"engineering-shape-sphere"
+    },
+    {
+      id:"engineeringDrawerShapeWedge",
+      key:"wedge",
+      name:"Wedge",
+      action:"build-shape",
+      workshopShape:"trianglePrism",
+      previewClass:"engineering-shape-wedge"
+    }
+  ];
+  var engineeringColorTileData=[];
+  var engineeringFutureMaterialTileData=[
+    {id:"engineeringMaterialMetal",key:"metal",name:"Metal",variant:"material",previewClass:"engineering-material-preview",disabled:true,badges:["locked"]},
+    {id:"engineeringMaterialWood",key:"wood",name:"Wood",variant:"material",previewClass:"engineering-material-preview engineering-material-preview-wood",disabled:true,badges:["locked"]},
+    {id:"engineeringMaterialPlastic",key:"plastic",name:"Plastic",variant:"material",previewClass:"engineering-material-preview engineering-material-preview-plastic",disabled:true,badges:["locked"]},
+    {id:"engineeringMaterialGlass",key:"glass",name:"Glass",variant:"material",previewClass:"engineering-material-preview engineering-material-preview-glass",disabled:true,badges:["locked"]},
+    {id:"engineeringMaterialStone",key:"stone",name:"Stone",variant:"material",previewClass:"engineering-material-preview engineering-material-preview-stone",disabled:true,badges:["locked"]}
+  ];
   var workshopRulerConfig={
     xMin:-25,
     xMax:25,
@@ -27601,6 +28579,550 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
       panel.classList.toggle("isActive",isActive);
     });
     return workshopConsoleTab;
+  }
+
+  function getEngineeringToolChestDrawer(drawerName){
+    return document.querySelector(
+      "[data-tool-chest-drawer='"+drawerName+"']"
+    );
+  }
+
+  function createEngineeringObjectTile(config){
+    var item=config || {};
+    var tile=document.createElement("button");
+    var preview=document.createElement("span");
+    var thumbnail;
+    var name=document.createElement("span");
+    var badgeRow=document.createElement("span");
+    var metadata=document.createElement("span");
+    var selectedIndicator=document.createElement("span");
+    var supportedBadges=["favorite","mission","new","locked"];
+    var activeBadges=Array.isArray(item.badges) ? item.badges : [];
+
+    tile.type="button";
+    tile.id=item.id || "";
+    tile.className="engineering-object-tile"+
+      (item.variant ? " engineering-object-tile-"+item.variant : "");
+    tile.dataset.engineeringObjectTile=item.key || "";
+    tile.dataset.engineeringObjectAction=item.action || "";
+    tile.setAttribute("aria-label",item.ariaLabel || ("Select "+(item.name || "object")));
+    tile.setAttribute("aria-pressed",item.selected ? "true" : "false");
+    if(item.workshopShape) tile.dataset.workshopShape=item.workshopShape;
+    if(item.colorValue) tile.dataset.engineeringColorValue=item.colorValue;
+    if(item.disabled){
+      tile.disabled=true;
+      tile.setAttribute("aria-disabled","true");
+    }
+
+    preview.className="engineering-object-tile-preview";
+    preview.setAttribute("aria-hidden","true");
+    if(item.previewColor){
+      thumbnail=document.createElement("span");
+      thumbnail.className="engineering-object-tile-thumbnail engineering-object-color-swatch";
+      thumbnail.style.setProperty("--engineering-object-color",item.previewColor);
+    }else if(item.thumbnailSrc){
+      thumbnail=document.createElement("img");
+      thumbnail.src=item.thumbnailSrc;
+      thumbnail.alt="";
+      thumbnail.className="engineering-object-tile-thumbnail engineering-object-tile-thumbnail-image";
+    }else{
+      thumbnail=document.createElement("span");
+      thumbnail.className="engineering-object-tile-thumbnail "+(item.previewClass || "");
+    }
+    preview.appendChild(thumbnail);
+
+    name.className="engineering-object-tile-name";
+    name.textContent=item.name || "";
+
+    badgeRow.className="engineering-object-tile-badges";
+    badgeRow.hidden=activeBadges.length===0;
+    supportedBadges.forEach(function(badgeName){
+      var badge=document.createElement("span");
+      badge.className=badgeName==="favorite"
+        ? "engineering-object-tile-favorite"
+        : "engineering-object-tile-badge";
+      badge.dataset.engineeringBadge=badgeName;
+      badge.textContent=badgeName==="favorite" ? "★" : badgeName.toUpperCase();
+      badge.hidden=!activeBadges.includes(badgeName);
+      badgeRow.appendChild(badge);
+    });
+
+    metadata.className="engineering-object-tile-metadata";
+    metadata.hidden=!item.metadata;
+    metadata.textContent=item.metadata || "";
+
+    selectedIndicator.className="engineering-object-tile-selected-indicator";
+    selectedIndicator.setAttribute("aria-hidden","true");
+    selectedIndicator.textContent="✓";
+
+    tile.append(preview,name,badgeRow,metadata,selectedIndicator);
+    return tile;
+  }
+
+  function renderEngineeringObjectTiles(container,items){
+    if(!container) return [];
+    var fragment=document.createDocumentFragment();
+    var tiles=(Array.isArray(items) ? items : []).map(function(item){
+      var tile=createEngineeringObjectTile(item);
+      fragment.appendChild(tile);
+      return tile;
+    });
+    container.replaceChildren(fragment);
+    return tiles;
+  }
+
+  function setEngineeringObjectTileSelection(container,selectedKey){
+    if(!container) return null;
+    var selectedTile=null;
+    container.querySelectorAll(".engineering-object-tile").forEach(function(tile){
+      var isSelected=!tile.disabled &&
+        tile.dataset.engineeringObjectTile===selectedKey;
+      tile.setAttribute("aria-pressed",isSelected ? "true" : "false");
+      if(isSelected) selectedTile=tile;
+    });
+    return selectedTile;
+  }
+
+  function buildEngineeringColorTileData(){
+    var colorSelect=document.getElementById("blockColor");
+    engineeringColorTileData.length=0;
+    if(!colorSelect) return engineeringColorTileData;
+    Array.from(colorSelect.options).forEach(function(option,index){
+      var numericColor=Number(option.value);
+      var previewColor=Number.isFinite(numericColor)
+        ? "#"+numericColor.toString(16).padStart(6,"0")
+        : "#777777";
+      var colorName=option.textContent.trim().replace(/^[^A-Za-z0-9]+/,"").trim();
+      engineeringColorTileData.push({
+        id:"engineeringColorTile"+index,
+        key:option.value,
+        name:colorName,
+        ariaLabel:"Select "+colorName+" color",
+        action:"build-color",
+        colorValue:option.value,
+        previewColor:previewColor,
+        variant:"swatch",
+        selected:option.selected
+      });
+    });
+    return engineeringColorTileData;
+  }
+
+  function syncEngineeringColorTiles(){
+    var colorSelect=document.getElementById("blockColor");
+    var colorContainer=document.getElementById("engineeringDrawerSolidColors");
+    if(!colorSelect || !colorContainer) return null;
+    return setEngineeringObjectTileSelection(colorContainer,colorSelect.value);
+  }
+
+  function chooseWorkshopBuildColor(colorValue){
+    var colorSelect=document.getElementById("blockColor");
+    if(!colorSelect) return false;
+    var matchingOption=Array.from(colorSelect.options).some(function(option){
+      return option.value===colorValue;
+    });
+    if(!matchingOption) return false;
+    colorSelect.value=colorValue;
+    colorSelect.dispatchEvent(new Event("change",{bubbles:true}));
+    if(typeof window.updateCreatorBarSelection==="function"){
+      window.updateCreatorBarSelection();
+    }
+    return true;
+  }
+
+  function syncWorkshopPlatformTintMarker(){
+    var colorContainer=document.getElementById("engineeringDrawerSolidColors");
+    if(!colorContainer) return null;
+    var tintValue=String(workshopPlatformTint);
+    var matchingTile=null;
+    colorContainer.querySelectorAll(".engineering-object-tile").forEach(function(tile){
+      var isPlatformTint=Number(tile.dataset.engineeringColorValue)===Number(tintValue);
+      tile.dataset.platformTint=isPlatformTint ? "true" : "false";
+      if(isPlatformTint) matchingTile=tile;
+    });
+    return matchingTile;
+  }
+
+  function setPlatformColorStatus(message){
+    var status=document.getElementById("workshopPlatformColorStatus");
+    if(status) status.textContent=message || "";
+  }
+
+  function syncPlatformColorModePresentation(){
+    var content=document.getElementById("engineeringDrawerColorsMaterialsContent");
+    var modePanel=document.getElementById("workshopPlatformColorModePanel");
+    if(content){
+      content.classList.toggle("is-platform-color-mode",platformColorModeActive);
+    }
+    if(modePanel) modePanel.hidden=!platformColorModeActive;
+    syncWorkshopPlatformTintMarker();
+  }
+
+  function cancelPlatformColorMode(options){
+    var settings=options || {};
+    var wasActive=platformColorModeActive;
+    platformColorModeActive=false;
+    syncPlatformColorModePresentation();
+    if(wasActive && settings.announce!==false){
+      setPlatformColorStatus("Platform color selection cancelled.");
+    }
+    if(settings.restoreFocus){
+      var platformButton=document.getElementById("workshopPlatformColorButton");
+      if(platformButton && document.body.classList.contains("workshopMode")){
+        platformButton.focus({preventScroll:true});
+      }
+    }
+    return wasActive;
+  }
+
+  function chooseWorkshopPlatformTint(colorValue){
+    if(!platformColorModeActive ||
+      !document.body.classList.contains("workshopMode")){
+      return false;
+    }
+    var colorSelect=document.getElementById("blockColor");
+    var matchingOption=colorSelect && Array.from(colorSelect.options).some(function(option){
+      return option.value===colorValue;
+    });
+    var numericColor=Number(colorValue);
+    if(!matchingOption || !Number.isFinite(numericColor)) return false;
+
+    workshopPlatformTint=numericColor;
+    ground.material.color.setHex(workshopPlatformTint);
+    ground.material.needsUpdate=true;
+    syncWorkshopEngineeringGridContrast(workshopPlatformTint);
+    syncPlatformColorModePresentation();
+    setPlatformColorStatus("Platform color updated.");
+    return true;
+  }
+
+  function syncWorkshopEngineeringGridContrast(tint){
+    if(!engineeringGridMinorMaterial || !engineeringGridMajorMaterial) return;
+    var color=new THREE.Color(tint);
+    var linearChannel=function(channel){
+      return channel<=0.04045
+        ? channel/12.92
+        : Math.pow((channel+0.055)/1.055,2.4);
+    };
+    var luminance=
+      0.2126*linearChannel(color.r)+
+      0.7152*linearChannel(color.g)+
+      0.0722*linearChannel(color.b);
+    var useDarkLines=luminance>0.18;
+
+    engineeringGridMinorMaterial.color.setHex(
+      useDarkLines ? 0x17384a : 0xf3fcff
+    );
+    engineeringGridMinorMaterial.opacity=useDarkLines ? 0.55 : 0.62;
+    engineeringGridMajorMaterial.color.setHex(
+      useDarkLines ? 0x004d66 : 0x63e9ff
+    );
+    engineeringGridMajorMaterial.opacity=useDarkLines ? 0.85 : 0.90;
+    engineeringGridMinorMaterial.needsUpdate=true;
+    engineeringGridMajorMaterial.needsUpdate=true;
+  }
+
+  function focusPlatformColorTile(){
+    var matchingTile=syncWorkshopPlatformTintMarker();
+    var colorContainer=document.getElementById("engineeringDrawerSolidColors");
+    var focusTarget=matchingTile ||
+      (colorContainer && colorContainer.querySelector(".engineering-object-tile:not(:disabled)"));
+    if(focusTarget){
+      window.requestAnimationFrame(function(){
+        focusTarget.focus({preventScroll:true});
+        focusTarget.scrollIntoView({block:"nearest"});
+      });
+    }
+  }
+
+  function enterPlatformColorMode(){
+    if(!document.body.classList.contains("workshopMode")) return false;
+    setPlatformColorStatus("");
+    setEngineeringToolChestCabinetState("expanded");
+    closeAllEngineeringToolChestDrawers(true);
+    platformColorModeActive=true;
+    openEngineeringToolChestDrawer("colors-materials");
+    syncPlatformColorModePresentation();
+    var content=document.getElementById("engineeringDrawerColorsMaterialsContent");
+    if(content) content.scrollTop=0;
+    focusPlatformColorTile();
+    return true;
+  }
+
+  function closePlatformColorDialog(options){
+    var settings=options || {};
+    var dialog=document.getElementById("workshopPlatformColorDialog");
+    if(dialog) dialog.hidden=true;
+    if(settings.restoreFocus && platformColorDialogReturnFocus){
+      platformColorDialogReturnFocus.focus({preventScroll:true});
+    }
+    platformColorDialogReturnFocus=null;
+  }
+
+  function openPlatformColorDialog(){
+    if(!document.body.classList.contains("workshopMode")) return false;
+    var dialog=document.getElementById("workshopPlatformColorDialog");
+    var confirmButton=document.getElementById("workshopPlatformColorConfirm");
+    if(!dialog || !confirmButton) return false;
+    platformColorDialogReturnFocus=document.activeElement;
+    dialog.hidden=false;
+    window.requestAnimationFrame(function(){
+      confirmButton.focus({preventScroll:true});
+    });
+    return true;
+  }
+
+  function platformColorDialogIsOpen(){
+    var dialog=document.getElementById("workshopPlatformColorDialog");
+    return !!(dialog && !dialog.hidden);
+  }
+
+  function handlePlatformColorDialogKeydown(event){
+    if(!platformColorDialogIsOpen()) return false;
+    var dialog=document.getElementById("workshopPlatformColorDialog");
+    var buttons=Array.from(dialog.querySelectorAll("button:not(:disabled)"));
+    if(event.key==="Escape"){
+      event.preventDefault();
+      closePlatformColorDialog({restoreFocus:true});
+      return true;
+    }
+    if(event.key!=="Tab" || buttons.length===0) return true;
+    var firstButton=buttons[0];
+    var lastButton=buttons[buttons.length-1];
+    if(event.shiftKey && document.activeElement===firstButton){
+      event.preventDefault();
+      lastButton.focus();
+    }else if(!event.shiftKey && document.activeElement===lastButton){
+      event.preventDefault();
+      firstButton.focus();
+    }
+    return true;
+  }
+
+  function updateEngineeringToolChestDrawerPresentation(drawerName,state){
+    var drawer=getEngineeringToolChestDrawer(drawerName);
+    if(!drawer) return;
+    var control=drawer.querySelector(".engineering-tool-chest-drawer-control");
+    var content=drawer.querySelector(".engineering-drawer-content");
+    var indicator=drawer.querySelector(".engineering-drawer-indicator");
+    var isExpanded=state==="opening" || state==="open";
+    var readableName={
+      "colors-materials":"Colors & Materials",
+      "shapes":"Shapes",
+      "parts-objects":"Parts & Objects",
+      "favorites":"Favorites"
+    }[drawerName];
+
+    drawer.dataset.drawerState=state;
+    drawer.classList.toggle("is-opening",state==="opening");
+    drawer.classList.toggle("is-open",state==="open");
+    drawer.classList.toggle("is-closing",state==="closing");
+    if(control){
+      control.setAttribute("aria-expanded",isExpanded ? "true" : "false");
+      control.setAttribute(
+        "aria-label",
+        (isExpanded ? "Close " : "Open ")+readableName+" drawer"
+      );
+    }
+    if(content) content.hidden=!isExpanded;
+    if(indicator){
+      indicator.src=isExpanded
+        ? engineeringToolChestIndicators.open
+        : engineeringToolChestIndicators.closed;
+    }
+  }
+
+  function closeEngineeringToolChestDrawer(drawerName,immediate){
+    var drawer=getEngineeringToolChestDrawer(drawerName);
+    if(!drawer) return;
+    if(drawerName==="colors-materials" && platformColorModeActive){
+      cancelPlatformColorMode({announce:false});
+    }
+    var control=drawer.querySelector(".engineering-tool-chest-drawer-control");
+    var content=drawer.querySelector(".engineering-drawer-content");
+    if(content && content.contains(document.activeElement) && control){
+      control.focus({preventScroll:true});
+    }
+    engineeringToolChestState.drawers[drawerName]=immediate ? "closed" : "closing";
+    updateEngineeringToolChestDrawerPresentation(
+      drawerName,
+      engineeringToolChestState.drawers[drawerName]
+    );
+    if(immediate){
+      drawer.classList.remove("is-opening","is-open","is-closing");
+    }
+    if(engineeringToolChestState.activeDrawer===drawerName){
+      engineeringToolChestState.activeDrawer=null;
+    }
+  }
+
+  function closeAllEngineeringToolChestDrawers(immediate){
+    Object.keys(engineeringToolChestState.drawers).forEach(function(drawerName){
+      closeEngineeringToolChestDrawer(drawerName,immediate);
+    });
+    engineeringToolChestState.activeDrawer=null;
+  }
+
+  function openEngineeringToolChestDrawer(drawerName){
+    if(!Object.prototype.hasOwnProperty.call(
+      engineeringToolChestState.drawers,
+      drawerName
+    )) return false;
+
+    if(engineeringToolChestState.cabinet!=="expanded"){
+      setEngineeringToolChestCabinetState("expanded");
+    }
+    Object.keys(engineeringToolChestState.drawers).forEach(function(otherName){
+      if(otherName!==drawerName &&
+         engineeringToolChestState.drawers[otherName]!=="closed"){
+        closeEngineeringToolChestDrawer(otherName,false);
+      }
+    });
+    engineeringToolChestState.activeDrawer=drawerName;
+    engineeringToolChestState.drawers[drawerName]="opening";
+    updateEngineeringToolChestDrawerPresentation(drawerName,"opening");
+    return true;
+  }
+
+  function toggleEngineeringToolChestDrawer(drawerName){
+    var state=engineeringToolChestState.drawers[drawerName];
+    if(state==="open" || state==="opening"){
+      closeEngineeringToolChestDrawer(drawerName,false);
+      return false;
+    }
+    return openEngineeringToolChestDrawer(drawerName);
+  }
+
+  function setEngineeringToolChestCabinetState(state){
+    var toolChest=document.getElementById("engineeringToolChest");
+    var handle=document.getElementById("engineeringToolChestHandle");
+    var requestedState=state==="expanded" ? "expanded" : "retracted";
+    engineeringToolChestState.cabinet=requestedState;
+    if(requestedState==="retracted"){
+      closeAllEngineeringToolChestDrawers(true);
+      if(toolChest && toolChest.contains(document.activeElement) &&
+         document.activeElement!==handle && handle){
+        handle.focus({preventScroll:true});
+      }
+    }
+    if(toolChest) toolChest.dataset.cabinetState=requestedState;
+    if(toolChest){
+      toolChest.querySelectorAll(".engineering-tool-chest-drawer-control").forEach(
+        function(control){
+          control.tabIndex=requestedState==="expanded" ? 0 : -1;
+        }
+      );
+    }
+    if(handle){
+      var isExpanded=requestedState==="expanded";
+      handle.setAttribute("aria-expanded",isExpanded ? "true" : "false");
+      handle.setAttribute(
+        "aria-label",
+        isExpanded
+          ? "Close Engineering Tool Chest"
+          : "Open Engineering Tool Chest"
+      );
+    }
+    return requestedState;
+  }
+
+  function resetEngineeringToolChest(){
+    closeAllEngineeringToolChestDrawers(true);
+    setEngineeringToolChestCabinetState("retracted");
+  }
+
+  function installEngineeringToolChest(){
+    var toolChest=document.getElementById("engineeringToolChest");
+    var handle=document.getElementById("engineeringToolChestHandle");
+    var shapesContent=document.getElementById("engineeringDrawerShapesContent");
+    var colorsContent=document.getElementById("engineeringDrawerSolidColors");
+    var materialsContent=document.getElementById("engineeringDrawerFutureMaterials");
+    var colorSelect=document.getElementById("blockColor");
+    if(!toolChest || toolChest.dataset.listenersInstalled==="true") return;
+    toolChest.dataset.listenersInstalled="true";
+
+    renderEngineeringObjectTiles(shapesContent,engineeringShapeTileData);
+    renderEngineeringObjectTiles(
+      colorsContent,
+      buildEngineeringColorTileData()
+    );
+    renderEngineeringObjectTiles(
+      materialsContent,
+      engineeringFutureMaterialTileData
+    );
+    syncWorkshopBuildShapeControls(selectedBlockShape);
+    syncEngineeringColorTiles();
+
+    if(colorSelect){
+      colorSelect.addEventListener("change",syncEngineeringColorTiles);
+    }
+
+    if(handle){
+      handle.addEventListener("click",function(){
+        setEngineeringToolChestCabinetState(
+          engineeringToolChestState.cabinet==="expanded"
+            ? "retracted"
+            : "expanded"
+        );
+      });
+    }
+
+    toolChest.querySelectorAll("[data-tool-chest-drawer]").forEach(function(drawer){
+      var drawerName=drawer.dataset.toolChestDrawer;
+      var control=drawer.querySelector(".engineering-tool-chest-drawer-control");
+      if(control){
+        control.addEventListener("click",function(){
+          toggleEngineeringToolChestDrawer(drawerName);
+        });
+      }
+      drawer.addEventListener("transitionend",function(event){
+        if(event.target!==drawer || event.propertyName!=="transform") return;
+        var state=engineeringToolChestState.drawers[drawerName];
+        if(state==="opening"){
+          engineeringToolChestState.drawers[drawerName]="open";
+          updateEngineeringToolChestDrawerPresentation(drawerName,"open");
+        }else if(state==="closing"){
+          engineeringToolChestState.drawers[drawerName]="closed";
+          updateEngineeringToolChestDrawerPresentation(drawerName,"closed");
+        }
+      });
+    });
+
+    toolChest.addEventListener("click",function(event){
+      var cancelControl=event.target.closest("#workshopPlatformColorModeCancel");
+      if(cancelControl && toolChest.contains(cancelControl)){
+        event.stopPropagation();
+        cancelPlatformColorMode({restoreFocus:true});
+        return;
+      }
+      var tile=event.target.closest(".engineering-object-tile");
+      if(!tile || !toolChest.contains(tile) || tile.disabled) return;
+      event.stopPropagation();
+      if(tile.dataset.engineeringObjectAction==="build-shape"){
+        chooseWorkshopBuildShape(tile.dataset.workshopShape);
+      }else if(tile.dataset.engineeringObjectAction==="build-color"){
+        if(platformColorModeActive){
+          chooseWorkshopPlatformTint(tile.dataset.engineeringColorValue);
+        }else{
+          chooseWorkshopBuildColor(tile.dataset.engineeringColorValue);
+        }
+      }
+    });
+    resetEngineeringToolChest();
+  }
+
+  function handleWorkshopToolChestOutsidePointerDown(event){
+    if(!document.body.classList.contains("workshopMode") ||
+      event.button!==0 ||
+      engineeringToolChestState.cabinet!=="expanded" ||
+      event.target!==renderer.domElement){
+      return;
+    }
+
+    // Close through the existing controller without consuming or recreating
+    // the canvas action; the original pointer event continues to Builder.
+    cancelPlatformColorMode({announce:false});
+    setEngineeringToolChestCabinetState("retracted");
   }
 
   function getWorkshopRulerAxisRange(axis){
@@ -27929,7 +29451,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     var target=event.target;
     if(target && typeof target.closest==="function" && target.closest(
       "#workshopDashboard,#workspaceUtilityRail,#viewCubeBox,#info,#stemCoach,"+
-      "#floatingToolbox,#toolbox,#buildBar,#studentProjectBar,#missionCard,[role='dialog']"
+      "#engineeringToolChest,#floatingToolbox,#toolbox,#buildBar,"+
+      "#studentProjectBar,#missionCard,[role='dialog']"
     )){
       return false;
     }
@@ -28089,6 +29612,170 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     return requestedUnit;
   }
 
+  var workshopEngineeringViewDirections={
+    front:{position:[0,0,1],up:[0,1,0]},
+    back:{position:[0,0,-1],up:[0,1,0]},
+    left:{position:[-1,0,0],up:[0,1,0]},
+    right:{position:[1,0,0],up:[0,1,0]},
+    top:{position:[0,1,0],up:[0,0,-1]},
+    bottom:{position:[0,-1,0],up:[0,0,1]}
+  };
+
+  function syncWorkshopEngineeringViewButtons(){
+    document.querySelectorAll("#workshopEngineeringViewControls [data-workshop-view]").forEach(function(button){
+      button.setAttribute(
+        "aria-pressed",
+        String(button.dataset.workshopView===activeWorkshopEngineeringView)
+      );
+    });
+  }
+
+  function clearWorkshopEngineeringView(){
+    activeWorkshopEngineeringView=null;
+    activeWorkshopEngineeringTarget=null;
+    syncWorkshopEngineeringViewButtons();
+  }
+
+  function getWorkshopEngineeringModelCenter(){
+    if(!blocks.length) return null;
+    var modelBounds=new THREE.Box3();
+    var hasVisibleBlock=false;
+    blocks.forEach(function(block){
+      if(!block || block.visible===false || !block.parent) return;
+      block.updateWorldMatrix(true,false);
+      modelBounds.expandByObject(block);
+      hasVisibleBlock=true;
+    });
+    return hasVisibleBlock
+      ? modelBounds.getCenter(new THREE.Vector3())
+      : null;
+  }
+
+  function getWorkshopEngineeringModelDepth(modelCenter){
+    if(!modelCenter) return Math.max(6,camera.position.length());
+    var cameraForward=new THREE.Vector3();
+    var cameraToModel=modelCenter.clone().sub(camera.position);
+    camera.getWorldDirection(cameraForward);
+    return Math.max(6,cameraToModel.dot(cameraForward));
+  }
+
+  function applyWorkshopEngineeringView(){
+    var definition=workshopEngineeringViewDirections[activeWorkshopEngineeringView];
+    if(!definition) return false;
+
+    var safeDistance=Math.max(6,cameraDistance);
+    var target=activeWorkshopEngineeringTarget || new THREE.Vector3(0,0,0);
+    cameraDistance=safeDistance;
+    camera.position.set(
+      target.x+definition.position[0]*safeDistance,
+      target.y+definition.position[1]*safeDistance,
+      target.z+definition.position[2]*safeDistance
+    );
+    camera.up.set(definition.up[0],definition.up[1],definition.up[2]);
+    camera.lookAt(target);
+    return true;
+  }
+
+  function setWorkshopEngineeringView(view){
+    if(!document.body.classList.contains("workshopMode")) return false;
+
+    if(view==="home"){
+      clearWorkshopEngineeringView();
+      camera.up.set(0,1,0);
+      setView("home");
+      activeWorkshopEngineeringView="home";
+      syncWorkshopEngineeringViewButtons();
+      return true;
+    }
+
+    if(!workshopEngineeringViewDirections[view]) return false;
+
+    // Preserve the model's projected depth and center the complete visible
+    // Workshop build while a directional engineering view is active.
+    var modelCenter=getWorkshopEngineeringModelCenter();
+    var modelDepth=getWorkshopEngineeringModelDepth(modelCenter);
+    activeWorkshopEngineeringTarget=modelCenter || new THREE.Vector3(0,0,0);
+    cameraDistance=Math.max(6,modelDepth);
+    activeWorkshopEngineeringView=view;
+    applyWorkshopEngineeringView();
+    syncWorkshopEngineeringViewButtons();
+    return true;
+  }
+
+  function captureBuilderCameraState(){
+    if(builderCameraSnapshot) return;
+    builderCameraSnapshot={
+      angle:cameraAngle,
+      distance:cameraDistance,
+      height:cameraHeight,
+      position:camera.position.clone(),
+      up:camera.up.clone()
+    };
+  }
+
+  function restoreBuilderCameraState(){
+    clearWorkshopEngineeringView();
+    if(!builderCameraSnapshot) return;
+    cameraAngle=builderCameraSnapshot.angle;
+    cameraDistance=builderCameraSnapshot.distance;
+    cameraHeight=builderCameraSnapshot.height;
+    camera.position.copy(builderCameraSnapshot.position);
+    camera.up.copy(builderCameraSnapshot.up);
+    camera.lookAt(0,0,0);
+    builderCameraSnapshot=null;
+  }
+
+  function workshopVisibleModalOwnsInteraction(){
+    return Array.from(document.querySelectorAll(
+      '[role="dialog"],#helpModal,#missionPopup,#badgePopup'
+    )).some(function(modal){
+      var style=window.getComputedStyle(modal);
+      var bounds=modal.getBoundingClientRect();
+      return !modal.hidden &&
+        style.display!=="none" &&
+        style.visibility!=="hidden" &&
+        bounds.width>0 &&
+        bounds.height>0;
+    });
+  }
+
+  function workshopViewShortcutAllowed(event){
+    if(!document.body.classList.contains("workshopMode") ||
+      event.defaultPrevented ||
+      event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+      workshopVisibleModalOwnsInteraction() ||
+      readToBobBlocksBuilderEvent(event)){
+      return false;
+    }
+
+    var target=event.target;
+    return !(target &&
+      (target.matches("input,textarea,select") || target.isContentEditable));
+  }
+
+  function handleWorkshopEngineeringViewShortcut(event){
+    if(handlePlatformColorDialogKeydown(event)) return;
+    if(platformColorModeActive && event.key==="Escape"){
+      event.preventDefault();
+      cancelPlatformColorMode({restoreFocus:true});
+      return;
+    }
+    if(!workshopViewShortcutAllowed(event)) return;
+    var shortcutViews={
+      "1":"front",
+      "2":"back",
+      "3":"left",
+      "4":"right",
+      "5":"top",
+      "6":"bottom",
+      "0":"home"
+    };
+    var view=shortcutViews[event.key];
+    if(!view) return;
+    event.preventDefault();
+    setWorkshopEngineeringView(view);
+  }
+
   function applyWorkshopBuildAreaVisuals(workshopIsActive){
     var gridButton=document.getElementById("engineeringGridToggle");
 
@@ -28098,6 +29785,9 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
           sceneBackground:scene.background ? scene.background.clone() : null,
           groundMap:ground.material.map,
           groundColor:ground.material.color.clone(),
+          groundTransparent:ground.material.transparent,
+          groundOpacity:ground.material.opacity,
+          groundDepthWrite:ground.material.depthWrite,
           gridVisible:engineeringGrid ? engineeringGrid.visible : true,
           atmosphereVisibility:atmosphereObjects.map(function(object){
             return {object:object,visible:object.visible};
@@ -28109,7 +29799,10 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
 
       scene.background=new THREE.Color(0xffffff);
       ground.material.map=null;
-      ground.material.color.setHex(0x000000);
+      ground.material.color.setHex(0x5f8fa8);
+      ground.material.transparent=true;
+      ground.material.opacity=0.30;
+      ground.material.depthWrite=false;
       ground.material.needsUpdate=true;
 
       atmosphereObjects.forEach(function(object){
@@ -28134,6 +29827,9 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     scene.background=workshopBuildAreaSnapshot.sceneBackground;
     ground.material.map=workshopBuildAreaSnapshot.groundMap;
     ground.material.color.copy(workshopBuildAreaSnapshot.groundColor);
+    ground.material.transparent=workshopBuildAreaSnapshot.groundTransparent;
+    ground.material.opacity=workshopBuildAreaSnapshot.groundOpacity;
+    ground.material.depthWrite=workshopBuildAreaSnapshot.groundDepthWrite;
     ground.material.needsUpdate=true;
 
     workshopBuildAreaSnapshot.atmosphereVisibility.forEach(function(state){
@@ -28162,15 +29858,22 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     if(requestedMode==="workshop" && isStarterScreenActive()) return false;
 
     if(requestedMode==="workshop"){
+      workshopPlatformTint=0x5f8fa8;
+      captureBuilderCameraState();
       beginBlankWorkshopSession();
       setWorkshopMeasurementUnit("cm");
+      resetEngineeringToolChest();
     }else if(currentWorkspaceMode==="workshop"){
+      closePlatformColorDialog({restoreFocus:false});
+      cancelPlatformColorMode({announce:false});
+      resetEngineeringToolChest();
       restoreBuilderSession();
     }
 
     currentWorkspaceMode=requestedMode;
     document.body.classList.toggle("workshopMode",requestedMode==="workshop");
     document.body.classList.toggle("missionMode",requestedMode==="mission");
+    if(requestedMode!=="workshop") restoreBuilderCameraState();
     if(requestedMode!=="workshop") hideWorkshopPrecisionCursor();
     applyWorkshopBuildAreaVisuals(requestedMode==="workshop");
     placeUtilityRail(requestedMode);
@@ -28184,10 +29887,15 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
 
   function stopBuilderClickThrough(element){
     if(!element) return;
-    ["click","mousedown","pointerdown","touchstart"].forEach(function(eventName){
+    [
+      "click","contextmenu",
+      "mousedown","mouseup",
+      "pointerdown","pointerup","pointercancel",
+      "touchstart","touchend","touchcancel"
+    ].forEach(function(eventName){
       element.addEventListener(eventName,function(event){
         event.stopPropagation();
-      },{passive:eventName==="touchstart"});
+      },{passive:eventName.startsWith("touch")});
     });
   }
 
@@ -28195,15 +29903,54 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     var utilityRail=document.getElementById("workspaceUtilityRail");
     var switcher=document.getElementById("workspaceModeSwitch");
     var workshopDashboard=document.getElementById("workshopDashboard");
+    var engineeringToolChest=document.getElementById("engineeringToolChest");
+    var engineeringViewControls=document.getElementById("workshopEngineeringViewControls");
+    var platformColorDialog=document.getElementById("workshopPlatformColorDialog");
+    var platformColorConfirm=document.getElementById("workshopPlatformColorConfirm");
+    var platformColorDialogCancel=document.getElementById("workshopPlatformColorDialogCancel");
     var mmButton=document.getElementById("workshopUnitMm");
     var cmButton=document.getElementById("workshopUnitCm");
 
     setWorkshopConsoleMode(workshopConsoleModes.grandMaster);
     setWorkshopConsoleTab("build");
+    installEngineeringToolChest();
     renderWorkshopRulers();
     stopBuilderClickThrough(utilityRail);
     stopBuilderClickThrough(switcher);
     stopBuilderClickThrough(workshopDashboard);
+    stopBuilderClickThrough(engineeringToolChest);
+    stopBuilderClickThrough(engineeringViewControls);
+    stopBuilderClickThrough(platformColorDialog);
+
+    if(engineeringViewControls){
+      engineeringViewControls.addEventListener("click",function(event){
+        var platformColorButton=event.target.closest("#workshopPlatformColorButton");
+        if(platformColorButton && engineeringViewControls.contains(platformColorButton)){
+          openPlatformColorDialog();
+          return;
+        }
+        var button=event.target.closest("[data-workshop-view]");
+        if(!button || !engineeringViewControls.contains(button)) return;
+        setWorkshopEngineeringView(button.dataset.workshopView);
+      });
+    }
+    if(platformColorConfirm){
+      platformColorConfirm.addEventListener("click",function(){
+        closePlatformColorDialog({restoreFocus:false});
+        enterPlatformColorMode();
+      });
+    }
+    if(platformColorDialogCancel){
+      platformColorDialogCancel.addEventListener("click",function(){
+        closePlatformColorDialog({restoreFocus:true});
+      });
+    }
+    document.addEventListener("keydown",handleWorkshopEngineeringViewShortcut);
+    document.addEventListener(
+      "pointerdown",
+      handleWorkshopToolChestOutsidePointerDown,
+      true
+    );
 
     if(mmButton){
       mmButton.addEventListener("click",function(){
@@ -28248,10 +29995,28 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     return setWorkspaceMode(currentWorkspaceMode==="workshop" ? "mission" : "workshop");
   };
   window.setWorkshopMeasurementUnit=setWorkshopMeasurementUnit;
+  window.setWorkshopEngineeringView=setWorkshopEngineeringView;
+  window.clearWorkshopEngineeringView=clearWorkshopEngineeringView;
+  window.applyWorkshopEngineeringView=applyWorkshopEngineeringView;
+  window.getWorkshopPlatformColorState=function(){
+    return {
+      active:platformColorModeActive,
+      tint:workshopPlatformTint
+    };
+  };
   window.setWorkshopConsoleMode=setWorkshopConsoleMode;
   window.getWorkshopConsoleMode=function(){ return workshopConsoleMode; };
   window.setWorkshopConsoleTab=setWorkshopConsoleTab;
   window.getWorkshopConsoleTab=function(){ return workshopConsoleTab; };
+  window.engineeringToolChestState=engineeringToolChestState;
+  window.engineeringColorTileData=engineeringColorTileData;
+  window.createEngineeringObjectTile=createEngineeringObjectTile;
+  window.renderEngineeringObjectTiles=renderEngineeringObjectTiles;
+  window.setEngineeringObjectTileSelection=setEngineeringObjectTileSelection;
+  window.syncEngineeringColorTiles=syncEngineeringColorTiles;
+  window.setEngineeringToolChestCabinetState=setEngineeringToolChestCabinetState;
+  window.toggleEngineeringToolChestDrawer=toggleEngineeringToolChestDrawer;
+  window.resetEngineeringToolChest=resetEngineeringToolChest;
   window.getWorkshopSnapIncrement=getWorkshopSnapIncrement;
   window.snapWorkshopValue=snapWorkshopValue;
   window.workshopRulerConfig=workshopRulerConfig;
