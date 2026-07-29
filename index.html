@@ -4872,14 +4872,14 @@ function syncEngineeringGridStyle(grassIsActive){
 
   if(grassIsActive){
     engineeringGridMinorMaterial.color.setHex(0xF2FCFF);
-    engineeringGridMinorMaterial.opacity = 0.45;
+    engineeringGridMinorMaterial.opacity = 0.62;
     engineeringGridMajorMaterial.color.setHex(0x7BEFFF);
-    engineeringGridMajorMaterial.opacity = 0.70;
+    engineeringGridMajorMaterial.opacity = 0.82;
   } else {
     engineeringGridMinorMaterial.color.setHex(0x8DDEFF);
-    engineeringGridMinorMaterial.opacity = 0.18;
+    engineeringGridMinorMaterial.opacity = 0.48;
     engineeringGridMajorMaterial.color.setHex(0x39CFFF);
-    engineeringGridMajorMaterial.opacity = 0.34;
+    engineeringGridMajorMaterial.opacity = 0.72;
   }
 
   engineeringGridMinorMaterial.needsUpdate = true;
@@ -6413,9 +6413,15 @@ function buildStarterGrid(){
   const minorPositions = [];
   const majorPositions = [];
 
-  for(let coordinate = -gridHalfSize; coordinate <= gridHalfSize; coordinate += minorSpacing){
-    const gridBoundary = coordinate + 0.5;
-    const target = coordinate % majorSpacing === 0
+  // Integer-centered one-centimeter blocks are bounded by half-unit lines.
+  // Mirror those boundaries around zero so the full grid is not shifted to
+  // one side of the platform. Five-centimeter accents are centered as well.
+  for(
+    let gridBoundary = -gridHalfSize + 0.5;
+    gridBoundary <= gridHalfSize - 0.5;
+    gridBoundary += minorSpacing
+  ){
+    const target = Math.abs((gridBoundary + majorSpacing / 2) % majorSpacing) < 1e-8
       ? majorPositions
       : minorPositions;
 
@@ -7360,12 +7366,16 @@ function workshopBoundsOverlap(
 }
 
 function calculateWorkshopPlacementCandidate(intersection, newBlock){
-  const isVoxelCube = newBlock.userData.builderShape === "cube";
-  // Voxel cubes always use the approved one-unit lattice in every precision mode.
-  // Future non-voxel engineering tools may use the active cm/mm precision state.
-  const increment = isVoxelCube ? 1 : window.getWorkshopSnapIncrement();
+  const isStandardWorkshopBlock =
+    newBlock.userData.builderShape === "cube" ||
+    newBlock.userData.builderShape === "sphere" ||
+    newBlock.userData.builderShape === "trianglePrism";
+  // All current standard blocks occupy one-centimeter grid cells and therefore
+  // share the approved one-unit lattice in every precision mode. The active
+  // cm/mm precision remains available for future non-block engineering tools.
+  const increment = isStandardWorkshopBlock ? 1 : window.getWorkshopSnapIncrement();
   const snapCandidateValue = function(value, offset){
-    if(isVoxelCube){
+    if(isStandardWorkshopBlock){
       return Number(Math.round(value).toFixed(4));
     }
     return window.snapWorkshopValue(value, offset);
@@ -28799,21 +28809,31 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
   function syncWorkshopEngineeringGridContrast(tint){
     if(!engineeringGridMinorMaterial || !engineeringGridMajorMaterial) return;
     var color=new THREE.Color(tint);
+    var platformOpacity=ground.material.transparent
+      ? ground.material.opacity
+      : 1;
+    // The Workshop platform is translucent over a white scene. Measure the
+    // color students actually see, not only the unblended source tint.
+    var visibleColor={
+      r:color.r*platformOpacity+(1-platformOpacity),
+      g:color.g*platformOpacity+(1-platformOpacity),
+      b:color.b*platformOpacity+(1-platformOpacity)
+    };
     var linearChannel=function(channel){
       return channel<=0.04045
         ? channel/12.92
         : Math.pow((channel+0.055)/1.055,2.4);
     };
     var luminance=
-      0.2126*linearChannel(color.r)+
-      0.7152*linearChannel(color.g)+
-      0.0722*linearChannel(color.b);
+      0.2126*linearChannel(visibleColor.r)+
+      0.7152*linearChannel(visibleColor.g)+
+      0.0722*linearChannel(visibleColor.b);
     var useDarkLines=luminance>0.18;
 
     engineeringGridMinorMaterial.color.setHex(
       useDarkLines ? 0x17384a : 0xf3fcff
     );
-    engineeringGridMinorMaterial.opacity=useDarkLines ? 0.55 : 0.62;
+    engineeringGridMinorMaterial.opacity=useDarkLines ? 0.68 : 0.72;
     engineeringGridMajorMaterial.color.setHex(
       useDarkLines ? 0x004d66 : 0x63e9ff
     );
@@ -29133,7 +29153,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
 
   function workshopModelToRulerPosition(value,axis,rulerElement){
     var range=getWorkshopRulerAxisRange(axis);
-    var clamped=Math.max(range.min,Math.min(range.max,Number(value)));
+    var measurementValue=axis==="y" ? Number(value)+0.5 : Number(value);
+    var clamped=Math.max(range.min,Math.min(range.max,measurementValue));
     var ratio=axis==="y"
       ? (range.max-clamped)/(range.max-range.min)
       : (clamped-range.min)/(range.max-range.min);
@@ -29154,7 +29175,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     var value=axis==="y"
       ? range.max-ratio*(range.max-range.min)
       : range.min+ratio*(range.max-range.min);
-    return normalizeWorkshopRulerValue(value);
+    return normalizeWorkshopRulerValue(axis==="y" ? value-0.5 : value);
   }
 
   function renderWorkshopRulerTicks(rulerElement){
@@ -29216,11 +29237,21 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
   var workshopRulerSelectedObject=null;
   var workshopRulerSelectedBoundsSignature="";
 
-  function formatWorkshopRulerCentimeters(value){
-    var normalized=normalizeWorkshopRulerValue(value);
-    return Number.isInteger(normalized)
-      ? String(normalized)
-      : String(Number(normalized.toFixed(2)));
+  function formatWorkshopMeasurement(value){
+    var isMillimeters=workshopMeasurementUnit==="mm";
+    var converted=normalizeWorkshopRulerValue(
+      Number(value)*(isMillimeters ? 10 : 1)
+    );
+    var text=Number.isInteger(converted)
+      ? String(converted)
+      : String(Number(converted.toFixed(2)));
+    return {
+      text:text,
+      abbreviation:isMillimeters ? "mm" : "cm",
+      spokenUnit:isMillimeters
+        ? (converted===1 ? "millimeter" : "millimeters")
+        : (converted===1 ? "centimeter" : "centimeters")
+    };
   }
 
   function clearWorkshopRulerSelectionHighlight(){
@@ -29308,8 +29339,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
       return;
     }
 
-    var widthText=formatWorkshopRulerCentimeters(selectedBounds.width);
-    var heightText=formatWorkshopRulerCentimeters(selectedBounds.height);
+    var widthMeasurement=formatWorkshopMeasurement(selectedBounds.width);
+    var heightMeasurement=formatWorkshopMeasurement(selectedBounds.height);
     [
       ["workshopRulerTop","workshopRulerTopSelection"],
       ["workshopRulerBottom","workshopRulerBottomSelection"]
@@ -29317,8 +29348,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
       renderWorkshopRulerSelectionLayer(
         ids[0],ids[1],"x",
         selectedBounds.min.x,selectedBounds.max.x,
-        "Width: "+widthText+" cm",
-        "Selected object width: "+widthText+" centimeters"
+        "Width: "+widthMeasurement.text+" "+widthMeasurement.abbreviation,
+        "Selected object width: "+widthMeasurement.text+" "+widthMeasurement.spokenUnit
       );
     });
     [
@@ -29328,8 +29359,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
       renderWorkshopRulerSelectionLayer(
         ids[0],ids[1],"y",
         selectedBounds.min.y,selectedBounds.max.y,
-        "Height: "+heightText+" cm",
-        "Selected object height: "+heightText+" centimeters"
+        "Height: "+heightMeasurement.text+" "+heightMeasurement.abbreviation,
+        "Selected object height: "+heightMeasurement.text+" "+heightMeasurement.spokenUnit
       );
     });
   }
@@ -29413,8 +29444,11 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
   function updateWorkshopPrecisionCursorText(){
     var cursor=document.getElementById("workshopPrecisionCursor");
     var dashboardPrecision=document.getElementById("workshopDashboardPrecision");
-    if(cursor) cursor.textContent="Precision: 1 "+workshopMeasurementUnit;
-    if(dashboardPrecision) dashboardPrecision.textContent="Precision: 1 "+workshopMeasurementUnit;
+    var precisionText=workshopMeasurementUnit==="mm"
+      ? "Precision: 1 mm • Blocks: 1 cm"
+      : "Precision: 1 cm";
+    if(cursor) cursor.textContent=precisionText;
+    if(dashboardPrecision) dashboardPrecision.textContent=precisionText;
   }
 
   function hideWorkshopPrecisionCursor(){
@@ -29597,13 +29631,18 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
       measurementKey.setAttribute(
         "aria-label",
         requestedUnit==="mm"
-          ? "Grid Precision. One square equals one millimeter. One centimeter contains ten millimeters."
-          : "Grid Precision. One square equals one centimeter."
+          ? "Grid Precision. Each grid cell equals one centimeter. Engineering precision is one millimeter within each cell. Standard blocks snap to one centimeter."
+          : "Grid Precision. Each grid cell and each standard block equal one centimeter."
       );
     }
-    if(previewLabel) previewLabel.textContent="1 "+requestedUnit;
-    if(keyValue) keyValue.textContent="One square = 1 "+(requestedUnit==="mm" ? "millimeter" : "centimeter");
+    if(previewLabel) previewLabel.textContent="1 cm";
+    if(keyValue){
+      keyValue.textContent=requestedUnit==="mm"
+        ? "1 mm precision inside each 1 cm cell • Blocks snap: 1 cm"
+        : "1 grid cell = 1 cm • Blocks snap: 1 cm";
+    }
     updateWorkshopPrecisionCursorText();
+    if(workshopRulerState.selectedBounds) renderWorkshopSelectedBounds();
 
     if(engineeringGrid){
       engineeringGrid.userData.workshopMeasurementUnit=requestedUnit;
@@ -29813,7 +29852,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
 
       if(engineeringGrid){
         engineeringGrid.visible=true;
-        syncEngineeringGridStyle(true);
+        syncWorkshopEngineeringGridContrast(workshopPlatformTint);
       }
       if(gridButton){
         gridButton.textContent="▦ Grid: On";
@@ -30032,7 +30071,9 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
       unit:workshopMeasurementUnit,
       snapIncrement:getWorkshopSnapIncrement(),
       centimeterWorldUnit:1,
-      gridIntervalsPerUnit:getWorkshopSnapIncrement(),
+      gridCellWorldUnits:1,
+      standardBlockSnapIncrement:1,
+      millimetersPerGridCell:10,
       description:"Workshop model units; not physical screen calibration"
     };
   };
