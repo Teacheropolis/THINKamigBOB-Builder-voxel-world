@@ -4237,7 +4237,7 @@ Nature ▶
         </span>
       </div>
       <p id="workshopMeasurementAssistantHint">Select one or more objects to see their size.</p>
-      <button id="workshopRestoreSelection" type="button" onclick="restorePreviousWorkshopSelection()" hidden disabled>Restore Selection</button>
+      <button id="workshopRestoreSelection" type="button" onclick="restorePreviousWorkshopSelection()" hidden disabled><span class="workshop-control-icon" aria-hidden="true">↶</span><span>Restore Selection</span></button>
     </section>
     <section id="engineeringToolChest" aria-label="Engineering Tool Chest" data-cabinet-state="retracted">
       <div id="engineeringToolChestCabinet">
@@ -4390,14 +4390,14 @@ Future extraction target: view controls.
 <div id="viewDiceHint">Drag • Click face • Double-click Home</div>
 <div id="workshopEngineeringViewControls" aria-label="Engineering view controls">
   <div id="workshopEngineeringViewRemoteTitle">VIEW REMOTE</div>
-  <button id="workshopViewTop" type="button" data-workshop-view="top" aria-label="Top View" aria-pressed="false" title="Top View (5)"><span>TOP</span><small>5</small></button>
-  <button id="workshopViewLeft" type="button" data-workshop-view="left" aria-label="Left View" aria-pressed="false" title="Left View (3)"><span>LEFT</span><small>3</small></button>
-  <button id="workshopViewFront" type="button" data-workshop-view="front" aria-label="Front View" aria-pressed="false" title="Front View (1)"><span>FRONT</span><small>1</small></button>
-  <button id="workshopViewRight" type="button" data-workshop-view="right" aria-label="Right View" aria-pressed="false" title="Right View (4)"><span>RIGHT</span><small>4</small></button>
-  <button id="workshopViewBack" type="button" data-workshop-view="back" aria-label="Back View" aria-pressed="false" title="Back View (2)"><span>BACK</span><small>2</small></button>
-  <button id="workshopViewBottom" type="button" data-workshop-view="bottom" aria-label="Bottom View" aria-pressed="false" title="Bottom View (6)"><span>BOTTOM</span><small>6</small></button>
-  <button id="workshopViewHome" type="button" data-workshop-view="home" aria-label="Home Perspective View" aria-pressed="false" title="Home Perspective View (0)"><span>HOME</span><small>0</small></button>
-  <button id="workshopPlatformColorButton" type="button" aria-label="Change Engineering Build Plane Color" title="Change Engineering Build Plane Color"><span>PLATFORM COLOR</span></button>
+  <button id="workshopViewTop" type="button" data-workshop-view="top" aria-label="Top View" aria-pressed="false" title="Top View (5)"><span class="workshop-control-icon" aria-hidden="true">⬆</span><span>TOP</span><small>5</small></button>
+  <button id="workshopViewLeft" type="button" data-workshop-view="left" aria-label="Left View" aria-pressed="false" title="Left View (3)"><span class="workshop-control-icon" aria-hidden="true">⬅</span><span>LEFT</span><small>3</small></button>
+  <button id="workshopViewFront" type="button" data-workshop-view="front" aria-label="Front View" aria-pressed="false" title="Front View (1)"><span class="workshop-control-icon" aria-hidden="true">◉</span><span>FRONT</span><small>1</small></button>
+  <button id="workshopViewRight" type="button" data-workshop-view="right" aria-label="Right View" aria-pressed="false" title="Right View (4)"><span class="workshop-control-icon" aria-hidden="true">➡</span><span>RIGHT</span><small>4</small></button>
+  <button id="workshopViewBack" type="button" data-workshop-view="back" aria-label="Back View" aria-pressed="false" title="Back View (2)"><span class="workshop-control-icon" aria-hidden="true">↶</span><span>BACK</span><small>2</small></button>
+  <button id="workshopViewBottom" type="button" data-workshop-view="bottom" aria-label="Bottom View" aria-pressed="false" title="Bottom View (6)"><span class="workshop-control-icon" aria-hidden="true">⬇</span><span>BOTTOM</span><small>6</small></button>
+  <button id="workshopViewHome" type="button" data-workshop-view="home" aria-label="Home Perspective View" aria-pressed="false" title="Home Perspective View (0)"><span class="workshop-control-icon" aria-hidden="true">⌂</span><span>HOME</span><small>0</small></button>
+  <button id="workshopPlatformColorButton" type="button" aria-label="Change Engineering Build Plane Color" title="Change Engineering Build Plane Color"><span class="workshop-control-icon" aria-hidden="true">🎨</span><span>PLATFORM COLOR</span></button>
 </div>
 </div>
 <div id="workshopPlatformColorDialog" role="dialog" aria-modal="true" aria-labelledby="workshopPlatformColorDialogTitle" aria-describedby="workshopPlatformColorDialogDescription" hidden>
@@ -4425,12 +4425,12 @@ This control is available only after a mission has started.
 <div id="workshopDashboard" role="region" aria-label="Engineering Control Console, Grand Master Mode" data-workshop-console-name="Engineering Control Console" data-workshop-console-mode="grand-master">
   <div id="workshopEngineeringDashboard">
     <div id="workshopQuickAccessToolbar" role="toolbar" aria-label="Workshop quick access">
-      <button id="workshopQuickCube" type="button" aria-pressed="true" onclick="chooseWorkshopBuildShape('cube')">Cube</button>
-      <button id="workshopQuickSelect" type="button" onclick="startSelectMode()">Select</button>
-      <button id="workshopQuickUndo" type="button" onclick="undoLast()" disabled>Undo</button>
-      <button id="workshopQuickDelete" type="button" onclick="deleteWorkshopSelectedStructure()">Delete</button>
-      <button id="workshopQuickScreenshot" type="button" onclick="saveImage()">Screenshot</button>
-      <button id="workshopQuickHelp" type="button" onclick="document.getElementById('helpButton').click()">Help</button>
+      <button id="workshopQuickCube" type="button" aria-pressed="true" onclick="chooseWorkshopBuildShape('cube')"><span class="workshop-control-icon" aria-hidden="true">🧊</span><span>Cube</span></button>
+      <button id="workshopQuickSelect" type="button" onclick="startSelectMode()"><span class="workshop-control-icon" aria-hidden="true">⌖</span><span>Select</span></button>
+      <button id="workshopQuickUndo" type="button" onclick="undoLast()" disabled><span class="workshop-control-icon" aria-hidden="true">↶</span><span>Undo</span></button>
+      <button id="workshopQuickDelete" type="button" onclick="deleteWorkshopSelectedStructure()"><span class="workshop-control-icon" aria-hidden="true">✕</span><span>Delete</span></button>
+      <button id="workshopQuickScreenshot" type="button" onclick="saveImage()"><span class="workshop-control-icon" aria-hidden="true">▣</span><span>Screenshot</span></button>
+      <button id="workshopQuickHelp" type="button" onclick="document.getElementById('helpButton').click()"><span class="workshop-control-icon" aria-hidden="true">?</span><span>Help</span></button>
     </div>
     <div id="workshopConsoleTabs" role="tablist" aria-label="Engineering console categories">
       <button id="workshopTabBuild" type="button" role="tab" aria-selected="true" aria-controls="workshopPanelBuild" onclick="setWorkshopConsoleTab('build')">Build</button>
@@ -4444,9 +4444,9 @@ This control is available only after a mission has started.
     <section id="workshopPanelBuild" class="workshop-dashboard-section isActive" role="tabpanel" aria-labelledby="workshopTabBuild" data-workshop-console-panel="build">
       <h2 id="workshopBuildShapesLabel">Build</h2>
       <div class="workshop-dashboard-controls workshop-shape-controls">
-        <button id="workshopShapeCube" type="button" data-workshop-shape="cube" aria-pressed="true" onclick="chooseWorkshopBuildShape('cube')">Cube</button>
-        <button id="workshopShapeSphere" type="button" data-workshop-shape="sphere" aria-pressed="false" onclick="chooseWorkshopBuildShape('sphere')">Sphere</button>
-        <button id="workshopShapeWedge" type="button" data-workshop-shape="trianglePrism" aria-pressed="false" onclick="chooseWorkshopBuildShape('trianglePrism')">Wedge</button>
+        <button id="workshopShapeCube" type="button" data-workshop-shape="cube" aria-pressed="true" onclick="chooseWorkshopBuildShape('cube')"><span class="workshop-control-icon" aria-hidden="true">🧊</span><span>Cube</span></button>
+        <button id="workshopShapeSphere" type="button" data-workshop-shape="sphere" aria-pressed="false" onclick="chooseWorkshopBuildShape('sphere')"><span class="workshop-control-icon" aria-hidden="true">●</span><span>Sphere</span></button>
+        <button id="workshopShapeWedge" type="button" data-workshop-shape="trianglePrism" aria-pressed="false" onclick="chooseWorkshopBuildShape('trianglePrism')"><span class="workshop-control-icon" aria-hidden="true">◢</span><span>Wedge</span></button>
         <button type="button" disabled>Cylinder</button>
         <button type="button" disabled>Cone</button>
         <button type="button" disabled>Pyramid</button>
@@ -4457,10 +4457,10 @@ This control is available only after a mission has started.
       <h2 id="workshopEditToolsLabel">Edit</h2>
       <span id="workshopSelectionToolsLabel" class="workshop-console-semantic-label">Selection tools</span>
       <div class="workshop-dashboard-controls">
-        <button id="workshopSelectButton" type="button" onclick="startSelectMode()">Select</button>
-        <button id="workshopDeleteButton" type="button" onclick="deleteWorkshopSelectedStructure()">Delete</button>
-        <button id="workshopUndoButton" type="button" onclick="undoLast()" disabled>Undo</button>
-        <button id="workshopRedoButton" type="button" onclick="redoLast()" disabled>Redo</button>
+        <button id="workshopSelectButton" type="button" onclick="startSelectMode()"><span class="workshop-control-icon" aria-hidden="true">⌖</span><span>Select</span></button>
+        <button id="workshopDeleteButton" type="button" onclick="deleteWorkshopSelectedStructure()"><span class="workshop-control-icon" aria-hidden="true">✕</span><span>Delete</span></button>
+        <button id="workshopUndoButton" type="button" onclick="undoLast()" disabled><span class="workshop-control-icon" aria-hidden="true">↶</span><span>Undo</span></button>
+        <button id="workshopRedoButton" type="button" onclick="redoLast()" disabled><span class="workshop-control-icon" aria-hidden="true">↷</span><span>Redo</span></button>
         <button type="button" disabled>Move</button>
         <button type="button" disabled>Rotate</button>
         <button type="button" disabled>Resize</button>
@@ -4470,8 +4470,8 @@ This control is available only after a mission has started.
     <section id="workshopPanelPrecision" class="workshop-dashboard-section workshop-engineering-controls" role="tabpanel" aria-labelledby="workshopTabPrecision" data-workshop-console-panel="precision" hidden>
       <h2 id="workshopEngineeringControlsLabel">Precision</h2>
       <div class="workshop-dashboard-controls workshop-engineering-status">
-        <button id="workshopGridButton" type="button" aria-pressed="true" onclick="toggleEngineeringGrid()">Grid: On</button>
-        <button id="workshopSnapStatus" type="button" aria-pressed="true" title="Voxel snapping is always enabled in Workshop." disabled>Snap: On</button>
+        <button id="workshopGridButton" type="button" aria-pressed="true" onclick="toggleEngineeringGrid()"><span class="workshop-control-icon" aria-hidden="true">▦</span><span>Grid: On</span></button>
+        <button id="workshopSnapStatus" type="button" aria-pressed="true" title="Voxel snapping is always enabled in Workshop." disabled><span class="workshop-control-icon" aria-hidden="true">⊞</span><span>Snap: On</span></button>
         <span id="workshopDashboardPrecision" role="status" aria-live="polite">Precision: 1 cm</span>
       </div>
       <div id="workshopMeasurementControls" aria-label="Workshop model measurement scale">
@@ -4887,6 +4887,45 @@ const groundMaterial = new THREE.MeshLambertMaterial({
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.position.y = -1;
 scene.add(ground);
+
+// Workshop-only visual frame. The existing 50 × 50 ground remains the sole
+// placement, snapping, collision, and raycast surface.
+const workshopStageFrameMaterial = new THREE.MeshStandardMaterial({
+  color:0x59636d,
+  roughness:0.34,
+  metalness:0.78,
+  emissive:0x07131b,
+  emissiveIntensity:0.22
+});
+const workshopStageFrame = new THREE.Group();
+workshopStageFrame.name = "workshopStageFrame";
+workshopStageFrame.visible = false;
+workshopStageFrame.raycast = function(){};
+
+[
+  {size:[50.0,0.22,0.46],position:[0,-0.36,-24.77]},
+  {size:[50.0,0.22,0.46],position:[0,-0.36,24.77]},
+  {size:[0.46,0.22,49.08],position:[-24.77,-0.36,0]},
+  {size:[0.46,0.22,49.08],position:[24.77,-0.36,0]}
+].forEach(function(framePart){
+  const rail = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      framePart.size[0],
+      framePart.size[1],
+      framePart.size[2]
+    ),
+    workshopStageFrameMaterial
+  );
+  rail.position.set(
+    framePart.position[0],
+    framePart.position[1],
+    framePart.position[2]
+  );
+  rail.raycast = function(){};
+  rail.userData.workshopDecoration = true;
+  workshopStageFrame.add(rail);
+});
+scene.add(workshopStageFrame);
 
 // UPDATE #101B: Persistent, non-interactive engineering build grid.
 let engineeringGrid = null;
@@ -7331,15 +7370,21 @@ function updateCamera(){
 
   camera.up.set(0,1,0);
 
+  const workshopOrbitTarget =
+    typeof window.getWorkshopCameraOrbitTarget === "function"
+      ? window.getWorkshopCameraOrbitTarget()
+      : null;
+  const cameraTarget = workshopOrbitTarget || {x:0,y:0,z:0};
+
   camera.position.x =
-    Math.sin(cameraAngle) * cameraDistance;
+    cameraTarget.x + Math.sin(cameraAngle) * cameraDistance;
 
   camera.position.z =
-    Math.cos(cameraAngle) * cameraDistance;
+    cameraTarget.z + Math.cos(cameraAngle) * cameraDistance;
 
   camera.position.y = cameraHeight;
 
-  camera.lookAt(0,0,0);
+  camera.lookAt(cameraTarget.x,cameraTarget.y,cameraTarget.z);
 }
 
 document.addEventListener('mousedown', (event)=>{
@@ -7449,8 +7494,10 @@ if(
     cameraDistance = 6;
   }
 
-  if(cameraDistance > 50){
-    cameraDistance = 50;
+  const maximumCameraDistance =
+    document.body.classList.contains("workshopMode") ? 80 : 50;
+  if(cameraDistance > maximumCameraDistance){
+    cameraDistance = maximumCameraDistance;
   }
 
   updateCamera();
@@ -7943,7 +7990,15 @@ viewCubeRenderer.render(
   if(!(document.body.classList.contains("workshopMode") &&
     typeof window.applyWorkshopEngineeringView === "function" &&
     window.applyWorkshopEngineeringView())){
-    camera.lookAt(0, 0, 0);
+    const workshopOrbitTarget =
+      typeof window.getWorkshopCameraOrbitTarget === "function"
+        ? window.getWorkshopCameraOrbitTarget()
+        : null;
+    if(workshopOrbitTarget){
+      camera.lookAt(workshopOrbitTarget);
+    }else{
+      camera.lookAt(0, 0, 0);
+    }
   }
   renderer.render(scene, camera);
 }
@@ -28940,12 +28995,309 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     font-size:5px;
   }
 }
+
+/* Workshop UX refresh: Builder-inspired visual hierarchy with larger,
+   touch-friendly controls. Icons are decorative; existing labels, IDs,
+   handlers, state attributes, and control order remain authoritative. */
+.workshop-control-icon{
+  display:inline-grid;
+  flex:0 0 auto;
+  place-items:center;
+  min-width:1em;
+  color:#8ff6ff;
+  font-family:Arial,sans-serif;
+  font-size:1.25em;
+  line-height:1;
+  text-shadow:0 0 5px rgba(54,216,255,.42);
+  pointer-events:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopRoot{
+  grid-template-rows:minmax(0,1fr) 126px;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopDashboard{
+  height:126px;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
+  grid-template-columns:minmax(390px,.9fr) minmax(0,1.1fr);
+  grid-template-rows:36px minmax(0,1fr);
+  gap:5px 9px;
+  padding:6px 9px;
+}
+
+#workshopQuickAccessToolbar{
+  gap:5px;
+}
+
+#workshopConsoleTabs{
+  gap:4px;
+}
+
+#workshopQuickAccessToolbar button,
+#workshopConsoleTabs button{
+  height:36px;
+  min-height:36px;
+  padding:4px 7px;
+  border-radius:8px;
+  font-size:9px;
+  line-height:1.05;
+  transition:
+    transform 140ms ease,
+    filter 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+#workshopQuickAccessToolbar button{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+}
+
+#workshopQuickScreenshot{
+  gap:3px !important;
+  padding-right:4px !important;
+  padding-left:4px !important;
+  font-size:8px !important;
+}
+
+#workshopQuickAccessToolbar button:hover:not(:disabled),
+#workshopConsoleTabs button:hover:not(:disabled){
+  transform:translateY(-1px);
+}
+
+#workshopQuickAccessToolbar button:active:not(:disabled),
+#workshopConsoleTabs button:active:not(:disabled){
+  transform:translateY(1px);
+  filter:brightness(.9);
+}
+
+#workshopQuickAccessToolbar button:focus-visible,
+#workshopConsoleTabs button:focus-visible,
+.workshop-dashboard-controls button:focus-visible{
+  outline:3px solid #36d8ff;
+  outline-offset:2px;
+}
+
+.workshop-dashboard-section{
+  padding:5px;
+  border-color:rgba(103,190,220,.38);
+  background:rgba(6,17,28,.64);
+}
+
+.workshop-dashboard-controls{
+  gap:6px;
+}
+
+.workshop-dashboard-controls button{
+  display:flex;
+  min-height:34px;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  padding:5px 8px;
+  border-radius:8px;
+  font-size:10px;
+  line-height:1.05;
+  transition:
+    transform 140ms ease,
+    filter 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.workshop-dashboard-controls button:hover:not(:disabled){
+  transform:translateY(-1px);
+}
+
+.workshop-dashboard-controls button:active:not(:disabled){
+  transform:translateY(1px);
+  filter:brightness(.9);
+}
+
+.workshop-dashboard-controls button:disabled{
+  color:rgba(221,233,239,.64);
+  opacity:.72;
+}
+
+#workshopDashboardPrecision{
+  min-height:34px;
+  padding:5px 7px;
+  font-size:9px;
+}
+
+.workshop-precision-future-tools button{
+  min-height:34px;
+  font-size:9px;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls{
+  width:142px;
+  gap:6px;
+  padding:8px;
+}
+
+#workshopEngineeringViewRemoteTitle{
+  padding:3px 4px 6px;
+  font-size:11px;
+}
+
+#workshopEngineeringViewControls button{
+  min-height:42px;
+  padding:4px 3px;
+  border-radius:9px;
+  font-size:10px;
+  font-family:"Lexend",Arial,sans-serif;
+}
+
+#workshopEngineeringViewControls button .workshop-control-icon{
+  margin-bottom:2px;
+  font-size:11px;
+}
+
+#workshopEngineeringViewControls button small{
+  margin-top:3px;
+  color:#c8e6ef;
+  font-size:9px;
+}
+
+#workshopEngineeringViewControls #workshopPlatformColorButton{
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-size:10px;
+}
+
+.workshop-ruler-label{
+  font-size:8px;
+  font-weight:800;
+}
+
+.workshop-ruler-measurement-label{
+  padding:2px 4px;
+  font-size:8px;
+}
+
+.workshop-measurement-assistant-header small,
+#workshopMeasurementAssistantHint{
+  color:#eef9fc;
+  font-size:10px;
+}
+
+.workshop-measurement-card small{
+  color:#c5e3ec;
+  font-size:9px;
+}
+
+.workshop-measurement-assistant-unit{
+  min-width:32px;
+  font-size:10px;
+}
+
+#workshopRestoreSelection{
+  display:flex;
+  min-height:38px;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  padding:8px 14px;
+  font-size:11px;
+}
+
+#workshopRestoreSelection[hidden]{
+  display:none;
+}
+
+#workspaceModeSwitch{
+  width:154px;
+  height:36px;
+  min-height:36px;
+  font-size:11px !important;
+}
+
+body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
+  bottom:138px;
+}
+
+@media(max-width:900px){
+  body.workshopMode:not(.starterScreenActive) #workshopRoot{
+    grid-template-rows:minmax(0,1fr) 126px;
+  }
+
+  body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
+    grid-template-columns:minmax(360px,.9fr) minmax(0,1.1fr);
+    grid-template-rows:36px minmax(0,1fr);
+    gap:4px;
+    padding:5px;
+  }
+
+  .workshop-dashboard-controls button{
+    min-height:33px;
+    padding:4px 6px;
+    font-size:9px;
+  }
+
+  .workshop-precision-future-tools button{
+    min-height:33px;
+    font-size:8px;
+  }
+}
+
+@media(max-width:650px){
+  body.workshopMode:not(.starterScreenActive) #workshopRoot{
+    grid-template-rows:minmax(0,1fr) 126px;
+  }
+
+  body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
+    grid-template-rows:34px minmax(0,1fr);
+  }
+
+  #workshopQuickAccessToolbar button,
+  #workshopConsoleTabs button{
+    height:34px;
+    min-height:34px;
+    padding:3px;
+    font-size:8px;
+  }
+
+  .workshop-dashboard-controls button,
+  .workshop-console-placeholder-section .workshop-dashboard-controls button{
+    min-height:32px;
+    padding:3px 4px;
+    font-size:8px;
+  }
+
+  #workshopDashboardPrecision{
+    min-height:32px;
+    font-size:8px;
+  }
+
+  body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
+    bottom:138px;
+  }
+}
 </style>
 
 <script id="workshopModeShellScript">
 (function(){
   var currentWorkspaceMode="mission";
   var workshopBuildAreaSnapshot=null;
+  var workshopRoomBackgroundTexture=new THREE.TextureLoader().load(
+    "assets/images/workshop/workshop-room-background.png",
+    function(texture){
+      texture.wrapS=THREE.ClampToEdgeWrapping;
+      texture.wrapT=THREE.ClampToEdgeWrapping;
+      updateWorkshopRoomBackgroundCover();
+      if(currentWorkspaceMode==="workshop"){
+        scene.background=texture;
+      }
+    }
+  );
   var builderCameraSnapshot=null;
   var activeWorkshopEngineeringView=null;
   var activeWorkshopEngineeringTarget=null;
@@ -28970,6 +29322,31 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
       "favorites":"closed"
     }
   };
+
+  function updateWorkshopRoomBackgroundCover(){
+    var texture=workshopRoomBackgroundTexture;
+    var image=texture && texture.image;
+    if(!image || !image.width || !image.height) return;
+
+    var imageAspect=image.width/image.height;
+    var viewportAspect=window.innerWidth/window.innerHeight;
+    var repeatX=1;
+    var repeatY=1;
+
+    if(viewportAspect<imageAspect){
+      repeatX=viewportAspect/imageAspect;
+    }else{
+      repeatY=imageAspect/viewportAspect;
+    }
+
+    texture.repeat.set(repeatX,repeatY);
+    texture.offset.set((1-repeatX)/2,(1-repeatY)/2);
+    texture.needsUpdate=true;
+  }
+
+  window.addEventListener("resize",function(){
+    updateWorkshopRoomBackgroundCover();
+  });
   var engineeringToolChestIndicators={
     closed:"assets/images/workshop/production/engineering-tool-chest/indicator-red.png",
     open:"assets/images/workshop/production/engineering-tool-chest/indicator-green.png",
@@ -30252,6 +30629,53 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     syncWorkshopEngineeringViewButtons();
   }
 
+  function getWorkshopHomeCameraConfig(){
+    var narrowAspect=4/3;
+    var wideAspect=16/9;
+    var viewportAspect=window.innerWidth/window.innerHeight;
+    var blend=Math.max(
+      0,
+      Math.min(1,(viewportAspect-narrowAspect)/(wideAspect-narrowAspect))
+    );
+
+    function interpolate(narrowValue,wideValue){
+      return narrowValue+(wideValue-narrowValue)*blend;
+    }
+
+    return {
+      targetX:interpolate(-11,-4.3),
+      targetY:interpolate(5,2.77),
+      distance:interpolate(45,45),
+      height:interpolate(38,25)
+    };
+  }
+
+  function applyResponsiveWorkshopHomeView(){
+    var config=getWorkshopHomeCameraConfig();
+    activeWorkshopEngineeringView="home";
+    activeWorkshopEngineeringTarget=new THREE.Vector3(
+      config.targetX,
+      config.targetY,
+      0
+    );
+    cameraAngle=0;
+    cameraDistance=config.distance;
+    cameraHeight=config.height;
+    camera.up.set(0,1,0);
+    updateCamera();
+    syncWorkshopEngineeringViewButtons();
+    return true;
+  }
+
+  function getWorkshopCameraOrbitTarget(){
+    if(!document.body.classList.contains("workshopMode") ||
+      activeWorkshopEngineeringView!=="home" ||
+      !activeWorkshopEngineeringTarget){
+      return null;
+    }
+    return activeWorkshopEngineeringTarget;
+  }
+
   function getWorkshopEngineeringModelCenter(){
     if(!blocks.length) return null;
     var modelBounds=new THREE.Box3();
@@ -30296,12 +30720,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     if(!document.body.classList.contains("workshopMode")) return false;
 
     if(view==="home"){
-      clearWorkshopEngineeringView();
-      camera.up.set(0,1,0);
-      setView("home");
-      activeWorkshopEngineeringView="home";
-      syncWorkshopEngineeringViewButtons();
-      return true;
+      return applyResponsiveWorkshopHomeView();
     }
 
     if(!workshopEngineeringViewDirections[view]) return false;
@@ -30413,13 +30832,15 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
         };
       }
 
-      scene.background=new THREE.Color(0xffffff);
+      updateWorkshopRoomBackgroundCover();
+      scene.background=workshopRoomBackgroundTexture;
       ground.material.map=null;
       ground.material.color.setHex(0x5f8fa8);
       ground.material.transparent=true;
       ground.material.opacity=0.30;
       ground.material.depthWrite=false;
       ground.material.needsUpdate=true;
+      workshopStageFrame.visible=true;
 
       atmosphereObjects.forEach(function(object){
         object.visible=false;
@@ -30447,6 +30868,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     ground.material.opacity=workshopBuildAreaSnapshot.groundOpacity;
     ground.material.depthWrite=workshopBuildAreaSnapshot.groundDepthWrite;
     ground.material.needsUpdate=true;
+    workshopStageFrame.visible=false;
 
     workshopBuildAreaSnapshot.atmosphereVisibility.forEach(function(state){
       state.object.visible=state.visible;
@@ -30492,6 +30914,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     if(requestedMode!=="workshop") restoreBuilderCameraState();
     if(requestedMode!=="workshop") hideWorkshopPrecisionCursor();
     applyWorkshopBuildAreaVisuals(requestedMode==="workshop");
+    if(requestedMode==="workshop") applyResponsiveWorkshopHomeView();
     placeUtilityRail(requestedMode);
     updateModeControls();
 
@@ -30585,8 +31008,15 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     });
     window.addEventListener("blur",hideWorkshopPrecisionCursor);
     window.addEventListener("resize",function(){
-      if(!workshopRulerState.selectedBounds) return;
-      window.requestAnimationFrame(renderWorkshopSelectedBounds);
+      window.requestAnimationFrame(function(){
+        if(document.body.classList.contains("workshopMode") &&
+          activeWorkshopEngineeringView==="home"){
+          applyResponsiveWorkshopHomeView();
+        }
+        if(workshopRulerState.selectedBounds){
+          renderWorkshopSelectedBounds();
+        }
+      });
     });
 
     if(switcher && !switcher.hasAttribute("onclick")){
@@ -30614,6 +31044,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
   window.setWorkshopEngineeringView=setWorkshopEngineeringView;
   window.clearWorkshopEngineeringView=clearWorkshopEngineeringView;
   window.applyWorkshopEngineeringView=applyWorkshopEngineeringView;
+  window.getWorkshopCameraOrbitTarget=getWorkshopCameraOrbitTarget;
   window.getWorkshopPlatformColorState=function(){
     return {
       active:platformColorModeActive,
