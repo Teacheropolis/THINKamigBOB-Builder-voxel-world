@@ -4211,6 +4211,34 @@ Nature ▶
     </div>
   </section>
   <aside id="workshopRightPanelShell" class="workshop-layout-region" data-workshop-region="right">
+    <section id="workshopMeasurementAssistant" role="region" data-measurement-state="empty" aria-label="Measurement Assistant. Select one or more objects to see their measurements.">
+      <header class="workshop-measurement-assistant-header">
+        <span class="workshop-measurement-assistant-icon" aria-hidden="true">📐</span>
+        <span>
+          <strong>Measurement Assistant</strong>
+          <small id="workshopMeasurementAssistantSelection" aria-live="polite" aria-atomic="true">Ready to measure</small>
+        </span>
+        <span id="workshopMeasurementAssistantUnit" class="workshop-measurement-assistant-unit">CM</span>
+      </header>
+      <div class="workshop-measurement-assistant-values" aria-hidden="true">
+        <span class="workshop-measurement-card workshop-measurement-width">
+          <span class="workshop-measurement-direction">↔</span>
+          <span>
+            <small>WIDTH</small>
+            <strong id="workshopMeasurementAssistantWidth">—</strong>
+          </span>
+        </span>
+        <span class="workshop-measurement-card workshop-measurement-height">
+          <span class="workshop-measurement-direction">↕</span>
+          <span>
+            <small>HEIGHT</small>
+            <strong id="workshopMeasurementAssistantHeight">—</strong>
+          </span>
+        </span>
+      </div>
+      <p id="workshopMeasurementAssistantHint">Select one or more objects to see their size.</p>
+      <button id="workshopRestoreSelection" type="button" onclick="restorePreviousWorkshopSelection()" hidden disabled>Restore Selection</button>
+    </section>
     <section id="engineeringToolChest" aria-label="Engineering Tool Chest" data-cabinet-state="retracted">
       <div id="engineeringToolChestCabinet">
         <img class="engineering-tool-chest-frame" src="assets/images/workshop/production/engineering-tool-chest/engineering-tool-chest-frame.png" alt="" aria-hidden="true" />
@@ -5039,6 +5067,189 @@ const spinningTurbines = [];
 let selectedBlocks = [];
 let selectMode = false;
 let moveSelectedMode = false;
+const WORKSHOP_CONTACT_TOLERANCE = 0.0001;
+const workshopContactGraph = new Map();
+let previousWorkshopSelection = [];
+
+function activeWorkshopBlocks(objects){
+  return objects.filter(function(block,index,list){
+    return block && block.parent && blocks.includes(block) &&
+      list.indexOf(block) === index;
+  });
+}
+
+function updateWorkshopRestoreSelectionAvailability(){
+  previousWorkshopSelection = activeWorkshopBlocks(previousWorkshopSelection);
+  const restoreButton = document.getElementById("workshopRestoreSelection");
+  if(restoreButton){
+    const canRestore = previousWorkshopSelection.length > 0;
+    restoreButton.hidden = !canRestore;
+    restoreButton.disabled = !canRestore;
+  }
+}
+
+function clearWorkshopSelectionRestore(){
+  previousWorkshopSelection = [];
+  updateWorkshopRestoreSelectionAvailability();
+}
+
+function getWorkshopContactSet(block){
+  if(!workshopContactGraph.has(block)){
+    workshopContactGraph.set(block,new Set());
+  }
+  return workshopContactGraph.get(block);
+}
+
+function connectWorkshopBlocks(firstBlock,secondBlock){
+  if(!firstBlock || !secondBlock || firstBlock === secondBlock) return;
+  getWorkshopContactSet(firstBlock).add(secondBlock);
+  getWorkshopContactSet(secondBlock).add(firstBlock);
+}
+
+function getWorkshopConnectedComponent(startBlock){
+  if(!startBlock || !startBlock.parent || !blocks.includes(startBlock)) return [];
+
+  const connected = [];
+  const pending = [startBlock];
+  const visited = new Set();
+
+  while(pending.length > 0){
+    const block = pending.shift();
+    if(visited.has(block)) continue;
+    visited.add(block);
+    if(!block || !block.parent || !blocks.includes(block)) continue;
+    connected.push(block);
+    const contacts = workshopContactGraph.get(block);
+    if(contacts){
+      contacts.forEach(function(contact){
+        if(!visited.has(contact)) pending.push(contact);
+      });
+    }
+  }
+
+  return connected;
+}
+
+function setWorkshopBlockSelectionHighlight(block, selected){
+  if(!block || !block.material || !block.material.emissive) return;
+
+  if(selected){
+    if(block.userData.workshopSelectionEmissive === undefined){
+      block.userData.workshopSelectionEmissive = block.material.emissive.getHex();
+    }
+    block.material.emissive.setHex(0x5511ff);
+    return;
+  }
+
+  block.material.emissive.setHex(
+    block.userData.workshopSelectionEmissive === undefined
+      ? 0x000000
+      : block.userData.workshopSelectionEmissive
+  );
+  delete block.userData.workshopSelectionEmissive;
+}
+
+function syncWorkshopSelectionMeasurements(){
+  if(window.setWorkshopRulerSelectedObjects){
+    window.setWorkshopRulerSelectedObjects(selectedBlocks);
+  }
+  updateWorkshopRestoreSelectionAvailability();
+}
+
+function sanitizeWorkshopSelectedBlocks(){
+  const activeSelection = [];
+
+  selectedBlocks.forEach(block => {
+    if(block && block.parent && blocks.includes(block)){
+      if(!activeSelection.includes(block)) activeSelection.push(block);
+      return;
+    }
+    setWorkshopBlockSelectionHighlight(block, false);
+  });
+
+  selectedBlocks = activeSelection;
+  syncWorkshopSelectionMeasurements();
+}
+
+function clearWorkshopSelectedBlocks(options = {}){
+  if(options.remember === true && selectedBlocks.length > 0){
+    previousWorkshopSelection = activeWorkshopBlocks(selectedBlocks);
+  }else if(options.preserveRestore !== true){
+    previousWorkshopSelection = [];
+  }
+  selectedBlocks.forEach(block => {
+    setWorkshopBlockSelectionHighlight(block, false);
+  });
+  selectedBlocks = [];
+  syncWorkshopSelectionMeasurements();
+}
+
+function removeWorkshopSelectedBlock(block){
+  const selectionIndex = selectedBlocks.indexOf(block);
+  if(selectionIndex === -1) return;
+
+  setWorkshopBlockSelectionHighlight(block, false);
+  selectedBlocks.splice(selectionIndex, 1);
+  syncWorkshopSelectionMeasurements();
+}
+
+function toggleWorkshopSelectedBlock(block){
+  sanitizeWorkshopSelectedBlocks();
+  clearWorkshopSelectionRestore();
+  const connectedBlocks = getWorkshopConnectedComponent(block);
+  const component = connectedBlocks.length > 0 ? connectedBlocks : [block];
+  const removeComponent = component.some(function(item){
+    return selectedBlocks.includes(item);
+  });
+
+  if(!removeComponent){
+    component.forEach(function(item){
+      if(!selectedBlocks.includes(item)) selectedBlocks.push(item);
+      setWorkshopBlockSelectionHighlight(item, true);
+    });
+  }else{
+    component.forEach(function(item){
+      const selectionIndex = selectedBlocks.indexOf(item);
+      if(selectionIndex !== -1) selectedBlocks.splice(selectionIndex, 1);
+      setWorkshopBlockSelectionHighlight(item, false);
+    });
+  }
+
+  syncWorkshopSelectionMeasurements();
+}
+
+function selectWorkshopConnectedBuild(block){
+  selectWorkshopConnectedBuilds([block]);
+}
+
+function selectWorkshopConnectedBuilds(startBlocks){
+  clearWorkshopSelectedBlocks();
+  startBlocks.forEach(function(block){
+    const component = getWorkshopConnectedComponent(block);
+    (component.length > 0 ? component : [block]).forEach(function(item){
+      if(!item || !item.parent || !blocks.includes(item) ||
+         selectedBlocks.includes(item)) return;
+      selectedBlocks.push(item);
+      setWorkshopBlockSelectionHighlight(item,true);
+    });
+  });
+  syncWorkshopSelectionMeasurements();
+}
+
+function restorePreviousWorkshopSelection(){
+  const restorableSelection = activeWorkshopBlocks(previousWorkshopSelection);
+  previousWorkshopSelection = [];
+  clearWorkshopSelectedBlocks({preserveRestore:true});
+  restorableSelection.forEach(function(block){
+    selectedBlocks.push(block);
+    setWorkshopBlockSelectionHighlight(block,true);
+  });
+  syncWorkshopSelectionMeasurements();
+  document.getElementById("toolMessage").innerHTML =
+    restorableSelection.length > 0
+      ? "✅ Selection restored."
+      : "⚠️ That selection is no longer available.";
+}
   
 const stars = [];
 let moon = null;
@@ -7438,11 +7649,24 @@ function calculateWorkshopPlacementCandidate(intersection, newBlock){
     return workshopBoundsOverlap(candidateBounds, existingBounds);
   });
 
+  let contactedBlock = null;
+  if(hit !== ground && !collidingBlock && contactAxis){
+    const hitBounds = new THREE.Box3().setFromObject(hit);
+    const candidateMinimum = candidateBounds.min[contactAxis];
+    const candidateMaximum = candidateBounds.max[contactAxis];
+    const positiveGap = Math.abs(candidateMinimum-hitBounds.max[contactAxis]);
+    const negativeGap = Math.abs(candidateMaximum-hitBounds.min[contactAxis]);
+    if(Math.min(positiveGap,negativeGap) <= WORKSHOP_CONTACT_TOLERANCE){
+      contactedBlock = hit;
+    }
+  }
+
   return {
     position,
     isValid:!collidingBlock,
     snapIncrement:increment,
-    collidingBlock:collidingBlock || null
+    collidingBlock:collidingBlock || null,
+    contactedBlock
   };
 }
 
@@ -7457,7 +7681,8 @@ function clickedUI(event){
     event.target.closest("#blockColor") ||
     event.target.closest("#missionCard") ||
     event.target.closest("#stemCoach") ||
-    event.target.closest("#viewCubeBox")
+    event.target.closest("#viewCubeBox") ||
+    event.target.closest("#workshopMeasurementAssistant")
   );
 
 }
@@ -7468,9 +7693,10 @@ function clickedUI(event){
   "toolbox",
   "buildBar",
   "studentProjectBar",
-  "missionCard",
-  "stemCoach",
-  "viewCubeBox"
+    "missionCard",
+    "stemCoach",
+    "viewCubeBox",
+    "workshopMeasurementAssistant"
 ].forEach(id => {
 
   const element = document.getElementById(id);
@@ -7511,59 +7737,83 @@ if(intersects.length > 0){
 
   const hit = intersects[0].object;
 
-  if(selectMode && hit !== ground){
-    selectConnectedBlocks(hit);
+  if(selectMode){
+    if(hit !== ground){
+      selectConnectedBlocks(hit);
+      return;
+    }
+
+    if(document.body.classList.contains("workshopMode")){
+      clearWorkshopSelectedBlocks({remember:true});
+      selectMode = false;
+      document.getElementById("toolMessage").innerHTML =
+        "✅ Selection cleared.";
+      return;
+    }
+  }
+
+  if(moveSelectedMode && hit === ground){
+    sanitizeWorkshopSelectedBlocks();
+    if(selectedBlocks.length === 0){
+      moveSelectedMode = false;
+      document.getElementById("toolMessage").innerHTML =
+        "⚠️ Select one or more objects first.";
+      return;
+    }
+
+    const targetX = snapGroundBuildCoordinate(intersects[0].point.x);
+    const targetZ = snapGroundBuildCoordinate(intersects[0].point.z);
+
+    let minX = Math.min(...selectedBlocks.map(block =>
+      workshopPrecisionSnappingActive()
+        ? window.snapWorkshopValue(block.position.x)
+        : Math.round(block.position.x)
+    ));
+    let minZ = Math.min(...selectedBlocks.map(block =>
+      workshopPrecisionSnappingActive()
+        ? window.snapWorkshopValue(block.position.z)
+        : Math.round(block.position.z)
+    ));
+
+    const changeX = targetX - minX;
+    const changeZ = targetZ - minZ;
+
+    selectedBlocks.forEach(block => {
+      if(workshopPrecisionSnappingActive()){
+        block.position.x = window.snapWorkshopValue(block.position.x + changeX);
+        block.position.z = window.snapWorkshopValue(block.position.z + changeZ);
+      }else{
+        block.position.x += changeX;
+        block.position.z += changeZ;
+      }
+    });
+
+    if(document.body.classList.contains("workshopMode")){
+      clearWorkshopSelectedBlocks();
+    }else{
+      selectedBlocks.forEach(block => {
+        block.material.emissive = new THREE.Color(0x000000);
+      });
+      selectedBlocks = [];
+      if(window.clearWorkshopRulerSelectionHighlight){
+        window.clearWorkshopRulerSelectionHighlight();
+      }
+    }
+    moveSelectedMode = false;
+
+    document.getElementById("toolMessage").innerHTML =
+      "✅ Structure moved!";
+
+    checkBadge();
     return;
   }
-
-if(moveSelectedMode && hit === ground){
-
-  const targetX = snapGroundBuildCoordinate(intersects[0].point.x);
-  const targetZ = snapGroundBuildCoordinate(intersects[0].point.z);
-
-  let minX = Math.min(...selectedBlocks.map(block =>
-    workshopPrecisionSnappingActive()
-      ? window.snapWorkshopValue(block.position.x)
-      : Math.round(block.position.x)
-  ));
-  let minZ = Math.min(...selectedBlocks.map(block =>
-    workshopPrecisionSnappingActive()
-      ? window.snapWorkshopValue(block.position.z)
-      : Math.round(block.position.z)
-  ));
-
-  const changeX = targetX - minX;
-  const changeZ = targetZ - minZ;
-
-  selectedBlocks.forEach(block => {
-    if(workshopPrecisionSnappingActive()){
-      block.position.x = window.snapWorkshopValue(block.position.x + changeX);
-      block.position.z = window.snapWorkshopValue(block.position.z + changeZ);
-    }else{
-      block.position.x += changeX;
-      block.position.z += changeZ;
-    }
-    block.material.emissive = new THREE.Color(0x000000);
-  });
-
-  selectedBlocks = [];
-  moveSelectedMode = false;
-  if(window.clearWorkshopRulerSelectionHighlight){
-    window.clearWorkshopRulerSelectionHighlight();
-  }
-
-  document.getElementById("toolMessage").innerHTML =
-    "✅ Structure moved!";
-
-  checkBadge();
-  return;
-}
   
     const newBlock = createStudentShape(
       selectedBlockShape,
       Number(document.getElementById("blockColor").value)
     );
 
+    let workshopPlacementContact = null;
     if(workshopPrecisionSnappingActive()){
       const candidate = calculateWorkshopPlacementCandidate(intersects[0], newBlock);
       if(!candidate.isValid){
@@ -7574,6 +7824,7 @@ if(moveSelectedMode && hit === ground){
         return;
       }
       newBlock.position.copy(candidate.position);
+      workshopPlacementContact = candidate.contactedBlock;
     }else if(hit === ground){
 
       newBlock.position.set(
@@ -7593,6 +7844,12 @@ if(moveSelectedMode && hit === ground){
 
     scene.add(newBlock);
     blocks.push(newBlock);
+    if(document.body.classList.contains("workshopMode")){
+      if(workshopPlacementContact){
+        connectWorkshopBlocks(newBlock,workshopPlacementContact);
+      }
+      selectWorkshopConnectedBuild(newBlock);
+    }
     redoBlocks.length = 0;
     checkBadge();
     updateUndoRedoButtons();
@@ -7618,10 +7875,12 @@ document.addEventListener('contextmenu', (event)=>{
 
     const blockToRemove = intersects[0].object;
 
-    scene.remove(blockToRemove);
-    if(window.clearWorkshopRulerSelectionForObject){
+    if(document.body.classList.contains("workshopMode")){
+      removeWorkshopSelectedBlock(blockToRemove);
+    }else if(window.clearWorkshopRulerSelectionForObject){
       window.clearWorkshopRulerSelectionForObject(blockToRemove);
     }
+    scene.remove(blockToRemove);
 
     const index = blocks.indexOf(blockToRemove);
 
@@ -7809,6 +8068,7 @@ function undoLast(){
       scene.add(block);
     });
     workshopDeletedSelectionRedo.push(restoredSelection);
+    selectWorkshopConnectedBuilds(restoredSelection);
     document.getElementById("toolMessage").innerHTML =
       "↩️ Deleted selection restored.";
     checkBadge();
@@ -7825,8 +8085,12 @@ function undoLast(){
 
   const lastBlock = blocks.pop();
 
+  if(document.body.classList.contains("workshopMode")){
+    removeWorkshopSelectedBlock(lastBlock);
+  }
   scene.remove(lastBlock);
-  if(window.clearWorkshopRulerSelectionForObject){
+  if(!document.body.classList.contains("workshopMode") &&
+     window.clearWorkshopRulerSelectionForObject){
     window.clearWorkshopRulerSelectionForObject(lastBlock);
   }
   redoBlocks.push(lastBlock);
@@ -7849,9 +8113,7 @@ function redoLast(){
       if(blockIndex > -1) blocks.splice(blockIndex, 1);
     });
     workshopDeletedSelectionUndo.push(deletedSelection);
-    if(window.clearWorkshopRulerSelectionHighlight){
-      window.clearWorkshopRulerSelectionHighlight();
-    }
+    sanitizeWorkshopSelectedBlocks();
     document.getElementById("toolMessage").innerHTML =
       "↪️ Selection deleted again.";
     checkBadge();
@@ -7870,6 +8132,9 @@ function redoLast(){
 
   scene.add(blockToRestore);
   blocks.push(blockToRestore);
+  if(document.body.classList.contains("workshopMode")){
+    selectWorkshopConnectedBuild(blockToRestore);
+  }
 
   document.getElementById("toolMessage").innerHTML =
     "↪️ Last block restored.";
@@ -7925,6 +8190,8 @@ if (document.body) document.body.classList.remove("builderMissionChosen");
 blocks.length = 0;
 redoBlocks.length = 0;
 selectedBlocks = [];
+workshopContactGraph.clear();
+clearWorkshopSelectionRestore();
 selectMode = false;
 moveSelectedMode = false;
 if(window.clearWorkshopRulerSelectionHighlight){
@@ -7947,8 +8214,12 @@ function startSelectMode(){
 
   selectMode = true;
   moveSelectedMode = false;
-  if(window.clearWorkshopRulerSelectionHighlight){
-    window.clearWorkshopRulerSelectionHighlight();
+
+  if(document.body.classList.contains("workshopMode")){
+    sanitizeWorkshopSelectedBlocks();
+    document.getElementById("toolMessage").innerHTML =
+      "🖱️ Click objects to add or remove them. Click the ground to clear.";
+    return;
   }
 
   // Remove highlight from previously selected blocks
@@ -7964,13 +8235,16 @@ document.getElementById("toolMessage").innerHTML =
 
 function selectConnectedBlocks(startBlock){
 
-  selectedBlocks = [];
-
   if(document.body.classList.contains("workshopMode")){
-    // Workshop engineering measurements and edits target exactly one object.
-    selectedBlocks.push(startBlock);
-    startBlock.material.emissive = new THREE.Color(0x5511ff);
+    toggleWorkshopSelectedBlock(startBlock);
+    document.getElementById("toolMessage").innerHTML =
+      selectedBlocks.length === 0
+        ? "Selection empty. Click another object or the ground to finish."
+        : "✅ "+selectedBlocks.length+" object"+
+          (selectedBlocks.length === 1 ? "" : "s")+" selected.";
+    return;
   }else{
+    selectedBlocks = [];
     const startX = Math.round(startBlock.position.x);
     const startY = Math.round(startBlock.position.y);
     const startZ = Math.round(startBlock.position.z);
@@ -7990,16 +8264,15 @@ function selectConnectedBlocks(startBlock){
   }
 
   selectMode = false;
-  if(document.body.classList.contains("workshopMode") &&
-     window.setWorkshopRulerSelectedObject){
-    window.setWorkshopRulerSelectedObject(startBlock);
-  }
-
 document.getElementById("toolMessage").innerHTML =
   "✅ Structure selected! Now click Move Selected.";
 }
 
 function startMoveSelected(){
+
+ if(document.body.classList.contains("workshopMode")){
+   sanitizeWorkshopSelectedBlocks();
+ }
 
  if(selectedBlocks.length === 0){
 
@@ -8867,6 +9140,10 @@ function addLysosome(){
 
 function deleteSelectedStructure(){
 
+  if(document.body.classList.contains("workshopMode")){
+    sanitizeWorkshopSelectedBlocks();
+  }
+
   if(selectedBlocks.length === 0){
 
     document.getElementById("toolMessage").innerHTML =
@@ -8886,9 +9163,13 @@ function deleteSelectedStructure(){
     }
   });
 
-  selectedBlocks = [];
-  if(window.clearWorkshopRulerSelectionHighlight){
-    window.clearWorkshopRulerSelectionHighlight();
+  if(document.body.classList.contains("workshopMode")){
+    clearWorkshopSelectedBlocks();
+  }else{
+    selectedBlocks = [];
+    if(window.clearWorkshopRulerSelectionHighlight){
+      window.clearWorkshopRulerSelectionHighlight();
+    }
   }
 
   document.getElementById("toolMessage").innerHTML =
@@ -8898,6 +9179,7 @@ function deleteSelectedStructure(){
 }
 
 function deleteWorkshopSelectedStructure(){
+  sanitizeWorkshopSelectedBlocks();
   const deletedSelection = selectedBlocks.slice();
   deleteSelectedStructure();
   if(deletedSelection.length === 0) return;
@@ -26889,6 +27171,223 @@ body.workshopMode:not(.starterScreenActive) #workshopViewportContainer{
   overflow:visible;
 }
 
+#workshopMeasurementAssistant{
+  display:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant{
+  position:absolute;
+  top:16px;
+  right:12px;
+  left:12px;
+  z-index:8;
+  display:grid;
+  gap:9px;
+  padding:11px;
+  box-sizing:border-box;
+  border:1px solid rgba(202,164,53,.82);
+  border-radius:14px;
+  color:#eefcff;
+  background:
+    linear-gradient(135deg,rgba(54,216,255,.12),transparent 42%),
+    linear-gradient(180deg,rgba(36,65,80,.97),rgba(8,25,36,.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 8px 22px rgba(0,0,0,.28),
+    0 0 12px rgba(54,216,255,.16);
+  font-family:"Lexend",Arial,sans-serif;
+  pointer-events:none;
+}
+
+.workshop-measurement-assistant-header{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:7px;
+  align-items:center;
+  min-width:0;
+}
+
+.workshop-measurement-assistant-header > span:nth-child(2){
+  display:grid;
+  gap:2px;
+  min-width:0;
+}
+
+.workshop-measurement-assistant-icon{
+  display:grid;
+  place-items:center;
+  width:28px;
+  height:28px;
+  border:1px solid rgba(143,246,255,.58);
+  border-radius:8px;
+  background:rgba(4,18,27,.76);
+  font-size:16px;
+  box-shadow:inset 0 0 8px rgba(54,216,255,.14);
+}
+
+.workshop-measurement-assistant-header strong{
+  color:#8ff6ff;
+  font-size:clamp(10px,1vw,13px);
+  line-height:1.05;
+  letter-spacing:.02em;
+}
+
+.workshop-measurement-assistant-header small{
+  overflow:hidden;
+  color:#d8e9ef;
+  font-size:8px;
+  line-height:1.15;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.workshop-measurement-assistant-unit{
+  min-width:28px;
+  padding:5px 4px;
+  border:1px solid rgba(255,218,91,.72);
+  border-radius:7px;
+  color:#ffe47c;
+  background:rgba(5,18,27,.84);
+  font:900 8px/1 "Lexend",Arial,sans-serif;
+  text-align:center;
+}
+
+.workshop-measurement-assistant-values{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:7px;
+}
+
+.workshop-measurement-card{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:6px;
+  align-items:center;
+  min-width:0;
+  min-height:52px;
+  padding:7px;
+  box-sizing:border-box;
+  border:1px solid rgba(103,190,220,.46);
+  border-radius:10px;
+  background:rgba(4,18,27,.76);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.workshop-measurement-card > span:last-child{
+  display:grid;
+  gap:3px;
+  min-width:0;
+}
+
+.workshop-measurement-card small{
+  color:#9fc3d1;
+  font:800 7px/1 "Lexend",Arial,sans-serif;
+  letter-spacing:.08em;
+}
+
+.workshop-measurement-card strong{
+  overflow:hidden;
+  color:#ffffff;
+  font:900 clamp(12px,1.2vw,17px)/1 "Lexend",Arial,sans-serif;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.workshop-measurement-direction{
+  display:grid;
+  place-items:center;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  color:#10202a;
+  background:#8ff6ff;
+  box-shadow:0 0 8px rgba(54,216,255,.56);
+  font:900 15px/1 Arial,sans-serif;
+}
+
+#workshopMeasurementAssistantHint{
+  margin:0;
+  color:#d8e9ef;
+  font-size:8px;
+  line-height:1.25;
+  text-align:center;
+}
+
+#workshopRestoreSelection{
+  justify-self:center;
+  min-height:32px;
+  padding:6px 12px;
+  border:1px solid rgba(143,246,255,.72);
+  border-radius:8px;
+  color:#ffffff;
+  background:linear-gradient(180deg,#185d78,#0a3044);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
+  font:800 9px/1 "Lexend",Arial,sans-serif;
+  cursor:pointer;
+  pointer-events:auto;
+}
+
+#workshopRestoreSelection:hover,
+#workshopRestoreSelection:focus-visible{
+  border-color:#ffffff;
+  outline:2px solid rgba(143,246,255,.62);
+  outline-offset:2px;
+}
+
+#workshopRestoreSelection[hidden]{
+  display:none;
+}
+
+#workshopMeasurementAssistant[data-measurement-state="empty"] .workshop-measurement-card{
+  opacity:.58;
+}
+
+@media(max-width:900px){
+  body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant{
+    right:8px;
+    left:8px;
+    gap:7px;
+    padding:8px;
+  }
+
+  .workshop-measurement-assistant-values{
+    grid-template-columns:1fr;
+    gap:5px;
+  }
+
+  .workshop-measurement-card{
+    min-height:40px;
+    padding:5px;
+  }
+}
+
+@media(max-width:650px){
+  body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant{
+    right:5px;
+    left:5px;
+    padding:6px;
+    border-radius:10px;
+  }
+
+  .workshop-measurement-assistant-icon{
+    display:none;
+  }
+
+  .workshop-measurement-assistant-header{
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+
+  .workshop-measurement-assistant-header strong{
+    font-size:9px;
+  }
+
+  .workshop-measurement-direction{
+    width:20px;
+    height:20px;
+    font-size:12px;
+  }
+}
+
 #engineeringToolChest{
   position:absolute;
   inset:0;
@@ -29234,7 +29733,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     });
   }
 
-  var workshopRulerSelectedObject=null;
+  var workshopRulerSelectedObjects=[];
   var workshopRulerSelectedBoundsSignature="";
 
   function formatWorkshopMeasurement(value){
@@ -29254,8 +29753,56 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     };
   }
 
+  function updateWorkshopMeasurementAssistant(){
+    var assistant=document.getElementById("workshopMeasurementAssistant");
+    var selectionLabel=document.getElementById("workshopMeasurementAssistantSelection");
+    var unitLabel=document.getElementById("workshopMeasurementAssistantUnit");
+    var widthLabel=document.getElementById("workshopMeasurementAssistantWidth");
+    var heightLabel=document.getElementById("workshopMeasurementAssistantHeight");
+    var hint=document.getElementById("workshopMeasurementAssistantHint");
+    var restoreButton=document.getElementById("workshopRestoreSelection");
+    var selectedBounds=workshopRulerState.selectedBounds;
+    if(!assistant || !selectionLabel || !unitLabel ||
+       !widthLabel || !heightLabel || !hint) return;
+
+    unitLabel.textContent=workshopMeasurementUnit.toUpperCase();
+    updateWorkshopRestoreSelectionAvailability();
+    if(!selectedBounds){
+      assistant.dataset.measurementState="empty";
+      selectionLabel.textContent="Ready to measure";
+      widthLabel.textContent="—";
+      heightLabel.textContent="—";
+      hint.textContent="Select one or more objects to see their size.";
+      assistant.setAttribute(
+        "aria-label",
+        "Measurement Assistant. Select one or more objects to see their measurements."
+      );
+      return;
+    }
+
+    var widthMeasurement=formatWorkshopMeasurement(selectedBounds.width);
+    var heightMeasurement=formatWorkshopMeasurement(selectedBounds.height);
+    var objectCount=selectedBounds.objectCount || 1;
+    var selectionText=objectCount===1
+      ? "1 object selected"
+      : objectCount+" objects together";
+    assistant.dataset.measurementState="measured";
+    selectionLabel.textContent=selectionText;
+    widthLabel.textContent=widthMeasurement.text+" "+widthMeasurement.abbreviation;
+    heightLabel.textContent=heightMeasurement.text+" "+heightMeasurement.abbreviation;
+    hint.textContent=objectCount===1
+      ? "The arrows show this object's width and height."
+      : "The arrows show the whole selection's width and height.";
+    assistant.setAttribute(
+      "aria-label",
+      "Measurement Assistant. "+selectionText+". Width "+
+        widthMeasurement.text+" "+widthMeasurement.spokenUnit+
+        ". Height "+heightMeasurement.text+" "+heightMeasurement.spokenUnit+"."
+    );
+  }
+
   function clearWorkshopRulerSelectionHighlight(){
-    workshopRulerSelectedObject=null;
+    workshopRulerSelectedObjects=[];
     workshopRulerSelectedBoundsSignature="";
     workshopRulerState.selectedBounds=null;
 
@@ -29271,6 +29818,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
       layer.replaceChildren();
       layer.removeAttribute("style");
     });
+    updateWorkshopMeasurementAssistant();
   }
 
   function renderWorkshopRulerSelectionLayer(rulerId,layerId,axis,minimum,maximum,labelText,accessibleText){
@@ -29341,6 +29889,10 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
 
     var widthMeasurement=formatWorkshopMeasurement(selectedBounds.width);
     var heightMeasurement=formatWorkshopMeasurement(selectedBounds.height);
+    var selectionDescription=selectedBounds.objectCount===1
+      ? "Selected object"
+      : "Selected objects combined";
+    updateWorkshopMeasurementAssistant();
     [
       ["workshopRulerTop","workshopRulerTopSelection"],
       ["workshopRulerBottom","workshopRulerBottomSelection"]
@@ -29349,7 +29901,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
         ids[0],ids[1],"x",
         selectedBounds.min.x,selectedBounds.max.x,
         "Width: "+widthMeasurement.text+" "+widthMeasurement.abbreviation,
-        "Selected object width: "+widthMeasurement.text+" "+widthMeasurement.spokenUnit
+        selectionDescription+" width: "+widthMeasurement.text+" "+widthMeasurement.spokenUnit
       );
     });
     [
@@ -29360,26 +29912,30 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
         ids[0],ids[1],"y",
         selectedBounds.min.y,selectedBounds.max.y,
         "Height: "+heightMeasurement.text+" "+heightMeasurement.abbreviation,
-        "Selected object height: "+heightMeasurement.text+" "+heightMeasurement.spokenUnit
+        selectionDescription+" height: "+heightMeasurement.text+" "+heightMeasurement.spokenUnit
       );
     });
   }
 
   function refreshWorkshopRulerSelectionHighlight(){
+    workshopRulerSelectedObjects=workshopRulerSelectedObjects.filter(function(object){
+      return object && object.parent && blocks.includes(object);
+    });
     if(!document.body.classList.contains("workshopMode") ||
-       !workshopRulerSelectedObject ||
-       !workshopRulerSelectedObject.parent){
+       workshopRulerSelectedObjects.length===0){
       if(workshopRulerState.selectedBounds) clearWorkshopRulerSelectionHighlight();
       return;
     }
 
-    if(typeof workshopRulerSelectedObject.updateWorldMatrix==="function"){
-      workshopRulerSelectedObject.updateWorldMatrix(true,true);
-    }else{
-      workshopRulerSelectedObject.updateMatrixWorld(true);
-    }
-
-    var bounds=new THREE.Box3().setFromObject(workshopRulerSelectedObject);
+    var bounds=new THREE.Box3();
+    workshopRulerSelectedObjects.forEach(function(object){
+      if(typeof object.updateWorldMatrix==="function"){
+        object.updateWorldMatrix(true,true);
+      }else{
+        object.updateMatrixWorld(true);
+      }
+      bounds.expandByObject(object);
+    });
     if(bounds.isEmpty()){
       clearWorkshopRulerSelectionHighlight();
       return;
@@ -29405,23 +29961,40 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
         z:normalizeWorkshopRulerValue(bounds.max.z)
       },
       width:normalizeWorkshopRulerValue(size.x),
-      height:normalizeWorkshopRulerValue(size.y)
+      height:normalizeWorkshopRulerValue(size.y),
+      objectCount:workshopRulerSelectedObjects.length
     };
     renderWorkshopSelectedBounds();
   }
 
   function setWorkshopRulerSelectedObject(object){
-    clearWorkshopRulerSelectionHighlight();
-    if(!object) return;
-    workshopRulerSelectedObject=object;
+    setWorkshopRulerSelectedObjects(object ? [object] : []);
+  }
+
+  function setWorkshopRulerSelectedObjects(objects){
+    workshopRulerSelectedObjects=Array.isArray(objects)
+      ? objects.filter(function(object,index,list){
+          return object && list.indexOf(object)===index;
+        })
+      : [];
     workshopRulerSelectedBoundsSignature="";
+    if(workshopRulerSelectedObjects.length===0){
+      clearWorkshopRulerSelectionHighlight();
+      return;
+    }
     refreshWorkshopRulerSelectionHighlight();
   }
 
   function clearWorkshopRulerSelectionForObject(object){
-    if(object && object===workshopRulerSelectedObject){
+    var objectIndex=workshopRulerSelectedObjects.indexOf(object);
+    if(objectIndex===-1) return;
+    workshopRulerSelectedObjects.splice(objectIndex,1);
+    workshopRulerSelectedBoundsSignature="";
+    if(workshopRulerSelectedObjects.length===0){
       clearWorkshopRulerSelectionHighlight();
+      return;
     }
+    refreshWorkshopRulerSelectionHighlight();
   }
 
   function isStarterScreenActive(){
@@ -29565,6 +30138,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
     blocks.length=0;
     redoBlocks.length=0;
     selectedBlocks=[];
+    workshopContactGraph.clear();
+    clearWorkshopSelectionRestore();
     selectMode=false;
     moveSelectedMode=false;
     updateUndoRedoButtons();
@@ -29587,6 +30162,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
       blocks.length=0;
       redoBlocks.length=0;
       selectedBlocks=[];
+      workshopContactGraph.clear();
+      clearWorkshopSelectionRestore();
       selectMode=false;
       moveSelectedMode=false;
       updateUndoRedoButtons();
@@ -30063,9 +30640,11 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail #helpButton{
   window.workshopModelToRulerPosition=workshopModelToRulerPosition;
   window.workshopRulerPositionToModel=workshopRulerPositionToModel;
   window.setWorkshopRulerSelectedObject=setWorkshopRulerSelectedObject;
+  window.setWorkshopRulerSelectedObjects=setWorkshopRulerSelectedObjects;
   window.clearWorkshopRulerSelectionHighlight=clearWorkshopRulerSelectionHighlight;
   window.clearWorkshopRulerSelectionForObject=clearWorkshopRulerSelectionForObject;
   window.refreshWorkshopRulerSelectionHighlight=refreshWorkshopRulerSelectionHighlight;
+  window.updateWorkshopMeasurementAssistant=updateWorkshopMeasurementAssistant;
   window.getWorkshopMeasurementUnit=function(){
     return {
       unit:workshopMeasurementUnit,
