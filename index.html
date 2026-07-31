@@ -4210,6 +4210,10 @@ Nature ▶
       <div id="workshopRulerBottomHandles" class="workshop-ruler-layer workshop-ruler-handles" aria-hidden="true"></div>
     </div>
   </section>
+  <div id="workshopCadHeightOverlay" hidden aria-hidden="true">
+    <span class="workshop-cad-height-screen-guide" aria-hidden="true"></span>
+    <span id="workshopCadHeightOverlayLabel"></span>
+  </div>
   <aside id="workshopRightPanelShell" class="workshop-layout-region" data-workshop-region="right">
     <section id="workshopMeasurementAssistant" role="region" data-measurement-state="empty" aria-label="Measurement Assistant. Select one or more objects to see their measurements.">
       <header class="workshop-measurement-assistant-header">
@@ -4226,6 +4230,13 @@ Nature ▶
           <span>
             <small>WIDTH</small>
             <strong id="workshopMeasurementAssistantWidth">—</strong>
+          </span>
+        </span>
+        <span class="workshop-measurement-card workshop-measurement-length">
+          <span class="workshop-measurement-direction">↗</span>
+          <span>
+            <small>LENGTH</small>
+            <strong id="workshopMeasurementAssistantLength">—</strong>
           </span>
         </span>
         <span class="workshop-measurement-card workshop-measurement-height">
@@ -4384,7 +4395,8 @@ Nature ▶
 HTML SECTION 03 — VIEW CUBE / CAMERA HELPER
 Future extraction target: view controls.
 ===================================================== -->
-<div id="viewCubeBox">
+<div id="viewCubeBox" role="region" aria-label="Engineering Control Station">
+<div id="workshopEngineeringControlStationTitle">ENGINEERING CONTROL STATION</div>
 <div id="viewCubeTitle">🧭 View</div>
 <canvas height="180" id="viewCubeCanvas" width="180"></canvas>
 <div id="viewDiceHint">Drag • Click face • Double-click Home</div>
@@ -4397,7 +4409,15 @@ Future extraction target: view controls.
   <button id="workshopViewBack" type="button" data-workshop-view="back" aria-label="Back View" aria-pressed="false" title="Back View (2)"><span class="workshop-control-icon" aria-hidden="true">↶</span><span>BACK</span><small>2</small></button>
   <button id="workshopViewBottom" type="button" data-workshop-view="bottom" aria-label="Bottom View" aria-pressed="false" title="Bottom View (6)"><span class="workshop-control-icon" aria-hidden="true">⬇</span><span>BOTTOM</span><small>6</small></button>
   <button id="workshopViewHome" type="button" data-workshop-view="home" aria-label="Home Perspective View" aria-pressed="false" title="Home Perspective View (0)"><span class="workshop-control-icon" aria-hidden="true">⌂</span><span>HOME</span><small>0</small></button>
+  <button id="workshopFitSelection" type="button" aria-label="Fit selected object or build in the current view" aria-pressed="false" title="Fit Selection (F)" disabled><span class="workshop-control-icon" aria-hidden="true">⌗</span><span>FIT SELECTION</span><small>F</small></button>
   <button id="workshopPlatformColorButton" type="button" aria-label="Change Engineering Build Plane Color" title="Change Engineering Build Plane Color"><span class="workshop-control-icon" aria-hidden="true">🎨</span><span>PLATFORM COLOR</span></button>
+</div>
+<div id="workspaceUtilityRail">
+  <button id="helpButton" type="button" title="Open Builder Help" aria-label="Open Builder Help">? HELP</button>
+  <button id="workspaceModeSwitch" type="button" aria-pressed="false" onclick="toggleWorkspaceMode()">
+    <span class="workspaceModeIcon" aria-hidden="true">🛠</span>
+    <span class="workspaceModeLabel">Open Workshop</span>
+  </button>
 </div>
 </div>
 <div id="workshopPlatformColorDialog" role="dialog" aria-modal="true" aria-labelledby="workshopPlatformColorDialogTitle" aria-describedby="workshopPlatformColorDialogDescription" hidden>
@@ -4414,14 +4434,6 @@ Future extraction target: view controls.
 HTML SECTION 03A — MISSION / WORKSHOP MODE SWITCH
 This control is available only after a mission has started.
 ===================================================== -->
-<div id="workspaceUtilityRail">
-  <button id="helpButton" type="button" title="Open Builder Help" aria-label="Open Builder Help">? HELP</button>
-  <button id="workspaceModeSwitch" type="button" aria-pressed="false" onclick="toggleWorkspaceMode()">
-    <span class="workspaceModeIcon" aria-hidden="true">🛠</span>
-    <span class="workspaceModeLabel">Open Workshop</span>
-  </button>
-</div>
-
 <div id="workshopDashboard" role="region" aria-label="Engineering Control Console, Grand Master Mode" data-workshop-console-name="Engineering Control Console" data-workshop-console-mode="grand-master">
   <div id="workshopEngineeringDashboard">
     <div id="workshopQuickAccessToolbar" role="toolbar" aria-label="Workshop quick access">
@@ -4888,43 +4900,63 @@ const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.position.y = -1;
 scene.add(ground);
 
-// Workshop-only visual frame. The existing 50 × 50 ground remains the sole
-// placement, snapping, collision, and raycast surface.
-const workshopStageFrameMaterial = new THREE.MeshStandardMaterial({
-  color:0x59636d,
-  roughness:0.34,
-  metalness:0.78,
-  emissive:0x07131b,
-  emissiveIntensity:0.22
+// Workshop-only visual Engineering Table edge. The existing 50 × 50 ground
+// remains the sole placement, snapping, collision, and raycast surface.
+const workshopStageFrameMaterial = new THREE.MeshPhysicalMaterial({
+  color:0x627984,
+  roughness:0.22,
+  metalness:0.9,
+  clearcoat:0.42,
+  clearcoatRoughness:0.3,
+  emissive:0x062734,
+  emissiveIntensity:0.24
 });
 const workshopStageFrame = new THREE.Group();
 workshopStageFrame.name = "workshopStageFrame";
 workshopStageFrame.visible = false;
 workshopStageFrame.raycast = function(){};
 
-[
-  {size:[50.0,0.22,0.46],position:[0,-0.36,-24.77]},
-  {size:[50.0,0.22,0.46],position:[0,-0.36,24.77]},
-  {size:[0.46,0.22,49.08],position:[-24.77,-0.36,0]},
-  {size:[0.46,0.22,49.08],position:[24.77,-0.36,0]}
-].forEach(function(framePart){
-  const rail = new THREE.Mesh(
-    new THREE.BoxGeometry(
-      framePart.size[0],
-      framePart.size[1],
-      framePart.size[2]
-    ),
-    workshopStageFrameMaterial
-  );
-  rail.position.set(
-    framePart.position[0],
-    framePart.position[1],
-    framePart.position[2]
-  );
-  rail.raycast = function(){};
-  rail.userData.workshopDecoration = true;
-  workshopStageFrame.add(rail);
-});
+const workshopStageFrameShape = new THREE.Shape();
+workshopStageFrameShape.moveTo(-24.50,-24.92);
+workshopStageFrameShape.lineTo(24.50,-24.92);
+workshopStageFrameShape.quadraticCurveTo(24.92,-24.92,24.92,-24.50);
+workshopStageFrameShape.lineTo(24.92,24.50);
+workshopStageFrameShape.quadraticCurveTo(24.92,24.92,24.50,24.92);
+workshopStageFrameShape.lineTo(-24.50,24.92);
+workshopStageFrameShape.quadraticCurveTo(-24.92,24.92,-24.92,24.50);
+workshopStageFrameShape.lineTo(-24.92,-24.50);
+workshopStageFrameShape.quadraticCurveTo(-24.92,-24.92,-24.50,-24.92);
+workshopStageFrameShape.closePath();
+
+const workshopStageFrameOpening = new THREE.Path();
+workshopStageFrameOpening.moveTo(-24.32,-24.54);
+workshopStageFrameOpening.lineTo(24.32,-24.54);
+workshopStageFrameOpening.quadraticCurveTo(24.54,-24.54,24.54,-24.32);
+workshopStageFrameOpening.lineTo(24.54,24.32);
+workshopStageFrameOpening.quadraticCurveTo(24.54,24.54,24.32,24.54);
+workshopStageFrameOpening.lineTo(-24.32,24.54);
+workshopStageFrameOpening.quadraticCurveTo(-24.54,24.54,-24.54,24.32);
+workshopStageFrameOpening.lineTo(-24.54,-24.32);
+workshopStageFrameOpening.quadraticCurveTo(-24.54,-24.54,-24.32,-24.54);
+workshopStageFrameOpening.closePath();
+workshopStageFrameShape.holes.push(workshopStageFrameOpening);
+
+const workshopStageFrameRail = new THREE.Mesh(
+  new THREE.ExtrudeGeometry(workshopStageFrameShape,{
+    depth:0.18,
+    bevelEnabled:true,
+    bevelSegments:2,
+    steps:1,
+    bevelSize:0.08,
+    bevelThickness:0.06
+  }),
+  workshopStageFrameMaterial
+);
+workshopStageFrameRail.rotation.x=Math.PI/2;
+workshopStageFrameRail.position.y=-0.25;
+workshopStageFrameRail.raycast = function(){};
+workshopStageFrameRail.userData.workshopDecoration = true;
+workshopStageFrame.add(workshopStageFrameRail);
 scene.add(workshopStageFrame);
 
 // UPDATE #101B: Persistent, non-interactive engineering build grid.
@@ -5191,6 +5223,12 @@ function setWorkshopBlockSelectionHighlight(block, selected){
 function syncWorkshopSelectionMeasurements(){
   if(window.setWorkshopRulerSelectedObjects){
     window.setWorkshopRulerSelectedObjects(selectedBlocks);
+  }
+  if(window.clearWorkshopFitSelectionState){
+    window.clearWorkshopFitSelectionState();
+  }
+  if(window.syncWorkshopFitSelectionAvailability){
+    window.syncWorkshopFitSelectionAvailability();
   }
   updateWorkshopRestoreSelectionAvailability();
 }
@@ -7943,6 +7981,10 @@ function animate(){
   requestAnimationFrame(animate);
   if(window.refreshWorkshopRulerSelectionHighlight){
     window.refreshWorkshopRulerSelectionHighlight();
+  }
+  if(document.body.classList.contains("workshopMode") &&
+    window.updateWorkshopProjectedRulerBounds){
+    window.updateWorkshopProjectedRulerBounds();
   }
 
   if(!window.calmMode && !window.readToBobFeedbackActive && !window.readToBobPracticeActive){
@@ -28284,8 +28326,15 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls{
 #workshopViewTop,
 #workshopViewBottom,
 #workshopViewHome,
+#workshopFitSelection,
 #workshopPlatformColorButton{
   grid-column:1 / -1;
+}
+
+#workshopEngineeringViewControls #workshopFitSelection:disabled{
+  cursor:not-allowed;
+  opacity:.48;
+  filter:saturate(.45);
 }
 
 #workshopEngineeringViewControls #workshopPlatformColorButton{
@@ -29281,31 +29330,433 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     bottom:138px;
   }
 }
+
+/* Workshop Layout v1: consolidate the existing left-side controls into one
+   reserved station so the live engineering platform never sits beneath them. */
+#workshopEngineeringControlStationTitle{
+  display:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopRoot{
+  grid-template-columns:200px minmax(0,1fr) clamp(220px,18vw,260px);
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox{
+  top:50px !important;
+  left:8px !important;
+  translate:none !important;
+  display:grid !important;
+  width:184px !important;
+  max-height:calc(100vh - 184px);
+  gap:4px;
+  padding:6px !important;
+  overflow:hidden;
+  box-sizing:border-box !important;
+  background:
+    linear-gradient(135deg,rgba(54,216,255,.08),transparent 38%),
+    linear-gradient(180deg,rgba(28,48,61,.98),rgba(7,22,32,.98)) !important;
+  border-color:rgba(202,164,53,.86) !important;
+  pointer-events:auto;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringControlStationTitle{
+  display:block;
+  padding:5px 3px;
+  border-bottom:1px solid rgba(143,246,255,.34);
+  color:#b8f4ff;
+  font:900 9px/1 "Lexend",Arial,sans-serif;
+  letter-spacing:.07em;
+  text-align:center;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeTitle{
+  margin:0 !important;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeCanvas{
+  justify-self:center;
+  width:128px !important;
+  height:128px !important;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewDiceHint{
+  margin:0 !important;
+  font-size:8px !important;
+  text-align:center;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls{
+  position:static;
+  width:auto;
+  gap:4px;
+  padding:5px;
+  box-sizing:border-box;
+  border-radius:9px;
+  box-shadow:inset 0 1px rgba(255,255,255,.10);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewRemoteTitle{
+  padding:2px 3px 4px;
+  font-size:9px;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls button{
+  min-height:32px;
+  padding:3px 2px;
+  border-radius:7px;
+  font-size:8px;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls button .workshop-control-icon{
+  display:inline-grid;
+  margin:0 2px 0 0;
+  font-size:9px;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls button small{
+  display:inline;
+  margin:0 0 0 3px;
+  font-size:7px;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls #workshopPlatformColorButton{
+  min-height:34px;
+  margin-top:0;
+  font-size:8px;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceUtilityRail{
+  position:static;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:4px;
+  width:100%;
+  margin:0;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceUtilityRail #helpButton{
+  width:48px !important;
+  min-width:48px !important;
+  height:32px !important;
+  min-height:32px !important;
+  padding:3px !important;
+  font-size:8px !important;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch{
+  width:100%;
+  height:32px;
+  min-height:32px;
+  padding:3px 4px;
+  font-size:8px !important;
+}
+
+@media(max-width:1100px){
+  body.workshopMode:not(.starterScreenActive) #workshopRoot{
+    grid-template-columns:196px minmax(0,1fr) 220px;
+  }
+
+  body.workshopMode:not(.starterScreenActive) #viewCubeBox{
+    width:180px !important;
+  }
+}
+
+/* Phase 6A: projected X/Z rulers read as engraved measurement instruments in
+   the physical Engineering Frame. Selection highlights remain restrained so
+   the holographic work surface and the student's model keep visual priority. */
+body.workshopMode:not(.starterScreenActive) #workshopViewportContainer{
+  grid-template-columns:24px minmax(0,1fr) 24px;
+  grid-template-rows:20px minmax(0,1fr) 20px;
+}
+
+#workshopCadHeightOverlay{
+  position:fixed;
+  left:0;
+  top:0;
+  z-index:324;
+  width:76px;
+  height:22px;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+#workshopCadHeightOverlay[hidden]{
+  display:none;
+}
+
+#workshopCadHeightOverlayLabel{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  box-sizing:border-box;
+  border:1px solid rgba(143,246,255,.95);
+  border-radius:4px;
+  color:#eaffff;
+  background:rgba(5,18,27,.94);
+  box-shadow:0 0 6px rgba(54,216,255,.42);
+  font:700 11px/1 Arial,sans-serif;
+  white-space:nowrap;
+}
+
+.workshop-cad-height-screen-guide{
+  position:absolute;
+  left:-9px;
+  top:50%;
+  display:none;
+  width:1px;
+  height:44px;
+  border-radius:1px;
+  background:#8ff6ff;
+  box-shadow:0 0 5px rgba(54,216,255,.72);
+  transform:translateY(-50%);
+}
+
+.workshop-cad-height-screen-guide::before,
+.workshop-cad-height-screen-guide::after{
+  content:"";
+  position:absolute;
+  left:-4px;
+  width:9px;
+  height:1px;
+  background:#8ff6ff;
+}
+
+.workshop-cad-height-screen-guide::before{top:0;}
+.workshop-cad-height-screen-guide::after{bottom:0;}
+
+#workshopCadHeightOverlay.isSchematic .workshop-cad-height-screen-guide{
+  display:block;
+}
+
+body.workshopMode:not(.starterScreenActive) .workshop-ruler{
+  --workshop-ruler-line:rgba(207,242,248,.58);
+  --workshop-ruler-label:rgba(230,249,252,.94);
+  --workshop-dimension-color:#67edff;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,.035) 0,
+      rgba(255,255,255,.035) 1px,
+      rgba(0,0,0,.022) 1px,
+      rgba(0,0,0,.022) 3px
+    ),
+    linear-gradient(180deg,rgba(84,111,122,.84),rgba(22,47,58,.88));
+  border-color:rgba(126,224,239,.42);
+  box-shadow:
+    inset 0 1px rgba(224,252,255,.28),
+    inset 0 -1px rgba(0,0,0,.42),
+    inset 0 0 8px rgba(59,218,240,.08),
+    0 2px 5px rgba(3,12,18,.2);
+  text-shadow:
+    0 1px 0 rgba(0,0,0,.88),
+    0 0 2px rgba(213,247,255,.18);
+}
+
+body.workshopMode:not(.starterScreenActive) .workshop-ruler-selection{
+  background:linear-gradient(
+    90deg,
+    rgba(42,224,255,.04),
+    rgba(88,238,255,.2),
+    rgba(42,224,255,.04)
+  );
+  box-shadow:inset 0 0 7px rgba(75,232,255,.2);
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-measurement-label{
+  color:#dfffff;
+  border:1px solid rgba(103,237,255,.5);
+  background:rgba(4,25,34,.88);
+  box-shadow:0 0 6px rgba(54,216,255,.42);
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-horizontal .workshop-ruler-selection{
+  height:20px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-vertical .workshop-ruler-selection{
+  width:24px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-horizontal .workshop-ruler-tick-minor{
+  height:3px;
+  opacity:.16;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-horizontal .workshop-ruler-tick-medium{
+  height:6px;
+  opacity:.38;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-horizontal .workshop-ruler-tick-major{
+  height:10px;
+  opacity:.84;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-vertical .workshop-ruler-tick-minor{
+  width:3px;
+  opacity:.16;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-vertical .workshop-ruler-tick-medium{
+  width:6px;
+  opacity:.38;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-vertical .workshop-ruler-tick-major{
+  width:10px;
+  opacity:.84;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-horizontal .workshop-ruler-dimension-line{
+  top:13px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-horizontal .workshop-ruler-dimension-cap{
+  top:9px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-bottom .workshop-ruler-dimension-line{
+  top:5px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-bottom .workshop-ruler-dimension-cap{
+  top:1px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-bottom .workshop-ruler-measurement-label{
+  top:8px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-vertical .workshop-ruler-dimension-line{
+  left:5px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-vertical .workshop-ruler-dimension-cap{
+  left:1px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-right .workshop-ruler-dimension-line{
+  right:5px;
+  left:auto;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-right .workshop-ruler-dimension-cap{
+  right:1px;
+  left:auto;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-vertical .workshop-ruler-measurement-label{
+  left:17px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-right .workshop-ruler-measurement-label{
+  right:4px;
+  left:auto;
+}
 </style>
 
 <script id="workshopModeShellScript">
 (function(){
   var currentWorkspaceMode="mission";
   var workshopBuildAreaSnapshot=null;
-  var workshopRoomBackgroundTexture=new THREE.TextureLoader().load(
-    "assets/images/workshop/workshop-room-background.png",
+  var workshopRoomBackgroundAssetPath=
+    "assets/images/workshop/production/workshop-environment-production-v6-master.png";
+  var workshopRoomBackgroundTexture=null;
+  new THREE.TextureLoader().load(
+    workshopRoomBackgroundAssetPath,
     function(texture){
+      var image=texture.image;
+      var maximumTextureSize=renderer.capabilities.maxTextureSize;
+      if(image && maximumTextureSize &&
+        (image.width>maximumTextureSize || image.height>maximumTextureSize)){
+        try{
+          var scale=Math.min(
+            maximumTextureSize/image.width,
+            maximumTextureSize/image.height
+          );
+          var canvas=document.createElement("canvas");
+          canvas.width=Math.max(1,Math.floor(image.width*scale));
+          canvas.height=Math.max(1,Math.floor(image.height*scale));
+          var context=canvas.getContext("2d");
+          if(!context) throw new Error("2D canvas context is unavailable");
+          context.imageSmoothingEnabled=true;
+          context.imageSmoothingQuality="high";
+          context.drawImage(image,0,0,canvas.width,canvas.height);
+
+          var reducedTexture=new THREE.CanvasTexture(canvas);
+          if(typeof texture.colorSpace!=="undefined"){
+            reducedTexture.colorSpace=texture.colorSpace;
+          }
+          texture.dispose();
+          texture=reducedTexture;
+        }catch(error){
+          console.error(
+            "Workshop Production v6 in-memory texture resizing failed:",
+            workshopRoomBackgroundAssetPath,
+            error
+          );
+          return;
+        }
+      }
+
       texture.wrapS=THREE.ClampToEdgeWrapping;
       texture.wrapT=THREE.ClampToEdgeWrapping;
+      workshopRoomBackgroundTexture=texture;
       updateWorkshopRoomBackgroundCover();
       if(currentWorkspaceMode==="workshop"){
         scene.background=texture;
       }
+    },
+    undefined,
+    function(error){
+      console.error(
+        "Workshop Production v6 texture-loading failure:",
+        workshopRoomBackgroundAssetPath,
+        error
+      );
     }
   );
   var builderCameraSnapshot=null;
   var activeWorkshopEngineeringView=null;
   var activeWorkshopEngineeringTarget=null;
+  var activeWorkshopFitSelection=false;
   var platformColorModeActive=false;
   var workshopPlatformTint=0x5f8fa8;
   var platformColorDialogReturnFocus=null;
   var builderSessionSnapshot=null;
   var workshopMeasurementUnit="cm";
+  var workshopProjectedRulerCorners=[
+    new THREE.Vector3(-25,-0.485,-25),
+    new THREE.Vector3(-25,-0.485,25),
+    new THREE.Vector3(25,-0.485,-25),
+    new THREE.Vector3(25,-0.485,25)
+  ];
+  var workshopProjectedRulerScratch=workshopProjectedRulerCorners.map(function(){
+    return new THREE.Vector3();
+  });
+  var workshopProjectedRulerBoundsSignature="";
   var workshopConsoleModes={
     student:"student",
     grandMaster:"grand-master"
@@ -29334,9 +29785,9 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     var repeatY=1;
 
     if(viewportAspect<imageAspect){
-      repeatX=viewportAspect/imageAspect;
-    }else{
       repeatY=imageAspect/viewportAspect;
+    }else{
+      repeatX=viewportAspect/imageAspect;
     }
 
     texture.repeat.set(repeatX,repeatY);
@@ -29344,8 +29795,85 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     texture.needsUpdate=true;
   }
 
+  function clearWorkshopProjectedRulerBounds(){
+    var container=document.getElementById("workshopViewportContainer");
+    workshopProjectedRulerBoundsSignature="";
+    if(!container) return;
+    [
+      "position","left","top","right","bottom","width","height","grid-area"
+    ].forEach(function(property){
+      container.style.removeProperty(property);
+    });
+  }
+
+  function updateWorkshopProjectedRulerBounds(){
+    if(currentWorkspaceMode!=="workshop" ||
+      !document.body.classList.contains("workshopMode") ||
+      isStarterScreenActive()){
+      return false;
+    }
+
+    var container=document.getElementById("workshopViewportContainer");
+    var topRuler=document.getElementById("workshopRulerTop");
+    var leftRuler=document.getElementById("workshopRulerLeft");
+    if(!container || !topRuler || !leftRuler) return false;
+
+    var canvasBounds=renderer.domElement.getBoundingClientRect();
+    if(!canvasBounds.width || !canvasBounds.height) return false;
+
+    camera.updateMatrixWorld();
+    syncWorkshopCadHeightLabelPresentation();
+    var minimumX=Infinity;
+    var maximumX=-Infinity;
+    var minimumY=Infinity;
+    var maximumY=-Infinity;
+
+    workshopProjectedRulerCorners.forEach(function(corner,index){
+      var projected=workshopProjectedRulerScratch[index]
+        .copy(corner)
+        .project(camera);
+      var screenX=canvasBounds.left+(projected.x+1)*canvasBounds.width/2;
+      var screenY=canvasBounds.top+(1-projected.y)*canvasBounds.height/2;
+      minimumX=Math.min(minimumX,screenX);
+      maximumX=Math.max(maximumX,screenX);
+      minimumY=Math.min(minimumY,screenY);
+      maximumY=Math.max(maximumY,screenY);
+    });
+
+    if(!Number.isFinite(minimumX) || !Number.isFinite(minimumY)) return false;
+
+    var horizontalThickness=
+      parseFloat(window.getComputedStyle(topRuler).height) || 32;
+    var verticalThickness=
+      parseFloat(window.getComputedStyle(leftRuler).width) || 36;
+    var left=Math.round(minimumX-verticalThickness);
+    var top=Math.round(minimumY-horizontalThickness);
+    var width=Math.max(
+      verticalThickness*2+1,
+      Math.round(maximumX-minimumX+verticalThickness*2)
+    );
+    var height=Math.max(
+      horizontalThickness*2+1,
+      Math.round(maximumY-minimumY+horizontalThickness*2)
+    );
+    var signature=[left,top,width,height].join(":");
+    if(signature===workshopProjectedRulerBoundsSignature) return true;
+
+    workshopProjectedRulerBoundsSignature=signature;
+    container.style.position="fixed";
+    container.style.gridArea="auto";
+    container.style.left=left+"px";
+    container.style.top=top+"px";
+    container.style.right="auto";
+    container.style.bottom="auto";
+    container.style.width=width+"px";
+    container.style.height=height+"px";
+    return true;
+  }
+
   window.addEventListener("resize",function(){
     updateWorkshopRoomBackgroundCover();
+    window.requestAnimationFrame(updateWorkshopProjectedRulerBounds);
   });
   var engineeringToolChestIndicators={
     closed:"assets/images/workshop/production/engineering-tool-chest/indicator-red.png",
@@ -29390,6 +29918,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
   var workshopRulerConfig={
     xMin:-25,
     xMax:25,
+    zMin:-25,
+    zMax:25,
     yMin:0,
     yMax:25,
     centimetersPerMajorTick:1,
@@ -30022,19 +30552,24 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
   }
 
   function getWorkshopRulerAxisRange(axis){
-    return axis==="y"
-      ? {min:workshopRulerConfig.yMin,max:workshopRulerConfig.yMax}
-      : {min:workshopRulerConfig.xMin,max:workshopRulerConfig.xMax};
+    if(axis==="y"){
+      return {min:workshopRulerConfig.yMin,max:workshopRulerConfig.yMax};
+    }
+    if(axis==="z"){
+      return {min:workshopRulerConfig.zMin,max:workshopRulerConfig.zMax};
+    }
+    return {min:workshopRulerConfig.xMin,max:workshopRulerConfig.xMax};
   }
 
   function workshopModelToRulerPosition(value,axis,rulerElement){
     var range=getWorkshopRulerAxisRange(axis);
+    var isVertical=rulerElement.classList.contains("workshop-ruler-vertical");
     var measurementValue=axis==="y" ? Number(value)+0.5 : Number(value);
     var clamped=Math.max(range.min,Math.min(range.max,measurementValue));
-    var ratio=axis==="y"
+    var ratio=isVertical
       ? (range.max-clamped)/(range.max-range.min)
       : (clamped-range.min)/(range.max-range.min);
-    var renderedSize=axis==="y"
+    var renderedSize=isVertical
       ? rulerElement.clientHeight
       : rulerElement.clientWidth;
     return normalizeWorkshopRulerValue(ratio*renderedSize);
@@ -30042,13 +30577,14 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
 
   function workshopRulerPositionToModel(position,axis,rulerElement){
     var range=getWorkshopRulerAxisRange(axis);
-    var renderedSize=axis==="y"
+    var isVertical=rulerElement.classList.contains("workshop-ruler-vertical");
+    var renderedSize=isVertical
       ? rulerElement.clientHeight
       : rulerElement.clientWidth;
     if(renderedSize<=0) return range.min;
     var clampedPosition=Math.max(0,Math.min(renderedSize,Number(position)));
     var ratio=clampedPosition/renderedSize;
-    var value=axis==="y"
+    var value=isVertical
       ? range.max-ratio*(range.max-range.min)
       : range.min+ratio*(range.max-range.min);
     return normalizeWorkshopRulerValue(axis==="y" ? value-0.5 : value);
@@ -30059,7 +30595,9 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     var tickGroup=rulerElement.querySelector(".workshop-ruler-ticks");
     if(!tickGroup) return;
 
-    var axis=rulerElement.dataset.workshopAxis==="y" ? "y" : "x";
+    var axis=rulerElement.classList.contains("workshop-ruler-vertical")
+      ? "z"
+      : "x";
     var range=getWorkshopRulerAxisRange(axis);
     var subdivisions=workshopRulerConfig.millimetersPerCentimeter;
     var minimumStep=Math.round(range.min*subdivisions);
@@ -30070,7 +30608,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
       var value=step/subdivisions;
       var isMajor=step%subdivisions===0;
       var isMedium=!isMajor && Math.abs(step)%subdivisions===subdivisions/2;
-      var ratio=axis==="y"
+      var ratio=rulerElement.classList.contains("workshop-ruler-vertical")
         ? (range.max-value)/(range.max-range.min)
         : (value-range.min)/(range.max-range.min);
       var position=(ratio*100).toFixed(4)+"%";
@@ -30088,8 +30626,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
       if(isMajor){
         var label=document.createElement("span");
         label.className="workshop-ruler-label";
-        if(step===minimumStep) label.classList.add(axis==="y" ? "is-range-end" : "is-range-start");
-        if(step===maximumStep) label.classList.add(axis==="y" ? "is-range-start" : "is-range-end");
+        if(step===minimumStep) label.classList.add(axis==="z" ? "is-range-end" : "is-range-start");
+        if(step===maximumStep) label.classList.add(axis==="z" ? "is-range-start" : "is-range-end");
         label.style.setProperty("--workshop-ruler-position",position);
         label.textContent=String(normalizeWorkshopRulerValue(value));
         fragment.appendChild(label);
@@ -30100,6 +30638,20 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
   }
 
   function renderWorkshopRulers(){
+    var leftRuler=document.getElementById("workshopRulerLeft");
+    var rightRuler=document.getElementById("workshopRulerRight");
+    if(leftRuler){
+      leftRuler.setAttribute(
+        "aria-label",
+        "Left model Z-axis ruler. Model Scale, centimeters with millimeter subdivisions."
+      );
+    }
+    if(rightRuler){
+      rightRuler.setAttribute(
+        "aria-label",
+        "Right model Z-axis ruler. Model Scale, centimeters with millimeter subdivisions."
+      );
+    }
     [
       "workshopRulerTop",
       "workshopRulerBottom",
@@ -30112,6 +30664,401 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
 
   var workshopRulerSelectedObjects=[];
   var workshopRulerSelectedBoundsSignature="";
+  var workshopCadDimensionGroup=null;
+  var workshopCadHeightGuideBase=null;
+  var workshopCadHeightGuideTop=null;
+  var workshopCadHeightLabelText="";
+
+  function disposeWorkshopCadDimensionObject(object){
+    if(!object) return;
+    if(object.geometry && typeof object.geometry.dispose==="function"){
+      object.geometry.dispose();
+    }
+    if(object.material){
+      var materials=Array.isArray(object.material)
+        ? object.material
+        : [object.material];
+      materials.forEach(function(material){
+        if(material.map && typeof material.map.dispose==="function"){
+          material.map.dispose();
+        }
+        if(typeof material.dispose==="function") material.dispose();
+      });
+    }
+  }
+
+  function clearWorkshopCadDimensions(){
+    if(!workshopCadDimensionGroup) return;
+    while(workshopCadDimensionGroup.children.length){
+      var child=workshopCadDimensionGroup.children.pop();
+      disposeWorkshopCadDimensionObject(child);
+    }
+    workshopCadDimensionGroup.visible=false;
+    workshopCadHeightGuideBase=null;
+    workshopCadHeightGuideTop=null;
+    workshopCadHeightLabelText="";
+    var heightOverlay=document.getElementById("workshopCadHeightOverlay");
+    if(heightOverlay) heightOverlay.hidden=true;
+  }
+
+  function ensureWorkshopCadDimensionGroup(){
+    if(workshopCadDimensionGroup) return workshopCadDimensionGroup;
+    workshopCadDimensionGroup=new THREE.Group();
+    workshopCadDimensionGroup.name="Workshop CAD Dimensions";
+    workshopCadDimensionGroup.visible=false;
+    workshopCadDimensionGroup.userData.workshopNonInteractive=true;
+    scene.add(workshopCadDimensionGroup);
+    return workshopCadDimensionGroup;
+  }
+
+  function createWorkshopCadLine(points,opacity){
+    var geometry=new THREE.BufferGeometry().setFromPoints(points);
+    var material=new THREE.LineBasicMaterial({
+      color:0x8ff6ff,
+      transparent:true,
+      opacity:opacity,
+      depthTest:true,
+      depthWrite:false
+    });
+    var line=new THREE.LineSegments(geometry,material);
+    line.renderOrder=18;
+    line.userData.workshopNonInteractive=true;
+    line.raycast=function(){};
+    return line;
+  }
+
+  function createWorkshopCadLabel(labelText,options){
+    var settings=options || {};
+    var canvas=document.createElement("canvas");
+    canvas.width=512;
+    canvas.height=128;
+    var context=canvas.getContext("2d");
+    context.clearRect(0,0,canvas.width,canvas.height);
+    context.fillStyle="rgba(5,18,27,.94)";
+    context.strokeStyle="rgba(143,246,255,.95)";
+    context.lineWidth=4;
+    context.beginPath();
+    if(typeof context.roundRect==="function"){
+      context.roundRect(8,8,496,112,18);
+    }else{
+      context.rect(8,8,496,112);
+    }
+    context.fill();
+    context.stroke();
+    context.fillStyle="#eaffff";
+    context.font="700 48px Arial, sans-serif";
+    context.textAlign="center";
+    context.textBaseline="middle";
+    context.fillText(labelText,256,65);
+
+    var texture=new THREE.CanvasTexture(canvas);
+    texture.minFilter=THREE.LinearFilter;
+    texture.magFilter=THREE.LinearFilter;
+    texture.needsUpdate=true;
+    var material=new THREE.SpriteMaterial({
+      map:texture,
+      transparent:true,
+      depthTest:false,
+      depthWrite:false
+    });
+    var sprite=new THREE.Sprite(material);
+    sprite.scale.set(
+      settings.width || 8,
+      settings.height || 2,
+      1
+    );
+    sprite.renderOrder=20;
+    sprite.userData.workshopNonInteractive=true;
+    sprite.raycast=function(){};
+    return sprite;
+  }
+
+  function syncWorkshopCadHeightLabelPresentation(){
+    var overlay=document.getElementById("workshopCadHeightOverlay");
+    var label=document.getElementById("workshopCadHeightOverlayLabel");
+    var selectedBounds=workshopRulerState.selectedBounds;
+    if(!overlay || !label ||
+      !workshopCadHeightGuideBase || !workshopCadHeightGuideTop ||
+      !selectedBounds ||
+      !document.body.classList.contains("workshopMode")){
+      if(overlay) overlay.hidden=true;
+      return false;
+    }
+
+    camera.updateMatrixWorld();
+    var canvasBounds=renderer.domElement.getBoundingClientRect();
+    if(!canvasBounds.width || !canvasBounds.height){
+      overlay.hidden=true;
+      return false;
+    }
+
+    function projectPoint(point){
+      var projected=point.clone().project(camera);
+      return {
+        x:canvasBounds.left+(projected.x+1)*canvasBounds.width/2,
+        y:canvasBounds.top+(1-projected.y)*canvasBounds.height/2,
+        depth:projected.z
+      };
+    }
+
+    var objectMinimumX=Infinity;
+    var objectMaximumX=-Infinity;
+    var objectMinimumY=Infinity;
+    var objectMaximumY=-Infinity;
+    [selectedBounds.min.x,selectedBounds.max.x].forEach(function(x){
+      [selectedBounds.min.y,selectedBounds.max.y].forEach(function(y){
+        [selectedBounds.min.z,selectedBounds.max.z].forEach(function(z){
+          var point=projectPoint(new THREE.Vector3(x,y,z));
+          objectMinimumX=Math.min(objectMinimumX,point.x);
+          objectMaximumX=Math.max(objectMaximumX,point.x);
+          objectMinimumY=Math.min(objectMinimumY,point.y);
+          objectMaximumY=Math.max(objectMaximumY,point.y);
+        });
+      });
+    });
+
+    var tableMinimumX=Infinity;
+    var tableMaximumX=-Infinity;
+    var tableMinimumY=Infinity;
+    var tableMaximumY=-Infinity;
+    workshopProjectedRulerCorners.forEach(function(corner){
+      var point=projectPoint(corner);
+      tableMinimumX=Math.min(tableMinimumX,point.x);
+      tableMaximumX=Math.max(tableMaximumX,point.x);
+      tableMinimumY=Math.min(tableMinimumY,point.y);
+      tableMaximumY=Math.max(tableMaximumY,point.y);
+    });
+
+    var viewStation=document.getElementById("viewCubeBox");
+    var assistant=document.getElementById("workshopMeasurementAssistant");
+    var dashboard=document.getElementById("workshopDashboard");
+    var stationBounds=viewStation && viewStation.getBoundingClientRect();
+    var assistantBounds=assistant && assistant.getBoundingClientRect();
+    var dashboardBounds=dashboard && dashboard.getBoundingClientRect();
+    var margin=8;
+    var labelWidth=76;
+    var labelHeight=22;
+    var protectedLeft=Math.max(
+      margin,
+      stationBounds && stationBounds.width ? stationBounds.right+margin : margin
+    );
+    var protectedRight=Math.min(
+      window.innerWidth-margin,
+      assistantBounds && assistantBounds.width ? assistantBounds.left-margin : window.innerWidth-margin
+    );
+    var protectedTop=margin;
+    var protectedBottom=Math.min(
+      window.innerHeight-margin,
+      dashboardBounds && dashboardBounds.height ? dashboardBounds.top-margin : window.innerHeight-margin
+    );
+
+    var avoidRects=[{
+      left:objectMinimumX-10,
+      right:objectMaximumX+10,
+      top:objectMinimumY-10,
+      bottom:objectMaximumY+10
+    }];
+    [
+      "workshopRulerTopSelection","workshopRulerBottomSelection",
+      "workshopRulerLeftSelection","workshopRulerRightSelection"
+    ].forEach(function(id){
+      var element=document.getElementById(id);
+      if(!element || element.hidden) return;
+      var bounds=element.getBoundingClientRect();
+      if(bounds.width && bounds.height){
+        avoidRects.push({
+          left:bounds.left-4,right:bounds.right+4,
+          top:bounds.top-4,bottom:bounds.bottom+4
+        });
+      }
+    });
+
+    function clamp(value,minimum,maximum){
+      return Math.max(minimum,Math.min(maximum,value));
+    }
+    function candidateRect(candidate){
+      return {
+        left:candidate.x-labelWidth/2,
+        right:candidate.x+labelWidth/2,
+        top:candidate.y-labelHeight/2,
+        bottom:candidate.y+labelHeight/2
+      };
+    }
+    function overlaps(first,second){
+      return first.left<second.right && first.right>second.left &&
+        first.top<second.bottom && first.bottom>second.top;
+    }
+    function normalizeCandidate(x,y){
+      return {
+        x:clamp(x,protectedLeft+labelWidth/2,protectedRight-labelWidth/2),
+        y:clamp(y,protectedTop+labelHeight/2,protectedBottom-labelHeight/2)
+      };
+    }
+
+    var basePoint=projectPoint(workshopCadHeightGuideBase);
+    var topPoint=projectPoint(workshopCadHeightGuideTop);
+    var guideLength=Math.hypot(topPoint.x-basePoint.x,topPoint.y-basePoint.y);
+    var objectCenterX=(objectMinimumX+objectMaximumX)/2;
+    var objectCenterY=(objectMinimumY+objectMaximumY)/2;
+    var guideCenterX=(basePoint.x+topPoint.x)/2;
+    var guideCenterY=(basePoint.y+topPoint.y)/2;
+    var topOrBottom=activeWorkshopEngineeringView==="top" ||
+      activeWorkshopEngineeringView==="bottom";
+    var schematic=topOrBottom || guideLength<12 ||
+      basePoint.depth<-1 || basePoint.depth>1 ||
+      topPoint.depth<-1 || topPoint.depth>1;
+    var horizontalSide=guideCenterX<objectCenterX ? -1 : 1;
+    var candidates=[];
+
+    if(!schematic){
+      candidates.push(normalizeCandidate(
+        guideCenterX+horizontalSide*(labelWidth/2+12),guideCenterY
+      ));
+      candidates.push(normalizeCandidate(
+        guideCenterX-horizontalSide*(labelWidth/2+12),guideCenterY
+      ));
+    }
+    candidates.push(normalizeCandidate(
+      tableMinimumX+labelWidth/2+12,objectCenterY
+    ));
+    candidates.push(normalizeCandidate(
+      tableMaximumX-labelWidth/2-12,objectCenterY
+    ));
+    candidates.push(normalizeCandidate(
+      tableMinimumX-labelWidth/2-8,objectCenterY
+    ));
+    candidates.push(normalizeCandidate(
+      tableMaximumX+labelWidth/2+8,objectCenterY
+    ));
+    candidates.push(normalizeCandidate(
+      protectedLeft+labelWidth/2,objectCenterY
+    ));
+    candidates.push(normalizeCandidate(
+      protectedRight-labelWidth/2,objectCenterY
+    ));
+    candidates.push(normalizeCandidate(
+      objectCenterX,tableMinimumY-labelHeight/2-8
+    ));
+    candidates.push(normalizeCandidate(
+      objectCenterX,tableMaximumY+labelHeight/2+8
+    ));
+    candidates.push(normalizeCandidate(
+      protectedLeft+labelWidth/2,protectedTop+labelHeight/2+44
+    ));
+    candidates.push(normalizeCandidate(
+      protectedRight-labelWidth/2,protectedTop+labelHeight/2+44
+    ));
+    candidates.push(normalizeCandidate(
+      protectedLeft+labelWidth/2,protectedBottom-labelHeight/2-44
+    ));
+    candidates.push(normalizeCandidate(
+      protectedRight-labelWidth/2,protectedBottom-labelHeight/2-44
+    ));
+
+    var chosen=candidates[0];
+    for(var index=0;index<candidates.length;index++){
+      var candidate=candidates[index];
+      var rectangle=candidateRect(candidate);
+      if(!avoidRects.some(function(avoid){return overlaps(rectangle,avoid);})){
+        chosen=candidate;
+        break;
+      }
+    }
+
+    overlay.classList.toggle("isSchematic",schematic);
+    overlay.style.left=Math.round(chosen.x-labelWidth/2)+"px";
+    overlay.style.top=Math.round(chosen.y-labelHeight/2)+"px";
+    label.textContent=workshopCadHeightLabelText;
+    overlay.hidden=false;
+    return true;
+  }
+
+  function appendWorkshopCadDimension(axis,start,end,offsetStart,offsetEnd,labelText,options){
+    var settings=options || {};
+    var group=ensureWorkshopCadDimensionGroup();
+    var axisDirection=end.clone().sub(start).normalize();
+    var extensionDirection=offsetStart.clone().sub(start).normalize();
+    var capSize=.32;
+    var capDirection=extensionDirection.lengthSq()
+      ? extensionDirection
+      : new THREE.Vector3(0,1,0);
+    var linePoints=[
+      start,offsetStart,
+      end,offsetEnd,
+      offsetStart,offsetEnd,
+      offsetStart.clone().addScaledVector(capDirection,-capSize),
+      offsetStart.clone().addScaledVector(capDirection,capSize),
+      offsetEnd.clone().addScaledVector(capDirection,-capSize),
+      offsetEnd.clone().addScaledVector(capDirection,capSize)
+    ];
+    group.add(createWorkshopCadLine(linePoints,.94));
+
+    if(settings.showLabel===false) return;
+
+    var label=createWorkshopCadLabel(labelText,settings.labelSize);
+    label.position.copy(offsetStart).lerp(offsetEnd,.5);
+    label.position.addScaledVector(capDirection,.62);
+    // A slight along-axis bias keeps labels clear when three dimensions meet.
+    label.position.addScaledVector(axisDirection,.08);
+    if(axis==="x") label.position.y+=.45;
+    if(axis==="z") label.position.y+=1.05;
+    if(axis==="y") label.position.addScaledVector(capDirection,1.15);
+    group.add(label);
+  }
+
+  function renderWorkshopCadDimensions(){
+    clearWorkshopCadDimensions();
+    var selectedBounds=workshopRulerState.selectedBounds;
+    if(!selectedBounds || !document.body.classList.contains("workshopMode")){
+      return;
+    }
+
+    var group=ensureWorkshopCadDimensionGroup();
+    var heightMeasurement=formatWorkshopMeasurement(selectedBounds.height);
+    var frameLimit=24.35;
+    var selectionCenterX=(selectedBounds.min.x+selectedBounds.max.x)/2;
+    var selectionCenterZ=(selectedBounds.min.z+selectedBounds.max.z)/2;
+    var frameClearances=[
+      {edge:"left",space:selectedBounds.min.x+frameLimit},
+      {edge:"right",space:frameLimit-selectedBounds.max.x},
+      {edge:"back",space:selectedBounds.min.z+frameLimit},
+      {edge:"front",space:frameLimit-selectedBounds.max.z}
+    ];
+    frameClearances.sort(function(first,second){
+      return second.space-first.space;
+    });
+    var guideEdge=frameClearances[0].edge;
+    var guideX=THREE.MathUtils.clamp(selectionCenterX,-22.5,22.5);
+    var guideZ=THREE.MathUtils.clamp(selectionCenterZ,-22.5,22.5);
+    if(guideEdge==="left"){
+      guideX=-frameLimit;
+    }else if(guideEdge==="right"){
+      guideX=frameLimit;
+    }else if(guideEdge==="back"){
+      guideZ=-frameLimit;
+    }else{
+      guideZ=frameLimit;
+    }
+    var tableY=-.5;
+    var topY=selectedBounds.max.y;
+    var capSize=Math.max(.18,Math.min(.42,selectedBounds.height*.12));
+    var heightGuidePoints=[
+      new THREE.Vector3(guideX,tableY,guideZ),
+      new THREE.Vector3(guideX,topY,guideZ),
+      new THREE.Vector3(guideX-capSize,tableY,guideZ),
+      new THREE.Vector3(guideX+capSize,tableY,guideZ),
+      new THREE.Vector3(guideX-capSize,topY,guideZ),
+      new THREE.Vector3(guideX+capSize,topY,guideZ)
+    ];
+    group.add(createWorkshopCadLine(heightGuidePoints,.92));
+
+    workshopCadHeightGuideBase=new THREE.Vector3(guideX,tableY,guideZ);
+    workshopCadHeightGuideTop=new THREE.Vector3(guideX,topY,guideZ);
+    workshopCadHeightLabelText=
+      "H  "+heightMeasurement.text+" "+heightMeasurement.abbreviation;
+    syncWorkshopCadHeightLabelPresentation();
+    group.visible=true;
+  }
 
   function formatWorkshopMeasurement(value){
     var isMillimeters=workshopMeasurementUnit==="mm";
@@ -30135,12 +31082,13 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     var selectionLabel=document.getElementById("workshopMeasurementAssistantSelection");
     var unitLabel=document.getElementById("workshopMeasurementAssistantUnit");
     var widthLabel=document.getElementById("workshopMeasurementAssistantWidth");
+    var lengthLabel=document.getElementById("workshopMeasurementAssistantLength");
     var heightLabel=document.getElementById("workshopMeasurementAssistantHeight");
     var hint=document.getElementById("workshopMeasurementAssistantHint");
     var restoreButton=document.getElementById("workshopRestoreSelection");
     var selectedBounds=workshopRulerState.selectedBounds;
     if(!assistant || !selectionLabel || !unitLabel ||
-       !widthLabel || !heightLabel || !hint) return;
+       !widthLabel || !lengthLabel || !heightLabel || !hint) return;
 
     unitLabel.textContent=workshopMeasurementUnit.toUpperCase();
     updateWorkshopRestoreSelectionAvailability();
@@ -30148,6 +31096,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
       assistant.dataset.measurementState="empty";
       selectionLabel.textContent="Ready to measure";
       widthLabel.textContent="—";
+      lengthLabel.textContent="—";
       heightLabel.textContent="—";
       hint.textContent="Select one or more objects to see their size.";
       assistant.setAttribute(
@@ -30158,6 +31107,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     }
 
     var widthMeasurement=formatWorkshopMeasurement(selectedBounds.width);
+    var lengthMeasurement=formatWorkshopMeasurement(selectedBounds.length);
     var heightMeasurement=formatWorkshopMeasurement(selectedBounds.height);
     var objectCount=selectedBounds.objectCount || 1;
     var selectionText=objectCount===1
@@ -30166,14 +31116,16 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     assistant.dataset.measurementState="measured";
     selectionLabel.textContent=selectionText;
     widthLabel.textContent=widthMeasurement.text+" "+widthMeasurement.abbreviation;
+    lengthLabel.textContent=lengthMeasurement.text+" "+lengthMeasurement.abbreviation;
     heightLabel.textContent=heightMeasurement.text+" "+heightMeasurement.abbreviation;
     hint.textContent=objectCount===1
-      ? "The arrows show this object's width and height."
-      : "The arrows show the whole selection's width and height.";
+      ? "The frame highlights show width and length; the cyan guide shows height."
+      : "The frame highlights and cyan guide measure the whole selection.";
     assistant.setAttribute(
       "aria-label",
       "Measurement Assistant. "+selectionText+". Width "+
         widthMeasurement.text+" "+widthMeasurement.spokenUnit+
+        ". Length "+lengthMeasurement.text+" "+lengthMeasurement.spokenUnit+
         ". Height "+heightMeasurement.text+" "+heightMeasurement.spokenUnit+"."
     );
   }
@@ -30182,6 +31134,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     workshopRulerSelectedObjects=[];
     workshopRulerSelectedBoundsSignature="";
     workshopRulerState.selectedBounds=null;
+    clearWorkshopCadDimensions();
 
     [
       "workshopRulerTopSelection",
@@ -30208,11 +31161,12 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     var start=Math.min(firstPosition,secondPosition);
     var end=Math.max(firstPosition,secondPosition);
     var span=Math.max(1,end-start);
-    var rulerSize=axis==="y" ? ruler.clientHeight : ruler.clientWidth;
+    var isVertical=ruler.classList.contains("workshop-ruler-vertical");
+    var rulerSize=isVertical ? ruler.clientHeight : ruler.clientWidth;
 
     layer.hidden=false;
     layer.replaceChildren();
-    if(axis==="y"){
+    if(isVertical){
       layer.style.top=start+"px";
       layer.style.height=span+"px";
       layer.style.left="";
@@ -30250,7 +31204,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     var labelHalf=Math.min(label.offsetWidth/2,rulerSize/2);
     var desiredCenter=(start+end)/2;
     var safeCenter=Math.max(labelHalf,Math.min(rulerSize-labelHalf,desiredCenter));
-    if(axis==="y"){
+    if(isVertical){
       label.style.top=(safeCenter-start)+"px";
     }else{
       label.style.left=(safeCenter-start)+"px";
@@ -30265,11 +31219,12 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     }
 
     var widthMeasurement=formatWorkshopMeasurement(selectedBounds.width);
-    var heightMeasurement=formatWorkshopMeasurement(selectedBounds.height);
+    var lengthMeasurement=formatWorkshopMeasurement(selectedBounds.length);
     var selectionDescription=selectedBounds.objectCount===1
       ? "Selected object"
       : "Selected objects combined";
     updateWorkshopMeasurementAssistant();
+    renderWorkshopCadDimensions();
     [
       ["workshopRulerTop","workshopRulerTopSelection"],
       ["workshopRulerBottom","workshopRulerBottomSelection"]
@@ -30286,10 +31241,10 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
       ["workshopRulerRight","workshopRulerRightSelection"]
     ].forEach(function(ids){
       renderWorkshopRulerSelectionLayer(
-        ids[0],ids[1],"y",
-        selectedBounds.min.y,selectedBounds.max.y,
-        "Height: "+heightMeasurement.text+" "+heightMeasurement.abbreviation,
-        selectionDescription+" height: "+heightMeasurement.text+" "+heightMeasurement.spokenUnit
+        ids[0],ids[1],"z",
+        selectedBounds.min.z,selectedBounds.max.z,
+        "Length: "+lengthMeasurement.text+" "+lengthMeasurement.abbreviation,
+        selectionDescription+" length: "+lengthMeasurement.text+" "+lengthMeasurement.spokenUnit
       );
     });
   }
@@ -30338,6 +31293,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
         z:normalizeWorkshopRulerValue(bounds.max.z)
       },
       width:normalizeWorkshopRulerValue(size.x),
+      length:normalizeWorkshopRulerValue(size.z),
       height:normalizeWorkshopRulerValue(size.y),
       objectCount:workshopRulerSelectedObjects.length
     };
@@ -30427,6 +31383,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     if(currentWorkspaceMode!=="workshop" ||
        !document.body.classList.contains("workshopMode") ||
        isStarterScreenActive() ||
+       selectMode ||
+       activeWorkshopFitSelection ||
        !workshopBuildToolIsActive() ||
        workshopHasBlockingModal()){
       return false;
@@ -30494,7 +31452,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     if(!utilityRail) return;
 
     if(mode==="workshop"){
-      document.body.appendChild(utilityRail);
+      var controlStation=document.getElementById("viewCubeBox");
+      if(controlStation) controlStation.appendChild(utilityRail);
       return;
     }
 
@@ -30621,11 +31580,157 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
         String(button.dataset.workshopView===activeWorkshopEngineeringView)
       );
     });
+    var fitButton=document.getElementById("workshopFitSelection");
+    if(fitButton){
+      fitButton.setAttribute("aria-pressed",String(activeWorkshopFitSelection));
+    }
+  }
+
+  function getWorkshopSelectedObjectBounds(){
+    var selection=selectedBlocks.filter(function(block,index,list){
+      return block && block.parent && blocks.includes(block) &&
+        list.indexOf(block)===index;
+    });
+    if(selection.length===0) return null;
+
+    var bounds=new THREE.Box3();
+    selection.forEach(function(block){
+      block.updateWorldMatrix(true,true);
+      bounds.expandByObject(block);
+    });
+    return bounds.isEmpty() ? null : bounds;
+  }
+
+  function syncWorkshopFitSelectionAvailability(){
+    var fitButton=document.getElementById("workshopFitSelection");
+    if(!fitButton) return;
+    var available=!!getWorkshopSelectedObjectBounds();
+    fitButton.disabled=!available;
+    fitButton.setAttribute("aria-disabled",String(!available));
+    if(!available && activeWorkshopFitSelection){
+      activeWorkshopFitSelection=false;
+      fitButton.setAttribute("aria-pressed","false");
+    }
+  }
+
+  function clearWorkshopFitSelectionState(){
+    activeWorkshopFitSelection=false;
+    hideWorkshopPrecisionCursor();
+    syncWorkshopEngineeringViewButtons();
+  }
+
+  function fitWorkshopSelection(requestedView){
+    if(!document.body.classList.contains("workshopMode")) return false;
+    var bounds=getWorkshopSelectedObjectBounds();
+    if(!bounds){
+      syncWorkshopFitSelectionAvailability();
+      return false;
+    }
+
+    var center=bounds.getCenter(new THREE.Vector3());
+    var direction=new THREE.Vector3();
+    var up=camera.up.clone().normalize();
+    var definition=workshopEngineeringViewDirections[requestedView];
+    if(definition){
+      direction.set(
+        definition.position[0],
+        definition.position[1],
+        definition.position[2]
+      ).normalize();
+      up.set(definition.up[0],definition.up[1],definition.up[2]).normalize();
+      activeWorkshopEngineeringView=requestedView;
+    }else{
+      direction.copy(camera.position).sub(
+        activeWorkshopEngineeringTarget || center
+      );
+      if(direction.lengthSq()<0.0001) direction.set(0,.7,1);
+      direction.normalize();
+      activeWorkshopEngineeringView="fit";
+    }
+
+    var forward=direction.clone().multiplyScalar(-1);
+    var right=new THREE.Vector3().crossVectors(forward,up).normalize();
+    if(right.lengthSq()<0.0001){
+      right.set(1,0,0);
+    }
+    var viewUp=new THREE.Vector3().crossVectors(right,forward).normalize();
+    var halfWidth=0;
+    var halfHeight=0;
+    [bounds.min.x,bounds.max.x].forEach(function(x){
+      [bounds.min.y,bounds.max.y].forEach(function(y){
+        [bounds.min.z,bounds.max.z].forEach(function(z){
+          var offset=new THREE.Vector3(x,y,z).sub(center);
+          halfWidth=Math.max(halfWidth,Math.abs(offset.dot(right)));
+          halfHeight=Math.max(halfHeight,Math.abs(offset.dot(viewUp)));
+        });
+      });
+    });
+
+    var viewStation=document.getElementById("viewCubeBox");
+    var assistant=document.getElementById("workshopMeasurementAssistant");
+    var dashboard=document.getElementById("workshopDashboard");
+    var stationBounds=viewStation && viewStation.getBoundingClientRect();
+    var assistantBounds=assistant && assistant.getBoundingClientRect();
+    var dashboardBounds=dashboard && dashboard.getBoundingClientRect();
+    var usableWidth=Math.max(
+      240,
+      (assistantBounds ? assistantBounds.left : window.innerWidth)-
+        (stationBounds ? stationBounds.right : 0)-24
+    );
+    var usableHeight=Math.max(
+      240,
+      (dashboardBounds ? dashboardBounds.top : window.innerHeight)-72
+    );
+    var fitFov=50;
+    var verticalFov=THREE.MathUtils.degToRad(fitFov);
+    var horizontalFov=2*Math.atan(
+      Math.tan(verticalFov/2)*(usableWidth/usableHeight)
+    );
+    var targetFill=.40;
+    var fitDistance=Math.max(
+      3.2,
+      halfHeight/(Math.tan(verticalFov/2)*targetFill),
+      halfWidth/(Math.tan(horizontalFov/2)*targetFill)
+    )*1.08;
+
+    activeWorkshopEngineeringTarget=center;
+    activeWorkshopFitSelection=true;
+    camera.fov=fitFov;
+    camera.updateProjectionMatrix();
+    camera.up.copy(up);
+    camera.position.copy(center).addScaledVector(direction,fitDistance);
+    camera.lookAt(center);
+
+    if(definition){
+      cameraDistance=fitDistance;
+      applyWorkshopEngineeringView();
+    }else{
+      var horizontalOffset=camera.position.clone().sub(center);
+      cameraAngle=Math.atan2(horizontalOffset.x,horizontalOffset.z);
+      cameraDistance=Math.max(
+        .01,
+        Math.hypot(horizontalOffset.x,horizontalOffset.z)
+      );
+      cameraHeight=camera.position.y;
+    }
+    hideWorkshopPrecisionCursor();
+    if(workshopRulerState.selectedBounds){
+      renderWorkshopSelectedBounds();
+    }
+    syncWorkshopEngineeringViewButtons();
+    return true;
   }
 
   function clearWorkshopEngineeringView(){
+    if(activeWorkshopFitSelection && activeWorkshopEngineeringTarget){
+      activeWorkshopFitSelection=false;
+      activeWorkshopEngineeringView="home";
+      syncWorkshopEngineeringViewButtons();
+      return;
+    }
     activeWorkshopEngineeringView=null;
     activeWorkshopEngineeringTarget=null;
+    activeWorkshopFitSelection=false;
     syncWorkshopEngineeringViewButtons();
   }
 
@@ -30643,15 +31748,17 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     }
 
     return {
-      targetX:interpolate(-11,-4.3),
-      targetY:interpolate(5,2.77),
-      distance:interpolate(45,45),
-      height:interpolate(38,25)
+      targetX:interpolate(-0.6,-0.2),
+      targetY:interpolate(-2.6,-2.3),
+      distance:interpolate(39.6,52.6),
+      height:interpolate(82,44.6),
+      fov:interpolate(48,59.5)
     };
   }
 
   function applyResponsiveWorkshopHomeView(){
     var config=getWorkshopHomeCameraConfig();
+    activeWorkshopFitSelection=false;
     activeWorkshopEngineeringView="home";
     activeWorkshopEngineeringTarget=new THREE.Vector3(
       config.targetX,
@@ -30661,6 +31768,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     cameraAngle=0;
     cameraDistance=config.distance;
     cameraHeight=config.height;
+    camera.fov=config.fov;
+    camera.updateProjectionMatrix();
     camera.up.set(0,1,0);
     updateCamera();
     syncWorkshopEngineeringViewButtons();
@@ -30669,7 +31778,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
 
   function getWorkshopCameraOrbitTarget(){
     if(!document.body.classList.contains("workshopMode") ||
-      activeWorkshopEngineeringView!=="home" ||
+      (activeWorkshopEngineeringView!=="home" && !activeWorkshopFitSelection) ||
       !activeWorkshopEngineeringTarget){
       return null;
     }
@@ -30716,6 +31825,87 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     return true;
   }
 
+  function correctWorkshopDirectionalViewProtectedZone(view){
+    var protectsViewStation=view==="left" || view==="back";
+    if(!protectsViewStation && view!=="bottom") return false;
+    if(!updateWorkshopProjectedRulerBounds()) return false;
+
+    var rulerBounds=document
+      .getElementById("workshopViewportContainer")
+      .getBoundingClientRect();
+    var desiredScreenX=0;
+    var desiredScreenY=0;
+    var safetyMargin=8;
+
+    if(protectsViewStation){
+      var viewStation=document.getElementById("viewCubeBox");
+      if(!viewStation) return false;
+      var viewStationBounds=viewStation.getBoundingClientRect();
+      desiredScreenX=Math.max(
+        0,
+        viewStationBounds.right+safetyMargin-rulerBounds.left
+      );
+    }else{
+      var dashboard=document.getElementById("workshopDashboard");
+      if(!dashboard) return false;
+      var dashboardBounds=dashboard.getBoundingClientRect();
+      desiredScreenY=Math.min(
+        0,
+        dashboardBounds.top-safetyMargin-rulerBounds.bottom
+      );
+    }
+
+    if(!desiredScreenX && !desiredScreenY) return false;
+
+    camera.updateMatrixWorld();
+    var canvasBounds=renderer.domElement.getBoundingClientRect();
+    var target=activeWorkshopEngineeringTarget;
+    if(!target || !canvasBounds.height) return false;
+
+    var targetDepth=camera.position.distanceTo(target);
+    var worldUnitsPerPixel=
+      2*targetDepth*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))/
+      canvasBounds.height;
+    var cameraRight=new THREE.Vector3()
+      .setFromMatrixColumn(camera.matrixWorld,0);
+    var cameraUp=new THREE.Vector3()
+      .setFromMatrixColumn(camera.matrixWorld,1);
+    var translation=new THREE.Vector3()
+      .addScaledVector(
+        cameraRight,
+        -desiredScreenX*worldUnitsPerPixel
+      )
+      .addScaledVector(
+        cameraUp,
+        desiredScreenY*worldUnitsPerPixel
+      );
+
+    target.add(translation);
+    camera.position.add(translation);
+    camera.lookAt(target);
+    updateWorkshopProjectedRulerBounds();
+
+    // Calibrate the world-space estimate against the actual projected shift
+    // so perspective depth cannot turn a minimum clearance into an overshoot.
+    var correctedBounds=document
+      .getElementById("workshopViewportContainer")
+      .getBoundingClientRect();
+    var estimatedShift=protectsViewStation
+      ? correctedBounds.left-rulerBounds.left
+      : correctedBounds.bottom-rulerBounds.bottom;
+    var requiredShift=protectsViewStation ? desiredScreenX : desiredScreenY;
+    if(Math.abs(estimatedShift)>0.01){
+      var refinement=translation.clone().multiplyScalar(
+        requiredShift/estimatedShift-1
+      );
+      target.add(refinement);
+      camera.position.add(refinement);
+      camera.lookAt(target);
+      updateWorkshopProjectedRulerBounds();
+    }
+    return true;
+  }
+
   function setWorkshopEngineeringView(view){
     if(!document.body.classList.contains("workshopMode")) return false;
 
@@ -30725,6 +31915,10 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
 
     if(!workshopEngineeringViewDirections[view]) return false;
 
+    if(getWorkshopSelectedObjectBounds()){
+      return fitWorkshopSelection(view);
+    }
+
     // Preserve the model's projected depth and center the complete visible
     // Workshop build while a directional engineering view is active.
     var modelCenter=getWorkshopEngineeringModelCenter();
@@ -30732,7 +31926,10 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     activeWorkshopEngineeringTarget=modelCenter || new THREE.Vector3(0,0,0);
     cameraDistance=Math.max(6,modelDepth);
     activeWorkshopEngineeringView=view;
+    camera.fov=builderCameraSnapshot ? builderCameraSnapshot.fov : 75;
+    camera.updateProjectionMatrix();
     applyWorkshopEngineeringView();
+    correctWorkshopDirectionalViewProtectedZone(view);
     syncWorkshopEngineeringViewButtons();
     return true;
   }
@@ -30744,7 +31941,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
       distance:cameraDistance,
       height:cameraHeight,
       position:camera.position.clone(),
-      up:camera.up.clone()
+      up:camera.up.clone(),
+      fov:camera.fov
     };
   }
 
@@ -30756,6 +31954,8 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     cameraHeight=builderCameraSnapshot.height;
     camera.position.copy(builderCameraSnapshot.position);
     camera.up.copy(builderCameraSnapshot.up);
+    camera.fov=builderCameraSnapshot.fov;
+    camera.updateProjectionMatrix();
     camera.lookAt(0,0,0);
     builderCameraSnapshot=null;
   }
@@ -30796,6 +31996,11 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
       return;
     }
     if(!workshopViewShortcutAllowed(event)) return;
+    if(event.key.toLowerCase()==="f"){
+      event.preventDefault();
+      fitWorkshopSelection();
+      return;
+    }
     var shortcutViews={
       "1":"front",
       "2":"back",
@@ -30833,12 +32038,12 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
       }
 
       updateWorkshopRoomBackgroundCover();
-      scene.background=workshopRoomBackgroundTexture;
+      scene.background=workshopRoomBackgroundTexture || new THREE.Color(0x87CEEB);
       ground.material.map=null;
       ground.material.color.setHex(0x5f8fa8);
       ground.material.transparent=true;
-      ground.material.opacity=0.30;
-      ground.material.depthWrite=false;
+      ground.material.opacity=0.95;
+      ground.material.depthWrite=true;
       ground.material.needsUpdate=true;
       workshopStageFrame.visible=true;
 
@@ -30861,6 +32066,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
 
     if(!workshopBuildAreaSnapshot) return;
 
+    clearWorkshopProjectedRulerBounds();
     scene.background=workshopBuildAreaSnapshot.sceneBackground;
     ground.material.map=workshopBuildAreaSnapshot.groundMap;
     ground.material.color.copy(workshopBuildAreaSnapshot.groundColor);
@@ -30914,7 +32120,10 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     if(requestedMode!=="workshop") restoreBuilderCameraState();
     if(requestedMode!=="workshop") hideWorkshopPrecisionCursor();
     applyWorkshopBuildAreaVisuals(requestedMode==="workshop");
-    if(requestedMode==="workshop") applyResponsiveWorkshopHomeView();
+    if(requestedMode==="workshop"){
+      applyResponsiveWorkshopHomeView();
+      window.requestAnimationFrame(updateWorkshopProjectedRulerBounds);
+    }
     placeUtilityRail(requestedMode);
     updateModeControls();
 
@@ -30954,6 +32163,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
     setWorkshopConsoleTab("build");
     installEngineeringToolChest();
     renderWorkshopRulers();
+    syncWorkshopFitSelectionAvailability();
     stopBuilderClickThrough(utilityRail);
     stopBuilderClickThrough(switcher);
     stopBuilderClickThrough(workshopDashboard);
@@ -30963,6 +32173,11 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
 
     if(engineeringViewControls){
       engineeringViewControls.addEventListener("click",function(event){
+        var fitSelectionButton=event.target.closest("#workshopFitSelection");
+        if(fitSelectionButton && engineeringViewControls.contains(fitSelectionButton)){
+          fitWorkshopSelection();
+          return;
+        }
         var platformColorButton=event.target.closest("#workshopPlatformColorButton");
         if(platformColorButton && engineeringViewControls.contains(platformColorButton)){
           openPlatformColorDialog();
@@ -31042,9 +32257,13 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
   };
   window.setWorkshopMeasurementUnit=setWorkshopMeasurementUnit;
   window.setWorkshopEngineeringView=setWorkshopEngineeringView;
+  window.fitWorkshopSelection=fitWorkshopSelection;
+  window.clearWorkshopFitSelectionState=clearWorkshopFitSelectionState;
+  window.syncWorkshopFitSelectionAvailability=syncWorkshopFitSelectionAvailability;
   window.clearWorkshopEngineeringView=clearWorkshopEngineeringView;
   window.applyWorkshopEngineeringView=applyWorkshopEngineeringView;
   window.getWorkshopCameraOrbitTarget=getWorkshopCameraOrbitTarget;
+  window.updateWorkshopProjectedRulerBounds=updateWorkshopProjectedRulerBounds;
   window.getWorkshopPlatformColorState=function(){
     return {
       active:platformColorModeActive,
