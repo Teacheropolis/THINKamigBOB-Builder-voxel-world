@@ -8047,6 +8047,15 @@ viewCubeRenderer.render(
 
 function saveImage(){
 
+  if(typeof window.html2canvas !== "function"){
+    const toolMessage = document.getElementById("toolMessage");
+    if(toolMessage){
+      toolMessage.textContent =
+        "Screenshot is unavailable right now. Your build is unchanged.";
+    }
+    return false;
+  }
+
   const studentName =
     document.getElementById("studentName").value || "Student";
 
@@ -11019,8 +11028,23 @@ END JS SECTION 02A: UPDATE #64 — STARTER PAGE + MISSION SELECTION SYSTEM
 JS SECTION 03: TITLE SYSTEM SCRIPT
 Preserved from working file. Future edits should target by section.
 ===================================================== -->
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js">
-/* UPDATE #58: Neutralized ignored inline starter-page duplicate inside external html2canvas script tag. */
+<script id="optionalHtml2CanvasLoader">
+(function(){
+  function loadOptionalHtml2Canvas(){
+    if(typeof window.html2canvas === "function" ||
+       document.querySelector('script[data-optional-dependency="html2canvas"]')) return;
+    var script=document.createElement("script");
+    script.src="https://html2canvas.hertzen.com/dist/html2canvas.min.js";
+    script.async=true;
+    script.dataset.optionalDependency="html2canvas";
+    document.head.appendChild(script);
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded",loadOptionalHtml2Canvas,{once:true});
+  }else{
+    loadOptionalHtml2Canvas();
+  }
+})();
 </script>
 <!-- =====================================================
 CSS SECTION 04: DASHBOARD / BUILD BAR CSS
@@ -29680,13 +29704,86 @@ body.workshopMode:not(.starterScreenActive)
 <script id="workshopModeShellScript">
 (function(){
   var currentWorkspaceMode="mission";
+  var workshopStateController=null;
+  var workshopControllerReady=null;
+  var workshopStartupState="OFF";
+  var workshopStartupRequested=false;
+  var workshopAssetLoadAttempt=0;
+  var workshopDrawerTransitionCompletions=Object.create(null);
   var workshopBuildAreaSnapshot=null;
   var workshopRoomBackgroundAssetPath=
     "assets/images/workshop/production/workshop-environment-production-v6-master.png";
   var workshopRoomBackgroundTexture=null;
-  new THREE.TextureLoader().load(
-    workshopRoomBackgroundAssetPath,
+  var workshopRoomBackgroundLoadError=null;
+
+  function getWorkshopStartupStatusElement(){
+    var status=document.getElementById("workshopStartupStatus");
+    if(status) return status;
+    status=document.createElement("span");
+    status.id="workshopStartupStatus";
+    status.setAttribute("role","status");
+    status.setAttribute("aria-live","polite");
+    status.style.position="absolute";
+    status.style.width="1px";
+    status.style.height="1px";
+    status.style.padding="0";
+    status.style.margin="-1px";
+    status.style.overflow="hidden";
+    status.style.clip="rect(0, 0, 0, 0)";
+    status.style.whiteSpace="nowrap";
+    status.style.border="0";
+    document.body.appendChild(status);
+    return status;
+  }
+
+  function setWorkshopStartupState(state,message){
+    workshopStartupState=state;
+    var switcher=document.getElementById("workspaceModeSwitch");
+    var label=switcher && switcher.querySelector(".workspaceModeLabel");
+    var loading=state==="STARTING" || (state==="LOADING" && workshopStartupRequested);
+    if(switcher){
+      switcher.disabled=loading;
+      switcher.setAttribute("aria-busy",loading ? "true" : "false");
+      switcher.dataset.workshopStartupState=state;
+      if(state==="FAILED"){
+        switcher.title="Retry opening Workshop";
+        switcher.setAttribute("aria-label","Workshop failed to load. Retry opening Workshop");
+      }
+    }
+    if(label && currentWorkspaceMode!=="workshop"){
+      label.textContent=state==="LOADING" && workshopStartupRequested ? "Loading Workshop…" :
+        state==="STARTING" ? "Opening Workshop…" :
+        state==="FAILED" ? "Retry Workshop" : "Open Workshop";
+    }
+    if(message) getWorkshopStartupStatusElement().textContent=message;
+  }
+
+  function workshopStartupDependenciesReady(){
+    return !!(
+      workshopStateController &&
+      workshopRoomBackgroundTexture &&
+      renderer && renderer.capabilities &&
+      scene && camera && ground && workshopStageFrame && engineeringGrid
+    );
+  }
+
+  function retryPendingWorkshopStartup(){
+    if(!workshopStartupRequested || !workshopStartupDependenciesReady()) return false;
+    setWorkshopStartupState("READY","Workshop assets are ready.");
+    return requestWorkshopPowerOn();
+  }
+
+  function loadWorkshopStartupAssets(){
+    var attempt=++workshopAssetLoadAttempt;
+    workshopRoomBackgroundLoadError=null;
+    setWorkshopStartupState("LOADING","Loading Workshop assets.");
+    new THREE.TextureLoader().load(
+      workshopRoomBackgroundAssetPath,
     function(texture){
+      if(attempt!==workshopAssetLoadAttempt){
+        texture.dispose();
+        return;
+      }
       var image=texture.image;
       var maximumTextureSize=renderer.capabilities.maxTextureSize;
       if(image && maximumTextureSize &&
@@ -29717,6 +29814,8 @@ body.workshopMode:not(.starterScreenActive)
             workshopRoomBackgroundAssetPath,
             error
           );
+          workshopRoomBackgroundLoadError=error;
+          setWorkshopStartupState("FAILED","Workshop assets could not be prepared. Select Retry Workshop to try again.");
           return;
         }
       }
@@ -29728,16 +29827,25 @@ body.workshopMode:not(.starterScreenActive)
       if(currentWorkspaceMode==="workshop"){
         scene.background=texture;
       }
+      if(workshopStartupDependenciesReady()){
+        setWorkshopStartupState("READY","Workshop assets are ready.");
+        retryPendingWorkshopStartup();
+      }
     },
     undefined,
     function(error){
+      if(attempt!==workshopAssetLoadAttempt) return;
+      workshopRoomBackgroundLoadError=error || new Error("Workshop background failed to load");
       console.error(
         "Workshop Production v6 texture-loading failure:",
         workshopRoomBackgroundAssetPath,
         error
       );
+      setWorkshopStartupState("FAILED","Workshop assets could not be loaded. Select Retry Workshop to try again.");
     }
-  );
+    );
+  }
+  loadWorkshopStartupAssets();
   var builderCameraSnapshot=null;
   var activeWorkshopEngineeringView=null;
   var activeWorkshopEngineeringTarget=null;
@@ -30412,6 +30520,13 @@ body.workshopMode:not(.starterScreenActive)
 
   function toggleEngineeringToolChestDrawer(drawerName){
     var state=engineeringToolChestState.drawers[drawerName];
+    if(workshopStateController && currentWorkspaceMode==="workshop"){
+      return workshopStateController.request({
+        action:state==="open" || state==="opening" ? "CLOSE_DRAWER" : "OPEN_DRAWER",
+        input:"pointer",
+        payload:{uiDrawer:drawerName,uncommittedOperationResolved:true}
+      }).ok;
+    }
     if(state==="open" || state==="opening"){
       closeEngineeringToolChestDrawer(drawerName,false);
       return false;
@@ -30510,6 +30625,11 @@ body.workshopMode:not(.starterScreenActive)
         }else if(state==="closing"){
           engineeringToolChestState.drawers[drawerName]="closed";
           updateEngineeringToolChestDrawerPresentation(drawerName,"closed");
+        }
+        var complete=workshopDrawerTransitionCompletions[drawerName];
+        if(complete && (state==="opening" || state==="closing")){
+          delete workshopDrawerTransitionCompletions[drawerName];
+          complete();
         }
       });
     });
@@ -31304,7 +31424,7 @@ body.workshopMode:not(.starterScreenActive)
     setWorkshopRulerSelectedObjects(object ? [object] : []);
   }
 
-  function setWorkshopRulerSelectedObjects(objects){
+  function applyWorkshopRulerSelectedObjects(objects){
     workshopRulerSelectedObjects=Array.isArray(objects)
       ? objects.filter(function(object,index,list){
           return object && list.indexOf(object)===index;
@@ -31318,16 +31438,35 @@ body.workshopMode:not(.starterScreenActive)
     refreshWorkshopRulerSelectionHighlight();
   }
 
+  function setWorkshopRulerSelectedObjects(objects){
+    var selected=Array.isArray(objects)
+      ? objects.filter(function(object,index,list){
+          return object && list.indexOf(object)===index;
+        })
+      : [];
+    if(workshopStateController && currentWorkspaceMode==="workshop"){
+      return workshopStateController.request({
+        action:selected.length ? "SELECT_MEASURABLE_OBJECT" : "CLEAR_SELECTION",
+        input:"host",
+        payload:{
+          objects:selected,
+          objectId:selected.length===1
+            ? (selected[0].uuid || selected[0].id || "selected-object")
+            : "selection",
+          objectMeasurable:selected.length>0
+        }
+      }).ok;
+    }
+    applyWorkshopRulerSelectedObjects(selected);
+    return true;
+  }
+
   function clearWorkshopRulerSelectionForObject(object){
     var objectIndex=workshopRulerSelectedObjects.indexOf(object);
     if(objectIndex===-1) return;
-    workshopRulerSelectedObjects.splice(objectIndex,1);
-    workshopRulerSelectedBoundsSignature="";
-    if(workshopRulerSelectedObjects.length===0){
-      clearWorkshopRulerSelectionHighlight();
-      return;
-    }
-    refreshWorkshopRulerSelectionHighlight();
+    setWorkshopRulerSelectedObjects(workshopRulerSelectedObjects.filter(function(item){
+      return item!==object;
+    }));
   }
 
   function isStarterScreenActive(){
@@ -31445,6 +31584,9 @@ body.workshopMode:not(.starterScreenActive)
     var label=modeSwitch.querySelector(".workspaceModeLabel");
     if(icon) icon.textContent=workshopIsActive ? "🧱" : "🛠";
     if(label) label.textContent=workshopIsActive ? "Return to Mission" : "Open Workshop";
+    if(!workshopIsActive && workshopStartupState!=="OFF" && workshopStartupState!=="READY"){
+      setWorkshopStartupState(workshopStartupState);
+    }
   }
 
   function placeUtilityRail(mode){
@@ -32016,7 +32158,7 @@ body.workshopMode:not(.starterScreenActive)
     setWorkshopEngineeringView(view);
   }
 
-  function applyWorkshopBuildAreaVisuals(workshopIsActive){
+  function applyWorkshopBuildAreaVisuals(workshopIsActive,onComplete){
     var gridButton=document.getElementById("engineeringGridToggle");
 
     if(workshopIsActive){
@@ -32038,7 +32180,7 @@ body.workshopMode:not(.starterScreenActive)
       }
 
       updateWorkshopRoomBackgroundCover();
-      scene.background=workshopRoomBackgroundTexture || new THREE.Color(0x87CEEB);
+      scene.background=workshopRoomBackgroundTexture;
       ground.material.map=null;
       ground.material.color.setHex(0x5f8fa8);
       ground.material.transparent=true;
@@ -32061,6 +32203,7 @@ body.workshopMode:not(.starterScreenActive)
         gridButton.textContent="▦ Grid: On";
         gridButton.setAttribute("aria-pressed","true");
       }
+      if(typeof onComplete==="function") onComplete();
       return;
     }
 
@@ -32095,12 +32238,10 @@ body.workshopMode:not(.starterScreenActive)
     }
     syncEngineeringGridStyle(ground.material.map === grassTexture);
     workshopBuildAreaSnapshot=null;
+    if(typeof onComplete==="function") onComplete();
   }
 
-  function setWorkspaceMode(mode){
-    var requestedMode=mode==="workshop" ? "workshop" : "mission";
-    if(requestedMode==="workshop" && isStarterScreenActive()) return false;
-
+  function applyWorkspaceModeVisuals(requestedMode,onComplete){
     if(requestedMode==="workshop"){
       workshopPlatformTint=0x5f8fa8;
       captureBuilderCameraState();
@@ -32119,7 +32260,7 @@ body.workshopMode:not(.starterScreenActive)
     document.body.classList.toggle("missionMode",requestedMode==="mission");
     if(requestedMode!=="workshop") restoreBuilderCameraState();
     if(requestedMode!=="workshop") hideWorkshopPrecisionCursor();
-    applyWorkshopBuildAreaVisuals(requestedMode==="workshop");
+    applyWorkshopBuildAreaVisuals(requestedMode==="workshop",onComplete);
     if(requestedMode==="workshop"){
       applyResponsiveWorkshopHomeView();
       window.requestAnimationFrame(updateWorkshopProjectedRulerBounds);
@@ -32130,6 +32271,49 @@ body.workshopMode:not(.starterScreenActive)
     window.dispatchEvent(new CustomEvent("workspace-mode-change",{
       detail:{mode:requestedMode}
     }));
+  }
+
+  function requestWorkshopPowerOn(){
+    if(!workshopStartupDependenciesReady()) return false;
+    setWorkshopStartupState("STARTING","Opening Workshop.");
+    var result=workshopStateController.request({
+      action:"REQUEST_POWER_ON",
+      input:"host",
+      context:{
+        assetsLoaded:workshopStartupDependenciesReady()
+      }
+    });
+    if(!result.ok){
+      workshopStartupRequested=false;
+      setWorkshopStartupState("FAILED","Workshop could not start. Select Retry Workshop to try again.");
+      return false;
+    }
+    return true;
+  }
+
+  function setWorkspaceMode(mode){
+    var requestedMode=mode==="workshop" ? "workshop" : "mission";
+    if(requestedMode==="workshop" && isStarterScreenActive()) return false;
+    if(requestedMode===currentWorkspaceMode) return true;
+
+    if(requestedMode==="workshop"){
+      workshopStartupRequested=true;
+      if(workshopStartupState==="FAILED") loadWorkshopStartupAssets();
+      if(!workshopStartupDependenciesReady()){
+        setWorkshopStartupState("LOADING","Loading Workshop assets. Workshop will open automatically when ready.");
+        return true;
+      }
+      return requestWorkshopPowerOn();
+    }
+
+    if(!workshopStateController) return false;
+    var result=workshopStateController.request({
+      action:"REQUEST_POWER_OFF",
+      input:"host",
+      context:{applicationStateSecured:!platformColorDialogIsOpen()}
+    });
+    if(!result.ok) return false;
+    workshopStartupRequested=false;
     return true;
   }
 
@@ -32234,7 +32418,8 @@ body.workshopMode:not(.starterScreenActive)
       });
     });
 
-    if(switcher && !switcher.hasAttribute("onclick")){
+    if(switcher){
+      switcher.removeAttribute("onclick");
       switcher.addEventListener("click",function(){
         setWorkspaceMode(currentWorkspaceMode==="workshop" ? "mission" : "workshop");
       });
@@ -32242,7 +32427,7 @@ body.workshopMode:not(.starterScreenActive)
 
     new MutationObserver(function(){
       if(isStarterScreenActive() && currentWorkspaceMode!=="mission"){
-        setWorkspaceMode("mission");
+        updateModeControls();
       }
     }).observe(document.body,{attributes:true,attributeFilter:["class"]});
 
@@ -32306,6 +32491,57 @@ body.workshopMode:not(.starterScreenActive)
       description:"Workshop model units; not physical screen calibration"
     };
   };
+
+  workshopControllerReady=import("./js/workshop/runtime/workshop-runtime-controller.mjs")
+    .then(function(module){
+      workshopStateController=module.createWorkshopRuntimeController({
+        emit:function(eventName,detail){
+          window.dispatchEvent(new CustomEvent(eventName,{detail:detail}));
+          if(eventName==="workshop:ready"){
+            workshopStartupRequested=false;
+            setWorkshopStartupState("ACTIVE","Workshop is ready.");
+          }else if(eventName==="workshop:off"){
+            workshopStartupRequested=false;
+            setWorkshopStartupState("OFF","Workshop closed.");
+          }
+        },
+        drivers:{
+          enterWorkshop:function(transition){
+            applyWorkspaceModeVisuals("workshop",transition.complete);
+          },
+          exitWorkshop:function(transition){
+            applyWorkspaceModeVisuals("mission",transition.complete);
+          },
+          openDrawer:function(transition){
+            workshopDrawerTransitionCompletions[transition.uiDrawer]=transition.complete;
+            openEngineeringToolChestDrawer(transition.uiDrawer);
+          },
+          closeDrawer:function(transition){
+            workshopDrawerTransitionCompletions[transition.uiDrawer]=transition.complete;
+            closeEngineeringToolChestDrawer(transition.uiDrawer,false);
+          },
+          renderMeasurement:function(transition){
+            applyWorkshopRulerSelectedObjects(transition.payload.objects || []);
+          }
+        }
+      });
+      window.workshopStateController=workshopStateController;
+      window.dispatchEvent(new CustomEvent("workshop-contract-ready",{
+        detail:{version:"WS-005/1.0"}
+      }));
+      if(workshopStartupDependenciesReady()){
+        setWorkshopStartupState("READY","Workshop assets are ready.");
+        retryPendingWorkshopStartup();
+      }
+      return workshopStateController;
+    })
+    .catch(function(error){
+      console.error("Workshop state controller failed to load:",error);
+      workshopRoomBackgroundLoadError=error;
+      setWorkshopStartupState("FAILED","Workshop controls could not be loaded. Reload the page to try again.");
+      return null;
+    });
+  window.workshopControllerReady=workshopControllerReady;
 
   if(document.readyState==="loading"){
     document.addEventListener("DOMContentLoaded",installWorkshopModeSwitch,{once:true});
