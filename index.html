@@ -6743,22 +6743,34 @@ function buildStarterGrid(){
     color: 0x8DDEFF,
     transparent: true,
     opacity: 0.18,
-    depthWrite: false
+    depthTest: true,
+    depthWrite: false,
+    depthFunc: THREE.LessDepth
   });
 
   engineeringGridMajorMaterial = new THREE.LineBasicMaterial({
     color: 0x39CFFF,
     transparent: true,
     opacity: 0.34,
-    depthWrite: false
+    depthTest: true,
+    depthWrite: false,
+    depthFunc: THREE.LessDepth
   });
 
   const minorLines = new THREE.LineSegments(minorGeometry, engineeringGridMinorMaterial);
   const majorLines = new THREE.LineSegments(majorGeometry, engineeringGridMajorMaterial);
+  // The holographic grid is a reference layer beneath student geometry.
+  // Depth testing remains enabled; the negative order prevents transparent
+  // grid lines from visually washing over opaque or selected objects.
+  minorLines.renderOrder = -10;
+  majorLines.renderOrder = -10;
 
   engineeringGrid = new THREE.Group();
   engineeringGrid.name = "engineeringBuildGrid";
-  engineeringGrid.position.y = -0.485;
+  // Remain visually above the table while staying outside placed object
+  // interiors. Strict depth testing prevents a boundary line leaking through
+  // the bottom face of an opaque CAD solid.
+  engineeringGrid.position.y = -0.498;
 
   // Extra safeguard: the grid can never become a raycast target.
   engineeringGrid.raycast = function(){};
