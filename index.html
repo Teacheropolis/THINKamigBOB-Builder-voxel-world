@@ -30800,6 +30800,8 @@ body.workshopMode:not(.starterScreenActive)
   var workshopCadHeightGuideBase=null;
   var workshopCadHeightGuideTop=null;
   var workshopCadHeightLabelText="";
+  var workshopViewTransitionInProgress=false;
+  var workshopViewButtonSyncDeferred=false;
 
   function disposeWorkshopCadDimensionObject(object){
     if(!object) return;
@@ -31720,6 +31722,7 @@ body.workshopMode:not(.starterScreenActive)
   };
 
   function syncWorkshopEngineeringViewButtons(){
+    if(workshopViewButtonSyncDeferred) return;
     document.querySelectorAll("#workshopEngineeringViewControls [data-workshop-view]").forEach(function(button){
       button.setAttribute(
         "aria-pressed",
@@ -32055,29 +32058,53 @@ body.workshopMode:not(.starterScreenActive)
   function setWorkshopEngineeringView(view){
     if(!document.body.classList.contains("workshopMode")) return false;
 
-    if(view==="home"){
-      return applyResponsiveWorkshopHomeView();
+    // Camera navigation must not mutate the active editing tool. Ignore an
+    // already-active request and serialize the synchronous preset update so
+    // duplicate click/keyboard dispatch cannot flash competing buttons.
+    if(workshopViewTransitionInProgress) return false;
+    if(view===activeWorkshopEngineeringView && !activeWorkshopFitSelection){
+      syncWorkshopEngineeringViewButtons();
+      return true;
     }
+    var preservedSelectMode=selectMode;
+    var preservedMoveSelectedMode=moveSelectedMode;
+    workshopViewTransitionInProgress=true;
+    workshopViewButtonSyncDeferred=true;
 
-    if(!workshopEngineeringViewDirections[view]) return false;
+    try{
+      if(view==="home"){
+        return applyResponsiveWorkshopHomeView();
+      }
 
-    if(getWorkshopSelectedObjectBounds()){
-      return fitWorkshopSelection(view);
+      if(!workshopEngineeringViewDirections[view]) return false;
+
+      if(getWorkshopSelectedObjectBounds()){
+        return fitWorkshopSelection(view);
+      }
+
+      // Preserve the model's projected depth and center the complete visible
+      // Workshop build while a directional engineering view is active.
+      var modelCenter=getWorkshopEngineeringModelCenter();
+      var modelDepth=getWorkshopEngineeringModelDepth(modelCenter);
+      activeWorkshopEngineeringTarget=modelCenter || new THREE.Vector3(0,0,0);
+      cameraDistance=Math.max(6,modelDepth);
+      activeWorkshopEngineeringView=view;
+      camera.fov=builderCameraSnapshot ? builderCameraSnapshot.fov : 75;
+      camera.updateProjectionMatrix();
+      applyWorkshopEngineeringView();
+      correctWorkshopDirectionalViewProtectedZone(view);
+      syncWorkshopEngineeringViewButtons();
+      return true;
+    }finally{
+      selectMode=preservedSelectMode;
+      moveSelectedMode=preservedMoveSelectedMode;
+      workshopViewButtonSyncDeferred=false;
+      workshopViewTransitionInProgress=false;
+      syncWorkshopEngineeringViewButtons();
+      if(workshopRulerState.selectedBounds){
+        renderWorkshopSelectedBounds();
+      }
     }
-
-    // Preserve the model's projected depth and center the complete visible
-    // Workshop build while a directional engineering view is active.
-    var modelCenter=getWorkshopEngineeringModelCenter();
-    var modelDepth=getWorkshopEngineeringModelDepth(modelCenter);
-    activeWorkshopEngineeringTarget=modelCenter || new THREE.Vector3(0,0,0);
-    cameraDistance=Math.max(6,modelDepth);
-    activeWorkshopEngineeringView=view;
-    camera.fov=builderCameraSnapshot ? builderCameraSnapshot.fov : 75;
-    camera.updateProjectionMatrix();
-    applyWorkshopEngineeringView();
-    correctWorkshopDirectionalViewProtectedZone(view);
-    syncWorkshopEngineeringViewButtons();
-    return true;
   }
 
   function captureBuilderCameraState(){
