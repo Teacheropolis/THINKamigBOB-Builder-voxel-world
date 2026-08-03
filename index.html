@@ -27229,13 +27229,14 @@ body.workshopMode:not(.starterScreenActive) #workshopViewportContainer{
    placement. Responsive coordinate registration remains exclusively WS-007. */
 body.workshopMode:not(.starterScreenActive) #workshopProjectorMount{
   position:absolute;
-  left:50%;
+  left:0;
   bottom:0;
   z-index:0;
   display:block;
-  width:293.5px;
+  width:0;
   max-width:100%;
-  transform:translateX(-50%);
+  visibility:hidden;
+  transform:translateX(0);
   pointer-events:none;
 }
 
@@ -30039,6 +30040,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopRoomBackgroundTexture=null;
   var workshopRoomBackgroundLoadError=null;
   var workshopPoweredOffProjectorView=null;
+  var workshopPoweredOffProjectorRegistration=null;
   var workshopPoweredOffProjectorReady=false;
   var workshopPoweredOffProjectorLoadError=null;
 
@@ -30194,12 +30196,25 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       return;
     }
 
-    import("./js/workshop/projector/powered-off-projector-view.mjs")
-      .then(function(module){
-        workshopPoweredOffProjectorView=module.mountPoweredOffProjector({
+    Promise.all([
+      import("./js/workshop/projector/powered-off-projector-view.mjs"),
+      import("./js/workshop/projector/responsive-projector-registration.mjs")
+    ])
+      .then(function(modules){
+        workshopPoweredOffProjectorView=modules[0].mountPoweredOffProjector({
           document:document,
           mount:mount
         });
+        workshopPoweredOffProjectorRegistration=
+          modules[1].registerResponsivePoweredOffProjector({
+            stage:document.getElementById("workshopViewportStage"),
+            mount:mount,
+            protectedElements:[
+              document.getElementById("info"),
+              document.getElementById("workshopMeasurementAssistant"),
+              document.getElementById("workshopDashboard")
+            ]
+          });
         return workshopPoweredOffProjectorView.ready;
       })
       .then(function(){
