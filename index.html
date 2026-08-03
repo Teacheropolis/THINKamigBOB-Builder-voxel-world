@@ -31592,17 +31592,9 @@ body.workshopMode:not(.starterScreenActive)
   function placeUtilityRail(mode){
     var utilityRail=document.getElementById("workspaceUtilityRail");
     if(!utilityRail) return;
-
-    if(mode==="workshop"){
-      var controlStation=document.getElementById("viewCubeBox");
-      if(controlStation) controlStation.appendChild(utilityRail);
-      return;
-    }
-
-    var passportButton=document.getElementById("openPassportFromBadge");
-    var missionPanel=document.getElementById("info");
-    if(passportButton && missionPanel && passportButton.parentElement===missionPanel){
-      passportButton.insertAdjacentElement("afterend",utilityRail);
+    var controlStation=document.getElementById("viewCubeBox");
+    if(controlStation && utilityRail.parentElement!==controlStation){
+      controlStation.appendChild(utilityRail);
     }
   }
 
@@ -32427,11 +32419,11 @@ body.workshopMode:not(.starterScreenActive)
 
     new MutationObserver(function(){
       if(isStarterScreenActive() && currentWorkspaceMode!=="mission"){
-        updateModeControls();
+        setWorkspaceMode("mission");
       }
     }).observe(document.body,{attributes:true,attributeFilter:["class"]});
 
-    setWorkspaceMode("mission");
+    updateModeControls();
   }
 
   window.setWorkspaceMode=setWorkspaceMode;
