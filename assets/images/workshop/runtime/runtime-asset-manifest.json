@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "roadmapUpdate": "WS-003 through WS-008",
-  "status": "ws008-projector-power-on-integrated",
+  "roadmapUpdate": "WS-003 through WS-009",
+  "status": "ws009-projector-projection-active-integrated",
   "productionRoot": "assets/images/workshop/production",
   "runtimeRoot": "assets/images/workshop/runtime",
   "authoritativeApprovalManifest": {
@@ -159,6 +159,42 @@
       "stateDesignation": "POWERING_ON sequence 5; 160-280 ms; opacity endpoint 1",
       "runtimeRestrictions": ["Overlay only the unchanged Powered Off body.", "No blur, invented glow, repainting, silhouette change, beam, or body motion."],
       "rollback": "Delete this WS-008 derivative and mapping; retain both production masters unchanged."
+    },
+    {
+      "id": "ws009-projector-projection-starting-directional-trace",
+      "runtimeAssetPath": "assets/images/workshop/runtime/derivatives/projector/projector-projection-trace-v3-587x587.png",
+      "canonicalProductionSourcePath": "assets/images/workshop/production/engineering-projector/engineering-projector-production-v3-projection-starting.png",
+      "sourceSha256": "030c3907861f146442f764bfdb5d8f186ed9e4dd449e49124747cb6dea7f2d76",
+      "visualEndpointReferencePath": "assets/images/workshop/production/engineering-projector/ engineering-projector-production-v4-fully-active.png",
+      "visualEndpointReferenceSha256": "851dede7d6ad192d28711a0ff4d615f06f74a964f8b9e9b619ec7b397c3297d5",
+      "derivativeOperation": {
+        "type": "approved-semantic-directional-trace-mask-and-resize",
+        "approvedSemanticRegionSourcePixels": [[540, 300, 634, 470]],
+        "retainedCentralTraceSourcePixels": [[568, 300, 606, 450]],
+        "alphaFormula": "sourceAlpha * clamp((max(sourceGreen,sourceBlue)-sourceRed-12)/64,0,1) * clamp((sourceBlue-sourceRed-8)/56,0,1) * 6px horizontal edge feather * 8px vertical edge feather",
+        "excludedContent": [
+          "physical Projector body",
+          "holographic cylinder walls and diffuse field",
+          "perspective grid and horizontal calibration rings",
+          "particles and Table-emitter effects"
+        ],
+        "algorithm": "Pillow Resampling.LANCZOS",
+        "sourceDimensions": { "width": 1174, "height": 1174 },
+        "outputDimensions": { "width": 587, "height": 587 },
+        "pngEncoding": "compress_level=9; optimize=false"
+      },
+      "outputFormat": "PNG",
+      "outputColorMode": "RGBA",
+      "outputSha256": "71b6a8024d3b0fd2da5048261d99cb392c26dfc5756e068ed96bf3f8a5c4855c",
+      "approvalStatus": "APPROVED WS-009 DERIVATIVE",
+      "approvedPurpose": "Engineering Projector restrained central directional trace; excludes the future Table field",
+      "stateDesignation": "PROJECTION_STARTING 0-0.45; FULLY_ACTIVE base 0.40 with approved bounded luminance variation",
+      "runtimeRestrictions": [
+        "Overlay only the unchanged WS-006 body and reuse the aligned WS-008 lens.",
+        "No Table field, grid, calibration rings, particles, blur, repainting, invented glow, body motion, or scale fluctuation.",
+        "Follow WS-007 Projector registration and protected-zone visibility."
+      ],
+      "rollback": "Delete this WS-009 derivative and mapping; retain the v3/v4 production masters and WS-006 through WS-008 runtime assets unchanged."
     }
   ],
   "verification": {
@@ -183,6 +219,16 @@
     "ws008MacPowerOnEndpoint": "PASS",
     "ws008MissionRestoration": "PASS",
     "ws008ChromebookPhysicalVerification": "NOT TESTED",
+    "ws009DerivativeMappings": 1,
+    "ws009DerivativeHashMismatches": 0,
+    "ws009DerivativeDecodeFailures": 0,
+    "ws009MacProjectionStartingEndpoint": "PASS",
+    "ws009MacFullyActiveEndpoint": "PASS",
+    "ws009NormalAndReducedMotionTiming": "PASS — deterministic",
+    "ws009VisibilityPauseAndActiveSettlement": "PASS — deterministic",
+    "ws009CancellationAndOneShotCallbacks": "PASS — deterministic",
+    "ws009MissionRestoration": "PASS",
+    "ws009ChromebookPhysicalVerification": "NOT TESTED",
     "knownBaselineWarnings": [
       "Three.js legacy build script deprecation warning",
       "THREE.Texture.encoding replaced by .colorSpace warning"

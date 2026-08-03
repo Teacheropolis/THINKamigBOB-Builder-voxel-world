@@ -59,8 +59,7 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
 
   const finishPowerOn = (transition) => {
     if (activeTransition !== transition || transition.cancelled) return false;
-    state.projector = "FULLY_ACTIVE";
-    state.table = "FULLY_ACTIVE";
+    if (state.projector !== "FULLY_ACTIVE" || transition.tableProjectionStable !== true) return false;
     state.boardMechanical = "EXTENDED";
     state.boardPower = "READY";
     state.boardApplication = "MEASUREMENT_ASSISTANT";
@@ -73,8 +72,77 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     state.workshop = "READY";
     busy = false;
     activeTransition = null;
-    publish(transition, "workspace:projection-stable", { timingCompliance: "legacy-combined-not-bible-compliant" });
-    publish(transition, "workshop:ready", { timingCompliance: "legacy-combined-not-bible-compliant" });
+    publish(transition, "workshop:ready", { timingCompliance: "ws009-projector-optics-with-legacy-table-compatibility" });
+    return true;
+  };
+
+  const finishProjectorActive = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (state.projector !== "PROJECTION_STARTING" || transition.tableProjectionStable !== true) return false;
+    const result = validateTransition("projector", state.projector, "FULLY_ACTIVE", {
+      tableProjectionStable: true,
+    });
+    if (!result.ok) return false;
+    state.projector = "FULLY_ACTIVE";
+    publish(transition, "projector:active");
+    return finishPowerOn(transition);
+  };
+
+  const beginProjectorActiveSettle = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (transition.projectorProjectionStarted !== true || transition.tableProjectionStable !== true) return false;
+    if (transition.projectorActiveSettleRequested === true) return false;
+    transition.projectorActiveSettleRequested = true;
+    drivers.settleProjectorProjection?.({
+      transitionId: transition.id,
+      complete: () => finishProjectorActive(transition),
+    });
+    return true;
+  };
+
+  const finishProjectorProjectionStart = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (state.projector !== "PROJECTION_STARTING" || transition.projectorProjectionStarted === true) return false;
+    transition.projectorProjectionStarted = true;
+    publish(transition, "projector:projection-started");
+    commitLegacyTableStable(transition);
+    beginProjectorActiveSettle(transition);
+    return true;
+  };
+
+  const commitLegacyTableStable = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (transition.legacyTableStableSignal !== true || transition.projectorProjectionStarted !== true) return false;
+    if (transition.tableProjectionStable === true) return false;
+    transition.tableProjectionStable = true;
+    state.table = "FULLY_ACTIVE";
+    publish(transition, "workspace:projection-stable", {
+      timingCompliance: "legacy-table-compatibility-signal",
+    });
+    beginProjectorActiveSettle(transition);
+    return true;
+  };
+
+  const markLegacyTableStable = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (transition.legacyTableStableSignal === true) return false;
+    transition.legacyTableStableSignal = true;
+    commitLegacyTableStable(transition);
+    return true;
+  };
+
+  const beginProjectorProjection = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (state.projector !== "POWERED_ON") return false;
+    const result = validateTransition("projector", state.projector, "PROJECTION_STARTING", {
+      tableEmittersReady: true,
+    });
+    if (!result.ok) return false;
+    state.projector = "PROJECTION_STARTING";
+    drivers.startProjectorProjection?.({
+      transitionId: transition.id,
+      complete: () => finishProjectorProjectionStart(transition),
+    });
     return true;
   };
 
@@ -87,7 +155,8 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     publish(transition, "projector:powered-on");
     drivers.continueLegacyStartup?.({
       transitionId: transition.id,
-      complete: () => finishPowerOn(transition),
+      tableReady: () => beginProjectorProjection(transition),
+      tableStable: () => markLegacyTableStable(transition),
     });
     return true;
   };

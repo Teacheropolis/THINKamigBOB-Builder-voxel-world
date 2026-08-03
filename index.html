@@ -30060,6 +30060,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopPoweredOffProjectorView=null;
   var workshopPoweredOffProjectorRegistration=null;
   var workshopProjectorPowerOnView=null;
+  var workshopProjectorProjectionActiveView=null;
   var workshopPoweredOffProjectorReady=false;
   var workshopPoweredOffProjectorLoadError=null;
 
@@ -30218,7 +30219,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     Promise.all([
       import("./js/workshop/projector/powered-off-projector-view.mjs"),
       import("./js/workshop/projector/responsive-projector-registration.mjs"),
-      import("./js/workshop/projector/projector-power-on-view.mjs")
+      import("./js/workshop/projector/projector-power-on-view.mjs"),
+      import("./js/workshop/projector/projector-projection-active-view.mjs")
     ])
       .then(function(modules){
         workshopPoweredOffProjectorView=modules[0].mountPoweredOffProjector({
@@ -30229,6 +30231,12 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           document:document,
           mount:mount
         });
+        workshopProjectorProjectionActiveView=
+          modules[3].mountProjectorProjectionActiveView({
+            document:document,
+            mount:mount,
+            lensElement:workshopProjectorPowerOnView.elements.lens
+          });
         workshopPoweredOffProjectorRegistration=
           modules[1].registerResponsivePoweredOffProjector({
             stage:document.getElementById("workshopViewportStage"),
@@ -30241,7 +30249,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           });
         return Promise.all([
           workshopPoweredOffProjectorView.ready,
-          workshopProjectorPowerOnView.ready
+          workshopProjectorPowerOnView.ready,
+          workshopProjectorProjectionActiveView.ready
         ]);
       })
       .then(function(){
@@ -33331,7 +33340,21 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             });
           },
           continueLegacyStartup:function(transition){
-            applyWorkspaceModeVisuals("workshop",transition.complete);
+            if(transition.tableReady()===false) return;
+            applyWorkspaceModeVisuals("workshop",transition.tableStable);
+          },
+          startProjectorProjection:function(transition){
+            workshopProjectorProjectionActiveView.start({
+              transitionId:transition.transitionId,
+              begin:function(){ return true; },
+              complete:transition.complete
+            });
+          },
+          settleProjectorProjection:function(transition){
+            workshopProjectorProjectionActiveView.settleActive({
+              transitionId:transition.transitionId,
+              complete:transition.complete
+            });
           },
           exitWorkshop:function(transition){
             var pendingCompletions=2;
@@ -33342,7 +33365,11 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
               completionClaimed=true;
               transition.complete();
             }
-            workshopProjectorPowerOnView.cancel({complete:completeWhenSettled});
+            workshopProjectorProjectionActiveView.cancelToStandby({
+              complete:function(){
+                workshopProjectorPowerOnView.cancel({complete:completeWhenSettled});
+              }
+            });
             applyWorkspaceModeVisuals("mission",completeWhenSettled);
           },
           openDrawer:function(transition){

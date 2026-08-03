@@ -15,7 +15,12 @@ function harness() {
         pending.projectorBegin = begin;
         pending.projectorComplete = complete;
       },
-      continueLegacyStartup: ({ complete }) => { pending.enter = complete; },
+      continueLegacyStartup: ({ tableReady, tableStable }) => {
+        pending.tableReady = tableReady;
+        pending.tableStable = tableStable;
+      },
+      startProjectorProjection: ({ complete }) => { pending.projectionStart = complete; },
+      settleProjectorProjection: ({ complete }) => { pending.projectorActive = complete; },
       exitWorkshop: ({ complete }) => { pending.exit = complete; },
       openDrawer: ({ complete }) => { pending.drawer = complete; },
       closeDrawer: ({ complete }) => { pending.drawer = complete; },
@@ -27,7 +32,10 @@ function harness() {
 function completeStartup(pending) {
   assert.equal(pending.projectorBegin(), true);
   assert.equal(pending.projectorComplete(), true);
-  assert.equal(pending.enter(), true);
+  assert.equal(pending.tableReady(), true);
+  assert.equal(pending.projectionStart(), true);
+  assert.equal(pending.tableStable(), true);
+  assert.equal(pending.projectorActive(), true);
 }
 
 test("starts from deterministic protected states", () => {
@@ -59,10 +67,24 @@ test("power-on changes visuals only through the accepted driver and settles once
   assert.equal(controller.getSnapshot().projector, "POWERED_ON");
   assert.deepEqual(events.map((event) => event.name), ["workshop:startup-begun", "projector:powered-on"]);
   assert.equal(pending.projectorComplete(), false);
-  assert.equal(pending.enter(), true);
-  assert.equal(pending.enter(), false);
+  assert.equal(pending.tableReady(), true);
+  assert.equal(controller.getSnapshot().projector, "PROJECTION_STARTING");
+  assert.equal(pending.tableStable(), true);
+  assert.equal(controller.getSnapshot().table, "POWERED_OFF");
+  assert.equal(pending.projectionStart(), true);
+  assert.equal(pending.projectionStart(), false);
+  assert.equal(controller.getSnapshot().table, "FULLY_ACTIVE");
+  assert.equal(pending.projectorActive(), true);
+  assert.equal(pending.projectorActive(), false);
   assert.equal(controller.getSnapshot().workshop, "READY");
-  assert.deepEqual(events.map((event) => event.name), ["workshop:startup-begun", "projector:powered-on", "workspace:projection-stable", "workshop:ready"]);
+  assert.deepEqual(events.map((event) => event.name), [
+    "workshop:startup-begun",
+    "projector:powered-on",
+    "projector:projection-started",
+    "workspace:projection-stable",
+    "projector:active",
+    "workshop:ready",
+  ]);
 });
 
 test("power-on rejects missing asset readiness without invoking a driver", () => {
