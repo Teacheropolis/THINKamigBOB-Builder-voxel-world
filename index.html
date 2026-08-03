@@ -4196,7 +4196,9 @@ Nature ▶
       <div id="workshopRulerLeftDesignRange" class="workshop-ruler-layer workshop-ruler-design-range" hidden aria-hidden="true"></div>
       <div id="workshopRulerLeftHandles" class="workshop-ruler-layer workshop-ruler-handles" aria-hidden="true"></div>
     </div>
-    <div id="workshopViewportStage" aria-hidden="true"></div>
+    <div id="workshopViewportStage" aria-hidden="true">
+      <div id="workshopProjectorMount" aria-hidden="true"></div>
+    </div>
     <div id="workshopRulerRight" class="workshop-ruler workshop-ruler-vertical workshop-ruler-right" data-workshop-axis="y" aria-label="Right model Y-axis ruler. Model Scale, centimeters with millimeter subdivisions.">
       <div class="workshop-ruler-ticks" aria-hidden="true"></div>
       <div id="workshopRulerRightSelection" class="workshop-ruler-layer workshop-ruler-selection" hidden aria-hidden="true"></div>
@@ -27213,9 +27215,43 @@ body.workshopMode:not(.starterScreenActive) #workshopViewportContainer{
 
 #workshopViewportStage{
   grid-area:stage;
+  position:relative;
   min-width:0;
   min-height:0;
   pointer-events:none;
+}
+
+#workshopProjectorMount{
+  display:none;
+}
+
+/* WS-006 proves the approved Powered Off asset at one neutral reference
+   placement. Responsive coordinate registration remains exclusively WS-007. */
+body.workshopMode:not(.starterScreenActive) #workshopProjectorMount{
+  position:absolute;
+  left:50%;
+  bottom:0;
+  z-index:0;
+  display:block;
+  width:293.5px;
+  max-width:100%;
+  transform:translateX(-50%);
+  pointer-events:none;
+}
+
+.workshop-projector-powered-off{
+  display:block;
+  width:100%;
+  height:auto;
+  max-width:100%;
+  opacity:1;
+  transform:scale(1);
+  transform-origin:center bottom;
+  object-fit:contain;
+  animation:none;
+  transition:none;
+  user-select:none;
+  -webkit-user-drag:none;
 }
 
 .workshop-ruler{
@@ -30002,6 +30038,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     "assets/images/workshop/production/workshop-environment-production-v6-master.png";
   var workshopRoomBackgroundTexture=null;
   var workshopRoomBackgroundLoadError=null;
+  var workshopPoweredOffProjectorView=null;
+  var workshopPoweredOffProjectorReady=false;
+  var workshopPoweredOffProjectorLoadError=null;
 
   function getWorkshopStartupStatusElement(){
     var status=document.getElementById("workshopStartupStatus");
@@ -30055,6 +30094,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     return !!(
       workshopStateController &&
       workshopRoomBackgroundTexture &&
+      workshopPoweredOffProjectorReady &&
       renderer && renderer.capabilities &&
       scene && camera && ground && workshopStageFrame && engineeringGrid
     );
@@ -30139,6 +30179,46 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     );
   }
   loadWorkshopStartupAssets();
+
+  function loadWorkshopPoweredOffProjector(){
+    var mount=document.getElementById("workshopProjectorMount");
+    workshopPoweredOffProjectorReady=false;
+    workshopPoweredOffProjectorLoadError=null;
+    if(!mount){
+      workshopPoweredOffProjectorLoadError=
+        new Error("Powered-off Projector mount is unavailable");
+      setWorkshopStartupState(
+        "FAILED",
+        "Workshop Projector could not be prepared. Reload the page to try again."
+      );
+      return;
+    }
+
+    import("./js/workshop/projector/powered-off-projector-view.mjs")
+      .then(function(module){
+        workshopPoweredOffProjectorView=module.mountPoweredOffProjector({
+          document:document,
+          mount:mount
+        });
+        return workshopPoweredOffProjectorView.ready;
+      })
+      .then(function(){
+        workshopPoweredOffProjectorReady=true;
+        if(workshopStartupDependenciesReady()){
+          setWorkshopStartupState("READY","Workshop assets are ready.");
+          retryPendingWorkshopStartup();
+        }
+      })
+      .catch(function(error){
+        workshopPoweredOffProjectorLoadError=error;
+        console.error("Workshop Powered Off Projector failed to load:",error);
+        setWorkshopStartupState(
+          "FAILED",
+          "Workshop Projector could not be loaded. Reload the page to try again."
+        );
+      });
+  }
+  loadWorkshopPoweredOffProjector();
   var builderCameraSnapshot=null;
   var activeWorkshopEngineeringView=null;
   var activeWorkshopEngineeringTarget=null;

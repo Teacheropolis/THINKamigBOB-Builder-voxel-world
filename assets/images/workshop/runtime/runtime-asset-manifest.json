@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "roadmapUpdate": "WS-003",
+  "status": "sample-pipeline-validated",
+  "productionRoot": "assets/images/workshop/production",
+  "runtimeRoot": "assets/images/workshop/runtime",
+  "authoritativeApprovalManifest": {
+    "path": "assets/images/workshop/production/documentation/thinkamigbob-workshop-ws-002-locked-asset-inventory.md",
+    "sha256AtMapping": "c272c00248b3b161ea695f3a70241cff084d76ceb27f637533b6ce418b0548da"
+  },
+  "rules": {
+    "productionMastersImmutable": true,
+    "runtimeDerivativesSeparate": true,
+    "bulkConversionAllowed": false,
+    "semanticTextRequiredForBakedText": true,
+    "additionalMappingsRequireOwningRoadmapUpdate": true
+  },
+  "mappings": [
+    {
+      "id": "ws003-projector-powered-off-sample",
+      "runtimeAssetPath": "assets/images/workshop/runtime/derivatives/projector/projector-powered-off-sample-587x587.png",
+      "canonicalProductionSourcePath": "assets/images/workshop/production/engineering-projector/engineering-projector-production-v1-powered-off.png",
+      "sourceSha256": "cf509afb1ff40e4e853136c99ded7398239e7abb1b1484d7df846c1ab3cac3d3",
+      "derivativeOperation": {
+        "type": "resize",
+        "algorithm": "Pillow Resampling.LANCZOS",
+        "sourceDimensions": {
+          "width": 1174,
+          "height": 1174
+        },
+        "outputDimensions": {
+          "width": 587,
+          "height": 587
+        },
+        "alphaHandling": "preserve RGBA alpha channel",
+        "pngEncoding": "compress_level=9; optimize=false"
+      },
+      "outputFormat": "PNG",
+      "outputColorMode": "RGBA",
+      "outputSha256": "4f5f2876e6b6168db3bac53a589f6b6aa3cefe06d11b977bc6da6b2aa689296c",
+      "approvalStatus": "APPROVED WS-003 SAMPLE DERIVATIVE; AUTHORIZED BY WS-006 FOR POWERED-OFF PROJECTOR RUNTIME USE",
+      "runtimeUseStatus": "integrated by WS-006 as the powered-off structural Projector view",
+      "approvedPurpose": "Engineering Projector — Powered Off",
+      "stateDesignation": "POWERED_OFF",
+      "runtimeRestrictions": [
+        "Opacity and scale remain fixed at 1.",
+        "Decorative/structural image only; semantic controls remain external.",
+        "No glow, LEDs, beam, powered layers, animation, or completion event in WS-006.",
+        "Responsive coordinate registration is reserved for WS-007."
+      ],
+      "rollback": "Delete only this derivative and its mapping entry; retain the production source unchanged."
+    }
+  ],
+  "verification": {
+    "platform": "Mac",
+    "chromebook": "NOT TESTED",
+    "approvedProductionHashMismatches": 0,
+    "sourceHashMatchesMapping": true,
+    "outputHashMatchesMapping": true,
+    "outputDecode": "PASS",
+    "outputDimensionsMatch": true,
+    "outputFormatMatch": true,
+    "rgbaAlphaPreserved": true,
+    "deterministicPixelComparison": "PASS",
+    "runtimeAssetHttpStatus": 200,
+    "manifestHttpStatus": 200,
+    "browserConsoleErrors": 0,
+    "missingAssetPathErrors": 0,
+    "existingApplicationLaunch": "PASS",
+    "knownBaselineWarnings": [
+      "Three.js legacy build script deprecation warning",
+      "THREE.Texture.encoding replaced by .colorSpace warning"
+    ]
+  },
+  "reservedNamespaces": [
+    "architecture",
+    "identity",
+    "projector",
+    "table",
+    "smart-board",
+    "tool-chest",
+    "drawers",
+    "measurement-assistant",
+    "startup"
+  ]
+}
