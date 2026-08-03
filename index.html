@@ -4957,6 +4957,226 @@ workshopStageFrameRail.position.y=-0.25;
 workshopStageFrameRail.raycast = function(){};
 workshopStageFrameRail.userData.workshopDecoration = true;
 workshopStageFrame.add(workshopStageFrameRail);
+
+// Phase 6B: a lightweight projection aura shares the physical frame geometry.
+// It is visual-only, cannot receive raycasts, and animates only while the
+// Workshop starts or shuts down.
+const workshopStageProjectionGlowMaterial = new THREE.MeshBasicMaterial({
+  color:0x56eaff,
+  transparent:true,
+  opacity:0,
+  blending:THREE.AdditiveBlending,
+  depthTest:true,
+  depthWrite:false,
+  side:THREE.DoubleSide
+});
+const workshopStageProjectionGlow = new THREE.Mesh(
+  workshopStageFrameRail.geometry,
+  workshopStageProjectionGlowMaterial
+);
+workshopStageProjectionGlow.rotation.copy(workshopStageFrameRail.rotation);
+workshopStageProjectionGlow.position.copy(workshopStageFrameRail.position);
+workshopStageProjectionGlow.position.y+=0.08;
+workshopStageProjectionGlow.scale.set(1.006,1.006,1.006);
+workshopStageProjectionGlow.renderOrder=-8;
+workshopStageProjectionGlow.raycast=function(){};
+workshopStageProjectionGlow.userData.workshopDecoration=true;
+workshopStageFrame.add(workshopStageProjectionGlow);
+
+const workshopFrameEmitterMaterial = new THREE.MeshBasicMaterial({
+  color:0x75efff,
+  transparent:true,
+  opacity:0,
+  blending:THREE.AdditiveBlending,
+  depthTest:true,
+  depthWrite:false,
+  side:THREE.DoubleSide
+});
+const workshopFrameEmitter = new THREE.Mesh(
+  createWorkshopProjectionBandGeometry(24.34,24.10,-0.20),
+  workshopFrameEmitterMaterial
+);
+workshopFrameEmitter.renderOrder=-6;
+workshopFrameEmitter.raycast=function(){};
+workshopFrameEmitter.userData.workshopDecoration=true;
+workshopStageFrame.add(workshopFrameEmitter);
+
+const workshopFrameCornerMaterial = new THREE.PointsMaterial({
+  color:0xb8f8ff,
+  size:0.34,
+  sizeAttenuation:true,
+  transparent:true,
+  opacity:0,
+  blending:THREE.AdditiveBlending,
+  depthTest:true,
+  depthWrite:false
+});
+const workshopFrameCorners = new THREE.Points(
+  new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-24.30,-0.185,-24.30),
+    new THREE.Vector3(24.30,-0.185,-24.30),
+    new THREE.Vector3(24.30,-0.185,24.30),
+    new THREE.Vector3(-24.30,-0.185,24.30)
+  ]),
+  workshopFrameCornerMaterial
+);
+workshopFrameCorners.renderOrder=-5;
+workshopFrameCorners.raycast=function(){};
+workshopFrameCorners.userData.workshopDecoration=true;
+workshopStageFrame.add(workshopFrameCorners);
+
+function createWorkshopProjectionBandGeometry(outerExtent,innerExtent,height){
+  var positions=[];
+  var colors=[];
+  function addStrip(a,b,c,d){
+    positions.push(
+      a[0],height,a[1], b[0],height,b[1], c[0],height,c[1],
+      a[0],height,a[1], c[0],height,c[1], d[0],height,d[1]
+    );
+    // Additive black at the inner edge creates a cheap inward fade.
+    colors.push(
+      0.35,0.92,1, 0.35,0.92,1, 0,0,0,
+      0.35,0.92,1, 0,0,0, 0,0,0
+    );
+  }
+  addStrip(
+    [-outerExtent,-outerExtent],[outerExtent,-outerExtent],
+    [innerExtent,-innerExtent],[-innerExtent,-innerExtent]
+  );
+  addStrip(
+    [outerExtent,-outerExtent],[outerExtent,outerExtent],
+    [innerExtent,innerExtent],[innerExtent,-innerExtent]
+  );
+  addStrip(
+    [outerExtent,outerExtent],[-outerExtent,outerExtent],
+    [-innerExtent,innerExtent],[innerExtent,innerExtent]
+  );
+  addStrip(
+    [-outerExtent,outerExtent],[-outerExtent,-outerExtent],
+    [-innerExtent,-innerExtent],[-innerExtent,innerExtent]
+  );
+  var geometry=new THREE.BufferGeometry();
+  geometry.setAttribute("position",new THREE.Float32BufferAttribute(positions,3));
+  geometry.setAttribute("color",new THREE.Float32BufferAttribute(colors,3));
+  return geometry;
+}
+
+const workshopProjectionBandMaterial = new THREE.MeshBasicMaterial({
+  vertexColors:true,
+  transparent:true,
+  opacity:0,
+  blending:THREE.AdditiveBlending,
+  depthTest:true,
+  depthWrite:false,
+  side:THREE.DoubleSide
+});
+const workshopProjectionBand = new THREE.Mesh(
+  createWorkshopProjectionBandGeometry(24.27,22.85,-0.465),
+  workshopProjectionBandMaterial
+);
+workshopProjectionBand.renderOrder=-9;
+workshopProjectionBand.raycast=function(){};
+workshopProjectionBand.userData.workshopDecoration=true;
+workshopStageFrame.add(workshopProjectionBand);
+
+const workshopProjectionHazeMaterial = new THREE.MeshBasicMaterial({
+  vertexColors:true,
+  transparent:true,
+  opacity:0,
+  blending:THREE.AdditiveBlending,
+  depthTest:true,
+  depthWrite:false,
+  side:THREE.DoubleSide
+});
+const workshopProjectionHaze = new THREE.Mesh(
+  createWorkshopProjectionBandGeometry(24.18,21.85,-0.36),
+  workshopProjectionHazeMaterial
+);
+workshopProjectionHaze.renderOrder=-7;
+workshopProjectionHaze.raycast=function(){};
+workshopProjectionHaze.userData.workshopDecoration=true;
+workshopStageFrame.add(workshopProjectionHaze);
+
+// Phase 6B.3: one lightweight four-sided projection volume gives the flat
+// frame effects a restrained upward direction. Vertex color fades each wall
+// completely before it reaches one world unit, so the room and student model
+// remain visually dominant. This is one geometry, one material, and one draw
+// call with no continuous animation after Workshop startup.
+function createWorkshopProjectionVolumeGeometry(extent,bottom,top){
+  var positions=[];
+  var colors=[];
+  function addWall(first,second){
+    positions.push(
+      first[0],bottom,first[1], second[0],bottom,second[1],
+      second[0],top,second[1],
+      first[0],bottom,first[1], second[0],top,second[1],
+      first[0],top,first[1]
+    );
+    colors.push(
+      .32,.88,1, .32,.88,1, 0,0,0,
+      .32,.88,1, 0,0,0, 0,0,0
+    );
+  }
+  addWall([-extent,-extent],[extent,-extent]);
+  addWall([extent,-extent],[extent,extent]);
+  addWall([extent,extent],[-extent,extent]);
+  addWall([-extent,extent],[-extent,-extent]);
+  var geometry=new THREE.BufferGeometry();
+  geometry.setAttribute(
+    "position",new THREE.Float32BufferAttribute(positions,3)
+  );
+  geometry.setAttribute(
+    "color",new THREE.Float32BufferAttribute(colors,3)
+  );
+  return geometry;
+}
+
+const workshopProjectionVolumeMaterial = new THREE.MeshBasicMaterial({
+  vertexColors:true,
+  transparent:true,
+  opacity:0,
+  blending:THREE.AdditiveBlending,
+  depthTest:true,
+  depthWrite:false,
+  side:THREE.DoubleSide
+});
+const workshopProjectionVolume = new THREE.Mesh(
+  createWorkshopProjectionVolumeGeometry(24.04,-0.18,0.72),
+  workshopProjectionVolumeMaterial
+);
+workshopProjectionVolume.renderOrder=-4;
+workshopProjectionVolume.raycast=function(){};
+workshopProjectionVolume.userData.workshopDecoration=true;
+workshopStageFrame.add(workshopProjectionVolume);
+
+const workshopGridPerimeterMaterial = new THREE.LineBasicMaterial({
+  color:0x63e9ff,
+  transparent:true,
+  opacity:0,
+  blending:THREE.AdditiveBlending,
+  depthTest:true,
+  depthWrite:false
+});
+const workshopGridPerimeterPositions=[];
+[23.5,22.5].forEach(function(extent){
+  workshopGridPerimeterPositions.push(
+    -extent,-0.475,-extent, extent,-0.475,-extent,
+    extent,-0.475,-extent, extent,-0.475,extent,
+    extent,-0.475,extent, -extent,-0.475,extent,
+    -extent,-0.475,extent, -extent,-0.475,-extent
+  );
+});
+const workshopGridPerimeterAccent = new THREE.LineSegments(
+  new THREE.BufferGeometry().setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(workshopGridPerimeterPositions,3)
+  ),
+  workshopGridPerimeterMaterial
+);
+workshopGridPerimeterAccent.renderOrder=-8;
+workshopGridPerimeterAccent.raycast=function(){};
+workshopGridPerimeterAccent.userData.workshopDecoration=true;
+workshopStageFrame.add(workshopGridPerimeterAccent);
 scene.add(workshopStageFrame);
 
 // UPDATE #101B: Persistent, non-interactive engineering build grid.
@@ -29807,9 +30027,14 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     workshopStartupState=state;
     var switcher=document.getElementById("workspaceModeSwitch");
     var label=switcher && switcher.querySelector(".workspaceModeLabel");
-    var loading=state==="STARTING" || (state==="LOADING" && workshopStartupRequested);
+    var loading=state==="STARTING" || state==="STOPPING" ||
+      (state==="LOADING" && workshopStartupRequested);
+    var dependenciesUnavailable=state==="LOADING" && workshopStartupRequested;
     if(switcher){
-      switcher.disabled=loading;
+      // Power remains actionable while motion is reversing. Only dependency
+      // loading disables the control; STARTING and STOPPING expose busy state
+      // without preventing the WS-004 Cancel/Power action.
+      switcher.disabled=dependenciesUnavailable;
       switcher.setAttribute("aria-busy",loading ? "true" : "false");
       switcher.dataset.workshopStartupState=state;
       if(state==="FAILED"){
@@ -29820,6 +30045,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     if(label && currentWorkspaceMode!=="workshop"){
       label.textContent=state==="LOADING" && workshopStartupRequested ? "Loading Workshop…" :
         state==="STARTING" ? "Opening Workshop…" :
+        state==="STOPPING" ? "Closing Workshop…" :
         state==="FAILED" ? "Retry Workshop" : "Open Workshop";
     }
     if(message) getWorkshopStartupStatusElement().textContent=message;
@@ -32477,6 +32703,122 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     setWorkshopEngineeringView(view);
   }
 
+  var workshopProjectionTransitionToken=0;
+  var workshopProjectionProgress=0;
+  var workshopProjectionGridTargets=null;
+
+  function clampWorkshopProjectionProgress(value){
+    return Math.max(0,Math.min(1,Number(value) || 0));
+  }
+
+  function workshopProjectionSmoothstep(value){
+    var amount=clampWorkshopProjectionProgress(value);
+    return amount*amount*(3-2*amount);
+  }
+
+  function captureWorkshopProjectionGridTargets(){
+    if(workshopProjectionGridTargets) return workshopProjectionGridTargets;
+    workshopProjectionGridTargets={
+      minor:engineeringGridMinorMaterial
+        ? engineeringGridMinorMaterial.opacity
+        : 0,
+      major:engineeringGridMajorMaterial
+        ? engineeringGridMajorMaterial.opacity
+        : 0
+    };
+    return workshopProjectionGridTargets;
+  }
+
+  function applyWorkshopProjectionProgress(value){
+    var progress=clampWorkshopProjectionProgress(value);
+    var gridTargets=workshopProjectionGridTargets ||
+      captureWorkshopProjectionGridTargets();
+    var frameAmount=workshopProjectionSmoothstep(progress/0.30);
+    var emitterAmount=workshopProjectionSmoothstep((progress-0.12)/0.38);
+    var bandAmount=workshopProjectionSmoothstep((progress-0.28)/0.40);
+    var hazeAmount=workshopProjectionSmoothstep((progress-0.34)/0.44);
+    var gridAmount=workshopProjectionSmoothstep((progress-0.48)/0.52);
+    var volumeAmount=workshopProjectionSmoothstep((progress-0.22)/0.46);
+
+    workshopProjectionProgress=progress;
+    workshopStageFrameMaterial.emissiveIntensity=0.08+(0.30*frameAmount);
+    workshopStageProjectionGlowMaterial.opacity=0.15*emitterAmount;
+    workshopFrameEmitterMaterial.opacity=0.58*emitterAmount;
+    workshopFrameCornerMaterial.opacity=0.82*emitterAmount;
+    workshopProjectionBandMaterial.opacity=0.30*bandAmount;
+    workshopProjectionHazeMaterial.opacity=0.065*hazeAmount;
+    workshopProjectionVolumeMaterial.opacity=0.085*volumeAmount;
+    workshopProjectionVolume.scale.y=Math.max(0.001,volumeAmount);
+    workshopGridPerimeterMaterial.opacity=0.24*gridAmount;
+    if(engineeringGridMinorMaterial){
+      engineeringGridMinorMaterial.opacity=gridTargets.minor*gridAmount;
+      engineeringGridMinorMaterial.needsUpdate=true;
+    }
+    if(engineeringGridMajorMaterial){
+      engineeringGridMajorMaterial.opacity=gridTargets.major*gridAmount;
+      engineeringGridMajorMaterial.needsUpdate=true;
+    }
+    workshopStageFrameMaterial.needsUpdate=true;
+    workshopStageProjectionGlowMaterial.needsUpdate=true;
+    workshopFrameEmitterMaterial.needsUpdate=true;
+    workshopFrameCornerMaterial.needsUpdate=true;
+    workshopProjectionBandMaterial.needsUpdate=true;
+    workshopProjectionHazeMaterial.needsUpdate=true;
+    workshopProjectionVolumeMaterial.needsUpdate=true;
+    workshopGridPerimeterMaterial.needsUpdate=true;
+  }
+
+  function animateWorkshopProjection(active,onComplete){
+    var token=++workshopProjectionTransitionToken;
+    var reduceMotion=window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var startProgress=clampWorkshopProjectionProgress(
+      workshopProjectionProgress
+    );
+    var targetProgress=active ? 1 : 0;
+    var distance=Math.abs(targetProgress-startProgress);
+    var duration=(active ? 580 : 380)*distance;
+    var startupPause=!reduceMotion && active && startProgress===0 ? 100 : 0;
+    var start=performance.now();
+    var completionClaimed=false;
+
+    function complete(){
+      if(token!==workshopProjectionTransitionToken || completionClaimed){
+        return false;
+      }
+      completionClaimed=true;
+      applyWorkshopProjectionProgress(targetProgress);
+      if(typeof onComplete==="function") onComplete();
+      return true;
+    }
+
+    if(reduceMotion || distance===0){
+      window.requestAnimationFrame(complete);
+      return;
+    }
+
+    function step(now){
+      if(token!==workshopProjectionTransitionToken) return;
+      var elapsed=now-start;
+      if(elapsed<startupPause){
+        applyWorkshopProjectionProgress(startProgress);
+        window.requestAnimationFrame(step);
+        return;
+      }
+      var transitionProgress=Math.min(
+        1,
+        Math.max(0,elapsed-startupPause)/duration
+      );
+      applyWorkshopProjectionProgress(
+        startProgress+(targetProgress-startProgress)*transitionProgress
+      );
+      if(transitionProgress<1) window.requestAnimationFrame(step);
+      else complete();
+    }
+
+    window.requestAnimationFrame(step);
+  }
+
   function applyWorkshopBuildAreaVisuals(workshopIsActive,onComplete){
     var gridButton=document.getElementById("engineeringGridToggle");
 
@@ -32489,6 +32831,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           groundTransparent:ground.material.transparent,
           groundOpacity:ground.material.opacity,
           groundDepthWrite:ground.material.depthWrite,
+          groundRenderOrder:ground.renderOrder,
           gridVisible:engineeringGrid ? engineeringGrid.visible : true,
           atmosphereVisibility:atmosphereObjects.map(function(object){
             return {object:object,visible:object.visible};
@@ -32505,6 +32848,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       ground.material.transparent=true;
       ground.material.opacity=0.95;
       ground.material.depthWrite=true;
+      // Draw the translucent physical surface first. The grid and projector
+      // layers then remain visible above it, while depth testing keeps every
+      // student object in front of the presentation.
+      ground.renderOrder=-20;
       ground.material.needsUpdate=true;
       workshopStageFrame.visible=true;
 
@@ -32518,15 +32865,26 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         engineeringGrid.visible=true;
         syncWorkshopEngineeringGridContrast(workshopPlatformTint);
       }
+      // Contrast establishes the session's full-opacity targets. Reversals
+      // reuse them rather than promoting a partial fade to a new endpoint.
+      captureWorkshopProjectionGridTargets();
+      applyWorkshopProjectionProgress(workshopProjectionProgress);
       if(gridButton){
         gridButton.textContent="▦ Grid: On";
         gridButton.setAttribute("aria-pressed","true");
       }
-      if(typeof onComplete==="function") onComplete();
+      animateWorkshopProjection(true,onComplete);
       return;
     }
 
-    if(!workshopBuildAreaSnapshot) return;
+    if(!workshopBuildAreaSnapshot){
+      applyWorkshopProjectionProgress(0);
+      workshopStageFrame.visible=false;
+      workshopProjectionGridTargets=null;
+      syncEngineeringGridStyle(ground.material.map === grassTexture);
+      if(typeof onComplete==="function") onComplete();
+      return;
+    }
 
     clearWorkshopProjectedRulerBounds();
     scene.background=workshopBuildAreaSnapshot.sceneBackground;
@@ -32535,6 +32893,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     ground.material.transparent=workshopBuildAreaSnapshot.groundTransparent;
     ground.material.opacity=workshopBuildAreaSnapshot.groundOpacity;
     ground.material.depthWrite=workshopBuildAreaSnapshot.groundDepthWrite;
+    ground.renderOrder=workshopBuildAreaSnapshot.groundRenderOrder;
     ground.material.needsUpdate=true;
     workshopStageFrame.visible=false;
 
@@ -32557,6 +32916,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     }
     syncEngineeringGridStyle(ground.material.map === grassTexture);
     workshopBuildAreaSnapshot=null;
+    workshopProjectionProgress=0;
+    workshopProjectionGridTargets=null;
     if(typeof onComplete==="function") onComplete();
   }
 
@@ -32579,7 +32940,15 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     document.body.classList.toggle("missionMode",requestedMode==="mission");
     if(requestedMode!=="workshop") restoreBuilderCameraState();
     if(requestedMode!=="workshop") hideWorkshopPrecisionCursor();
-    applyWorkshopBuildAreaVisuals(requestedMode==="workshop",onComplete);
+    if(requestedMode==="workshop"){
+      applyWorkshopBuildAreaVisuals(true,onComplete);
+    }else{
+      animateWorkshopProjection(false,function(){
+        if(currentWorkspaceMode!=="workshop"){
+          applyWorkshopBuildAreaVisuals(false,onComplete);
+        }
+      });
+    }
     if(requestedMode==="workshop"){
       applyResponsiveWorkshopHomeView();
       window.requestAnimationFrame(updateWorkshopProjectedRulerBounds);
@@ -32633,6 +33002,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     });
     if(!result.ok) return false;
     workshopStartupRequested=false;
+    setWorkshopStartupState("STOPPING","Closing Workshop.");
     return true;
   }
 
