@@ -29566,6 +29566,46 @@ body.workshopMode:not(.starterScreenActive) #workshopViewportContainer{
   display:block;
 }
 
+/* Phase 6B.3 fallback: when the world-space height guide is collapsed or
+   hidden behind the selected solid, retain only a compact schematic guide.
+   The measurement value remains on the Engineering Frame. */
+#workshopCadHeightOverlay.isGuideOnly{
+  width:76px;
+  height:44px;
+}
+
+#workshopCadHeightOverlay.isGuideOnly #workshopCadHeightOverlayLabel{
+  display:none;
+}
+
+#workshopCadHeightOverlay.isGuideOnly .workshop-cad-height-screen-guide{
+  left:50%;
+  top:0;
+  display:block;
+  transform:translateX(-50%);
+}
+
+.workshop-ruler-height-value{
+  position:absolute;
+  right:2px;
+  z-index:5;
+  display:grid;
+  width:76px;
+  height:18px;
+  place-items:center;
+  box-sizing:border-box;
+  border:1px solid rgba(103,237,255,.62);
+  border-radius:3px;
+  color:#eaffff;
+  background:rgba(4,25,34,.94);
+  box-shadow:0 0 6px rgba(54,216,255,.42);
+  font:800 7px/1 "Lexend",Arial,sans-serif;
+  white-space:nowrap;
+  pointer-events:none;
+  transform:translate(29px,-50%) rotate(-90deg);
+  transform-origin:center;
+}
+
 body.workshopMode:not(.starterScreenActive) .workshop-ruler{
   --workshop-ruler-line:rgba(207,242,248,.58);
   --workshop-ruler-label:rgba(230,249,252,.94);
@@ -29710,6 +29750,21 @@ body.workshopMode:not(.starterScreenActive)
   .workshop-ruler-right .workshop-ruler-measurement-label{
   right:4px;
   left:auto;
+}
+
+/* Phase 6A.2: close the projected side rails into the same physical frame as
+   the top and bottom rails without changing their scale or projection. */
+body.workshopMode:not(.starterScreenActive) .workshop-ruler-left,
+body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
+  z-index:2;
+  margin-top:-1px;
+  margin-bottom:-1px;
+  border-top:1px solid rgba(185,241,249,.5);
+  border-bottom:1px solid rgba(5,18,27,.72);
+  box-shadow:
+    inset 1px 0 rgba(224,252,255,.2),
+    inset -1px 0 rgba(0,0,0,.38),
+    inset 0 0 8px rgba(59,218,240,.08);
 }
 </style>
 
@@ -30833,6 +30888,9 @@ body.workshopMode:not(.starterScreenActive)
     workshopCadHeightLabelText="";
     var heightOverlay=document.getElementById("workshopCadHeightOverlay");
     if(heightOverlay) heightOverlay.hidden=true;
+    document.querySelectorAll(".workshop-ruler-height-value").forEach(function(value){
+      value.remove();
+    });
   }
 
   function ensureWorkshopCadDimensionGroup(){
@@ -30910,6 +30968,9 @@ body.workshopMode:not(.starterScreenActive)
   function syncWorkshopCadHeightLabelPresentation(){
     var overlay=document.getElementById("workshopCadHeightOverlay");
     var label=document.getElementById("workshopCadHeightOverlayLabel");
+    // Phase 6A.3 keeps measurement text on the Engineering Frame. Phase 6B.3
+    // may expose only the existing label-free schematic guide when the fixed
+    // world-space guide collapses or is occluded by the selected solid.
     var selectedBounds=workshopRulerState.selectedBounds;
     if(!overlay || !label ||
       !workshopCadHeightGuideBase || !workshopCadHeightGuideTop ||
@@ -30971,7 +31032,7 @@ body.workshopMode:not(.starterScreenActive)
     var dashboardBounds=dashboard && dashboard.getBoundingClientRect();
     var margin=8;
     var labelWidth=76;
-    var labelHeight=22;
+    var labelHeight=44;
     var protectedLeft=Math.max(
       margin,
       stationBounds && stationBounds.width ? stationBounds.right+margin : margin
@@ -30986,11 +31047,15 @@ body.workshopMode:not(.starterScreenActive)
       dashboardBounds && dashboardBounds.height ? dashboardBounds.top-margin : window.innerHeight-margin
     );
 
+    // Keep the fixed-size label perceptually separate from the model, not
+    // merely one non-overlapping pixel away from its projected bounds.
+    var objectClearanceX=Math.max(24,labelWidth*.45);
+    var objectClearanceY=Math.max(18,labelHeight);
     var avoidRects=[{
-      left:objectMinimumX-10,
-      right:objectMaximumX+10,
-      top:objectMinimumY-10,
-      bottom:objectMaximumY+10
+      left:objectMinimumX-objectClearanceX,
+      right:objectMaximumX+objectClearanceX,
+      top:objectMinimumY-objectClearanceY,
+      bottom:objectMaximumY+objectClearanceY
     }];
     [
       "workshopRulerTopSelection","workshopRulerBottomSelection",
@@ -31038,71 +31103,111 @@ body.workshopMode:not(.starterScreenActive)
     var guideCenterY=(basePoint.y+topPoint.y)/2;
     var topOrBottom=activeWorkshopEngineeringView==="top" ||
       activeWorkshopEngineeringView==="bottom";
-    var schematic=topOrBottom || guideLength<12 ||
+    var guideInsideModel=
+      guideCenterX>=objectMinimumX && guideCenterX<=objectMaximumX &&
+      guideCenterY>=objectMinimumY && guideCenterY<=objectMaximumY;
+    var schematic=topOrBottom || guideLength<12 || guideInsideModel ||
       basePoint.depth<-1 || basePoint.depth>1 ||
       topPoint.depth<-1 || topPoint.depth>1;
+    if(!schematic){
+      overlay.hidden=true;
+      overlay.classList.remove("isGuideOnly","isSchematic");
+      label.textContent="";
+      return false;
+    }
     var horizontalSide=guideCenterX<objectCenterX ? -1 : 1;
     var candidates=[];
 
-    if(!schematic){
-      candidates.push(normalizeCandidate(
-        guideCenterX+horizontalSide*(labelWidth/2+12),guideCenterY
-      ));
-      candidates.push(normalizeCandidate(
-        guideCenterX-horizontalSide*(labelWidth/2+12),guideCenterY
-      ));
+    function addCandidate(x,y,priority){
+      var candidate=normalizeCandidate(x,y);
+      candidate.priority=priority;
+      candidate.guideDistance=Math.hypot(
+        candidate.x-guideCenterX,
+        candidate.y-guideCenterY
+      );
+      candidates.push(candidate);
     }
-    candidates.push(normalizeCandidate(
-      tableMinimumX+labelWidth/2+12,objectCenterY
-    ));
-    candidates.push(normalizeCandidate(
-      tableMaximumX-labelWidth/2-12,objectCenterY
-    ));
-    candidates.push(normalizeCandidate(
-      tableMinimumX-labelWidth/2-8,objectCenterY
-    ));
-    candidates.push(normalizeCandidate(
-      tableMaximumX+labelWidth/2+8,objectCenterY
-    ));
-    candidates.push(normalizeCandidate(
-      protectedLeft+labelWidth/2,objectCenterY
-    ));
-    candidates.push(normalizeCandidate(
-      protectedRight-labelWidth/2,objectCenterY
-    ));
-    candidates.push(normalizeCandidate(
-      objectCenterX,tableMinimumY-labelHeight/2-8
-    ));
-    candidates.push(normalizeCandidate(
-      objectCenterX,tableMaximumY+labelHeight/2+8
-    ));
-    candidates.push(normalizeCandidate(
-      protectedLeft+labelWidth/2,protectedTop+labelHeight/2+44
-    ));
-    candidates.push(normalizeCandidate(
-      protectedRight-labelWidth/2,protectedTop+labelHeight/2+44
-    ));
-    candidates.push(normalizeCandidate(
-      protectedLeft+labelWidth/2,protectedBottom-labelHeight/2-44
-    ));
-    candidates.push(normalizeCandidate(
-      protectedRight-labelWidth/2,protectedBottom-labelHeight/2-44
-    ));
 
-    var chosen=candidates[0];
+    // The world-space guide already sits on an Engineering Frame edge. Find
+    // that projected edge and offer its outside/inside positions first so the
+    // label reads as part of the frame rather than part of the selected model.
+    var projectedFrameEdges=[
+      {name:"left",distance:Math.abs(guideCenterX-tableMinimumX)},
+      {name:"right",distance:Math.abs(guideCenterX-tableMaximumX)},
+      {name:"top",distance:Math.abs(guideCenterY-tableMinimumY)},
+      {name:"bottom",distance:Math.abs(guideCenterY-tableMaximumY)}
+    ];
+    projectedFrameEdges.sort(function(first,second){
+      return first.distance-second.distance;
+    });
+    var guideFrameEdge=projectedFrameEdges[0].name;
+    if(guideFrameEdge==="left"){
+      addCandidate(tableMinimumX-labelWidth/2-8,guideCenterY,0);
+      addCandidate(tableMinimumX+labelWidth/2+12,guideCenterY,0);
+    }else if(guideFrameEdge==="right"){
+      addCandidate(tableMaximumX+labelWidth/2+8,guideCenterY,0);
+      addCandidate(tableMaximumX-labelWidth/2-12,guideCenterY,0);
+    }else if(guideFrameEdge==="top"){
+      addCandidate(guideCenterX,tableMinimumY-labelHeight/2-8,0);
+      addCandidate(guideCenterX,tableMinimumY+labelHeight/2+8,0);
+    }else{
+      addCandidate(guideCenterX,tableMaximumY+labelHeight/2+8,0);
+      addCandidate(guideCenterX,tableMaximumY-labelHeight/2-8,0);
+    }
+
+    if(!schematic){
+      addCandidate(
+        guideCenterX+horizontalSide*(labelWidth/2+12),guideCenterY,1
+      );
+      addCandidate(
+        guideCenterX-horizontalSide*(labelWidth/2+12),guideCenterY,1
+      );
+    }
+    addCandidate(tableMinimumX+labelWidth/2+12,objectCenterY,2);
+    addCandidate(tableMaximumX-labelWidth/2-12,objectCenterY,2);
+    addCandidate(tableMinimumX-labelWidth/2-8,objectCenterY,2);
+    addCandidate(tableMaximumX+labelWidth/2+8,objectCenterY,2);
+    addCandidate(protectedLeft+labelWidth/2,objectCenterY,3);
+    addCandidate(protectedRight-labelWidth/2,objectCenterY,3);
+    addCandidate(objectCenterX,tableMinimumY-labelHeight/2-8,2);
+    addCandidate(objectCenterX,tableMaximumY+labelHeight/2+8,2);
+    addCandidate(
+      protectedLeft+labelWidth/2,protectedTop+labelHeight/2+44,4
+    );
+    addCandidate(
+      protectedRight-labelWidth/2,protectedTop+labelHeight/2+44,4
+    );
+    addCandidate(
+      protectedLeft+labelWidth/2,protectedBottom-labelHeight/2-44,4
+    );
+    addCandidate(
+      protectedRight-labelWidth/2,protectedBottom-labelHeight/2-44,4
+    );
+
+    var chosen=null;
+    var chosenScore=Infinity;
     for(var index=0;index<candidates.length;index++){
       var candidate=candidates[index];
       var rectangle=candidateRect(candidate);
       if(!avoidRects.some(function(avoid){return overlaps(rectangle,avoid);})){
+        var score=candidate.priority*10000+candidate.guideDistance;
+        if(score>=chosenScore) continue;
         chosen=candidate;
-        break;
+        chosenScore=score;
       }
     }
 
-    overlay.classList.toggle("isSchematic",schematic);
+    // The protected corner candidates make this exceptionally rare, but
+    // hiding is safer than placing a measurement over the model or controls.
+    if(!chosen){
+      overlay.hidden=true;
+      return false;
+    }
+
+    overlay.classList.add("isSchematic","isGuideOnly");
     overlay.style.left=Math.round(chosen.x-labelWidth/2)+"px";
     overlay.style.top=Math.round(chosen.y-labelHeight/2)+"px";
-    label.textContent=workshopCadHeightLabelText;
+    label.textContent="";
     overlay.hidden=false;
     return true;
   }
@@ -31149,30 +31254,14 @@ body.workshopMode:not(.starterScreenActive)
 
     var group=ensureWorkshopCadDimensionGroup();
     var heightMeasurement=formatWorkshopMeasurement(selectedBounds.height);
-    var frameLimit=24.35;
-    var selectionCenterX=(selectedBounds.min.x+selectedBounds.max.x)/2;
-    var selectionCenterZ=(selectedBounds.min.z+selectedBounds.max.z)/2;
-    var frameClearances=[
-      {edge:"left",space:selectedBounds.min.x+frameLimit},
-      {edge:"right",space:frameLimit-selectedBounds.max.x},
-      {edge:"back",space:selectedBounds.min.z+frameLimit},
-      {edge:"front",space:frameLimit-selectedBounds.max.z}
-    ];
-    frameClearances.sort(function(first,second){
-      return second.space-first.space;
-    });
-    var guideEdge=frameClearances[0].edge;
-    var guideX=THREE.MathUtils.clamp(selectionCenterX,-22.5,22.5);
-    var guideZ=THREE.MathUtils.clamp(selectionCenterZ,-22.5,22.5);
-    if(guideEdge==="left"){
-      guideX=-frameLimit;
-    }else if(guideEdge==="right"){
-      guideX=frameLimit;
-    }else if(guideEdge==="back"){
-      guideZ=-frameLimit;
-    }else{
-      guideZ=frameLimit;
-    }
+    // The footprint center is a deterministic world-space anchor directly
+    // beneath the selected build and never changes with camera orientation.
+    var guideX=THREE.MathUtils.clamp(
+      (selectedBounds.min.x+selectedBounds.max.x)/2,-24.35,24.35
+    );
+    var guideZ=THREE.MathUtils.clamp(
+      (selectedBounds.min.z+selectedBounds.max.z)/2,-24.35,24.35
+    );
     var tableY=-.5;
     var topY=selectedBounds.max.y;
     var capSize=Math.max(.18,Math.min(.42,selectedBounds.height*.12));
@@ -31191,7 +31280,8 @@ body.workshopMode:not(.starterScreenActive)
     workshopCadHeightLabelText=
       "H  "+heightMeasurement.text+" "+heightMeasurement.abbreviation;
     syncWorkshopCadHeightLabelPresentation();
-    group.visible=true;
+    group.visible=activeWorkshopEngineeringView!=="top" &&
+      activeWorkshopEngineeringView!=="bottom";
   }
 
   function formatWorkshopMeasurement(value){
@@ -31290,24 +31380,30 @@ body.workshopMode:not(.starterScreenActive)
     var layer=document.getElementById(layerId);
     if(!ruler || !layer) return;
 
-    var firstPosition=workshopModelToRulerPosition(minimum,axis,ruler);
-    var secondPosition=workshopModelToRulerPosition(maximum,axis,ruler);
-    var start=Math.min(firstPosition,secondPosition);
-    var end=Math.max(firstPosition,secondPosition);
-    var span=Math.max(1,end-start);
     var isVertical=ruler.classList.contains("workshop-ruler-vertical");
-    var rulerSize=isVertical ? ruler.clientHeight : ruler.clientWidth;
+    var range=getWorkshopRulerAxisRange(axis);
+    var firstValue=Math.max(range.min,Math.min(range.max,Number(minimum)));
+    var secondValue=Math.max(range.min,Math.min(range.max,Number(maximum)));
+    var firstRatio=isVertical
+      ? (range.max-firstValue)/(range.max-range.min)
+      : (firstValue-range.min)/(range.max-range.min);
+    var secondRatio=isVertical
+      ? (range.max-secondValue)/(range.max-range.min)
+      : (secondValue-range.min)/(range.max-range.min);
+    var startRatio=Math.min(firstRatio,secondRatio);
+    var endRatio=Math.max(firstRatio,secondRatio);
+    var spanRatio=Math.max(.0001,endRatio-startRatio);
 
     layer.hidden=false;
     layer.replaceChildren();
     if(isVertical){
-      layer.style.top=start+"px";
-      layer.style.height=span+"px";
+      layer.style.top=(startRatio*100)+"%";
+      layer.style.height=(spanRatio*100)+"%";
       layer.style.left="";
       layer.style.width="";
     }else{
-      layer.style.left=start+"px";
-      layer.style.width=span+"px";
+      layer.style.left=(startRatio*100)+"%";
+      layer.style.width=(spanRatio*100)+"%";
       layer.style.top="";
       layer.style.height="";
     }
@@ -31335,13 +31431,10 @@ body.workshopMode:not(.starterScreenActive)
     label.setAttribute("aria-label",accessibleText);
     layer.appendChild(label);
 
-    var labelHalf=Math.min(label.offsetWidth/2,rulerSize/2);
-    var desiredCenter=(start+end)/2;
-    var safeCenter=Math.max(labelHalf,Math.min(rulerSize-labelHalf,desiredCenter));
     if(isVertical){
-      label.style.top=(safeCenter-start)+"px";
+      label.style.top="50%";
     }else{
-      label.style.left=(safeCenter-start)+"px";
+      label.style.left="50%";
     }
   }
 
@@ -31360,27 +31453,91 @@ body.workshopMode:not(.starterScreenActive)
     updateWorkshopMeasurementAssistant();
     renderWorkshopCadDimensions();
     [
-      ["workshopRulerTop","workshopRulerTopSelection"],
-      ["workshopRulerBottom","workshopRulerBottomSelection"]
-    ].forEach(function(ids){
+      "workshopRulerTopSelection","workshopRulerBottomSelection",
+      "workshopRulerLeftSelection","workshopRulerRightSelection"
+    ].forEach(function(id){
+      var layer=document.getElementById(id);
+      if(!layer) return;
+      layer.hidden=true;
+      layer.replaceChildren();
+      layer.removeAttribute("style");
+    });
+
+    var view=activeWorkshopEngineeringView || "home";
+    var widthRuler=null;
+    var lengthRuler=null;
+    if(view==="front" || view==="back"){
+      widthRuler=["workshopRulerTop","workshopRulerTopSelection"];
+    }else if(view==="left"){
+      lengthRuler=["workshopRulerTop","workshopRulerTopSelection"];
+    }else if(view==="right"){
+      // The reversed Right orientation reads more clearly against the lower
+      // physical frame edge; values remain the same world-space Z segment.
+      lengthRuler=["workshopRulerBottom","workshopRulerBottomSelection"];
+    }else if(view==="top" || view==="bottom"){
+      widthRuler=["workshopRulerBottom","workshopRulerBottomSelection"];
+      lengthRuler=["workshopRulerRight","workshopRulerRightSelection"];
+    }else{
+      widthRuler=["workshopRulerBottom","workshopRulerBottomSelection"];
+      lengthRuler=["workshopRulerRight","workshopRulerRightSelection"];
+    }
+
+    if(widthRuler){
       renderWorkshopRulerSelectionLayer(
-        ids[0],ids[1],"x",
+        widthRuler[0],widthRuler[1],"x",
         selectedBounds.min.x,selectedBounds.max.x,
         "Width: "+widthMeasurement.text+" "+widthMeasurement.abbreviation,
         selectionDescription+" width: "+widthMeasurement.text+" "+widthMeasurement.spokenUnit
       );
-    });
-    [
-      ["workshopRulerLeft","workshopRulerLeftSelection"],
-      ["workshopRulerRight","workshopRulerRightSelection"]
-    ].forEach(function(ids){
+    }
+    if(lengthRuler){
       renderWorkshopRulerSelectionLayer(
-        ids[0],ids[1],"z",
+        lengthRuler[0],lengthRuler[1],"z",
         selectedBounds.min.z,selectedBounds.max.z,
         "Length: "+lengthMeasurement.text+" "+lengthMeasurement.abbreviation,
         selectionDescription+" length: "+lengthMeasurement.text+" "+lengthMeasurement.spokenUnit
       );
+    }
+    renderWorkshopFrameHeightValue(selectedBounds);
+  }
+
+  function renderWorkshopFrameHeightValue(selectedBounds){
+    var rightRuler=document.getElementById("workshopRulerRight");
+    document.querySelectorAll(".workshop-ruler-height-value").forEach(function(value){
+      value.remove();
     });
+    if(!rightRuler || !selectedBounds) return;
+
+    var range=getWorkshopRulerAxisRange("z");
+    var firstRatio=(range.max-selectedBounds.min.z)/(range.max-range.min);
+    var secondRatio=(range.max-selectedBounds.max.z)/(range.max-range.min);
+    var occupiedStart=Math.min(firstRatio,secondRatio);
+    var occupiedEnd=Math.max(firstRatio,secondRatio);
+    var candidates=[.14,.5,.86];
+    var chosen=candidates[0];
+    var bestClearance=-Infinity;
+    candidates.forEach(function(candidate){
+      var clearance=candidate<occupiedStart
+        ? occupiedStart-candidate
+        : candidate>occupiedEnd
+          ? candidate-occupiedEnd
+          : -Math.min(candidate-occupiedStart,occupiedEnd-candidate);
+      if(clearance>bestClearance){
+        chosen=candidate;
+        bestClearance=clearance;
+      }
+    });
+
+    var heightMeasurement=formatWorkshopMeasurement(selectedBounds.height);
+    var value=document.createElement("span");
+    value.className="workshop-ruler-height-value";
+    value.textContent="H: "+heightMeasurement.text+" "+heightMeasurement.abbreviation;
+    value.setAttribute(
+      "aria-label",
+      "Selected build height: "+heightMeasurement.text+" "+heightMeasurement.spokenUnit
+    );
+    value.style.top=(chosen*100)+"%";
+    rightRuler.appendChild(value);
   }
 
   function refreshWorkshopRulerSelectionHighlight(){
@@ -31974,40 +32131,162 @@ body.workshopMode:not(.starterScreenActive)
     return true;
   }
 
+  function fitWorkshopDirectionalMeasurementFrame(view){
+    var definition=workshopEngineeringViewDirections[view];
+    var selectedBounds=getWorkshopSelectedObjectBounds();
+    if(!definition || !selectedBounds) return false;
+
+    // Directional engineering views must frame the fixed 50 cm Engineering
+    // Frame as well as the selected object's vertical measurement envelope.
+    // Explicit Fit Selection remains the separate object-focused command.
+    var frameBounds=new THREE.Box3(
+      new THREE.Vector3(-25,-.5,-25),
+      new THREE.Vector3(25,-.5,25)
+    );
+    frameBounds.union(selectedBounds);
+    var center=frameBounds.getCenter(new THREE.Vector3());
+    var direction=new THREE.Vector3(
+      definition.position[0],
+      definition.position[1],
+      definition.position[2]
+    ).normalize();
+    var up=new THREE.Vector3(
+      definition.up[0],
+      definition.up[1],
+      definition.up[2]
+    ).normalize();
+    var forward=direction.clone().multiplyScalar(-1);
+    var right=new THREE.Vector3().crossVectors(forward,up).normalize();
+    var viewUp=new THREE.Vector3().crossVectors(right,forward).normalize();
+    var halfWidth=0;
+    var halfHeight=0;
+
+    [frameBounds.min.x,frameBounds.max.x].forEach(function(x){
+      [frameBounds.min.y,frameBounds.max.y].forEach(function(y){
+        [frameBounds.min.z,frameBounds.max.z].forEach(function(z){
+          var offset=new THREE.Vector3(x,y,z).sub(center);
+          halfWidth=Math.max(halfWidth,Math.abs(offset.dot(right)));
+          halfHeight=Math.max(halfHeight,Math.abs(offset.dot(viewUp)));
+        });
+      });
+    });
+
+    var canvasBounds=renderer.domElement.getBoundingClientRect();
+    var viewStation=document.getElementById("viewCubeBox");
+    var assistant=document.getElementById("workshopMeasurementAssistant");
+    var dashboard=document.getElementById("workshopDashboard");
+    var stationBounds=viewStation && viewStation.getBoundingClientRect();
+    var assistantBounds=assistant && assistant.getBoundingClientRect();
+    var dashboardBounds=dashboard && dashboard.getBoundingClientRect();
+    var safetyMargin=12;
+    var labelAllowance=28;
+    var protectedLeft=stationBounds
+      ? stationBounds.right+safetyMargin
+      : canvasBounds.left+safetyMargin;
+    var protectedRight=assistantBounds
+      ? assistantBounds.left-safetyMargin
+      : canvasBounds.right-safetyMargin;
+    var protectedTop=canvasBounds.top+safetyMargin;
+    var protectedBottom=dashboardBounds
+      ? dashboardBounds.top-safetyMargin
+      : canvasBounds.bottom-safetyMargin;
+    var usableWidth=Math.max(
+      240,
+      protectedRight-protectedLeft-(labelAllowance*2)
+    );
+    var usableHeight=Math.max(
+      240,
+      protectedBottom-protectedTop-(labelAllowance*2)
+    );
+    var fitFov=50;
+    var verticalFov=THREE.MathUtils.degToRad(fitFov);
+    var horizontalFov=2*Math.atan(
+      Math.tan(verticalFov/2)*(canvasBounds.width/canvasBounds.height)
+    );
+    var fitDistance=Math.max(
+      6,
+      halfHeight/Math.tan(verticalFov/2)*
+        (canvasBounds.height/usableHeight),
+      halfWidth/Math.tan(horizontalFov/2)*
+        (canvasBounds.width/usableWidth)
+    )*1.06;
+
+    activeWorkshopEngineeringTarget=center;
+    activeWorkshopFitSelection=false;
+    activeWorkshopEngineeringView=view;
+    cameraDistance=fitDistance;
+    camera.fov=fitFov;
+    camera.updateProjectionMatrix();
+    camera.up.copy(up);
+    camera.position.copy(center).addScaledVector(direction,fitDistance);
+    camera.lookAt(center);
+    applyWorkshopEngineeringView();
+    renderWorkshopSelectedBounds();
+
+    // Calibrate against the real projected ruler container. This accounts
+    // for ruler thickness and perspective depth that the world-space bounds
+    // estimate cannot represent exactly in edge-on directional views.
+    for(var calibrationPass=0;calibrationPass<3;calibrationPass+=1){
+      if(!updateWorkshopProjectedRulerBounds()) break;
+      var projectedBounds=document
+        .getElementById("workshopViewportContainer")
+        .getBoundingClientRect();
+      var projectedScale=Math.max(
+        projectedBounds.width/usableWidth,
+        projectedBounds.height/usableHeight
+      );
+      if(projectedScale<=1) break;
+      cameraDistance*=projectedScale*1.03;
+      applyWorkshopEngineeringView();
+    }
+    correctWorkshopDirectionalViewProtectedZone(view);
+    return true;
+  }
+
   function correctWorkshopDirectionalViewProtectedZone(view){
-    var protectsViewStation=view==="left" || view==="back";
-    if(!protectsViewStation && view!=="bottom") return false;
+    if(!workshopEngineeringViewDirections[view]) return false;
     if(!updateWorkshopProjectedRulerBounds()) return false;
 
     var rulerBounds=document
       .getElementById("workshopViewportContainer")
       .getBoundingClientRect();
+    var viewStation=document.getElementById("viewCubeBox");
+    var assistant=document.getElementById("workshopMeasurementAssistant");
+    var dashboard=document.getElementById("workshopDashboard");
+    var canvasBounds=renderer.domElement.getBoundingClientRect();
+    var viewStationBounds=viewStation && viewStation.getBoundingClientRect();
+    var assistantBounds=assistant && assistant.getBoundingClientRect();
+    var dashboardBounds=dashboard && dashboard.getBoundingClientRect();
     var desiredScreenX=0;
     var desiredScreenY=0;
     var safetyMargin=8;
+    var protectedLeft=viewStationBounds
+      ? viewStationBounds.right+safetyMargin
+      : canvasBounds.left+safetyMargin;
+    var protectedRight=assistantBounds
+      ? assistantBounds.left-safetyMargin
+      : canvasBounds.right-safetyMargin;
+    var protectedTop=canvasBounds.top+safetyMargin;
+    var protectedBottom=dashboardBounds
+      ? dashboardBounds.top-safetyMargin
+      : canvasBounds.bottom-safetyMargin;
 
-    if(protectsViewStation){
-      var viewStation=document.getElementById("viewCubeBox");
-      if(!viewStation) return false;
-      var viewStationBounds=viewStation.getBoundingClientRect();
-      desiredScreenX=Math.max(
-        0,
-        viewStationBounds.right+safetyMargin-rulerBounds.left
-      );
-    }else{
-      var dashboard=document.getElementById("workshopDashboard");
-      if(!dashboard) return false;
-      var dashboardBounds=dashboard.getBoundingClientRect();
-      desiredScreenY=Math.min(
-        0,
-        dashboardBounds.top-safetyMargin-rulerBounds.bottom
-      );
+    if(rulerBounds.left<protectedLeft){
+      desiredScreenX=protectedLeft-rulerBounds.left;
+    }
+    if(rulerBounds.right+desiredScreenX>protectedRight){
+      desiredScreenX+=protectedRight-(rulerBounds.right+desiredScreenX);
+    }
+    if(rulerBounds.top<protectedTop){
+      desiredScreenY=protectedTop-rulerBounds.top;
+    }
+    if(rulerBounds.bottom+desiredScreenY>protectedBottom){
+      desiredScreenY+=protectedBottom-(rulerBounds.bottom+desiredScreenY);
     }
 
     if(!desiredScreenX && !desiredScreenY) return false;
 
     camera.updateMatrixWorld();
-    var canvasBounds=renderer.domElement.getBoundingClientRect();
     var target=activeWorkshopEngineeringTarget;
     if(!target || !canvasBounds.height) return false;
 
@@ -32039,19 +32318,28 @@ body.workshopMode:not(.starterScreenActive)
     var correctedBounds=document
       .getElementById("workshopViewportContainer")
       .getBoundingClientRect();
-    var estimatedShift=protectsViewStation
-      ? correctedBounds.left-rulerBounds.left
-      : correctedBounds.bottom-rulerBounds.bottom;
-    var requiredShift=protectsViewStation ? desiredScreenX : desiredScreenY;
-    if(Math.abs(estimatedShift)>0.01){
-      var refinement=translation.clone().multiplyScalar(
-        requiredShift/estimatedShift-1
+    var actualScreenX=correctedBounds.left-rulerBounds.left;
+    var actualScreenY=correctedBounds.top-rulerBounds.top;
+    if(Math.abs(actualScreenX)>0.01 && desiredScreenX){
+      var horizontalRefinement=new THREE.Vector3().addScaledVector(
+        cameraRight,
+        -desiredScreenX*worldUnitsPerPixel*
+          (desiredScreenX/actualScreenX-1)
       );
-      target.add(refinement);
-      camera.position.add(refinement);
-      camera.lookAt(target);
-      updateWorkshopProjectedRulerBounds();
+      target.add(horizontalRefinement);
+      camera.position.add(horizontalRefinement);
     }
+    if(Math.abs(actualScreenY)>0.01 && desiredScreenY){
+      var verticalRefinement=new THREE.Vector3().addScaledVector(
+        cameraUp,
+        desiredScreenY*worldUnitsPerPixel*
+          (desiredScreenY/actualScreenY-1)
+      );
+      target.add(verticalRefinement);
+      camera.position.add(verticalRefinement);
+    }
+    camera.lookAt(target);
+    updateWorkshopProjectedRulerBounds();
     return true;
   }
 
@@ -32079,7 +32367,7 @@ body.workshopMode:not(.starterScreenActive)
       if(!workshopEngineeringViewDirections[view]) return false;
 
       if(getWorkshopSelectedObjectBounds()){
-        return fitWorkshopSelection(view);
+        return fitWorkshopDirectionalMeasurementFrame(view);
       }
 
       // Preserve the model's projected depth and center the complete visible
