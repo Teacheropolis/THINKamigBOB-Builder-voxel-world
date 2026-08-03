@@ -78,6 +78,33 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     return true;
   };
 
+  const finishProjectorPowerOn = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (state.projector !== "POWERING_ON") return false;
+    const result = validateTransition("projector", state.projector, "POWERED_ON");
+    if (!result.ok) return false;
+    state.projector = "POWERED_ON";
+    publish(transition, "projector:powered-on");
+    drivers.continueLegacyStartup?.({
+      transitionId: transition.id,
+      complete: () => finishPowerOn(transition),
+    });
+    return true;
+  };
+
+  const beginProjectorPowerOn = (transition, context) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (state.projector !== "POWERED_OFF") return false;
+    const result = validateTransition("projector", state.projector, "POWERING_ON", {
+      workshopState: state.workshop,
+      assetReady: context.assetsLoaded === true,
+      shutdownLock: state.workshop === "SHUTTING_DOWN",
+    });
+    if (!result.ok) return false;
+    state.projector = "POWERING_ON";
+    return true;
+  };
+
   const finishPowerOff = (transition) => {
     if (activeTransition !== transition || transition.cancelled) return false;
     Object.keys(drawerStates).forEach((id) => { drawerStates[id] = "CLOSED"; });
@@ -113,7 +140,11 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     state.workshop = "STARTING";
     busy = true;
     publish(transition, "workshop:startup-begun");
-    drivers.enterWorkshop?.({ transitionId: transition.id, complete: () => finishPowerOn(transition) });
+    drivers.powerOnProjector?.({
+      transitionId: transition.id,
+      begin: () => beginProjectorPowerOn(transition, context),
+      complete: () => finishProjectorPowerOn(transition),
+    });
     return accept(transition);
   };
 

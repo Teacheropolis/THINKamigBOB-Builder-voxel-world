@@ -27255,6 +27255,24 @@ body.workshopMode:not(.starterScreenActive) #workshopProjectorMount{
   -webkit-user-drag:none;
 }
 
+.workshop-projector-power-layer{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:auto;
+  max-width:100%;
+  opacity:0;
+  transform:scale(1);
+  transform-origin:center bottom;
+  object-fit:contain;
+  animation:none;
+  transition:none;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+
 .workshop-ruler{
   --workshop-ruler-line:rgba(207,239,247,.76);
   --workshop-ruler-label:rgba(235,250,255,.88);
@@ -30041,6 +30059,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopRoomBackgroundLoadError=null;
   var workshopPoweredOffProjectorView=null;
   var workshopPoweredOffProjectorRegistration=null;
+  var workshopProjectorPowerOnView=null;
   var workshopPoweredOffProjectorReady=false;
   var workshopPoweredOffProjectorLoadError=null;
 
@@ -30198,10 +30217,15 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
 
     Promise.all([
       import("./js/workshop/projector/powered-off-projector-view.mjs"),
-      import("./js/workshop/projector/responsive-projector-registration.mjs")
+      import("./js/workshop/projector/responsive-projector-registration.mjs"),
+      import("./js/workshop/projector/projector-power-on-view.mjs")
     ])
       .then(function(modules){
         workshopPoweredOffProjectorView=modules[0].mountPoweredOffProjector({
+          document:document,
+          mount:mount
+        });
+        workshopProjectorPowerOnView=modules[2].mountProjectorPowerOnView({
           document:document,
           mount:mount
         });
@@ -30215,7 +30239,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
               document.getElementById("workshopDashboard")
             ]
           });
-        return workshopPoweredOffProjectorView.ready;
+        return Promise.all([
+          workshopPoweredOffProjectorView.ready,
+          workshopProjectorPowerOnView.ready
+        ]);
       })
       .then(function(){
         workshopPoweredOffProjectorReady=true;
@@ -33077,7 +33104,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   function setWorkspaceMode(mode){
     var requestedMode=mode==="workshop" ? "workshop" : "mission";
     if(requestedMode==="workshop" && isStarterScreenActive()) return false;
-    if(requestedMode===currentWorkspaceMode) return true;
+    if(requestedMode===currentWorkspaceMode && !(
+      requestedMode==="mission" && workshopStartupState==="STARTING"
+    )) return true;
 
     if(requestedMode==="workshop"){
       workshopStartupRequested=true;
@@ -33205,7 +33234,11 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     if(switcher){
       switcher.removeAttribute("onclick");
       switcher.addEventListener("click",function(){
-        setWorkspaceMode(currentWorkspaceMode==="workshop" ? "mission" : "workshop");
+        setWorkspaceMode(
+          workshopStartupState==="STARTING" || currentWorkspaceMode==="workshop"
+            ? "mission"
+            : "workshop"
+        );
       });
     }
 
@@ -33290,11 +33323,27 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           }
         },
         drivers:{
-          enterWorkshop:function(transition){
+          powerOnProjector:function(transition){
+            workshopProjectorPowerOnView.start({
+              transitionId:transition.transitionId,
+              begin:transition.begin,
+              complete:transition.complete
+            });
+          },
+          continueLegacyStartup:function(transition){
             applyWorkspaceModeVisuals("workshop",transition.complete);
           },
           exitWorkshop:function(transition){
-            applyWorkspaceModeVisuals("mission",transition.complete);
+            var pendingCompletions=2;
+            var completionClaimed=false;
+            function completeWhenSettled(){
+              pendingCompletions-=1;
+              if(pendingCompletions!==0 || completionClaimed) return;
+              completionClaimed=true;
+              transition.complete();
+            }
+            workshopProjectorPowerOnView.cancel({complete:completeWhenSettled});
+            applyWorkspaceModeVisuals("mission",completeWhenSettled);
           },
           openDrawer:function(transition){
             workshopDrawerTransitionCompletions[transition.uiDrawer]=transition.complete;
