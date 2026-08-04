@@ -29656,7 +29656,8 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox{
   top:50px !important;
   left:8px !important;
   translate:none !important;
-  display:grid !important;
+  display:flex !important;
+  flex-direction:column;
   width:184px !important;
   max-height:calc(100vh - 184px);
   gap:4px;
@@ -29672,6 +29673,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox{
 
 body.workshopMode:not(.starterScreenActive) #workshopEngineeringControlStationTitle{
   display:block;
+  flex:0 0 auto;
   padding:5px 3px;
   border-bottom:1px solid rgba(143,246,255,.34);
   color:#b8f4ff;
@@ -29681,22 +29683,27 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringControlStationTi
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeTitle{
+  flex:0 0 auto;
   margin:0 !important;
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeCanvas{
-  justify-self:center;
+  flex:0 0 auto;
+  align-self:center;
   width:128px !important;
   height:128px !important;
 }
 
 body.workshopMode:not(.starterScreenActive) #viewDiceHint{
+  flex:0 0 auto;
   margin:0 !important;
   font-size:8px !important;
   text-align:center;
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls{
+  flex:1 1 auto;
+  min-height:0;
   position:static;
   width:auto;
   gap:4px;
@@ -29704,6 +29711,10 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls{
   box-sizing:border-box;
   border-radius:9px;
   box-shadow:inset 0 1px rgba(255,255,255,.10);
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewRemoteTitle{
@@ -29737,27 +29748,30 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls #wo
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceUtilityRail{
+  flex:0 0 44px;
   position:static;
   display:grid;
   grid-template-columns:minmax(0,1fr);
+  align-items:stretch;
   gap:4px;
   width:100%;
   margin:0;
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceUtilityRail #helpButton{
+  display:none !important;
   width:48px !important;
   min-width:48px !important;
-  height:32px !important;
-  min-height:32px !important;
+  height:44px !important;
+  min-height:44px !important;
   padding:3px !important;
   font-size:8px !important;
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch{
   width:100%;
-  height:32px;
-  min-height:32px;
+  height:44px;
+  min-height:44px;
   padding:3px 4px;
   font-size:8px !important;
 }
@@ -29769,6 +29783,25 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch{
 
   body.workshopMode:not(.starterScreenActive) #viewCubeBox{
     width:180px !important;
+  }
+}
+
+@media(max-height:700px){
+  body.workshopMode:not(.starterScreenActive) #viewCubeCanvas{
+    width:96px !important;
+    height:96px !important;
+  }
+}
+
+@media(max-height:500px){
+  body.workshopMode:not(.starterScreenActive) #workshopEngineeringControlStationTitle,
+  body.workshopMode:not(.starterScreenActive) #viewDiceHint{
+    display:none;
+  }
+
+  body.workshopMode:not(.starterScreenActive) #viewCubeCanvas{
+    width:48px !important;
+    height:48px !important;
   }
 }
 
