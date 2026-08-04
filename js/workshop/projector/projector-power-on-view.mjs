@@ -1,3 +1,8 @@
+import {
+  PROJECTOR_SHUTDOWN_TIMING,
+  calculateProjectorPowerDownPresentation,
+} from "./projector-lifecycle-safety.mjs";
+
 export const PROJECTOR_POWER_ON_ASSETS = Object.freeze({
   lens: "assets/images/workshop/runtime/derivatives/projector/projector-powering-on-lens-587x587.png",
   lowerBars: "assets/images/workshop/runtime/derivatives/projector/projector-powering-on-lower-bars-587x587.png",
@@ -214,11 +219,136 @@ export function mountProjectorPowerOnView({
     return Object.freeze({ ok: true, code: "REVERSING" });
   };
 
+  const powerDown = ({ transitionId, tableProjectionVisible = true, complete = () => true } = {}) => {
+    if (typeof transitionId !== "string" || transitionId.length === 0) {
+      throw new TypeError("transitionId must be a non-empty string.");
+    }
+    if (tableProjectionVisible !== false) {
+      return Object.freeze({ ok: false, code: "TABLE_FIELD_VISIBLE" });
+    }
+    const token = ++activeToken;
+    transitionActive = true;
+    const initial = Object.fromEntries(Object.keys(elements).map((name) => [name, values[name] || 0]));
+    const maximumRatio = Math.max(0, ...Object.entries(initial).map(([name, value]) => (
+      value / PROJECTOR_POWER_ON_TIMING.layers[name].opacity
+    )));
+    if (maximumRatio === 0) {
+      clear();
+      complete();
+      return Object.freeze({ ok: true, code: "ALREADY_OFF", transitionId });
+    }
+    const isReduced = reducedMotion();
+    const fullDuration = isReduced
+      ? PROJECTOR_SHUTDOWN_TIMING.reducedDuration
+      : PROJECTOR_SHUTDOWN_TIMING.duration;
+    const duration = fullDuration * Math.min(1, maximumRatio);
+    let firstTimestamp = null;
+    let completionClaimed = false;
+    state = "POWERED_ON";
+    mount.dataset.projectorPowerTransition = "POWERING_OFF";
+
+    const frame = (timestamp) => {
+      if (token !== activeToken) return;
+      if (firstTimestamp === null) firstTimestamp = timestamp;
+      const scaledElapsed = duration === 0
+        ? fullDuration
+        : Math.min(fullDuration, ((timestamp - firstTimestamp) / duration) * fullDuration);
+      const presentation = calculateProjectorPowerDownPresentation(
+        scaledElapsed,
+        initial,
+        { reducedMotion: isReduced },
+      );
+      apply(presentation);
+      if (!presentation.complete) {
+        requestAnimationFrame(frame);
+        return;
+      }
+      if (completionClaimed || token !== activeToken) return;
+      completionClaimed = true;
+      delete mount.dataset.projectorPowerTransition;
+      clear();
+      complete();
+    };
+    requestAnimationFrame(frame);
+    return Object.freeze({ ok: true, code: "ACCEPTED", transitionId });
+  };
+
+  const restorePoweredOn = ({ transitionId, complete = () => true } = {}) => {
+    if (typeof transitionId !== "string" || transitionId.length === 0) {
+      throw new TypeError("transitionId must be a non-empty string.");
+    }
+    const token = ++activeToken;
+    transitionActive = true;
+    const initial = Object.fromEntries(Object.keys(elements).map((name) => [name, values[name] || 0]));
+    const targets = Object.fromEntries(Object.entries(PROJECTOR_POWER_ON_TIMING.layers).map(
+      ([name, layer]) => [name, layer.opacity],
+    ));
+    const maximumDistance = Math.max(0, ...Object.keys(elements).map((name) => (
+      Math.abs(targets[name] - initial[name]) / targets[name]
+    )));
+    if (maximumDistance === 0) {
+      state = "POWERED_ON";
+      transitionActive = false;
+      delete mount.dataset.projectorPowerTransition;
+      mount.dataset.projectorPowerState = state;
+      complete();
+      return Object.freeze({ ok: true, code: "ALREADY_ON", transitionId });
+    }
+    const isReduced = reducedMotion();
+    const duration = (isReduced
+      ? PROJECTOR_POWER_ON_TIMING.reducedDuration
+      : PROJECTOR_POWER_ON_TIMING.duration) * maximumDistance;
+    let firstTimestamp = null;
+    let completionClaimed = false;
+    state = "POWERING_ON";
+    mount.dataset.projectorPowerTransition = "POWERING_ON";
+    const frame = (timestamp) => {
+      if (token !== activeToken) return;
+      if (firstTimestamp === null) firstTimestamp = timestamp;
+      const progress = duration === 0 ? 1 : clamp01((timestamp - firstTimestamp) / duration);
+      const eased = powerUpEasing(progress);
+      const presentation = Object.fromEntries(Object.keys(elements).map((name) => [
+        name,
+        initial[name] + ((targets[name] - initial[name]) * eased),
+      ]));
+      apply(Object.freeze({ ...presentation, progress, complete: progress >= 1 }));
+      if (progress < 1) {
+        requestAnimationFrame(frame);
+        return;
+      }
+      if (completionClaimed || token !== activeToken) return;
+      completionClaimed = true;
+      state = "POWERED_ON";
+      transitionActive = false;
+      delete mount.dataset.projectorPowerTransition;
+      mount.dataset.projectorPowerState = state;
+      complete();
+    };
+    requestAnimationFrame(frame);
+    return Object.freeze({ ok: true, code: "REVERSING", transitionId });
+  };
+
+  const enterFaultSafe = ({ transitionId, complete = () => true } = {}) => {
+    activeToken += 1;
+    const zero = Object.fromEntries(Object.keys(elements).map((name) => [name, 0]));
+    values = Object.freeze({ ...zero, progress: 0, complete: true });
+    Object.keys(elements).forEach((name) => { elements[name].style.opacity = "0"; });
+    state = "FAULT_SAFE";
+    transitionActive = false;
+    delete mount.dataset.projectorPowerTransition;
+    mount.dataset.projectorPowerState = state;
+    complete();
+    return Object.freeze({ ok: true, code: "FAULT_SAFE", transitionId });
+  };
+
   return Object.freeze({
     elements: Object.freeze({ ...elements }),
     ready: Promise.all(readiness),
     start,
     cancel,
+    powerDown,
+    restorePoweredOn,
+    enterFaultSafe,
     reset: clear,
     getSnapshot: () => Object.freeze({ state, values }),
   });

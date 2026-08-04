@@ -30094,6 +30094,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopPoweredOffProjectorRegistration=null;
   var workshopProjectorPowerOnView=null;
   var workshopProjectorProjectionActiveView=null;
+  var workshopProjectorLifecycleSafety=null;
+  var workshopPendingProjectorFault=null;
   var workshopPoweredOffProjectorReady=false;
   var workshopPoweredOffProjectorLoadError=null;
 
@@ -30253,7 +30255,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       import("./js/workshop/projector/powered-off-projector-view.mjs"),
       import("./js/workshop/projector/responsive-projector-registration.mjs"),
       import("./js/workshop/projector/projector-power-on-view.mjs"),
-      import("./js/workshop/projector/projector-projection-active-view.mjs")
+      import("./js/workshop/projector/projector-projection-active-view.mjs"),
+      import("./js/workshop/projector/projector-lifecycle-safety.mjs")
     ])
       .then(function(modules){
         workshopPoweredOffProjectorView=modules[0].mountPoweredOffProjector({
@@ -30269,6 +30272,26 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             document:document,
             mount:mount,
             lensElement:workshopProjectorPowerOnView.elements.lens
+          });
+        workshopProjectorLifecycleSafety=
+          modules[4].createProjectorLifecycleSafety({
+            powerView:workshopProjectorPowerOnView,
+            opticalView:workshopProjectorProjectionActiveView,
+            stopTableField:function(transition){
+              applyWorkspaceModeVisuals("mission",transition.complete);
+            },
+            audio:modules[4].createProjectorAudioHooks({
+              isMuted:function(){
+                var toggle=document.getElementById("audioPowerToggle");
+                return !!toggle && toggle.checked===false;
+              }
+            }),
+            reportStatus:function(fault){
+              setWorkshopStartupState(
+                "FAILED",
+                fault.message || "Projector unavailable. Workshop entered safe mode."
+              );
+            }
           });
         workshopPoweredOffProjectorRegistration=
           modules[1].registerResponsivePoweredOffProjector({
@@ -30295,6 +30318,14 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       })
       .catch(function(error){
         workshopPoweredOffProjectorLoadError=error;
+        workshopPendingProjectorFault={
+          code:"PROJECTOR_ASSET_UNAVAILABLE",
+          message:"Projector unavailable. Workshop entered safe mode."
+        };
+        if(workshopStateController){
+          workshopStateController.reportProjectorFault(workshopPendingProjectorFault);
+          workshopPendingProjectorFault=null;
+        }
         console.error("Workshop Powered Off Projector failed to load:",error);
         setWorkshopStartupState(
           "FAILED",
@@ -33148,6 +33179,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     if(requestedMode==="workshop" && isStarterScreenActive()) return false;
     if(requestedMode===currentWorkspaceMode && !(
       requestedMode==="mission" && workshopStartupState==="STARTING"
+    ) && !(
+      requestedMode==="workshop" && workshopStartupState==="STOPPING"
     )) return true;
 
     if(requestedMode==="workshop"){
@@ -33277,7 +33310,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       switcher.removeAttribute("onclick");
       switcher.addEventListener("click",function(){
         setWorkspaceMode(
-          workshopStartupState==="STARTING" || currentWorkspaceMode==="workshop"
+          workshopStartupState==="STOPPING"
+            ? "workshop"
+            : workshopStartupState==="STARTING" || currentWorkspaceMode==="workshop"
             ? "mission"
             : "workshop"
         );
@@ -33297,7 +33332,11 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   window.openWorkshop=function(){ return setWorkspaceMode("workshop"); };
   window.returnToMission=function(){ return setWorkspaceMode("mission"); };
   window.toggleWorkspaceMode=function(){
-    return setWorkspaceMode(currentWorkspaceMode==="workshop" ? "mission" : "workshop");
+    return setWorkspaceMode(
+      workshopStartupState==="STOPPING"
+        ? "workshop"
+        : currentWorkspaceMode==="workshop" ? "mission" : "workshop"
+    );
   };
   window.setWorkshopMeasurementUnit=setWorkshopMeasurementUnit;
   window.setWorkshopEngineeringView=setWorkshopEngineeringView;
@@ -33366,6 +33405,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         },
         drivers:{
           powerOnProjector:function(transition){
+            workshopProjectorLifecycleSafety.playAudio("relay-on");
             workshopProjectorPowerOnView.start({
               transitionId:transition.transitionId,
               begin:transition.begin,
@@ -33377,6 +33417,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             applyWorkspaceModeVisuals("workshop",transition.tableStable);
           },
           startProjectorProjection:function(transition){
+            workshopProjectorLifecycleSafety.playAudio("projector-rise");
             workshopProjectorProjectionActiveView.start({
               transitionId:transition.transitionId,
               begin:function(){ return true; },
@@ -33386,24 +33427,47 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           settleProjectorProjection:function(transition){
             workshopProjectorProjectionActiveView.settleActive({
               transitionId:transition.transitionId,
-              complete:transition.complete
+              complete:function(){
+                workshopProjectorLifecycleSafety.playAudio("projection-lock");
+                transition.complete();
+              }
             });
           },
           exitWorkshop:function(transition){
-            var pendingCompletions=2;
-            var completionClaimed=false;
-            function completeWhenSettled(){
-              pendingCompletions-=1;
-              if(pendingCompletions!==0 || completionClaimed) return;
-              completionClaimed=true;
-              transition.complete();
-            }
-            workshopProjectorProjectionActiveView.cancelToStandby({
-              complete:function(){
-                workshopProjectorPowerOnView.cancel({complete:completeWhenSettled});
-              }
+            workshopProjectorLifecycleSafety.shutdown({
+              transitionId:transition.transitionId,
+              standby:transition.standby,
+              poweredOff:transition.poweredOff,
+              complete:transition.complete
             });
-            applyWorkspaceModeVisuals("mission",completeWhenSettled);
+          },
+          restoreProjectorShutdown:function(transition){
+            workshopProjectorLifecycleSafety.restore({
+              transitionId:transition.transitionId,
+              complete:transition.complete
+            });
+          },
+          lowerProjectorToStandby:function(transition){
+            workshopProjectorLifecycleSafety.lowerToStandby({
+              transitionId:transition.transitionId,
+              complete:transition.complete
+            });
+          },
+          secureProjectorFault:function(transition){
+            if(!workshopProjectorLifecycleSafety){
+              setWorkshopStartupState(
+                "FAILED",
+                transition.message || "Projector unavailable. Workshop entered safe mode."
+              );
+              transition.complete();
+              return;
+            }
+            workshopProjectorLifecycleSafety.fault({
+              transitionId:transition.transitionId,
+              code:transition.code,
+              message:transition.message,
+              complete:transition.complete
+            });
           },
           openDrawer:function(transition){
             workshopDrawerTransitionCompletions[transition.uiDrawer]=transition.complete;
@@ -33419,6 +33483,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         }
       });
       window.workshopStateController=workshopStateController;
+      if(workshopPendingProjectorFault){
+        workshopStateController.reportProjectorFault(workshopPendingProjectorFault);
+        workshopPendingProjectorFault=null;
+      }
       window.dispatchEvent(new CustomEvent("workshop-contract-ready",{
         detail:{version:"WS-005/1.0"}
       }));

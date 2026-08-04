@@ -161,6 +161,24 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     return true;
   };
 
+  const continueFromPoweredProjector = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (state.projector !== "POWERED_ON") return false;
+    drivers.continueLegacyStartup?.({
+      transitionId: transition.id,
+      tableReady: () => beginProjectorProjection(transition),
+      tableStable: () => markLegacyTableStable(transition),
+    });
+    return true;
+  };
+
+  const finishShutdownReversal = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (state.projector === "POWERING_ON") state.projector = "POWERED_ON";
+    if (state.projector !== "POWERED_ON") return false;
+    return continueFromPoweredProjector(transition);
+  };
+
   const beginProjectorPowerOn = (transition, context) => {
     if (activeTransition !== transition || transition.cancelled) return false;
     if (state.projector !== "POWERED_OFF") return false;
@@ -174,8 +192,37 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     return true;
   };
 
+  const markProjectorStandby = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (state.projector === "FULLY_ACTIVE") {
+      const result = validateTransition("projector", state.projector, "POWERED_ON", {
+        tableRendererAvailable: false,
+      });
+      if (!result.ok) return false;
+      state.projector = "POWERED_ON";
+    } else if (state.projector === "PROJECTION_STARTING") {
+      const result = validateTransition("projector", state.projector, "POWERED_ON");
+      if (!result.ok) return false;
+      state.projector = "POWERED_ON";
+    }
+    return state.projector === "POWERED_ON" || state.projector === "POWERING_ON" || state.projector === "POWERED_OFF";
+  };
+
+  const markProjectorPoweredOff = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (state.projector !== "POWERED_OFF") {
+      const result = validateTransition("projector", state.projector, "POWERED_OFF", {
+        tableProjectionVisible: false,
+      });
+      if (!result.ok) return false;
+      state.projector = "POWERED_OFF";
+    }
+    return publish(transition, "projector:powered-off");
+  };
+
   const finishPowerOff = (transition) => {
     if (activeTransition !== transition || transition.cancelled) return false;
+    if (state.projector !== "POWERED_OFF") return false;
     Object.keys(drawerStates).forEach((id) => { drawerStates[id] = "CLOSED"; });
     activeDrawer = null;
     state.chest = "PARKED";
@@ -183,7 +230,6 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     state.boardPower = "POWERED_OFF";
     state.boardMechanical = "RETRACTED";
     state.table = "POWERED_OFF";
-    state.projector = "POWERED_OFF";
     const result = validateTransition("workshop", state.workshop, "OFF", {
       shutdownSequenceComplete: true,
     });
@@ -191,7 +237,33 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     state.workshop = "OFF";
     busy = false;
     activeTransition = null;
-    publish(transition, "workshop:off", { timingCompliance: "legacy-combined-not-bible-compliant" });
+    publish(transition, "workshop:off", { timingCompliance: "ws010-safe-projector-shutdown" });
+    return true;
+  };
+
+  const finishFaultSafePowerOff = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    const projectorResult = validateTransition("projector", state.projector, "POWERED_OFF", {
+      emissiveLayersOff: true,
+    });
+    const workshopResult = validateTransition("workshop", state.workshop, "OFF", {
+      faultAcknowledged: true,
+      emissiveLayersOff: true,
+    });
+    if (!projectorResult.ok || !workshopResult.ok) return false;
+    state.projector = "POWERED_OFF";
+    state.workshop = "OFF";
+    state.table = "POWERED_OFF";
+    state.boardMechanical = "RETRACTED";
+    state.boardPower = "POWERED_OFF";
+    state.boardApplication = "NONE";
+    state.chest = "PARKED";
+    state.measurement = "IDLE";
+    Object.keys(drawerStates).forEach((id) => { drawerStates[id] = "CLOSED"; });
+    activeDrawer = null;
+    busy = false;
+    activeTransition = null;
+    publish(transition, "workshop:off", { timingCompliance: "ws010-fault-safe-settlement" });
     return true;
   };
 
@@ -209,6 +281,14 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     state.workshop = "STARTING";
     busy = true;
     publish(transition, "workshop:startup-begun");
+    if (transition.from === "SHUTTING_DOWN" && state.projector !== "POWERED_OFF") {
+      if (state.projector !== "POWERED_ON") state.projector = "POWERING_ON";
+      drivers.restoreProjectorShutdown?.({
+        transitionId: transition.id,
+        complete: () => finishShutdownReversal(transition),
+      });
+      return accept(transition, "REVERSING");
+    }
     drivers.powerOnProjector?.({
       transitionId: transition.id,
       begin: () => beginProjectorPowerOn(transition, context),
@@ -219,6 +299,20 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
 
   const requestPowerOff = (context) => {
     if (state.workshop === "OFF") return freezeResult({ ok: true, code: "IDEMPOTENT" });
+    if (state.workshop === "FAULT_SAFE") {
+      const transition = nextTransition("workshop", state.workshop, "OFF");
+      activeTransition = transition;
+      busy = true;
+      if (typeof drivers.secureProjectorFault === "function") {
+        drivers.secureProjectorFault({
+          transitionId: transition.id,
+          code: "FAULT_ACKNOWLEDGED",
+          message: "Projector fault secured.",
+          complete: () => finishFaultSafePowerOff(transition),
+        });
+      } else finishFaultSafePowerOff(transition);
+      return accept(transition, "FAULT_ACKNOWLEDGED");
+    }
     const result = validateTransition("workshop", state.workshop, "SHUTTING_DOWN", {
       applicationStateSecured: context.applicationStateSecured !== false,
     });
@@ -229,8 +323,59 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     state.workshop = "SHUTTING_DOWN";
     busy = true;
     publish(transition, "workshop:shutdown-begun");
-    drivers.exitWorkshop?.({ transitionId: transition.id, complete: () => finishPowerOff(transition) });
+    drivers.exitWorkshop?.({
+      transitionId: transition.id,
+      standby: () => markProjectorStandby(transition),
+      poweredOff: () => markProjectorPoweredOff(transition),
+      complete: () => finishPowerOff(transition),
+    });
     return accept(transition);
+  };
+
+  const reportProjectorRendererUnavailable = () => {
+    if (state.projector !== "FULLY_ACTIVE") {
+      return freezeResult({ ok: true, code: state.projector === "POWERED_ON" ? "IDEMPOTENT" : "NOT_ACTIVE" });
+    }
+    const transition = nextTransition("projector", state.projector, "POWERED_ON");
+    drivers.lowerProjectorToStandby?.({
+      transitionId: transition.id,
+      complete: () => {
+        if (transition.cancelled || state.projector !== "FULLY_ACTIVE") return false;
+        const result = validateTransition("projector", state.projector, "POWERED_ON", {
+          tableRendererAvailable: false,
+        });
+        if (!result.ok) return false;
+        state.projector = "POWERED_ON";
+        return true;
+      },
+    });
+    return accept(transition, "STANDBY_REQUESTED");
+  };
+
+  const reportProjectorFault = ({ code = "PROJECTOR_ASSET_UNAVAILABLE", message } = {}) => {
+    if (state.projector === "FAULT_SAFE") return freezeResult({ ok: true, code: "IDEMPOTENT" });
+    if (activeTransition) activeTransition.cancelled = true;
+    const transition = nextTransition("projector", state.projector, "FAULT_SAFE");
+    const projectorResult = validateTransition("projector", state.projector, "FAULT_SAFE");
+    const workshopResult = validateTransition("workshop", state.workshop, "FAULT_SAFE");
+    if (!projectorResult.ok || !workshopResult.ok) {
+      return reject("FAULT_TRANSITION_REJECTED", projectorResult.reason || workshopResult.reason);
+    }
+    activeTransition = transition;
+    state.projector = "FAULT_SAFE";
+    state.workshop = "FAULT_SAFE";
+    busy = true;
+    publish(transition, "projector:fault", { code, message });
+    const settle = () => {
+      if (activeTransition !== transition || transition.cancelled) return false;
+      busy = false;
+      activeTransition = null;
+      return true;
+    };
+    if (typeof drivers.secureProjectorFault === "function") {
+      drivers.secureProjectorFault({ transitionId: transition.id, code, message, complete: settle });
+    } else settle();
+    return accept(transition, "FAULT_SAFE");
   };
 
   const finishDrawer = (transition, logicalId, targetState, eventName) => {
@@ -319,6 +464,8 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
       if (normalized.action === "SELECT_MEASURABLE_OBJECT" || normalized.action === "CLEAR_SELECTION") return requestMeasurement(normalized.action, normalized.payload);
       return reject("UNIMPLEMENTED_ACTION", `${normalized.action} is not wired in WS-005.`);
     },
+    reportProjectorRendererUnavailable,
+    reportProjectorFault,
     getSnapshot() {
       return freezeResult({
         ...state,
@@ -332,7 +479,7 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
           measurement: state.workshop !== "READY" || state.boardApplication !== "MEASUREMENT_ASSISTANT",
         }),
         activeTransitionId: activeTransition?.id || null,
-        timingCompliance: "legacy-combined-not-bible-compliant",
+        timingCompliance: "ws010-safe-projector-lifecycle",
       });
     },
   });

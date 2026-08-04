@@ -21,7 +21,11 @@ function harness() {
       },
       startProjectorProjection: ({ complete }) => { pending.projectionStart = complete; },
       settleProjectorProjection: ({ complete }) => { pending.projectorActive = complete; },
-      exitWorkshop: ({ complete }) => { pending.exit = complete; },
+      exitWorkshop: ({ standby, poweredOff, complete }) => {
+        pending.standby = standby;
+        pending.poweredOff = poweredOff;
+        pending.exit = complete;
+      },
       openDrawer: ({ complete }) => { pending.drawer = complete; },
       closeDrawer: ({ complete }) => { pending.drawer = complete; },
     },
@@ -50,7 +54,7 @@ test("starts from deterministic protected states", () => {
     activeDrawer: null, busy: false,
     disabled: { powerOn: false, powerOff: true, drawers: true, measurement: true },
     activeTransitionId: null,
-    timingCompliance: "legacy-combined-not-bible-compliant",
+    timingCompliance: "ws010-safe-projector-lifecycle",
   });
 });
 
