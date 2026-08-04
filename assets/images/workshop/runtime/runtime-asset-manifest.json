@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "roadmapUpdate": "WS-003 through WS-009",
-  "status": "ws009-projector-projection-active-integrated",
+  "roadmapUpdate": "WS-003 through WS-011",
+  "status": "ws011-powered-off-table-option-c-integrated",
   "productionRoot": "assets/images/workshop/production",
   "runtimeRoot": "assets/images/workshop/runtime",
   "authoritativeApprovalManifest": {
@@ -195,6 +195,69 @@
         "Follow WS-007 Projector registration and protected-zone visibility."
       ],
       "rollback": "Delete this WS-009 derivative and mapping; retain the v3/v4 production masters and WS-006 through WS-008 runtime assets unchanged."
+    },
+    {
+      "id": "ws011-table-powered-off-tabletop-rear",
+      "runtimeAssetPath": "assets/images/workshop/runtime/derivatives/table/table-powered-off-tabletop-rear-1761x1174.png",
+      "canonicalProductionSourcePath": "assets/images/workshop/production/engineering-tool-chest/engineering-projection-table-production-v1-powered-off.png",
+      "sourceSha256": "285166b30b676b1bd193a304e28277a41a9ccee88098678678e7b3eb9b10f23f",
+      "derivativeOperation": {
+        "type": "approved-option-c-structural-alpha-separation",
+        "tabletopPolygonSourcePixels": [[152, 314], [1287, 263], [1586, 448], [365, 530]],
+        "alphaOwnership": "tabletop/rear owns the approved polygon; front/chassis owns its complement with the approved one-pixel shared seam",
+        "rgbHandling": "copy canonical RGB bytes exactly at every pixel; modify alpha ownership only",
+        "sourceDimensions": { "width": 1761, "height": 1174 },
+        "outputDimensions": { "width": 1761, "height": 1174 },
+        "visibleBounds": { "left": 152, "top": 263, "rightExclusive": 1585, "bottomExclusive": 530 },
+        "visiblePixels": 253213,
+        "partialAlphaPixels": 0,
+        "sharedFullyOpaqueSeamPixels": 3394,
+        "pngEncoding": "deterministic approved WS-011 structural derivative encoding"
+      },
+      "outputFormat": "PNG",
+      "outputColorMode": "RGBA",
+      "outputSha256": "da3f139d54643a7ba0da27b0a82f3690e84b0557c4a77e10a54d1a0ec109a7ed",
+      "approvalStatus": "APPROVED WS-011 OPTION C STRUCTURAL DERIVATIVE",
+      "approvedPurpose": "Powered-off Engineering Projection Table tabletop/rear structural layer below the unchanged ground, Grid, Projection primitives, and stage frame",
+      "stateDesignation": "POWERED_OFF — TABLETOP_REAR",
+      "runtimeRestrictions": [
+        "Use only with the registered complementary front/chassis layer.",
+        "Preserve the full 1761x1174 canvas, source registration, RGB, and alpha bytes.",
+        "No powered-on emitters, fields, glow, highlights, masking changes, resize, crop, optimization, or repainting."
+      ],
+      "rollback": "Remove only the WS-011 compositor, mappings, and two runtime structural derivatives; retain the canonical production master unchanged."
+    },
+    {
+      "id": "ws011-table-powered-off-front-chassis",
+      "runtimeAssetPath": "assets/images/workshop/runtime/derivatives/table/table-powered-off-front-chassis-1761x1174.png",
+      "canonicalProductionSourcePath": "assets/images/workshop/production/engineering-tool-chest/engineering-projection-table-production-v1-powered-off.png",
+      "sourceSha256": "285166b30b676b1bd193a304e28277a41a9ccee88098678678e7b3eb9b10f23f",
+      "derivativeOperation": {
+        "type": "approved-option-c-structural-alpha-separation",
+        "tabletopPolygonSourcePixels": [[152, 314], [1287, 263], [1586, 448], [365, 530]],
+        "alphaOwnership": "front/chassis owns the complement of the approved tabletop polygon plus the approved one-pixel shared seam",
+        "rgbHandling": "copy canonical RGB bytes exactly at every pixel; modify alpha ownership only",
+        "sourceDimensions": { "width": 1761, "height": 1174 },
+        "outputDimensions": { "width": 1761, "height": 1174 },
+        "visibleBounds": { "left": 42, "top": 229, "rightExclusive": 1714, "bottomExclusive": 1084 },
+        "visiblePixels": 761223,
+        "partialAlphaPixels": 53556,
+        "fullyOpaquePixels": 707667,
+        "sharedFullyOpaqueSeamPixels": 3394,
+        "reconstruction": "front/chassis source-over tabletop/rear equals canonical RGBA with zero differing pixels"
+      },
+      "outputFormat": "PNG",
+      "outputColorMode": "RGBA",
+      "outputSha256": "942c9edcd0de9d15aac8e3dea2697fd425d6f340fdaa3adfba2613cb20d3c824",
+      "approvalStatus": "APPROVED WS-011 OPTION C STRUCTURAL DERIVATIVE",
+      "approvedPurpose": "Powered-off Engineering Projection Table front/chassis structural layer above ground, Grid, Projection primitives, and stage frame but below the bounded student/measurement final pass",
+      "stateDesignation": "POWERED_OFF — FRONT_CHASSIS",
+      "runtimeRestrictions": [
+        "Use only with the registered complementary tabletop/rear layer and bounded C1 final student pass.",
+        "Preserve the full 1761x1174 canvas, source registration, RGB, and alpha bytes.",
+        "No powered-on emitters, fields, glow, highlights, masking changes, resize, crop, optimization, or repainting."
+      ],
+      "rollback": "Remove only the WS-011 compositor, mappings, and two runtime structural derivatives; retain the canonical production master unchanged."
     }
   ],
   "verification": {
@@ -229,6 +292,11 @@
     "ws009CancellationAndOneShotCallbacks": "PASS — deterministic",
     "ws009MissionRestoration": "PASS",
     "ws009ChromebookPhysicalVerification": "NOT TESTED",
+    "ws011DerivativeMappings": 2,
+    "ws011DerivativeHashMismatches": 0,
+    "ws011DerivativeDecodeFailures": 0,
+    "ws011RgbaReconstruction": "PASS — zero differing pixels",
+    "ws011ChromebookPhysicalVerification": "NOT TESTED",
     "knownBaselineWarnings": [
       "Three.js legacy build script deprecation warning",
       "THREE.Texture.encoding replaced by .colorSpace warning"

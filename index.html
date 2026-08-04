@@ -8276,7 +8276,10 @@ viewCubeRenderer.render(
       camera.lookAt(0, 0, 0);
     }
   }
-  renderer.render(scene, camera);
+  if(!(typeof window.renderWorkshopPoweredOffTableFrame==="function" &&
+    window.renderWorkshopPoweredOffTableFrame())){
+    renderer.render(scene, camera);
+  }
 }
 
 function saveImage(){
@@ -30098,6 +30101,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopPendingProjectorFault=null;
   var workshopPoweredOffProjectorReady=false;
   var workshopPoweredOffProjectorLoadError=null;
+  var workshopPoweredOffTableCompositor=null;
+  var workshopPoweredOffTableReady=false;
+  var workshopPoweredOffTableLoadError=null;
 
   function getWorkshopStartupStatusElement(){
     var status=document.getElementById("workshopStartupStatus");
@@ -30152,6 +30158,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       workshopStateController &&
       workshopRoomBackgroundTexture &&
       workshopPoweredOffProjectorReady &&
+      workshopPoweredOffTableReady &&
       renderer && renderer.capabilities &&
       scene && camera && ground && workshopStageFrame && engineeringGrid
     );
@@ -30334,6 +30341,54 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       });
   }
   loadWorkshopPoweredOffProjector();
+
+  function loadWorkshopPoweredOffTable(){
+    workshopPoweredOffTableReady=false;
+    workshopPoweredOffTableLoadError=null;
+    import("./js/workshop/table/powered-off-table-view.mjs")
+      .then(function(module){
+        workshopPoweredOffTableCompositor=module.createPoweredOffTableCompositor({
+          THREE:THREE,
+          scene:scene,
+          camera:camera,
+          renderer:renderer,
+          raycaster:raycaster,
+          stage:document.getElementById("workshopViewportStage"),
+          protectedElements:[
+            document.getElementById("info"),
+            document.getElementById("workshopMeasurementAssistant"),
+            document.getElementById("workshopDashboard")
+          ],
+          getStudentObjects:function(){ return blocks; },
+          getCadDimensionGroup:function(){ return workshopCadDimensionGroup; },
+          lights:[light,ambient]
+        });
+        window.renderWorkshopPoweredOffTableFrame=function(){
+          return workshopPoweredOffTableCompositor ?
+            workshopPoweredOffTableCompositor.render() : false;
+        };
+        return workshopPoweredOffTableCompositor.ready;
+      })
+      .then(function(){
+        workshopPoweredOffTableReady=true;
+        workshopPoweredOffTableCompositor.setWorkshopActive(
+          currentWorkspaceMode==="workshop"
+        );
+        if(workshopStartupDependenciesReady()){
+          setWorkshopStartupState("READY","Workshop assets are ready.");
+          retryPendingWorkshopStartup();
+        }
+      })
+      .catch(function(error){
+        workshopPoweredOffTableLoadError=error;
+        console.error("Workshop Powered Off Table failed to load:",error);
+        setWorkshopStartupState(
+          "FAILED",
+          "Workshop Table could not be loaded. Reload the page to try again."
+        );
+      });
+  }
+  loadWorkshopPoweredOffTable();
   var builderCameraSnapshot=null;
   var activeWorkshopEngineeringView=null;
   var activeWorkshopEngineeringTarget=null;
@@ -33133,6 +33188,11 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     currentWorkspaceMode=requestedMode;
     document.body.classList.toggle("workshopMode",requestedMode==="workshop");
     document.body.classList.toggle("missionMode",requestedMode==="mission");
+    if(workshopPoweredOffTableCompositor){
+      workshopPoweredOffTableCompositor.setWorkshopActive(
+        requestedMode==="workshop"
+      );
+    }
     if(requestedMode!=="workshop") restoreBuilderCameraState();
     if(requestedMode!=="workshop") hideWorkshopPrecisionCursor();
     if(requestedMode==="workshop"){
