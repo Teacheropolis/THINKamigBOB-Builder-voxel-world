@@ -39,8 +39,9 @@ class Material {
   dispose() { this.disposed = true; }
 }
 
-function createHarness({ stageBounds, protectedBounds = [] } = {}) {
+function createHarness({ stageBounds, registrationBounds, protectedBounds = [] } = {}) {
   let currentStage = stageBounds || { left: 0, top: 0, width: 1000, height: 700 };
+  let currentRegistrationBounds = registrationBounds || currentStage;
   let loadCallbacks = [];
   const textures = [];
   const geometry = { disposed: false, dispose() { this.disposed = true; } };
@@ -99,6 +100,7 @@ function createHarness({ stageBounds, protectedBounds = [] } = {}) {
   scene.add(light);
   const compositor = createPoweredOffTableCompositor({
     THREE, scene, camera, renderer, raycaster, stage, protectedElements,
+    getRegistrationBounds: () => currentRegistrationBounds,
     getStudentObjects: () => [student],
     getCadDimensionGroup: () => cad,
     lights: [light],
@@ -109,6 +111,7 @@ function createHarness({ stageBounds, protectedBounds = [] } = {}) {
     textures, renderCalls, observed,
     completeLoads() { loadCallbacks.splice(0).forEach((callback) => callback()); },
     setStage(bounds) { currentStage = bounds; },
+    setRegistrationBounds(bounds) { currentRegistrationBounds = bounds; },
   };
 }
 
@@ -143,7 +146,7 @@ test("registers the approved visible base center and camera plane", () => {
   assert.ok(transform.width > 0 && transform.height > 0);
 });
 
-test("keeps registration stable when Camera Fit expands the projected ruler grid track", async () => {
+test("ignores directional and Fit ruler rectangles in favor of stable Home registration", async () => {
   const harness = createHarness({ stageBounds: { left: 200, top: 150, width: 600, height: 400 } });
   harness.completeLoads();
   await harness.compositor.ready;
@@ -155,6 +158,32 @@ test("keeps registration stable when Camera Fit expands the projected ruler grid
   assert.equal(fit.anchorScreenX, stable.anchorScreenX);
   assert.equal(fit.anchorScreenY, stable.anchorScreenY);
   assert.equal(fit.width, stable.width);
+  harness.compositor.dispose();
+});
+
+test("recalculates from the stable provider after responsive viewport resizing", async () => {
+  const harness = createHarness({ stageBounds: { left: 200, top: 150, width: 600, height: 400 } });
+  harness.completeLoads();
+  await harness.compositor.ready;
+  harness.compositor.setWorkshopActive(true);
+  harness.setRegistrationBounds({ left: 100, top: 100, width: 800, height: 500 });
+  const resized = harness.compositor.updateRegistration();
+  assert.equal(resized.hidden, false);
+  assert.equal(resized.anchorScreenX, 500);
+  assert.equal(resized.anchorScreenY, 600);
+  assert.equal(resized.width, 704);
+  harness.compositor.dispose();
+});
+
+test("fails closed when the stable registration provider is invalid", async () => {
+  const harness = createHarness();
+  harness.completeLoads();
+  await harness.compositor.ready;
+  harness.compositor.setWorkshopActive(true);
+  harness.setRegistrationBounds({ left: -100, top: 0, width: 1200, height: 700 });
+  const invalid = harness.compositor.updateRegistration();
+  assert.equal(invalid.hidden, true);
+  assert.equal(harness.compositor.visible, false);
   harness.compositor.dispose();
 });
 

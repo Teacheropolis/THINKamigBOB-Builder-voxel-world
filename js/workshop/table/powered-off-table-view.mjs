@@ -168,6 +168,7 @@ export function createPoweredOffTableCompositor({
   renderer,
   raycaster,
   stage,
+  getRegistrationBounds,
   protectedElements = [],
   getStudentObjects = () => [],
   getCadDimensionGroup = () => null,
@@ -188,6 +189,9 @@ export function createPoweredOffTableCompositor({
   }
   if (!raycaster || !raycaster.layers || !stage || typeof stage.getBoundingClientRect !== "function") {
     throw new TypeError("raycaster layers and a measurable stage are required.");
+  }
+  if (typeof getRegistrationBounds !== "function") {
+    throw new TypeError("a stable registration-bounds provider is required.");
   }
   if (typeof ResizeObserverConstructor !== "function") throw new TypeError("ResizeObserver is required.");
 
@@ -224,7 +228,6 @@ export function createPoweredOffTableCompositor({
   let active = false;
   let tableVisible = false;
   let lastRegistration = null;
-  let lastStableStageRatio = null;
   const textureLoader = new THREE.TextureLoader();
   const onLoaded = () => { loaded += 1; if (loaded === 2) { updateRegistration(); resolveReady(); } };
   const onError = (path) => (error) => rejectReady(new Error(`Powered-off Table layer failed to load: ${path}`, { cause: error }));
@@ -274,29 +277,19 @@ export function createPoweredOffTableCompositor({
 
   function updateRegistration() {
     if (disposed) return null;
-    const measuredStageBounds = stage.getBoundingClientRect();
     const canvasBounds = renderer.domElement.getBoundingClientRect();
-    const stageIsStable = canvasBounds.width > 0 && canvasBounds.height > 0 &&
-      measuredStageBounds.width > 0 && measuredStageBounds.height > 0 &&
-      measuredStageBounds.left >= canvasBounds.left && measuredStageBounds.top >= canvasBounds.top &&
-      measuredStageBounds.left + measuredStageBounds.width <= canvasBounds.left + canvasBounds.width &&
-      measuredStageBounds.top + measuredStageBounds.height <= canvasBounds.top + canvasBounds.height;
-    if (stageIsStable) {
-      lastStableStageRatio = {
-        left: (measuredStageBounds.left - canvasBounds.left) / canvasBounds.width,
-        top: (measuredStageBounds.top - canvasBounds.top) / canvasBounds.height,
-        width: measuredStageBounds.width / canvasBounds.width,
-        height: measuredStageBounds.height / canvasBounds.height,
-      };
-    }
-    const stageBounds = stageIsStable || !lastStableStageRatio
-      ? measuredStageBounds
-      : {
-          left: canvasBounds.left + lastStableStageRatio.left * canvasBounds.width,
-          top: canvasBounds.top + lastStableStageRatio.top * canvasBounds.height,
-          width: lastStableStageRatio.width * canvasBounds.width,
-          height: lastStableStageRatio.height * canvasBounds.height,
-        };
+    const providedStageBounds = getRegistrationBounds({ canvasBounds });
+    const stageBoundsAreValid = providedStageBounds &&
+      Number.isFinite(providedStageBounds.left) && Number.isFinite(providedStageBounds.top) &&
+      finiteNonnegative(providedStageBounds.width) && finiteNonnegative(providedStageBounds.height) &&
+      providedStageBounds.left >= canvasBounds.left && providedStageBounds.top >= canvasBounds.top &&
+      providedStageBounds.left + providedStageBounds.width <= canvasBounds.left + canvasBounds.width &&
+      providedStageBounds.top + providedStageBounds.height <= canvasBounds.top + canvasBounds.height;
+    // Fail closed rather than accepting the live ruler rectangle. That DOM
+    // rectangle is intentionally directional and object-dependent.
+    const stageBounds = stageBoundsAreValid
+      ? providedStageBounds
+      : { left: canvasBounds.left, top: canvasBounds.top, width: 0, height: 0 };
     const protectedBounds = protectedElements.filter((element) => element &&
       typeof element.getBoundingClientRect === "function")
       .map((element) => element.getBoundingClientRect())

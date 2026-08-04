@@ -7546,6 +7546,15 @@ function viewFromDiceFace(materialIndex){
   return faceMap[materialIndex] || "home";
 }
 
+function requestViewDicePreset(view){
+  if(document.body.classList.contains("workshopMode") &&
+    typeof window.setWorkshopEngineeringView === "function"){
+    return window.setWorkshopEngineeringView(view);
+  }
+  setView(view);
+  return true;
+}
+
 viewCubeCanvas.addEventListener("click", function(event){
   if(readToBobBlocksBuilderEvent(event)) return;
   if(viewDiceMoved){
@@ -7564,31 +7573,29 @@ viewCubeCanvas.addEventListener("click", function(event){
 
   if(hits.length > 0){
     const faceIndex = hits[0].face.materialIndex;
-    setView(viewFromDiceFace(faceIndex));
+    requestViewDicePreset(viewFromDiceFace(faceIndex));
   }
 });
 
 viewCubeCanvas.addEventListener("dblclick", function(event){
   if(readToBobBlocksBuilderEvent(event)) return;
-  setView("home");
+  requestViewDicePreset("home");
 });
 
 let viewDiceDragging = false;
 let viewDiceMoved = false;
 let viewDiceLastX = 0;
 let viewDiceLastY = 0;
+let viewDiceWorkshopDragPrepared = false;
 
 viewCubeCanvas.addEventListener("mousedown", function(event){
   if(readToBobBlocksBuilderEvent(event)){
     viewDiceDragging = false;
     return;
   }
-  if(document.body.classList.contains("workshopMode") &&
-    typeof window.clearWorkshopEngineeringView === "function"){
-    window.clearWorkshopEngineeringView();
-  }
   viewDiceDragging = true;
   viewDiceMoved = false;
+  viewDiceWorkshopDragPrepared = false;
   viewDiceLastX = event.clientX;
   viewDiceLastY = event.clientY;
 });
@@ -7607,13 +7614,23 @@ document.addEventListener("mousemove", function(event){
 
   if(Math.abs(dx) > 2 || Math.abs(dy) > 2){
     viewDiceMoved = true;
+    if(!viewDiceWorkshopDragPrepared &&
+      document.body.classList.contains("workshopMode") &&
+      typeof window.beginWorkshopViewDiceDrag === "function"){
+      window.beginWorkshopViewDiceDrag();
+      viewDiceWorkshopDragPrepared = true;
+    }
   }
 
   cameraAngle += dx * 0.01;
   cameraHeight -= dy * 0.05;
 
   if(cameraHeight < 2){ cameraHeight = 2; }
-  if(cameraHeight > 30){ cameraHeight = 30; }
+  const maximumViewDiceHeight =
+    document.body.classList.contains("workshopMode") ? 80 : 30;
+  if(cameraHeight > maximumViewDiceHeight){
+    cameraHeight = maximumViewDiceHeight;
+  }
 
   viewDiceLastX = event.clientX;
   viewDiceLastY = event.clientY;
@@ -7623,6 +7640,7 @@ document.addEventListener("mousemove", function(event){
 
 document.addEventListener("mouseup", function(){
   viewDiceDragging = false;
+  viewDiceWorkshopDragPrepared = false;
 });
 
 function updateViewDice(){
@@ -7661,6 +7679,13 @@ function updateCamera(){
 
 document.addEventListener('mousedown', (event)=>{
   if(readToBobBlocksBuilderEvent(event)){
+    isDragging = false;
+    mouseMoved = false;
+    return;
+  }
+  if(document.body.classList.contains("workshopMode") &&
+    event.target && typeof event.target.closest === "function" &&
+    event.target.closest("#viewCubeBox")){
     isDragging = false;
     mouseMoved = false;
     return;
@@ -30354,6 +30379,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           renderer:renderer,
           raycaster:raycaster,
           stage:document.getElementById("workshopViewportStage"),
+          getRegistrationBounds:getWorkshopTableHomeRegistrationBounds,
           protectedElements:[
             document.getElementById("info"),
             document.getElementById("workshopMeasurementAssistant"),
@@ -32538,6 +32564,70 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     };
   }
 
+  var workshopTableHomeRegistrationCamera=null;
+  var workshopTableHomeRegistrationScratch=null;
+  var workshopTableHomeRegistrationSignature="";
+  var workshopTableHomeRegistrationBounds=null;
+
+  function getWorkshopTableHomeRegistrationBounds(){
+    var canvasBounds=renderer.domElement.getBoundingClientRect();
+    if(!canvasBounds.width || !canvasBounds.height){
+      return {left:canvasBounds.left,top:canvasBounds.top,width:0,height:0};
+    }
+
+    var signature=[
+      canvasBounds.left,canvasBounds.top,canvasBounds.width,canvasBounds.height,
+      window.innerWidth,window.innerHeight,camera.near,camera.far
+    ].join(":");
+    if(signature===workshopTableHomeRegistrationSignature &&
+      workshopTableHomeRegistrationBounds){
+      return workshopTableHomeRegistrationBounds;
+    }
+
+    var config=getWorkshopHomeCameraConfig();
+    if(!workshopTableHomeRegistrationCamera){
+      workshopTableHomeRegistrationCamera=new THREE.PerspectiveCamera();
+      workshopTableHomeRegistrationScratch=workshopProjectedRulerCorners.map(function(){
+        return new THREE.Vector3();
+      });
+    }
+    var referenceCamera=workshopTableHomeRegistrationCamera;
+    referenceCamera.near=camera.near;
+    referenceCamera.far=camera.far;
+    referenceCamera.fov=config.fov;
+    referenceCamera.aspect=canvasBounds.width/canvasBounds.height;
+    referenceCamera.position.set(config.targetX,config.height,config.distance);
+    referenceCamera.up.set(0,1,0);
+    referenceCamera.lookAt(config.targetX,config.targetY,0);
+    referenceCamera.updateProjectionMatrix();
+    referenceCamera.updateMatrixWorld();
+
+    var minimumX=Infinity;
+    var maximumX=-Infinity;
+    var minimumY=Infinity;
+    var maximumY=-Infinity;
+    workshopProjectedRulerCorners.forEach(function(corner,index){
+      var projected=workshopTableHomeRegistrationScratch[index]
+        .copy(corner)
+        .project(referenceCamera);
+      var screenX=canvasBounds.left+(projected.x+1)*canvasBounds.width/2;
+      var screenY=canvasBounds.top+(1-projected.y)*canvasBounds.height/2;
+      minimumX=Math.min(minimumX,screenX);
+      maximumX=Math.max(maximumX,screenX);
+      minimumY=Math.min(minimumY,screenY);
+      maximumY=Math.max(maximumY,screenY);
+    });
+
+    workshopTableHomeRegistrationSignature=signature;
+    workshopTableHomeRegistrationBounds=Object.freeze({
+      left:minimumX,
+      top:minimumY,
+      width:maximumX-minimumX,
+      height:maximumY-minimumY
+    });
+    return workshopTableHomeRegistrationBounds;
+  }
+
   function applyResponsiveWorkshopHomeView(){
     var config=getWorkshopHomeCameraConfig();
     activeWorkshopFitSelection=false;
@@ -32554,6 +32644,24 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     camera.updateProjectionMatrix();
     camera.up.set(0,1,0);
     updateCamera();
+    syncWorkshopEngineeringViewButtons();
+    return true;
+  }
+
+  function beginWorkshopViewDiceDrag(){
+    if(!document.body.classList.contains("workshopMode")) return false;
+    var config=getWorkshopHomeCameraConfig();
+    activeWorkshopFitSelection=false;
+    activeWorkshopEngineeringView=null;
+    activeWorkshopEngineeringTarget=null;
+    cameraAngle=0;
+    cameraDistance=config.distance;
+    cameraHeight=config.height;
+    camera.fov=config.fov;
+    camera.updateProjectionMatrix();
+    camera.up.set(0,1,0);
+    updateCamera();
+    hideWorkshopPrecisionCursor();
     syncWorkshopEngineeringViewButtons();
     return true;
   }
@@ -33400,6 +33508,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   };
   window.setWorkshopMeasurementUnit=setWorkshopMeasurementUnit;
   window.setWorkshopEngineeringView=setWorkshopEngineeringView;
+  window.beginWorkshopViewDiceDrag=beginWorkshopViewDiceDrag;
   window.fitWorkshopSelection=fitWorkshopSelection;
   window.clearWorkshopFitSelectionState=clearWorkshopFitSelectionState;
   window.syncWorkshopFitSelectionAvailability=syncWorkshopFitSelectionAvailability;
