@@ -59,7 +59,8 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
 
   const finishPowerOn = (transition) => {
     if (activeTransition !== transition || transition.cancelled) return false;
-    if (state.projector !== "FULLY_ACTIVE" || transition.tableProjectionStable !== true) return false;
+    if (state.projector !== "FULLY_ACTIVE" || state.table !== "FULLY_ACTIVE" ||
+        transition.tableProjectionStable !== true) return false;
     state.boardMechanical = "EXTENDED";
     state.boardPower = "READY";
     state.boardApplication = "MEASUREMENT_ASSISTANT";
@@ -72,7 +73,7 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     state.workshop = "READY";
     busy = false;
     activeTransition = null;
-    publish(transition, "workshop:ready", { timingCompliance: "ws013-table-field-with-ws014-compatibility" });
+    publish(transition, "workshop:ready", { timingCompliance: "ws014-table-fully-active" });
     return true;
   };
 
@@ -105,32 +106,35 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     if (state.projector !== "PROJECTION_STARTING" || transition.projectorProjectionStarted === true) return false;
     transition.projectorProjectionStarted = true;
     publish(transition, "projector:projection-started");
-    commitWs014Compatibility(transition);
     beginProjectorActiveSettle(transition);
     return true;
   };
 
-  const commitWs014Compatibility = (transition) => {
+  const finishTableProjectionActiveSettle = (transition) => {
     if (activeTransition !== transition || transition.cancelled) return false;
-    if (transition.ws014LegacyStableCompatibility !== true ||
-        transition.tableProjectionStarted !== true ||
-        transition.projectorProjectionStarted !== true) return false;
+    if (transition.tableProjectionStarted !== true || state.table !== "PROJECTION_STARTING") return false;
     if (transition.tableProjectionStable === true) return false;
+    const result = validateTransition("table", state.table, "FULLY_ACTIVE");
+    if (!result.ok) return false;
+    state.table = "FULLY_ACTIVE";
     transition.tableProjectionStable = true;
     publish(transition, "workspace:projection-stable", {
-      timingCompliance: "ws013-field-with-ws014-compatibility",
-      visualState: "PROJECTION_STARTING",
-      temporaryCompatibility: true,
+      timingCompliance: "ws014-table-fully-active",
+      visualState: "FULLY_ACTIVE",
+      temporaryCompatibility: false,
     });
     beginProjectorActiveSettle(transition);
     return true;
   };
 
-  const markWs014Compatibility = (transition) => {
+  const beginTableProjectionActiveSettle = (transition) => {
     if (activeTransition !== transition || transition.cancelled) return false;
-    if (transition.ws014LegacyStableCompatibility === true) return false;
-    transition.ws014LegacyStableCompatibility = true;
-    commitWs014Compatibility(transition);
+    if (transition.tableProjectionStarted !== true || transition.tableActiveSettleRequested === true) return false;
+    transition.tableActiveSettleRequested = true;
+    drivers.settleTableProjection?.({
+      transitionId: transition.id,
+      complete: () => finishTableProjectionActiveSettle(transition),
+    });
     return true;
   };
 
@@ -139,8 +143,7 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     if (state.table !== "PROJECTION_STARTING" || transition.tableProjectionStarted === true) return false;
     transition.tableProjectionStarted = true;
     publish(transition, "table:projection-started");
-    commitWs014Compatibility(transition);
-    return true;
+    return beginTableProjectionActiveSettle(transition);
   };
 
   const beginProjectorProjection = (transition) => {
@@ -163,17 +166,16 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
       drivers.startTableProjection({
         transitionId: transition.id,
         complete: () => finishTableProjectionStart(transition),
-        compatibilityStable: () => markWs014Compatibility(transition),
       });
     } else {
-      // Test and rollback compatibility only. Runtime integration uses the
-      // real WS-013 driver above; WS-014 removes this legacy adapter.
+      // Legacy hosts report a rendered stable endpoint in one callback. The
+      // production WS-014 integration always supplies both modern drivers.
       drivers.startLegacyTableProjection?.({
         transitionId: transition.id,
         stable: () => {
-          const completed = finishTableProjectionStart(transition);
-          const compatible = markWs014Compatibility(transition);
-          return completed || compatible;
+          const started = finishTableProjectionStart(transition);
+          const settled = finishTableProjectionActiveSettle(transition);
+          return started || settled;
         },
       });
     }
@@ -622,7 +624,7 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
           measurement: state.workshop !== "READY" || state.boardApplication !== "MEASUREMENT_ASSISTANT",
         }),
         activeTransitionId: activeTransition?.id || null,
-        timingCompliance: "ws013-table-projection-start-with-ws014-compatibility",
+        timingCompliance: "ws014-table-fully-active",
       });
     },
   });

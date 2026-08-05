@@ -19,10 +19,10 @@ function harness() {
         pending.tableBegin = begin;
         pending.tablePower = complete;
       },
-      startTableProjection: ({ complete, compatibilityStable }) => {
+      startTableProjection: ({ complete }) => {
         pending.tableProjection = complete;
-        pending.tableStable = compatibilityStable;
       },
+      settleTableProjection: ({ complete }) => { pending.tableActive = complete; },
       startProjectorProjection: ({ complete }) => { pending.projectionStart = complete; },
       settleProjectorProjection: ({ complete }) => { pending.projectorActive = complete; },
       exitWorkshop: ({ tableStandby, tablePoweredOff, standby, poweredOff, complete }) => {
@@ -47,7 +47,7 @@ function completeStartup(pending) {
   assert.equal(pending.tablePower(), true);
   assert.equal(pending.projectionStart(), true);
   assert.equal(pending.tableProjection(), true);
-  assert.equal(pending.tableStable(), true);
+  assert.equal(pending.tableActive(), true);
   assert.equal(pending.projectorActive(), true);
 }
 
@@ -63,7 +63,7 @@ test("starts from deterministic protected states", () => {
     activeDrawer: null, busy: false,
     disabled: { powerOn: false, powerOff: true, drawers: true, measurement: true },
     activeTransitionId: null,
-    timingCompliance: "ws013-table-projection-start-with-ws014-compatibility",
+    timingCompliance: "ws014-table-fully-active",
   });
 });
 
@@ -87,11 +87,13 @@ test("power-on changes visuals only through the accepted driver and settles once
   assert.equal(controller.getSnapshot().projector, "PROJECTION_STARTING");
   assert.equal(pending.tableProjection(), true);
   assert.equal(pending.tableProjection(), false);
-  assert.equal(pending.tableStable(), true);
   assert.equal(controller.getSnapshot().table, "PROJECTION_STARTING");
   assert.equal(pending.projectionStart(), true);
   assert.equal(pending.projectionStart(), false);
   assert.equal(controller.getSnapshot().table, "PROJECTION_STARTING");
+  assert.equal(pending.tableActive(), true);
+  assert.equal(controller.getSnapshot().table, "FULLY_ACTIVE");
+  assert.equal(pending.tableActive(), false);
   assert.equal(pending.projectorActive(), true);
   assert.equal(pending.projectorActive(), false);
   assert.equal(controller.getSnapshot().workshop, "READY");
@@ -173,7 +175,7 @@ test("reports invalid and unwired actions without throwing", () => {
   assert.equal(controller.request({ action: "OPEN_NOTEBOOK", input: "pointer" }).code, "UNIMPLEMENTED_ACTION");
 });
 
-test("requires both readiness branches and emits table projection once", () => {
+test("requires both readiness branches and emits real Table stability once", () => {
   const { controller, events, pending } = harness();
   controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
   pending.projectorBegin(); pending.projectorComplete(); pending.tableBegin(); pending.tablePower();
@@ -181,35 +183,41 @@ test("requires both readiness branches and emits table projection once", () => {
   assert.equal(pending.tableProjection(), false);
   assert.equal(events.filter((event) => event.name === "table:projection-started").length, 1);
   assert.equal(controller.getSnapshot().workshop, "STARTING");
-  assert.equal(pending.tableStable(), true);
+  assert.equal(events.some((event) => event.name === "workspace:projection-stable"), false);
+  assert.equal(pending.tableActive(), true);
+  assert.equal(controller.getSnapshot().table, "FULLY_ACTIVE");
   assert.equal(controller.getSnapshot().workshop, "STARTING");
   pending.projectionStart(); pending.projectorActive();
   assert.equal(controller.getSnapshot().workshop, "READY");
+  assert.equal(events.filter((event) => event.name === "workspace:projection-stable").length, 1);
 });
 
-test("labels temporary WS-014 compatibility without claiming a Table active visual", () => {
+test("labels genuine WS-014 stability at the Fully Active rendered endpoint", () => {
   const { controller, events, pending } = harness();
   controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
   pending.projectorBegin(); pending.projectorComplete(); pending.tableBegin(); pending.tablePower();
-  pending.tableProjection(); pending.tableStable(); pending.projectionStart(); pending.projectorActive();
-  assert.equal(controller.getSnapshot().table, "PROJECTION_STARTING");
+  pending.tableProjection();
+  assert.equal(events.some((event) => event.name === "workspace:projection-stable"), false);
+  pending.tableActive(); pending.projectionStart(); pending.projectorActive();
+  assert.equal(controller.getSnapshot().table, "FULLY_ACTIVE");
   const stable = events.find((event) => event.name === "workspace:projection-stable");
   assert.deepEqual(
     { timingCompliance: stable.detail.timingCompliance, visualState: stable.detail.visualState, temporaryCompatibility: stable.detail.temporaryCompatibility },
-    { timingCompliance: "ws013-field-with-ws014-compatibility", visualState: "PROJECTION_STARTING", temporaryCompatibility: true },
+    { timingCompliance: "ws014-table-fully-active", visualState: "FULLY_ACTIVE", temporaryCompatibility: false },
   );
 });
 
-test("rejects stale Table, Projector, and compatibility callbacks after cancellation", () => {
+test("rejects stale Table, Projector, and active-settle callbacks after cancellation", () => {
   const { controller, events, pending } = harness();
   controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
   pending.projectorBegin(); pending.projectorComplete(); pending.tableBegin(); pending.tablePower();
   const staleTable = pending.tableProjection;
   const staleProjector = pending.projectionStart;
-  const staleCompatibility = pending.tableStable;
+  staleTable();
+  const staleActive = pending.tableActive;
   controller.request({ action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true } });
   assert.equal(staleTable(), false);
   assert.equal(staleProjector(), false);
-  assert.equal(staleCompatibility(), false);
-  assert.equal(events.some((event) => event.name === "table:projection-started"), false);
+  assert.equal(staleActive(), false);
+  assert.equal(events.some((event) => event.name === "workspace:projection-stable"), false);
 });

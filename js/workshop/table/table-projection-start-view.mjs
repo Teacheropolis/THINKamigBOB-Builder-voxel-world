@@ -211,7 +211,9 @@ export function createTableProjectionStartView({
   const apply = (next) => {
     presentation = {
       heightRatio: Math.max(0, next.heightRatio),
-      fieldOpacity: clamp(next.fieldOpacity, 0, TABLE_PROJECTION_START_TIMING.endingFieldOpacity),
+      // WS-014 may adopt the approved Fully Active opacity while this view
+      // continues to own the registered field geometry and reversal path.
+      fieldOpacity: clamp(next.fieldOpacity, 0, 0.72),
       emitterOpacity: clamp(next.emitterOpacity, TABLE_PROJECTION_START_TIMING.startingEmitterOpacity, TABLE_PROJECTION_START_TIMING.endingEmitterOpacity),
     };
     if (emitterHandoffActive) adoptEmitterOpacity(presentation.emitterOpacity);
@@ -321,6 +323,17 @@ export function createTableProjectionStartView({
     },
     setWorkshopActive(value) { active = value === true; apply(presentation); return active; },
     syncRegistration() { apply(presentation); return getRegistration(); },
+    adoptActiveFieldOpacity(value) {
+      if (disposed) return Object.freeze({ ok: false, code: "DISPOSED" });
+      if (state !== "PROJECTION_STARTED" || animation) {
+        return Object.freeze({ ok: false, code: "PROJECTION_START_NOT_SETTLED" });
+      }
+      if (!Number.isFinite(value) || value < 0.62 || value > 0.72) {
+        throw new RangeError("Fully Active field opacity must be between 0.62 and 0.72.");
+      }
+      apply({ ...presentation, heightRatio: 1, fieldOpacity: value, emitterOpacity: 1 });
+      return Object.freeze({ ok: true, code: "ADOPTED", fieldOpacity: presentation.fieldOpacity });
+    },
     cancel() { cancelFrame(); ++token; animation = null; },
     get state() { return state; },
     get presentation() { return Object.freeze({ ...presentation }); },

@@ -171,6 +171,26 @@ test("repeated activation is idempotent after the rendered endpoint", () => {
   assert.equal(result.duration, 0);
 });
 
+test("adopts only the bounded Fully Active opacity after Projection Starting settles", () => {
+  const h = harness();
+  assert.equal(h.view.adoptActiveFieldOpacity(0.72).code, "PROJECTION_START_NOT_SETTLED");
+  h.view.start(); h.run(0); h.run(500);
+  const result = h.view.adoptActiveFieldOpacity(0.72);
+  assert.deepEqual(result, { ok: true, code: "ADOPTED", fieldOpacity: 0.72 });
+  assert.deepEqual(h.view.presentation, { heightRatio: 1, fieldOpacity: 0.72, emitterOpacity: 1 });
+  assert.throws(() => h.view.adoptActiveFieldOpacity(0.73), /between 0.62 and 0.72/);
+});
+
+test("reverses an adopted Fully Active field continuously", () => {
+  const h = harness();
+  h.view.start(); h.run(0); h.run(500);
+  h.view.adoptActiveFieldOpacity(0.72);
+  const reverse = h.view.stopToPoweredOn();
+  assert.deepEqual(h.view.presentation, { heightRatio: 1, fieldOpacity: 0.72, emitterOpacity: 1 });
+  h.run(500); h.run(500 + reverse.duration);
+  assert.deepEqual(h.view.presentation, { heightRatio: 0, fieldOpacity: 0, emitterOpacity: 0.75 });
+});
+
 test("pauses hidden-tab time and resumes without a jump", () => {
   const h = harness();
   h.view.start(); h.run(0); h.run(100);

@@ -30129,6 +30129,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopPoweredOffTableCompositor=null;
   var workshopTablePowerOnView=null;
   var workshopTableProjectionStartView=null;
+  var workshopTableProjectionActiveView=null;
   var workshopActiveTableShutdown=null;
   var workshopPoweredOffTableReady=false;
   var workshopPoweredOffTableLoadError=null;
@@ -30151,6 +30152,32 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     status.style.border="0";
     document.body.appendChild(status);
     return status;
+  }
+
+  function settleWorkshopTableProjectionToPoweredOn(transition,onComplete){
+    function stopStartingField(){
+      if(workshopTableProjectionStartView){
+        workshopTableProjectionStartView.stopToPoweredOn({
+          transitionId:transition.transitionId,
+          complete:onComplete
+        });
+      }else if(typeof onComplete==="function") onComplete();
+    }
+    if(!workshopTableProjectionActiveView){
+      stopStartingField();
+      return;
+    }
+    var activeState=workshopTableProjectionActiveView.state;
+    if(activeState==="FULLY_ACTIVE" || activeState==="SETTLING_ACTIVE" ||
+      activeState==="REVERSING"){
+      workshopTableProjectionActiveView.cancelToProjectionStarting({
+        transitionId:transition.transitionId,
+        complete:stopStartingField
+      });
+      return;
+    }
+    workshopTableProjectionActiveView.cancel();
+    stopStartingField();
   }
 
   function setWorkshopStartupState(state,message){
@@ -30338,12 +30365,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
                 });
                 });
               }
-              if(workshopTableProjectionStartView){
-                workshopTableProjectionStartView.stopToPoweredOn({
-                  transitionId:transition.transitionId,
-                  complete:finishTableFieldStop
-                });
-              }else finishTableFieldStop();
+              settleWorkshopTableProjectionToPoweredOn(
+                transition,
+                finishTableFieldStop
+              );
             },
             audio:modules[4].createProjectorAudioHooks({
               isMuted:function(){
@@ -30406,7 +30431,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     Promise.all([
       import("./js/workshop/table/powered-off-table-view.mjs"),
       import("./js/workshop/table/table-power-on-view.mjs"),
-      import("./js/workshop/table/table-projection-start-view.mjs")
+      import("./js/workshop/table/table-projection-start-view.mjs"),
+      import("./js/workshop/table/table-projection-active-view.mjs")
     ])
       .then(function(modules){
         workshopPoweredOffTableCompositor=modules[0].createPoweredOffTableCompositor({
@@ -30461,17 +30487,35 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
               }
             }
           });
+        workshopTableProjectionActiveView=
+          modules[3].createTableProjectionActiveView({
+            document:document,
+            getTableVisible:function(){
+              return !!workshopPoweredOffTableCompositor &&
+                workshopPoweredOffTableCompositor.visible;
+            },
+            applyFieldOpacity:function(value){
+              return workshopTableProjectionStartView
+                .adoptActiveFieldOpacity(value);
+            },
+            applyGridScalar:applyWorkshopProjectionGridScalar,
+            applyGridVisibility:setWorkshopProjectionGridVisible
+          });
         window.renderWorkshopPoweredOffTableFrame=function(){
           if(!workshopPoweredOffTableCompositor) return false;
           if(workshopTableProjectionStartView){
             workshopTableProjectionStartView.syncRegistration();
+          }
+          if(workshopTableProjectionActiveView){
+            workshopTableProjectionActiveView.syncVisibility();
           }
           return workshopPoweredOffTableCompositor.render();
         };
         return Promise.all([
           workshopPoweredOffTableCompositor.ready,
           workshopTablePowerOnView.ready,
-          workshopTableProjectionStartView.ready
+          workshopTableProjectionStartView.ready,
+          workshopTableProjectionActiveView.ready
         ]);
       })
       .then(function(){
@@ -30480,6 +30524,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           currentWorkspaceMode==="workshop"
         );
         workshopTableProjectionStartView.setWorkshopActive(
+          currentWorkspaceMode==="workshop"
+        );
+        workshopTableProjectionActiveView.setWorkshopActive(
           currentWorkspaceMode==="workshop"
         );
         if(workshopStartupDependenciesReady()){
@@ -33152,6 +33199,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
 
   var workshopProjectionTransitionToken=0;
   var workshopProjectionProgress=0;
+  var workshopProjectionGridScalar=0;
   var workshopProjectionGridTargets=null;
 
   function clampWorkshopProjectionProgress(value){
@@ -33176,10 +33224,31 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     return workshopProjectionGridTargets;
   }
 
-  function applyWorkshopProjectionProgress(value){
-    var progress=clampWorkshopProjectionProgress(value);
+  function applyWorkshopProjectionGridScalar(value){
+    var scalar=Math.max(0,Math.min(0.78,Number(value) || 0));
     var gridTargets=workshopProjectionGridTargets ||
       captureWorkshopProjectionGridTargets();
+    workshopProjectionGridScalar=scalar;
+    if(engineeringGridMinorMaterial){
+      engineeringGridMinorMaterial.opacity=gridTargets.minor*scalar;
+      engineeringGridMinorMaterial.needsUpdate=true;
+    }
+    if(engineeringGridMajorMaterial){
+      engineeringGridMajorMaterial.opacity=gridTargets.major*scalar;
+      engineeringGridMajorMaterial.needsUpdate=true;
+    }
+    return scalar;
+  }
+
+  function setWorkshopProjectionGridVisible(value){
+    if(!engineeringGrid) return false;
+    engineeringGrid.visible=value===true &&
+      currentWorkspaceMode==="workshop";
+    return engineeringGrid.visible;
+  }
+
+  function applyWorkshopProjectionProgress(value){
+    var progress=clampWorkshopProjectionProgress(value);
     var frameAmount=workshopProjectionSmoothstep(progress/0.30);
     var emitterAmount=workshopProjectionSmoothstep((progress-0.12)/0.38);
     var bandAmount=workshopProjectionSmoothstep((progress-0.28)/0.40);
@@ -33199,14 +33268,6 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     workshopProjectionVolumeMaterial.opacity=0;
     workshopProjectionVolume.scale.y=0.001;
     workshopGridPerimeterMaterial.opacity=0.24*gridAmount;
-    if(engineeringGridMinorMaterial){
-      engineeringGridMinorMaterial.opacity=gridTargets.minor*gridAmount;
-      engineeringGridMinorMaterial.needsUpdate=true;
-    }
-    if(engineeringGridMajorMaterial){
-      engineeringGridMajorMaterial.opacity=gridTargets.major*gridAmount;
-      engineeringGridMajorMaterial.needsUpdate=true;
-    }
     workshopStageFrameMaterial.needsUpdate=true;
     workshopStageProjectionGlowMaterial.needsUpdate=true;
     workshopFrameEmitterMaterial.needsUpdate=true;
@@ -33224,6 +33285,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     var startProgress=clampWorkshopProjectionProgress(
       workshopProjectionProgress
     );
+    var startGridScalar=workshopProjectionGridScalar;
     var targetProgress=active ? 1 : 0;
     var distance=Math.abs(targetProgress-startProgress);
     var duration=(active ? 580 : 380)*distance;
@@ -33237,6 +33299,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       }
       completionClaimed=true;
       applyWorkshopProjectionProgress(targetProgress);
+      if(!active) applyWorkshopProjectionGridScalar(0);
       if(typeof onComplete==="function") onComplete();
       return true;
     }
@@ -33261,6 +33324,11 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       applyWorkshopProjectionProgress(
         startProgress+(targetProgress-startProgress)*transitionProgress
       );
+      if(!active){
+        applyWorkshopProjectionGridScalar(
+          startGridScalar*(1-transitionProgress)
+        );
+      }
       if(transitionProgress<1) window.requestAnimationFrame(step);
       else complete();
     }
@@ -33314,7 +33382,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       if(earth) earth.visible=false;
 
       if(engineeringGrid){
-        engineeringGrid.visible=true;
+        engineeringGrid.visible=false;
         syncWorkshopEngineeringGridContrast(workshopPlatformTint);
       }
       // Contrast establishes the session's full-opacity targets. Reversals
@@ -33331,6 +33399,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         // startWorkshopProjectionVisuals owns the later 500 ms activation.
         workshopProjectionTransitionToken+=1;
         applyWorkshopProjectionProgress(0);
+        applyWorkshopProjectionGridScalar(0);
+        setWorkshopProjectionGridVisible(false);
         if(typeof onComplete==="function") onComplete();
         return;
       }
@@ -33340,6 +33410,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
 
     if(!workshopBuildAreaSnapshot){
       applyWorkshopProjectionProgress(0);
+      applyWorkshopProjectionGridScalar(0);
+      setWorkshopProjectionGridVisible(false);
       workshopStageFrame.visible=false;
       workshopProjectionGridTargets=null;
       syncEngineeringGridStyle(ground.material.map === grassTexture);
@@ -33378,6 +33450,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     syncEngineeringGridStyle(ground.material.map === grassTexture);
     workshopBuildAreaSnapshot=null;
     workshopProjectionProgress=0;
+    workshopProjectionGridScalar=0;
     workshopProjectionGridTargets=null;
     if(typeof onComplete==="function") onComplete();
   }
@@ -33406,6 +33479,11 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     }
     if(workshopTableProjectionStartView){
       workshopTableProjectionStartView.setWorkshopActive(
+        requestedMode==="workshop"
+      );
+    }
+    if(workshopTableProjectionActiveView){
+      workshopTableProjectionActiveView.setWorkshopActive(
         requestedMode==="workshop"
       );
     }
@@ -33714,12 +33792,37 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           },
           startTableProjection:function(transition){
             startWorkshopProjectionVisuals();
-            workshopTableProjectionStartView.start({
-              transitionId:transition.transitionId,
-              complete:function(){
-                transition.complete();
-                transition.compatibilityStable();
+            var remainingProjectionStarts=2;
+            var projectionStartClaimed=false;
+            function completeProjectionStart(){
+              remainingProjectionStarts-=1;
+              if(remainingProjectionStarts>0 || projectionStartClaimed){
+                return false;
               }
+              projectionStartClaimed=true;
+              return transition.complete();
+            }
+            var startingFieldResult=workshopTableProjectionStartView.start({
+              transitionId:transition.transitionId,
+              complete:completeProjectionStart
+            });
+            if(startingFieldResult && startingFieldResult.ok &&
+              startingFieldResult.code==="IDEMPOTENT"){
+              completeProjectionStart();
+            }
+            var startingGridResult=workshopTableProjectionActiveView.startProjectionGrid({
+              transitionId:transition.transitionId,
+              complete:completeProjectionStart
+            });
+            if(startingGridResult && startingGridResult.ok &&
+              startingGridResult.code==="IDEMPOTENT"){
+              completeProjectionStart();
+            }
+          },
+          settleTableProjection:function(transition){
+            workshopTableProjectionActiveView.settleActive({
+              transitionId:transition.transitionId,
+              complete:transition.complete
             });
           },
           startProjectorProjection:function(transition){
@@ -33756,10 +33859,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
                   transition.complete();
                   return;
                 }
-                workshopTableProjectionStartView.stopToPoweredOn({
-                  transitionId:transition.transitionId,
-                  complete:transition.complete
-                });
+                settleWorkshopTableProjectionToPoweredOn(
+                  transition,
+                  transition.complete
+                );
               }
             });
           },
@@ -33806,14 +33909,20 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
                 }
               });
             }
-            if(workshopTableProjectionStartView){
-              workshopTableProjectionStartView.enterFaultSafe({
-                transitionId:transition.transitionId,
-                complete:finishTableFault
-              });
-            }else{
-              finishTableFault();
+            function secureStartingField(){
+              if(workshopTableProjectionStartView){
+                workshopTableProjectionStartView.enterFaultSafe({
+                  transitionId:transition.transitionId,
+                  complete:finishTableFault
+                });
+              }else finishTableFault();
             }
+            if(workshopTableProjectionActiveView){
+              workshopTableProjectionActiveView.enterFaultSafe({
+                transitionId:transition.transitionId,
+                complete:secureStartingField
+              });
+            }else secureStartingField();
           },
           openDrawer:function(transition){
             workshopDrawerTransitionCompletions[transition.uiDrawer]=transition.complete;
