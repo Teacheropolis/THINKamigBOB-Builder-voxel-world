@@ -1,15 +1,21 @@
 /**
- * THINKamigBOB Workshop state contract (Animation Bible v1.0 / WS-004).
+ * THINKamigBOB Workshop state contract (Animation Bible v1.0 / WS-016).
  * Pure data and validation only: no DOM, rendering, timing, or asset loading.
  */
 
 const freeze = (value) => Object.freeze(value);
 
-export const CONTRACT_VERSION = "WS-004/1.0";
+export const CONTRACT_VERSION = "WS-016/1.0";
 export const BIBLE_VERSION = "1.0";
 
 export const TOP_LEVEL_STATES = freeze([
   "OFF", "STARTING", "READY", "SHUTTING_DOWN", "FAULT_SAFE",
+]);
+
+// Loading and asset-failure labels belong to the browser host. They are not
+// legal Workshop lifecycle states and must never enter the runtime controller.
+export const HOST_PRESENTATION_STATES = freeze([
+  "OFF", "LOADING", "READY", "STARTING", "ACTIVE", "STOPPING", "FAILED",
 ]);
 
 export const SUBSYSTEM_STATES = freeze({

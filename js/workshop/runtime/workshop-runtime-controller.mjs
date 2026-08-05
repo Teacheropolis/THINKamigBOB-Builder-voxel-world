@@ -10,6 +10,11 @@ export const WORKSHOP_UI_DRAWER_MAP = Object.freeze({
   "parts-objects": "D4_COMPONENTS",
 });
 
+export const WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES = Object.freeze({
+  smartboard: "WS-017 temporary readiness state; no mechanical or power driver is claimed.",
+  toolchest: "Future lifecycle placeholder; no deployment driver is claimed.",
+});
+
 const INITIAL_STATE = Object.freeze({
   workshop: "OFF",
   projector: "POWERED_OFF",
@@ -23,7 +28,11 @@ const INITIAL_STATE = Object.freeze({
 
 const freezeResult = (value) => Object.freeze(value);
 
-export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} } = {}) {
+export function createWorkshopRuntimeController({
+  drivers = {},
+  emit = () => {},
+  stateChanged = () => {},
+} = {}) {
   const state = { ...INITIAL_STATE };
   const drawerStates = Object.fromEntries(
     ["D1_MEASURE", "D2_BUILD", "D3_MATERIALS", "D4_COMPONENTS", "D5_NOTEBOOK", "D6_UTILITY"]
@@ -36,7 +45,7 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
   let busy = false;
 
   const nextTransition = (domain, from, to) => ({
-    id: `ws005-${++transitionSerial}`,
+    id: `ws016-${++transitionSerial}`,
     domain,
     from,
     to,
@@ -57,10 +66,48 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     transitionId: transition.id,
   });
 
+  const disabledState = () => freezeResult({
+    powerOn: state.workshop !== "OFF",
+    powerOff: state.workshop === "OFF",
+    drawers: state.workshop !== "READY" || state.chest !== "DEPLOYED" || busy,
+    measurement: state.workshop !== "READY" || state.boardApplication !== "MEASUREMENT_ASSISTANT",
+  });
+
+  const topLevelSnapshot = () => freezeResult({
+    workshop: state.workshop,
+    busy,
+    disabled: disabledState(),
+    activeTransitionId: activeTransition?.id || null,
+  });
+
+  const announceTopLevelState = () => {
+    try {
+      stateChanged(topLevelSnapshot());
+    } catch {
+      // Presentation observers never own or gate the canonical lifecycle.
+    }
+  };
+
+  const missingDriver = (names) => names.find((name) => typeof drivers[name] !== "function");
+
+  const validateStartupDrivers = (reversing) => {
+    const required = reversing
+      ? ["restoreProjectorShutdown", "powerOnTable", "startProjectorProjection", "settleProjectorProjection"]
+      : ["powerOnProjector", "powerOnTable", "startProjectorProjection", "settleProjectorProjection"];
+    if (typeof drivers.startTableProjection === "function") required.push("settleTableProjection");
+    else required.push("startLegacyTableProjection");
+    const missing = missingDriver(required);
+    return missing
+      ? reject("REQUIRED_DRIVER_UNAVAILABLE", `Required Workshop startup driver unavailable: ${missing}.`)
+      : null;
+  };
+
   const finishPowerOn = (transition) => {
     if (activeTransition !== transition || transition.cancelled) return false;
     if (state.projector !== "FULLY_ACTIVE" || state.table !== "FULLY_ACTIVE" ||
         transition.tableProjectionStable !== true) return false;
+    // Explicit temporary test doubles preserve the verified shell until the
+    // Smart Board and Tool Chest receive their own lifecycle drivers.
     state.boardMechanical = "EXTENDED";
     state.boardPower = "READY";
     state.boardApplication = "MEASUREMENT_ASSISTANT";
@@ -74,6 +121,7 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     busy = false;
     activeTransition = null;
     publish(transition, "workshop:ready", { timingCompliance: "ws014-table-fully-active" });
+    announceTopLevelState();
     return true;
   };
 
@@ -342,6 +390,7 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     busy = false;
     activeTransition = null;
     publish(transition, "workshop:off", { timingCompliance: "ws010-safe-projector-shutdown" });
+    announceTopLevelState();
     return true;
   };
 
@@ -374,6 +423,7 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     busy = false;
     activeTransition = null;
     publish(transition, "workshop:off", { timingCompliance: "ws010-fault-safe-settlement" });
+    announceTopLevelState();
     return true;
   };
 
@@ -386,11 +436,14 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     });
     if (!result.ok) return reject(result.code, result.reason);
     if (result.code === "IDEMPOTENT") return freezeResult({ ok: true, code: result.code });
+    const driverFailure = validateStartupDrivers(state.workshop === "SHUTTING_DOWN");
+    if (driverFailure) return driverFailure;
     const transition = nextTransition("workshop", state.workshop, "STARTING");
     activeTransition = transition;
     state.workshop = "STARTING";
     busy = true;
     publish(transition, "workshop:startup-begun");
+    announceTopLevelState();
     if (transition.from === "SHUTTING_DOWN" && state.projector !== "POWERED_OFF") {
       if (state.projector !== "POWERED_ON") state.projector = "POWERING_ON";
       drivers.restoreProjectorShutdown?.({
@@ -413,6 +466,7 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
       const transition = nextTransition("workshop", state.workshop, "OFF");
       activeTransition = transition;
       busy = true;
+      announceTopLevelState();
       const secureFault = state.table === "FAULT_SAFE"
         ? drivers.secureTableFault
         : drivers.secureProjectorFault;
@@ -430,12 +484,16 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
       applicationStateSecured: context.applicationStateSecured !== false,
     });
     if (!result.ok) return reject(result.code, result.reason);
+    if (typeof drivers.exitWorkshop !== "function") {
+      return reject("REQUIRED_DRIVER_UNAVAILABLE", "Required Workshop shutdown driver unavailable: exitWorkshop.");
+    }
     if (activeTransition) activeTransition.cancelled = true;
     const transition = nextTransition("workshop", state.workshop, "SHUTTING_DOWN");
     activeTransition = transition;
     state.workshop = "SHUTTING_DOWN";
     busy = true;
     publish(transition, "workshop:shutdown-begun");
+    announceTopLevelState();
     drivers.exitWorkshop?.({
       transitionId: transition.id,
       tableStandby: () => markTableStandby(transition),
@@ -486,10 +544,12 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     state.workshop = "FAULT_SAFE";
     busy = true;
     publish(transition, "projector:fault", { code, message });
+    announceTopLevelState();
     const settle = () => {
       if (activeTransition !== transition || transition.cancelled) return false;
       busy = false;
       activeTransition = null;
+      announceTopLevelState();
       return true;
     };
     if (typeof drivers.secureProjectorFault === "function") {
@@ -514,10 +574,12 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
     state.table = "FAULT_SAFE";
     state.workshop = "FAULT_SAFE";
     busy = true;
+    announceTopLevelState();
     const settle = () => {
       if (activeTransition !== transition || transition.cancelled) return false;
       busy = false;
       activeTransition = null;
+      announceTopLevelState();
       return true;
     };
     if (typeof drivers.secureTableFault === "function") {
@@ -608,9 +670,12 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
       const context = command.context || {};
       if (normalized.action === "REQUEST_POWER_ON") return requestPowerOn(context);
       if (normalized.action === "REQUEST_POWER_OFF" || normalized.action === "CANCEL_TRANSITION") return requestPowerOff(context);
+      if (normalized.action === "RESET_FAULT") {
+        return reject("RESET_FAULT_REQUIRES_POWER_OFF", "Secure FAULT_SAFE with REQUEST_POWER_OFF before restarting Workshop.");
+      }
       if (normalized.action === "OPEN_DRAWER" || normalized.action === "CLOSE_DRAWER") return requestDrawer(normalized.action, normalized.payload);
       if (normalized.action === "SELECT_MEASURABLE_OBJECT" || normalized.action === "CLEAR_SELECTION") return requestMeasurement(normalized.action, normalized.payload);
-      return reject("UNIMPLEMENTED_ACTION", `${normalized.action} is not wired in WS-005.`);
+      return reject("UNIMPLEMENTED_ACTION", `${normalized.action} is not wired in WS-016.`);
     },
     reportProjectorRendererUnavailable,
     reportProjectorFault,
@@ -621,14 +686,9 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
         drawers: freezeResult({ ...drawerStates }),
         activeDrawer,
         busy,
-        disabled: freezeResult({
-          powerOn: state.workshop !== "OFF",
-          powerOff: state.workshop === "OFF",
-          drawers: state.workshop !== "READY" || state.chest !== "DEPLOYED" || busy,
-          measurement: state.workshop !== "READY" || state.boardApplication !== "MEASUREMENT_ASSISTANT",
-        }),
+        disabled: disabledState(),
         activeTransitionId: activeTransition?.id || null,
-        timingCompliance: "ws015-table-lifecycle",
+        timingCompliance: "ws016-top-level-controller",
       });
     },
   });

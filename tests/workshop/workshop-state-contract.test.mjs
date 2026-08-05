@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
   BIBLE_VERSION, CANCELLATION_CONTRACT, CANONICAL_EVENTS, CONTRACT_TRANSITIONS,
-  DEPENDENCY_ORDER, DRAWER_IDS, EVENT_OWNER, INPUT_SOURCES, OWNERSHIP,
+  DEPENDENCY_ORDER, DRAWER_IDS, EVENT_OWNER, HOST_PRESENTATION_STATES, INPUT_SOURCES, OWNERSHIP,
   SEMANTIC_ACTIONS, SUBSYSTEM_STATES, TOP_LEVEL_STATES,
   createOneShotEventLedger, normalizeSemanticAction, validateTransition,
 } from "../../js/workshop/contracts/workshop-state-contract.mjs";
@@ -12,6 +12,12 @@ const validStartup = { assetsLoaded: true, allDrawersClosed: true, chestParked: 
 
 test("targets Animation Bible version 1.0", () => assert.equal(BIBLE_VERSION, "1.0"));
 test("defines all authoritative top-level states", () => assert.deepEqual(TOP_LEVEL_STATES, ["OFF", "STARTING", "READY", "SHUTTING_DOWN", "FAULT_SAFE"]));
+test("keeps host loading labels outside canonical Workshop state", () => {
+  assert.deepEqual(HOST_PRESENTATION_STATES, ["OFF", "LOADING", "READY", "STARTING", "ACTIVE", "STOPPING", "FAILED"]);
+  assert.equal(TOP_LEVEL_STATES.includes("LOADING"), false);
+  assert.equal(TOP_LEVEL_STATES.includes("FAILED"), false);
+  assert.equal(TOP_LEVEL_STATES.includes("ACTIVE"), false);
+});
 test("defines all six logical drawers", () => assert.deepEqual(DRAWER_IDS, ["D1_MEASURE", "D2_BUILD", "D3_MATERIALS", "D4_COMPONENTS", "D5_NOTEBOOK", "D6_UTILITY"]));
 test("each required subsystem has explicit ownership", () => assert.deepEqual(Object.keys(OWNERSHIP), ["workshop", "projector", "table", "smartboard", "toolchest", "drawer", "measurement"]));
 test("state records and transition records are frozen", () => {

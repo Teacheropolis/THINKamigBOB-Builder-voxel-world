@@ -30109,7 +30109,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var currentWorkspaceMode="mission";
   var workshopStateController=null;
   var workshopControllerReady=null;
+  // Host-only asset/presentation state. WS-016 canonical lifecycle state is
+  // owned exclusively by workshopStateController.
   var workshopStartupState="OFF";
+  var workshopCanonicalState="OFF";
   var workshopStartupRequested=false;
   var workshopAssetLoadAttempt=0;
   var workshopDrawerTransitionCompletions=Object.create(null);
@@ -30207,6 +30210,25 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         state==="FAILED" ? "Retry Workshop" : "Open Workshop";
     }
     if(message) getWorkshopStartupStatusElement().textContent=message;
+  }
+
+  function syncWorkshopControllerPresentation(snapshot){
+    if(!snapshot || typeof snapshot.workshop!=="string") return;
+    workshopCanonicalState=snapshot.workshop;
+    if(snapshot.workshop==="STARTING"){
+      setWorkshopStartupState("STARTING","Opening Workshop.");
+    }else if(snapshot.workshop==="READY"){
+      workshopStartupRequested=false;
+      setWorkshopStartupState("ACTIVE","Workshop is ready.");
+    }else if(snapshot.workshop==="SHUTTING_DOWN"){
+      setWorkshopStartupState("STOPPING","Closing Workshop.");
+    }else if(snapshot.workshop==="FAULT_SAFE"){
+      workshopStartupRequested=false;
+      setWorkshopStartupState("FAILED","Workshop entered safe mode.");
+    }else if(snapshot.workshop==="OFF"){
+      workshopStartupRequested=false;
+      setWorkshopStartupState("OFF","Workshop closed.");
+    }
   }
 
   function workshopStartupDependenciesReady(){
@@ -33526,7 +33548,6 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
 
   function requestWorkshopPowerOn(){
     if(!workshopStartupDependenciesReady()) return false;
-    setWorkshopStartupState("STARTING","Opening Workshop.");
     var result=workshopStateController.request({
       action:"REQUEST_POWER_ON",
       input:"host",
@@ -33546,9 +33567,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     var requestedMode=mode==="workshop" ? "workshop" : "mission";
     if(requestedMode==="workshop" && isStarterScreenActive()) return false;
     if(requestedMode===currentWorkspaceMode && !(
-      requestedMode==="mission" && workshopStartupState==="STARTING"
+      requestedMode==="mission" && workshopCanonicalState==="STARTING"
     ) && !(
-      requestedMode==="workshop" && workshopStartupState==="STOPPING"
+      requestedMode==="workshop" && workshopCanonicalState==="SHUTTING_DOWN"
     )) return true;
 
     if(requestedMode==="workshop"){
@@ -33569,7 +33590,6 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     });
     if(!result.ok) return false;
     workshopStartupRequested=false;
-    setWorkshopStartupState("STOPPING","Closing Workshop.");
     return true;
   }
 
@@ -33678,9 +33698,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       switcher.removeAttribute("onclick");
       switcher.addEventListener("click",function(){
         setWorkspaceMode(
-          workshopStartupState==="STOPPING"
+          workshopCanonicalState==="SHUTTING_DOWN"
             ? "workshop"
-            : workshopStartupState==="STARTING" || currentWorkspaceMode==="workshop"
+            : workshopCanonicalState==="STARTING" || currentWorkspaceMode==="workshop"
             ? "mission"
             : "workshop"
         );
@@ -33701,7 +33721,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   window.returnToMission=function(){ return setWorkspaceMode("mission"); };
   window.toggleWorkspaceMode=function(){
     return setWorkspaceMode(
-      workshopStartupState==="STOPPING"
+      workshopCanonicalState==="SHUTTING_DOWN"
         ? "workshop"
         : currentWorkspaceMode==="workshop" ? "mission" : "workshop"
     );
@@ -33762,15 +33782,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   workshopControllerReady=import("./js/workshop/runtime/workshop-runtime-controller.mjs")
     .then(function(module){
       workshopStateController=module.createWorkshopRuntimeController({
+        stateChanged:syncWorkshopControllerPresentation,
         emit:function(eventName,detail){
           window.dispatchEvent(new CustomEvent(eventName,{detail:detail}));
-          if(eventName==="workshop:ready"){
-            workshopStartupRequested=false;
-            setWorkshopStartupState("ACTIVE","Workshop is ready.");
-          }else if(eventName==="workshop:off"){
-            workshopStartupRequested=false;
-            setWorkshopStartupState("OFF","Workshop closed.");
-          }
         },
         drivers:{
           powerOnProjector:function(transition){

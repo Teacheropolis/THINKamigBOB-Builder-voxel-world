@@ -1,15 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES,
   WORKSHOP_UI_DRAWER_MAP,
   createWorkshopRuntimeController,
 } from "../../js/workshop/runtime/workshop-runtime-controller.mjs";
 
 function harness() {
   const events = [];
+  const stateChanges = [];
   const pending = {};
   const controller = createWorkshopRuntimeController({
     emit: (name, detail) => events.push({ name, detail }),
+    stateChanged: (snapshot) => stateChanges.push(snapshot),
     drivers: {
       powerOnProjector: ({ begin, complete }) => {
         pending.projectorBegin = begin;
@@ -37,7 +40,7 @@ function harness() {
       closeDrawer: ({ complete }) => { pending.drawer = complete; },
     },
   });
-  return { controller, events, pending };
+  return { controller, events, pending, stateChanges };
 }
 
 function completeStartup(pending) {
@@ -63,8 +66,14 @@ test("starts from deterministic protected states", () => {
     activeDrawer: null, busy: false,
     disabled: { powerOn: false, powerOff: true, drawers: true, measurement: true },
     activeTransitionId: null,
-    timingCompliance: "ws015-table-lifecycle",
+    timingCompliance: "ws016-top-level-controller",
   });
+});
+
+test("identifies future subsystem readiness as temporary test doubles", () => {
+  assert.deepEqual(Object.keys(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES), ["smartboard", "toolchest"]);
+  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /temporary/i);
+  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.toolchest, /placeholder/i);
 });
 
 test("power-on changes visuals only through the accepted driver and settles once", () => {
@@ -240,4 +249,88 @@ test("shutdown publishes Table projection stop before Table and Projector power-
     "projector:powered-off",
     "workshop:off",
   ]);
+});
+
+test("publishes canonical top-level state and busy snapshots without host-only states", () => {
+  const { controller, pending, stateChanges } = harness();
+  controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
+  assert.deepEqual(
+    { workshop: stateChanges.at(-1).workshop, busy: stateChanges.at(-1).busy },
+    { workshop: "STARTING", busy: true },
+  );
+  completeStartup(pending);
+  assert.deepEqual(
+    { workshop: stateChanges.at(-1).workshop, busy: stateChanges.at(-1).busy },
+    { workshop: "READY", busy: false },
+  );
+  controller.request({ action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true } });
+  assert.deepEqual(
+    { workshop: stateChanges.at(-1).workshop, busy: stateChanges.at(-1).busy },
+    { workshop: "SHUTTING_DOWN", busy: true },
+  );
+  pending.tableStandby(); pending.tablePoweredOff(); pending.standby(); pending.poweredOff(); pending.exit();
+  assert.deepEqual(
+    { workshop: stateChanges.at(-1).workshop, busy: stateChanges.at(-1).busy },
+    { workshop: "OFF", busy: false },
+  );
+  assert.equal(stateChanges.some(({ workshop }) => ["LOADING", "ACTIVE", "FAILED", "STOPPING"].includes(workshop)), false);
+});
+
+test("missing required lifecycle drivers fail closed without changing canonical state", () => {
+  const startup = createWorkshopRuntimeController({ drivers: {} });
+  const start = startup.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
+  assert.equal(start.code, "REQUIRED_DRIVER_UNAVAILABLE");
+  assert.equal(startup.getSnapshot().workshop, "OFF");
+  assert.equal(startup.getSnapshot().busy, false);
+
+  const { controller, pending } = harness();
+  controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
+  completeStartup(pending);
+  const noExit = createWorkshopRuntimeController({
+    drivers: {
+      powerOnProjector: ({ begin, complete }) => { begin(); complete(); },
+      powerOnTable: ({ begin, complete }) => { begin(); complete(); },
+      startTableProjection: ({ complete }) => complete(),
+      settleTableProjection: ({ complete }) => complete(),
+      startProjectorProjection: ({ complete }) => complete(),
+      settleProjectorProjection: ({ complete }) => complete(),
+    },
+  });
+  noExit.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
+  assert.equal(noExit.getSnapshot().workshop, "READY");
+  const stop = noExit.request({ action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true } });
+  assert.equal(stop.code, "REQUIRED_DRIVER_UNAVAILABLE");
+  assert.equal(noExit.getSnapshot().workshop, "READY");
+  assert.equal(noExit.getSnapshot().busy, false);
+});
+
+test("RESET_FAULT is explicit and cannot bypass dependency-safe power-off", () => {
+  const { controller, pending } = harness();
+  controller.reportProjectorFault({ message: "test fault" });
+  const before = controller.getSnapshot();
+  const reset = controller.request({ action: "RESET_FAULT", input: "host" });
+  assert.equal(reset.code, "RESET_FAULT_REQUIRES_POWER_OFF");
+  assert.equal(controller.getSnapshot().workshop, "FAULT_SAFE");
+  assert.equal(controller.getSnapshot().activeTransitionId, before.activeTransitionId);
+  assert.equal(pending.projectorBegin, undefined);
+});
+
+test("presentation observer failures never gate canonical transitions", () => {
+  const events = [];
+  const controller = createWorkshopRuntimeController({
+    stateChanged: () => { throw new Error("presentation unavailable"); },
+    emit: (name) => events.push(name),
+    drivers: {
+      powerOnProjector: ({ begin }) => begin(),
+      powerOnTable() {},
+      startTableProjection() {},
+      settleTableProjection() {},
+      startProjectorProjection() {},
+      settleProjectorProjection() {},
+    },
+  });
+  const result = controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
+  assert.equal(result.ok, true);
+  assert.equal(controller.getSnapshot().workshop, "STARTING");
+  assert.deepEqual(events, ["workshop:startup-begun"]);
 });
