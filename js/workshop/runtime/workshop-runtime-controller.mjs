@@ -12,7 +12,7 @@ export const WORKSHOP_UI_DRAWER_MAP = Object.freeze({
 
 export const WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES = Object.freeze({
   smartboard: "WS-017 temporary readiness state; no mechanical or power driver is claimed.",
-  toolchest: "Future lifecycle placeholder; no deployment driver is claimed.",
+  workshopReadySettle: "WS-017 temporary final-ready settlement after the real WS-019 Tool Chest lifecycle.",
 });
 
 const INITIAL_STATE = Object.freeze({
@@ -158,7 +158,10 @@ export function createWorkshopRuntimeController({
     }
     if (state.chest !== "DEPLOYED") return false;
     transition.toolChestDeployed = true;
-    publish(transition, "toolchest:deployed", { temporaryCompatibility: true });
+    publish(transition, "toolchest:deployed", {
+      timingCompliance: "ws019-rendered-deployment",
+      temporaryCompatibility: false,
+    });
     return beginWorkshopReadySettle(transition);
   };
 
@@ -581,7 +584,10 @@ export function createWorkshopRuntimeController({
     }
     if (state.chest !== "PARKED") return false;
     transition.toolChestParked = true;
-    publish(transition, "toolchest:parked", { temporaryCompatibility: true });
+    publish(transition, "toolchest:parked", {
+      timingCompliance: "ws019-rendered-parking",
+      temporaryCompatibility: false,
+    });
     return beginSmartBoardRetraction(transition);
   };
 

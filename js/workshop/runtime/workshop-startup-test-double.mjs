@@ -1,6 +1,5 @@
 export const WORKSHOP_STARTUP_PLACEHOLDER_TIMING = Object.freeze({
   smartBoard: 400,
-  toolChest: 400,
   readySettle: 200,
   reducedMotion: 150,
 });
@@ -56,9 +55,6 @@ export function createWorkshopStartupTestDouble({
   return Object.freeze({
     activateSmartBoard(options) {
       return run("smartboard", WORKSHOP_STARTUP_PLACEHOLDER_TIMING.smartBoard, options);
-    },
-    deployToolChest(options) {
-      return run("toolchest", WORKSHOP_STARTUP_PLACEHOLDER_TIMING.toolChest, options);
     },
     settleWorkshopReady(options) {
       return run("ready", WORKSHOP_STARTUP_PLACEHOLDER_TIMING.readySettle, options);

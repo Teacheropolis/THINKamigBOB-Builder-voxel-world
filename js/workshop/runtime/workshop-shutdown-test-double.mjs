@@ -1,6 +1,5 @@
 export const WORKSHOP_SHUTDOWN_PLACEHOLDER_TIMING = Object.freeze({
   drawers: 200,
-  toolChest: 400,
   smartBoard: 400,
   reducedMotion: 150,
 });
@@ -56,9 +55,6 @@ export function createWorkshopShutdownTestDouble({
   return Object.freeze({
     secureDrawers(options) {
       return run("drawers", WORKSHOP_SHUTDOWN_PLACEHOLDER_TIMING.drawers, options);
-    },
-    parkToolChest(options) {
-      return run("toolchest", WORKSHOP_SHUTDOWN_PLACEHOLDER_TIMING.toolChest, options);
     },
     retractSmartBoard(options) {
       return run("smartboard", WORKSHOP_SHUTDOWN_PLACEHOLDER_TIMING.smartBoard, options);

@@ -87,9 +87,9 @@ test("starts from deterministic protected states", () => {
 });
 
 test("identifies future subsystem readiness as temporary test doubles", () => {
-  assert.deepEqual(Object.keys(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES), ["smartboard", "toolchest"]);
+  assert.deepEqual(Object.keys(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES), ["smartboard", "workshopReadySettle"]);
   assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /temporary/i);
-  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.toolchest, /placeholder/i);
+  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.workshopReadySettle, /temporary/i);
 });
 
 test("power-on changes visuals only through the accepted driver and settles once", () => {
