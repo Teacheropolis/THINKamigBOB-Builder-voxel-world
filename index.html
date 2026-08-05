@@ -30113,6 +30113,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopShutdownTestDouble=null;
   var workshopToolChestLifecycleView=null;
   var workshopToolChestDrawerSecurityView=null;
+  var workshopReadyRenderSettlement=null;
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
   var workshopStartupState="OFF";
@@ -33788,7 +33789,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/runtime/workshop-startup-test-double.mjs"),
     import("./js/workshop/runtime/workshop-shutdown-test-double.mjs"),
     import("./js/workshop/toolchest/tool-chest-lifecycle-view.mjs"),
-    import("./js/workshop/toolchest/tool-chest-drawer-security-view.mjs")
+    import("./js/workshop/toolchest/tool-chest-drawer-security-view.mjs"),
+    import("./js/workshop/runtime/workshop-ready-render-settlement.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -33796,6 +33798,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var shutdownModule=modules[2];
       var toolChestModule=modules[3];
       var drawerSecurityModule=modules[4];
+      var readySettlementModule=modules[5];
       workshopStartupTestDouble=startupModule.createWorkshopStartupTestDouble({
         reducedMotion:function(){
           return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -33821,6 +33824,28 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           return engineeringToolChestState.drawers[drawerName];
         },
         closeDrawer:closeEngineeringToolChestDrawer,
+        reducedMotion:function(){
+          return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+        }
+      });
+      workshopReadyRenderSettlement=readySettlementModule.createWorkshopReadyRenderSettlement({
+        isRenderedReady:function(){
+          var root=document.getElementById("engineeringToolChest");
+          var cabinet=document.getElementById("engineeringToolChestCabinet");
+          if(!root || !cabinet || root.dataset.cabinetState!=="expanded" ||
+            engineeringToolChestState.cabinet!=="expanded") return false;
+          var transform=window.getComputedStyle(cabinet).transform || "none";
+          if(transform==="none") return true;
+          var match=transform.match(/^matrix\([^,]+,[^,]+,[^,]+,[^,]+,\s*(-?[\d.]+)/);
+          var translateX=Number(match && match[1]);
+          return Number.isFinite(translateX) && Math.abs(translateX)<=1;
+        },
+        isTransitionCurrent:function(transitionId){
+          if(!workshopStateController) return false;
+          var snapshot=workshopStateController.getSnapshot();
+          return snapshot.workshop==="STARTING" &&
+            snapshot.activeTransitionId===transitionId;
+        },
         reducedMotion:function(){
           return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
         }
@@ -33915,7 +33940,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             return workshopToolChestLifecycleView.deploy(transition);
           },
           settleWorkshopReady:function(transition){
-            return workshopStartupTestDouble.settleWorkshopReady(transition);
+            return workshopReadyRenderSettlement.settle(transition);
           },
           secureDrawers:function(transition){
             return workshopToolChestDrawerSecurityView.secure(transition);

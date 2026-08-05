@@ -22,7 +22,6 @@ function harness({ reduced = false } = {}) {
 test("declares locked placeholder stage durations", () => {
   assert.deepEqual(WORKSHOP_STARTUP_PLACEHOLDER_TIMING, {
     smartBoard: 400,
-    readySettle: 200,
     reducedMotion: 150,
   });
 });
@@ -35,9 +34,7 @@ test("each placeholder stage completes only through its owned callback", () => {
   tasks[0].callback();
   tasks[0].callback();
   assert.equal(completions, 1);
-  assert.equal(driver.settleWorkshopReady({ transitionId: "start-1", complete: () => { completions += 1; } }).duration, 200);
-  tasks[1].callback();
-  assert.equal(completions, 2);
+  assert.equal(typeof driver.settleWorkshopReady, "undefined");
 });
 
 test("cancel rejects stale placeholder completion without a delayed side effect", () => {

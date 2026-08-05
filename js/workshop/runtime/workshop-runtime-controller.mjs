@@ -12,7 +12,6 @@ export const WORKSHOP_UI_DRAWER_MAP = Object.freeze({
 
 export const WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES = Object.freeze({
   smartboard: "WS-017 temporary readiness state; no mechanical or power driver is claimed.",
-  workshopReadySettle: "WS-017 temporary final-ready settlement after the real WS-019 Tool Chest lifecycle.",
 });
 
 const INITIAL_STATE = Object.freeze({
@@ -125,7 +124,7 @@ export function createWorkshopRuntimeController({
     state.workshop = "READY";
     busy = false;
     activeTransition = null;
-    publish(transition, "workshop:ready", { timingCompliance: "ws017-eight-stage-startup" });
+    publish(transition, "workshop:ready", { timingCompliance: "ws021-render-settlement" });
     announceTopLevelState();
     return true;
   };
