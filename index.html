@@ -4198,6 +4198,12 @@ Nature ▶
     </div>
     <div id="workshopViewportStage" aria-hidden="true">
       <div id="workshopProjectorMount" aria-hidden="true"></div>
+      <div id="engineeringSmartBoard" data-board-mechanical="retracted" data-board-power="powered-off" aria-hidden="true">
+        <div id="engineeringSmartBoardCabinet">
+          <img id="engineeringSmartBoardHardware" src="assets/images/workshop/production/engineering-smart-board/engineering-smart-board-production-v2-extended.png" alt="" aria-hidden="true" draggable="false" />
+          <div id="engineeringSmartBoardScreen" data-board-application="none" aria-hidden="true"></div>
+        </div>
+      </div>
     </div>
     <div id="workshopRulerRight" class="workshop-ruler workshop-ruler-vertical workshop-ruler-right" data-workshop-axis="y" aria-label="Right model Y-axis ruler. Model Scale, centimeters with millimeter subdivisions.">
       <div class="workshop-ruler-ticks" aria-hidden="true"></div>
@@ -27301,6 +27307,58 @@ body.workshopMode:not(.starterScreenActive) #workshopProjectorMount{
   -webkit-user-drag:none;
 }
 
+#engineeringSmartBoard{
+  --smart-board-extended-x:0px;
+  --smart-board-retracted-x:0px;
+  display:none;
+  position:absolute;
+  z-index:2;
+  overflow:visible;
+  visibility:hidden;
+  pointer-events:none;
+  user-select:none;
+  contain:layout style;
+}
+
+body.workshopMode:not(.starterScreenActive) #engineeringSmartBoard{
+  display:block;
+}
+
+#engineeringSmartBoardCabinet{
+  position:absolute;
+  inset:0;
+  transform:translateX(var(--smart-board-retracted-x));
+  transition:none;
+  pointer-events:none;
+  will-change:transform;
+}
+
+#engineeringSmartBoard[data-board-mechanical="extended"] #engineeringSmartBoardCabinet{
+  transform:translateX(var(--smart-board-extended-x));
+}
+
+#engineeringSmartBoardHardware{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+
+#engineeringSmartBoardScreen{
+  position:absolute;
+  left:20.2%;
+  top:25.8%;
+  width:48.5%;
+  height:36.6%;
+  overflow:hidden;
+  background:transparent;
+  pointer-events:none;
+  user-select:none;
+}
+
 .workshop-ruler{
   --workshop-ruler-line:rgba(207,239,247,.76);
   --workshop-ruler-label:rgba(235,250,255,.88);
@@ -30114,6 +30172,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopToolChestLifecycleView=null;
   var workshopToolChestDrawerSecurityView=null;
   var workshopReadyRenderSettlement=null;
+  var workshopSmartBoardRegistration=null;
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
   var workshopStartupState="OFF";
@@ -33790,7 +33849,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/runtime/workshop-shutdown-test-double.mjs"),
     import("./js/workshop/toolchest/tool-chest-lifecycle-view.mjs"),
     import("./js/workshop/toolchest/tool-chest-drawer-security-view.mjs"),
-    import("./js/workshop/runtime/workshop-ready-render-settlement.mjs")
+    import("./js/workshop/runtime/workshop-ready-render-settlement.mjs"),
+    import("./js/workshop/smartboard/responsive-smart-board-registration.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -33799,6 +33859,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var toolChestModule=modules[3];
       var drawerSecurityModule=modules[4];
       var readySettlementModule=modules[5];
+      var smartBoardRegistrationModule=modules[6];
       workshopStartupTestDouble=startupModule.createWorkshopStartupTestDouble({
         reducedMotion:function(){
           return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -33849,6 +33910,15 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         reducedMotion:function(){
           return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
         }
+      });
+      workshopSmartBoardRegistration=smartBoardRegistrationModule.registerResponsiveSmartBoard({
+        stage:document.getElementById("workshopViewportStage"),
+        mount:document.getElementById("engineeringSmartBoard"),
+        protectedElements:[
+          document.getElementById("info"),
+          document.getElementById("workshopMeasurementAssistant"),
+          document.getElementById("workshopDashboard")
+        ]
       });
       workshopStateController=module.createWorkshopRuntimeController({
         stateChanged:syncWorkshopControllerPresentation,
