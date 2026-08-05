@@ -30128,6 +30128,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopPoweredOffProjectorLoadError=null;
   var workshopPoweredOffTableCompositor=null;
   var workshopTablePowerOnView=null;
+  var workshopTableProjectionStartView=null;
   var workshopActiveTableShutdown=null;
   var workshopPoweredOffTableReady=false;
   var workshopPoweredOffTableLoadError=null;
@@ -30312,7 +30313,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             powerView:workshopProjectorPowerOnView,
             opticalView:workshopProjectorProjectionActiveView,
             stopTableField:function(transition){
-              animateWorkshopProjection(false,function(){
+              function finishTableFieldStop(){
+                animateWorkshopProjection(false,function(){
                 var shutdown=workshopActiveTableShutdown;
                 if(shutdown && typeof shutdown.tableStandby==="function"){
                   shutdown.tableStandby();
@@ -30334,7 +30336,14 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
                     applyWorkspaceModeVisuals("mission",transition.complete);
                   }
                 });
-              });
+                });
+              }
+              if(workshopTableProjectionStartView){
+                workshopTableProjectionStartView.stopToPoweredOn({
+                  transitionId:transition.transitionId,
+                  complete:finishTableFieldStop
+                });
+              }else finishTableFieldStop();
             },
             audio:modules[4].createProjectorAudioHooks({
               isMuted:function(){
@@ -30396,7 +30405,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     workshopPoweredOffTableLoadError=null;
     Promise.all([
       import("./js/workshop/table/powered-off-table-view.mjs"),
-      import("./js/workshop/table/table-power-on-view.mjs")
+      import("./js/workshop/table/table-power-on-view.mjs"),
+      import("./js/workshop/table/table-projection-start-view.mjs")
     ])
       .then(function(modules){
         workshopPoweredOffTableCompositor=modules[0].createPoweredOffTableCompositor({
@@ -30429,18 +30439,47 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             }
           }
         });
+        workshopTableProjectionStartView=
+          modules[2].createTableProjectionStartView({
+            THREE:THREE,
+            camera:camera,
+            getRegistration:function(){
+              workshopPoweredOffTableCompositor.updateRegistration();
+              return workshopPoweredOffTableCompositor.registration;
+            },
+            getTableVisible:function(){
+              return workshopPoweredOffTableCompositor.visible;
+            },
+            adoptEmitterOpacity:function(value){
+              return workshopTablePowerOnView.adoptProjectionOpacity(value);
+            },
+            document:document,
+            audio:{
+              trigger:function(token){
+                return workshopProjectorLifecycleSafety ?
+                  workshopProjectorLifecycleSafety.playAudio(token) : null;
+              }
+            }
+          });
         window.renderWorkshopPoweredOffTableFrame=function(){
-          return workshopPoweredOffTableCompositor ?
-            workshopPoweredOffTableCompositor.render() : false;
+          if(!workshopPoweredOffTableCompositor) return false;
+          if(workshopTableProjectionStartView){
+            workshopTableProjectionStartView.syncRegistration();
+          }
+          return workshopPoweredOffTableCompositor.render();
         };
         return Promise.all([
           workshopPoweredOffTableCompositor.ready,
-          workshopTablePowerOnView.ready
+          workshopTablePowerOnView.ready,
+          workshopTableProjectionStartView.ready
         ]);
       })
       .then(function(){
         workshopPoweredOffTableReady=true;
         workshopPoweredOffTableCompositor.setWorkshopActive(
+          currentWorkspaceMode==="workshop"
+        );
+        workshopTableProjectionStartView.setWorkshopActive(
           currentWorkspaceMode==="workshop"
         );
         if(workshopStartupDependenciesReady()){
@@ -33155,8 +33194,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     workshopFrameCornerMaterial.opacity=0.82*emitterAmount;
     workshopProjectionBandMaterial.opacity=0.30*bandAmount;
     workshopProjectionHazeMaterial.opacity=0.065*hazeAmount;
-    workshopProjectionVolumeMaterial.opacity=0.085*volumeAmount;
-    workshopProjectionVolume.scale.y=Math.max(0.001,volumeAmount);
+    // WS-013 replaces only the unregistered legacy volume. All other
+    // committed Projection primitives retain their established behavior.
+    workshopProjectionVolumeMaterial.opacity=0;
+    workshopProjectionVolume.scale.y=0.001;
     workshopGridPerimeterMaterial.opacity=0.24*gridAmount;
     if(engineeringGridMinorMaterial){
       engineeringGridMinorMaterial.opacity=gridTargets.minor*gridAmount;
@@ -33348,6 +33389,11 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     document.body.classList.toggle("missionMode",requestedMode==="mission");
     if(workshopPoweredOffTableCompositor){
       workshopPoweredOffTableCompositor.setWorkshopActive(
+        requestedMode==="workshop"
+      );
+    }
+    if(workshopTableProjectionStartView){
+      workshopTableProjectionStartView.setWorkshopActive(
         requestedMode==="workshop"
       );
     }
@@ -33642,8 +33688,15 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
               complete:transition.complete
             });
           },
-          startLegacyTableProjection:function(transition){
-            applyWorkspaceModeVisuals("workshop",transition.stable);
+          startTableProjection:function(transition){
+            applyWorkspaceModeVisuals("workshop");
+            workshopTableProjectionStartView.start({
+              transitionId:transition.transitionId,
+              complete:function(){
+                transition.complete();
+                transition.compatibilityStable();
+              }
+            });
           },
           startProjectorProjection:function(transition){
             workshopProjectorLifecycleSafety.playAudio("projector-rise");
@@ -33674,7 +33727,16 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           restoreProjectorShutdown:function(transition){
             workshopProjectorLifecycleSafety.restore({
               transitionId:transition.transitionId,
-              complete:transition.complete
+              complete:function(){
+                if(!workshopTableProjectionStartView){
+                  transition.complete();
+                  return;
+                }
+                workshopTableProjectionStartView.stopToPoweredOn({
+                  transitionId:transition.transitionId,
+                  complete:transition.complete
+                });
+              }
             });
           },
           lowerProjectorToStandby:function(transition){
@@ -33708,16 +33770,26 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
               transition.complete();
               return;
             }
-            workshopTablePowerOnView.enterFaultSafe({
-              transitionId:transition.transitionId,
-              complete:function(){
+            function finishTableFault(){
+              workshopTablePowerOnView.enterFaultSafe({
+                transitionId:transition.transitionId,
+                complete:function(){
                 setWorkshopStartupState(
                   "FAILED",
                   transition.message || "Workshop Table unavailable. Workshop entered safe mode."
                 );
                 transition.complete();
-              }
-            });
+                }
+              });
+            }
+            if(workshopTableProjectionStartView){
+              workshopTableProjectionStartView.enterFaultSafe({
+                transitionId:transition.transitionId,
+                complete:finishTableFault
+              });
+            }else{
+              finishTableFault();
+            }
           },
           openDrawer:function(transition){
             workshopDrawerTransitionCompletions[transition.uiDrawer]=transition.complete;

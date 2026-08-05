@@ -159,3 +159,31 @@ test("missing or failed audio never gates visual completion", () => {
   assert.equal(complete, 1);
   view.dispose();
 });
+
+test("adopts projection emitter opacity without animation, audio, or completion", () => {
+  const h = harness();
+  h.view.powerOn(); h.run(0); h.run(400);
+  const audioCount = h.audio.length;
+  const result = h.view.adoptProjectionOpacity(1);
+  assert.deepEqual(result, { ok: true, code: "ADOPTED", opacity: 1 });
+  assert.equal(h.view.opacity, 1);
+  assert.equal(h.materials.rear.opacity, 1);
+  assert.equal(h.materials.front.opacity, 1);
+  assert.equal(h.frames.size, 0);
+  assert.equal(h.audio.length, audioCount);
+  assert.throws(() => h.view.adoptProjectionOpacity(0.74), /between 0.75 and 1/);
+});
+
+test("returns to the WS-012 endpoint before power-down without a jump", () => {
+  const h = harness();
+  h.view.powerOn(); h.run(0); h.run(400);
+  h.view.adoptProjectionOpacity(1);
+  h.view.adoptProjectionOpacity(0.75);
+  const result = h.view.powerOff();
+  assert.equal(result.duration, 350);
+  assert.equal(h.view.opacity, 0.75);
+  h.run(400);
+  assert.equal(h.view.opacity, 0.75);
+  h.run(750);
+  assert.equal(h.view.opacity, 0);
+});

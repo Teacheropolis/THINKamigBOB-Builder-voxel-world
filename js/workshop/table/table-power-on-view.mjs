@@ -86,7 +86,7 @@ export function createTablePowerOnView({
   let disposed = false;
 
   const apply = (value) => {
-    opacity = Math.max(0, Math.min(TABLE_POWER_TIMING.endpointOpacity, value));
+    opacity = Math.max(0, Math.min(1, value));
     materials.rear.opacity = opacity;
     materials.front.opacity = opacity;
     materials.rear.visible = opacity > 0;
@@ -209,6 +209,18 @@ export function createTablePowerOnView({
     powerOn,
     powerOff,
     enterFaultSafe,
+    adoptProjectionOpacity(value) {
+      if (disposed) return Object.freeze({ ok: false, code: "DISPOSED" });
+      if (!Number.isFinite(value) || value < TABLE_POWER_TIMING.endpointOpacity || value > 1) {
+        throw new RangeError("Projection emitter opacity must be between 0.75 and 1.");
+      }
+      cancelFrame();
+      activeToken += 1;
+      animation = null;
+      state = value > TABLE_POWER_TIMING.endpointOpacity ? "PROJECTION_STARTING" : "POWERED_ON";
+      apply(value);
+      return Object.freeze({ ok: true, code: "ADOPTED", opacity });
+    },
     cancel() {
       cancelFrame();
       activeToken += 1;
