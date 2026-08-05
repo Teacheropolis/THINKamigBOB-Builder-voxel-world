@@ -4304,9 +4304,11 @@ Nature ▶
         <button id="workshopExitLearningMode" type="button" hidden disabled onclick="exitWorkshopMeasurementLearningMode()">BACK TO MEASUREMENTS</button>
         <span id="workshopMeasurementLearningStatus" class="sr-only" aria-live="polite" aria-atomic="true"></span>
       </div>
-      <div id="workshopMeasurementNotebookControls">
-        <button id="workshopOpenEngineeringNotebook" type="button" hidden disabled onclick="openWorkshopEngineeringNotebook(event)">OPEN ENGINEERING NOTEBOOK</button>
-        <button id="workshopBackToMeasurementsFromNotebook" type="button" hidden disabled onclick="returnWorkshopNotebookToMeasurements(event)">BACK TO MEASUREMENTS</button>
+      <div id="workshopMeasurementNotebookControls" role="group" aria-labelledby="workshopSmartBoardAppsLabel">
+        <strong id="workshopSmartBoardAppsLabel">SMART BOARD APPS</strong>
+        <button id="workshopBackToMeasurementsFromNotebook" type="button" aria-pressed="false" hidden disabled onclick="returnWorkshopNotebookToMeasurements(event)">📐 MEASUREMENTS</button>
+        <button id="workshopOpenEngineeringNotebook" type="button" aria-pressed="false" hidden disabled onclick="openWorkshopEngineeringNotebook(event)">📓 ENGINEERING NOTEBOOK</button>
+        <span id="workshopSmartBoardAppsStatus" role="status" aria-live="polite" aria-atomic="true"></span>
       </div>
       <button id="workshopRestoreSelection" type="button" onclick="restorePreviousWorkshopSelection()" hidden disabled><span class="workshop-control-icon" aria-hidden="true">↶</span><span>Restore Selection</span></button>
     </section>
@@ -28204,7 +28206,31 @@ body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant{
 
 #workshopMeasurementNotebookControls{
   display:grid;
-  gap:7px;
+  grid-template-columns:repeat(auto-fit,minmax(min(132px,100%),1fr));
+  gap:6px;
+  align-items:stretch;
+  margin-top:2px;
+  padding-top:7px;
+  border-top:1px solid rgba(143,246,255,.2);
+}
+
+#workshopSmartBoardAppsLabel,
+#workshopSmartBoardAppsStatus{
+  grid-column:1/-1;
+}
+
+#workshopSmartBoardAppsLabel{
+  color:#b9f548;
+  font:900 9px/1.2 "Lexend",Arial,sans-serif;
+  letter-spacing:.08em;
+  text-align:left;
+}
+
+#workshopSmartBoardAppsStatus{
+  min-height:1.2em;
+  color:#d8e9ef;
+  font:700 8px/1.2 "Lexend",Arial,sans-serif;
+  text-align:left;
 }
 
 #workshopEnterLearningMode,
@@ -28235,6 +28261,20 @@ body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant{
   letter-spacing:.03em;
   cursor:pointer;
   touch-action:manipulation;
+}
+
+#workshopOpenEngineeringNotebook[aria-pressed="true"],
+#workshopBackToMeasurementsFromNotebook[aria-pressed="true"]{
+  border-color:#b9f548;
+  color:#ffffff;
+  background:linear-gradient(180deg,rgba(38,82,68,.98),rgba(8,36,38,.98));
+  box-shadow:0 0 0 1px rgba(185,245,72,.22),0 0 12px rgba(101,255,104,.22),inset 0 1px rgba(255,255,255,.14);
+}
+
+#workshopOpenEngineeringNotebook:disabled,
+#workshopBackToMeasurementsFromNotebook:disabled{
+  cursor:not-allowed;
+  opacity:.58;
 }
 
 #workshopEnterLearningMode:hover,

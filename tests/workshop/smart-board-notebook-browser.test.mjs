@@ -21,14 +21,15 @@ test("mounts one separate read-only Engineering Notebook application section", (
 
 test("adds unique native right-panel controls and connects the approved lifecycle", () => {
   for (const [id, label] of [
-    ["workshopOpenEngineeringNotebook", "OPEN ENGINEERING NOTEBOOK"],
-    ["workshopBackToMeasurementsFromNotebook", "BACK TO MEASUREMENTS"],
+    ["workshopOpenEngineeringNotebook", "📓 ENGINEERING NOTEBOOK"],
+    ["workshopBackToMeasurementsFromNotebook", "📐 MEASUREMENTS"],
   ]) {
     assert.equal((source.match(new RegExp(`id=["']${id}["']`, "g")) || []).length, 1);
     const button = source.match(new RegExp(`<button id="${id}"[^>]*>${label}<\\/button>`))?.[0] || "";
     assert.match(button, /type="button"/);
     assert.match(button, /hidden/);
     assert.match(button, /disabled/);
+    assert.match(button, /aria-pressed="false"/);
     assert.match(button, /onclick=/);
   }
 });
