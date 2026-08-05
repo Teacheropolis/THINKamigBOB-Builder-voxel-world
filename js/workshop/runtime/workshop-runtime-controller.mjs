@@ -295,16 +295,20 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
 
   const markTableStandby = (transition) => {
     if (activeTransition !== transition || transition.cancelled) return false;
+    let projectionWasVisible = false;
     if (state.table === "FULLY_ACTIVE") {
+      projectionWasVisible = true;
       const lowering = validateTransition("table", state.table, "PROJECTION_STARTING");
       if (!lowering.ok) return false;
       state.table = "PROJECTION_STARTING";
     }
     if (state.table === "PROJECTION_STARTING") {
+      projectionWasVisible = true;
       const standby = validateTransition("table", state.table, "POWERED_ON");
       if (!standby.ok) return false;
       state.table = "POWERED_ON";
     }
+    if (projectionWasVisible) publish(transition, "table:projection-stopped");
     return state.table === "POWERED_ON" || state.table === "POWERING_ON" || state.table === "POWERED_OFF";
   };
 
@@ -624,7 +628,7 @@ export function createWorkshopRuntimeController({ drivers = {}, emit = () => {} 
           measurement: state.workshop !== "READY" || state.boardApplication !== "MEASUREMENT_ASSISTANT",
         }),
         activeTransitionId: activeTransition?.id || null,
-        timingCompliance: "ws014-table-fully-active",
+        timingCompliance: "ws015-table-lifecycle",
       });
     },
   });

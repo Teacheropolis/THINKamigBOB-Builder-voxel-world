@@ -30130,6 +30130,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopTablePowerOnView=null;
   var workshopTableProjectionStartView=null;
   var workshopTableProjectionActiveView=null;
+  var workshopTableLifecycleSafety=null;
   var workshopActiveTableShutdown=null;
   var workshopPoweredOffTableReady=false;
   var workshopPoweredOffTableLoadError=null;
@@ -30341,34 +30342,35 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             opticalView:workshopProjectorProjectionActiveView,
             stopTableField:function(transition){
               function finishTableFieldStop(){
-                animateWorkshopProjection(false,function(){
                 var shutdown=workshopActiveTableShutdown;
-                if(shutdown && typeof shutdown.tableStandby==="function"){
-                  shutdown.tableStandby();
-                }
-                if(!workshopTablePowerOnView){
-                  if(shutdown && typeof shutdown.tablePoweredOff==="function"){
-                    shutdown.tablePoweredOff();
-                  }
-                  applyWorkspaceModeVisuals("mission",transition.complete);
+                // The legacy shell and the WS-015 Table projection collapse
+                // together. Both use a 400 ms grid fade, while the registered
+                // field completes at 500 ms, so the grid leads by exactly the
+                // permitted 100 ms without delaying the dependency chain.
+                animateWorkshopProjection(false);
+                if(!workshopTableLifecycleSafety){
+                  settleWorkshopTableProjectionToPoweredOn(transition,function(){
+                    if(shutdown && typeof shutdown.tableStandby==="function") shutdown.tableStandby();
+                    if(shutdown && typeof shutdown.tablePoweredOff==="function") shutdown.tablePoweredOff();
+                    applyWorkspaceModeVisuals("mission",transition.complete);
+                  });
                   return;
                 }
-                workshopTablePowerOnView.powerOff({
+                workshopTableLifecycleSafety.shutdown({
                   transitionId:transition.transitionId,
+                  projectionStopped:function(){
+                    if(shutdown && typeof shutdown.tableStandby==="function") shutdown.tableStandby();
+                  },
+                  poweredOff:function(){
+                    if(shutdown && typeof shutdown.tablePoweredOff==="function") shutdown.tablePoweredOff();
+                  },
                   complete:function(){
-                    if(shutdown && typeof shutdown.tablePoweredOff==="function"){
-                      shutdown.tablePoweredOff();
-                    }
                     workshopActiveTableShutdown=null;
                     applyWorkspaceModeVisuals("mission",transition.complete);
                   }
                 });
-                });
               }
-              settleWorkshopTableProjectionToPoweredOn(
-                transition,
-                finishTableFieldStop
-              );
+              finishTableFieldStop();
             },
             audio:modules[4].createProjectorAudioHooks({
               isMuted:function(){
@@ -30432,7 +30434,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       import("./js/workshop/table/powered-off-table-view.mjs"),
       import("./js/workshop/table/table-power-on-view.mjs"),
       import("./js/workshop/table/table-projection-start-view.mjs"),
-      import("./js/workshop/table/table-projection-active-view.mjs")
+      import("./js/workshop/table/table-projection-active-view.mjs"),
+      import("./js/workshop/table/table-lifecycle-safety.mjs")
     ])
       .then(function(modules){
         workshopPoweredOffTableCompositor=modules[0].createPoweredOffTableCompositor({
@@ -30501,6 +30504,11 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             applyGridScalar:applyWorkshopProjectionGridScalar,
             applyGridVisibility:setWorkshopProjectionGridVisible
           });
+        workshopTableLifecycleSafety=modules[4].createTableLifecycleSafety({
+          activeView:workshopTableProjectionActiveView,
+          fieldView:workshopTableProjectionStartView,
+          powerView:workshopTablePowerOnView
+        });
         window.renderWorkshopPoweredOffTableFrame=function(){
           if(!workshopPoweredOffTableCompositor) return false;
           if(workshopTableProjectionStartView){
@@ -33288,7 +33296,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     var startGridScalar=workshopProjectionGridScalar;
     var targetProgress=active ? 1 : 0;
     var distance=Math.abs(targetProgress-startProgress);
-    var duration=(active ? 580 : 380)*distance;
+    var duration=(active ? 580 : 400)*distance;
     var startupPause=!reduceMotion && active && startProgress===0 ? 100 : 0;
     var start=performance.now();
     var completionClaimed=false;
@@ -33852,6 +33860,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             });
           },
           restoreProjectorShutdown:function(transition){
+            if(workshopTableLifecycleSafety) workshopTableLifecycleSafety.cancel();
             workshopProjectorLifecycleSafety.restore({
               transitionId:transition.transitionId,
               complete:function(){

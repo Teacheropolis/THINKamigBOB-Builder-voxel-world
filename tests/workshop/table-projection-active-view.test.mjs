@@ -123,6 +123,35 @@ test("reduced motion settles monotonically in 150ms", () => {
   assert.equal(h.view.presentation.fieldOpacity, 0.72);
 });
 
+test("shutdown removes the grid in 400ms without changing the active field", () => {
+  const h = harness();
+  let complete = 0;
+  settleStarting(h);
+  h.view.settleActive(); h.run(500); h.run(800);
+  const result = h.view.stopProjectionGrid({ complete: () => { complete += 1; } });
+  assert.equal(result.duration, 400);
+  h.run(800); h.run(1000);
+  assert.ok(h.view.presentation.gridScalar > 0 && h.view.presentation.gridScalar < 0.78);
+  assert.equal(h.view.presentation.fieldOpacity, 0.72);
+  h.run(1200);
+  assert.equal(h.view.presentation.gridScalar, 0);
+  assert.equal(h.view.presentation.fieldOpacity, 0.72);
+  assert.equal(h.view.state, "POWERED_ON");
+  assert.equal(complete, 1);
+});
+
+test("reduced-motion shutdown removes the grid monotonically within 150ms", () => {
+  const h = harness({ reduced: true });
+  settleStarting(h);
+  h.view.settleActive(); h.run(150); h.run(300);
+  const result = h.view.stopProjectionGrid();
+  assert.equal(result.duration, 150);
+  h.run(300); h.run(375);
+  assert.ok(h.view.presentation.gridScalar > 0 && h.view.presentation.gridScalar < 0.78);
+  h.run(450);
+  assert.equal(h.view.presentation.gridScalar, 0);
+});
+
 test("pauses hidden-tab time and resumes without a jump", () => {
   const h = harness();
   settleStarting(h);

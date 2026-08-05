@@ -8,6 +8,8 @@ export const TABLE_PROJECTION_ACTIVE_TIMING = Object.freeze({
   activeGridScalar: 0.78,
   heightRatio: 1,
   emitterOpacity: 1,
+  shutdownDuration: 400,
+  shutdownReducedDuration: 150,
   easing: Object.freeze([0.16, 1, 0.30, 1]),
 });
 
@@ -246,6 +248,31 @@ export function createTableProjectionActiveView({
         endpointState: "PROJECTION_STARTED",
         complete,
         reduced,
+      }) });
+    },
+    stopProjectionGrid({ complete = () => true, durationOverride } = {}) {
+      if (disposed) return Object.freeze({ ok: false, code: "DISPOSED" });
+      if (presentation.gridScalar === 0 && !animation) {
+        state = "POWERED_ON";
+        claimOnce(complete)();
+        return Object.freeze({ ok: true, code: "IDEMPOTENT", duration: 0 });
+      }
+      state = "STOPPING_PROJECTION";
+      const reduced = reducedMotion();
+      const distance = presentation.gridScalar / TABLE_PROJECTION_ACTIVE_TIMING.activeGridScalar;
+      const calculatedDuration = (reduced
+        ? TABLE_PROJECTION_ACTIVE_TIMING.shutdownReducedDuration
+        : TABLE_PROJECTION_ACTIVE_TIMING.shutdownDuration) * clamp01(distance);
+      const duration = Number.isFinite(durationOverride) && durationOverride >= 0
+        ? durationOverride
+        : calculatedDuration;
+      return Object.freeze({ ok: true, code: "ACCEPTED", ...schedule({
+        target: { ...presentation, gridScalar: 0 },
+        duration,
+        endpointState: "POWERED_ON",
+        complete,
+        applyField: false,
+        reduced: true,
       }) });
     },
     enterFaultSafe({ complete = () => true } = {}) {

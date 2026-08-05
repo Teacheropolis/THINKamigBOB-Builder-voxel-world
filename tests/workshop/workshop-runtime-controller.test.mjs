@@ -63,7 +63,7 @@ test("starts from deterministic protected states", () => {
     activeDrawer: null, busy: false,
     disabled: { powerOn: false, powerOff: true, drawers: true, measurement: true },
     activeTransitionId: null,
-    timingCompliance: "ws014-table-fully-active",
+    timingCompliance: "ws015-table-lifecycle",
   });
 });
 
@@ -220,4 +220,24 @@ test("rejects stale Table, Projector, and active-settle callbacks after cancella
   assert.equal(staleProjector(), false);
   assert.equal(staleActive(), false);
   assert.equal(events.some((event) => event.name === "workspace:projection-stable"), false);
+});
+
+test("shutdown publishes Table projection stop before Table and Projector power-off", () => {
+  const { controller, events, pending } = harness();
+  controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
+  completeStartup(pending);
+  controller.request({ action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true } });
+  assert.equal(pending.tableStandby(), true);
+  assert.equal(pending.tablePoweredOff(), true);
+  assert.equal(pending.standby(), true);
+  assert.equal(pending.poweredOff(), true);
+  assert.equal(pending.exit(), true);
+  const shutdownEvents = events.map((event) => event.name).slice(-5);
+  assert.deepEqual(shutdownEvents, [
+    "workshop:shutdown-begun",
+    "table:projection-stopped",
+    "table:powered-off",
+    "projector:powered-off",
+    "workshop:off",
+  ]);
 });
