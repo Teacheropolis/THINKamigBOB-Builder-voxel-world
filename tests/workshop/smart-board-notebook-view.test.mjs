@@ -9,7 +9,13 @@ const element = (text = "") => ({
   disabled: false,
 });
 
-function harness({ selectionCount = 1, controlsConnected = false } = {}) {
+function harness({
+  selectionCount = 1,
+  controlsConnected = false,
+  requestFrame,
+  cancelFrame,
+  activeElement,
+} = {}) {
   const screen = { dataset: { boardApplication: "measurement-assistant" } };
   const measurementDisplay = element();
   const learningDisplay = element();
@@ -30,6 +36,9 @@ function harness({ selectionCount = 1, controlsConnected = false } = {}) {
   const view = createSmartBoardNotebookView({
     screen, measurementDisplay, learningDisplay, notebookDisplay,
     openControl, backControl, source, target, controlsConnected,
+    ...(requestFrame ? { requestFrame } : {}),
+    ...(cancelFrame ? { cancelFrame } : {}),
+    ...(activeElement ? { activeElement } : {}),
   });
   return {
     view, screen, measurementDisplay, learningDisplay, notebookDisplay,
@@ -69,6 +78,7 @@ test("provides deterministic Notebook and Measurements endpoints", () => {
   assert.equal(h.measurementDisplay.hidden, true);
   assert.equal(h.learningDisplay.hidden, true);
   assert.equal(h.notebookDisplay.hidden, false);
+  assert.equal(h.screen.dataset.boardApplication, "engineering-notebook");
   assert.equal(h.backControl.hidden, false);
   assert.equal(h.view.showMeasurements().code, "MEASUREMENTS_VISIBLE");
   assert.equal(h.view.showMeasurements().code, "IDEMPOTENT");
@@ -94,8 +104,81 @@ test("selection clearing resets the read-only view and incomplete data is reject
   h.view.syncSelection({ hasSelection: true });
   h.view.showNotebook();
   assert.equal(h.view.syncSelection({ hasSelection: false }).code, "RESET");
-  assert.deepEqual(h.view.getSnapshot(), { mode: "measurements", selected: false, controlsConnected: false });
+  assert.deepEqual(h.view.getSnapshot(), {
+    mode: "measurements", selected: false, controlsConnected: false, transitionId: null,
+  });
   assert.equal(h.measurementDisplay.hidden, false);
   assert.equal(h.notebookDisplay.hidden, true);
   assert.throws(() => createSmartBoardNotebookView(), /display roots are required/);
+});
+
+test("lifecycle entry and Back settle after two frames and reject stale callbacks", () => {
+  const frames = new Map();
+  let frameId = 0;
+  const h = harness();
+  const view = createSmartBoardNotebookView({
+    screen: h.screen,
+    measurementDisplay: h.measurementDisplay,
+    learningDisplay: h.learningDisplay,
+    notebookDisplay: h.notebookDisplay,
+    openControl: h.openControl,
+    backControl: h.backControl,
+    source: h.source,
+    target: h.target,
+    controlsConnected: true,
+    requestFrame(callback) { const id = ++frameId; frames.set(id, callback); return id; },
+    cancelFrame(id) { frames.delete(id); },
+  });
+  const flush = () => {
+    const [id, callback] = frames.entries().next().value || [];
+    if (!callback) return false;
+    frames.delete(id);
+    callback();
+    return true;
+  };
+  view.syncSelection({ hasSelection: true });
+  let entries = 0;
+  view.enter({ transitionId: "notebook-1", complete: () => { entries += 1; return true; } });
+  assert.equal(h.notebookDisplay.hidden, false);
+  assert.equal(entries, 0);
+  flush();
+  assert.equal(entries, 0);
+  flush();
+  assert.equal(entries, 1);
+  let exits = 0;
+  view.exit({ transitionId: "measurements-1", complete: () => { exits += 1; return true; } });
+  flush();
+  view.cancel();
+  flush();
+  assert.equal(exits, 0);
+  assert.equal(h.measurementDisplay.hidden, false);
+  assert.equal(h.notebookDisplay.hidden, true);
+  assert.equal(h.screen.dataset.boardApplication, "measurement-assistant");
+});
+
+test("focus moves only between visible connected Notebook controls", () => {
+  const frames = [];
+  let focused = null;
+  const h = harness({
+    controlsConnected: true,
+    requestFrame(callback) { frames.push(callback); return callback; },
+    cancelFrame(handle) {
+      const index = frames.indexOf(handle);
+      if (index >= 0) frames.splice(index, 1);
+    },
+    activeElement: () => focused,
+  });
+  h.openControl.isConnected = true;
+  h.backControl.isConnected = true;
+  h.openControl.focus = () => { focused = h.openControl; };
+  h.backControl.focus = () => { focused = h.backControl; };
+  const flushTwo = () => { frames.shift()?.(); frames.shift()?.(); };
+  h.view.syncSelection({ hasSelection: true });
+  focused = h.openControl;
+  h.view.enter({ transitionId: "open", complete: () => true });
+  flushTwo();
+  assert.equal(focused, h.backControl);
+  h.view.exit({ transitionId: "back", complete: () => true });
+  flushTwo();
+  assert.equal(focused, h.openControl);
 });

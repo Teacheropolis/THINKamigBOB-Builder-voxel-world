@@ -49,11 +49,12 @@ function harness({ deferDrawerSecurity = false } = {}) {
   };
 }
 
-test("declares Measurement Assistant and Learning Mode production while later applications remain deferred", () => {
+test("declares Measurement Assistant, Learning Mode, and read-only Notebook production", () => {
   const declaration = WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard;
   assert.match(declaration, /production Measurement Assistant application, read-only display/i);
   assert.match(declaration, /read-only Learning Mode/i);
-  assert.match(declaration, /Engineering Notebook and application switching remain deferred/i);
+  assert.match(declaration, /read-only Engineering Notebook lifecycle/i);
+  assert.match(declaration, /general application-switching menu remains deferred/i);
   assert.doesNotMatch(declaration, /Learning Mode[^;]*remain deferred/i);
   assert.doesNotMatch(declaration, /application content remains deferred/i);
 });
@@ -141,10 +142,12 @@ test("fault invalidates a live selection exactly once and repeated fault is idem
   assert.equal(invalidations[0].detail.reason, "PROJECTOR_FAULT");
 });
 
-test("Notebook and application switching remain unwired", () => {
+test("Notebook is selection-bound and arbitrary application switching stays unavailable", () => {
   const h = harness();
   h.start();
-  ["OPEN_NOTEBOOK", "SELECT_APPLICATION"].forEach((action) => {
-    assert.equal(h.controller.request({ action, input: "pointer" }).code, "UNIMPLEMENTED_ACTION");
-  });
+  assert.equal(h.controller.request({ action: "OPEN_NOTEBOOK", input: "pointer" }).code,
+    "MEASUREMENT_SELECTION_REQUIRED");
+  assert.equal(h.controller.request({
+    action: "SELECT_APPLICATION", input: "pointer", payload: { application: "ENGINEERING_NOTEBOOK" },
+  }).code, "APPLICATION_NOT_APPROVED");
 });

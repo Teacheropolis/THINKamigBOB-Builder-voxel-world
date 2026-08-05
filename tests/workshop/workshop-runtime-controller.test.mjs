@@ -86,11 +86,12 @@ test("starts from deterministic protected states", () => {
   });
 });
 
-test("identifies Measurement Assistant and Learning Mode as production while later applications remain deferred", () => {
+test("identifies the read-only Smart Board applications as production", () => {
   assert.deepEqual(Object.keys(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES), ["smartboard"]);
   assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /production Measurement Assistant application/i);
   assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /read-only Learning Mode/i);
-  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /Engineering Notebook and application switching remain deferred/i);
+  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /read-only Engineering Notebook lifecycle/i);
+  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /general application-switching menu remains deferred/i);
   assert.doesNotMatch(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /Learning Mode[^;]*remain deferred/i);
 });
 
@@ -218,7 +219,7 @@ test("routes measurement selection through READY guards without changing geometr
 test("reports invalid and unwired actions without throwing", () => {
   const { controller } = harness();
   assert.equal(controller.request({ action: "CLICK", input: "pointer" }).code, "INVALID_ACTION");
-  assert.equal(controller.request({ action: "OPEN_NOTEBOOK", input: "pointer" }).code, "UNIMPLEMENTED_ACTION");
+  assert.equal(controller.request({ action: "OPEN_NOTEBOOK", input: "pointer" }).code, "MEASUREMENT_SELECTION_REQUIRED");
 });
 
 test("requires both readiness branches and emits real Table stability once", () => {

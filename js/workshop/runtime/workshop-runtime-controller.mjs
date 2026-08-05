@@ -11,7 +11,7 @@ export const WORKSHOP_UI_DRAWER_MAP = Object.freeze({
 });
 
 export const WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES = Object.freeze({
-  smartboard: "WS-024B production Measurement Assistant application, read-only display, and read-only Learning Mode; Engineering Notebook and application switching remain deferred.",
+  smartboard: "WS-025C production Measurement Assistant application, read-only display, read-only Learning Mode, and read-only Engineering Notebook lifecycle; a general application-switching menu remains deferred.",
 });
 
 const INITIAL_STATE = Object.freeze({
@@ -98,6 +98,33 @@ export function createWorkshopRuntimeController({
       state.measurement = activeMeasurementSelection ? "SELECTED_OBJECT" : "IDLE";
     }
     return cancelled;
+  };
+
+  const cancelNotebookTransition = ({ restore = true } = {}) => {
+    const notebookTransition = activeMeasurementTransition?.domain === "boardApplication";
+    if (notebookTransition) activeMeasurementTransition.cancelled = true;
+    if (notebookTransition) activeMeasurementTransition = null;
+    drivers.cancelNotebook?.({ restore: true, syncApplication: restore });
+    if (restore && state.boardApplication === "APPLICATION_SWITCHING") {
+      state.boardApplication = "MEASUREMENT_ASSISTANT";
+    }
+    if (restore && state.measurement === "ENGINEERING_NOTEBOOK") {
+      state.measurement = activeMeasurementSelection ? "SELECTED_OBJECT" : "IDLE";
+    }
+    return notebookTransition;
+  };
+
+  const restoreMeasurementsFromNotebook = () => {
+    const notebookActive = state.boardApplication === "ENGINEERING_NOTEBOOK" ||
+      state.boardApplication === "APPLICATION_SWITCHING" ||
+      state.measurement === "ENGINEERING_NOTEBOOK" ||
+      activeMeasurementTransition?.domain === "boardApplication";
+    if (!notebookActive) return false;
+    cancelNotebookTransition({ restore: false });
+    state.boardApplication = "MEASUREMENT_ASSISTANT";
+    state.measurement = activeMeasurementSelection ? "SELECTED_OBJECT" : "IDLE";
+    drivers.showNotebookMeasurements?.();
+    return true;
   };
 
   const missingDriver = (names) => names.find((name) => typeof drivers[name] !== "function");
@@ -662,6 +689,7 @@ export function createWorkshopRuntimeController({
         transition.smartBoardApplicationCleared === true) return false;
     if (state.chest !== "PARKED" || transition.toolChestParked !== true) return false;
     cancelMeasurementLearningMode();
+    cancelNotebookTransition({ restore: false });
     const previousApplication = state.boardApplication;
     state.boardApplication = "NONE";
     const hadMeasurementSelection = state.measurement !== "IDLE";
@@ -829,6 +857,7 @@ export function createWorkshopRuntimeController({
     const driverFailure = validateStartupDrivers(state.workshop === "SHUTTING_DOWN");
     if (driverFailure) return driverFailure;
     const transition = nextTransition("workshop", state.workshop, "STARTING");
+    if (state.workshop === "SHUTTING_DOWN") restoreMeasurementsFromNotebook();
     activeTransition = transition;
     state.workshop = "STARTING";
     busy = true;
@@ -883,6 +912,7 @@ export function createWorkshopRuntimeController({
     state.workshop = "SHUTTING_DOWN";
     busy = true;
     cancelMeasurementLearningMode();
+    cancelNotebookTransition({ restore: false });
     publish(transition, "workshop:shutdown-begun");
     announceTopLevelState();
     beginDrawerSecurity(transition);
@@ -924,6 +954,7 @@ export function createWorkshopRuntimeController({
     }
     activeTransition = transition;
     cancelMeasurementLearningMode();
+    cancelNotebookTransition({ restore: false });
     state.projector = "FAULT_SAFE";
     state.table = "FAULT_SAFE";
     state.workshop = "FAULT_SAFE";
@@ -975,6 +1006,7 @@ export function createWorkshopRuntimeController({
     }
     activeTransition = transition;
     cancelMeasurementLearningMode();
+    cancelNotebookTransition({ restore: false });
     state.table = "FAULT_SAFE";
     state.workshop = "FAULT_SAFE";
     const previousApplication = state.boardApplication;
@@ -1134,12 +1166,132 @@ export function createWorkshopRuntimeController({
     return accept(transition);
   };
 
+  const finishNotebookEntry = (transition) => {
+    if (activeMeasurementTransition !== transition || transition.cancelled ||
+        state.workshop !== "READY" || state.boardApplication !== "APPLICATION_SWITCHING" ||
+        state.measurement !== "SELECTED_OBJECT" || !activeMeasurementSelection) return false;
+    const application = validateTransition(
+      "boardApplication", state.boardApplication, "ENGINEERING_NOTEBOOK",
+    );
+    const measurement = validateTransition(
+      "measurement", state.measurement, "ENGINEERING_NOTEBOOK",
+    );
+    if (!application.ok || !measurement.ok) return false;
+    state.boardApplication = "ENGINEERING_NOTEBOOK";
+    state.measurement = "ENGINEERING_NOTEBOOK";
+    activeMeasurementTransition = null;
+    publish(transition, "smartboard:app-changed", {
+      application: "ENGINEERING_NOTEBOOK",
+      timingCompliance: "ws025c-two-frame-render-settlement",
+      temporaryCompatibility: false,
+    });
+    publish(transition, "measurement:notebook-opened", {
+      objectId: activeMeasurementSelection.objectId,
+      selectionCount: activeMeasurementSelection.objects.length,
+    });
+    return true;
+  };
+
+  const requestNotebook = () => {
+    if (state.boardApplication === "ENGINEERING_NOTEBOOK" ||
+        (activeMeasurementTransition?.domain === "boardApplication" &&
+         activeMeasurementTransition.to === "ENGINEERING_NOTEBOOK")) {
+      return freezeResult({ ok: true, code: "IDEMPOTENT" });
+    }
+    if (state.workshop !== "READY" || !activeMeasurementSelection ||
+        !["SELECTED_OBJECT", "LEARNING_MODE"].includes(state.measurement) ||
+        state.boardApplication !== "MEASUREMENT_ASSISTANT") {
+      return reject("MEASUREMENT_SELECTION_REQUIRED", "Engineering Notebook requires an active measurable selection.");
+    }
+    if (typeof drivers.renderNotebook !== "function") {
+      return reject("REQUIRED_DRIVER_UNAVAILABLE", "Engineering Notebook render driver unavailable.");
+    }
+    if (activeMeasurementTransition || state.measurement === "LEARNING_MODE") {
+      cancelMeasurementLearningMode();
+    }
+    const application = validateTransition(
+      "boardApplication", state.boardApplication, "APPLICATION_SWITCHING", { blockingModal: false },
+    );
+    const measurement = validateTransition(
+      "measurement", state.measurement, "ENGINEERING_NOTEBOOK",
+    );
+    if (!application.ok || !measurement.ok) {
+      return reject(application.ok ? measurement.code : application.code,
+        application.ok ? measurement.reason : application.reason);
+    }
+    const transition = nextTransition("boardApplication", state.boardApplication, "ENGINEERING_NOTEBOOK");
+    state.boardApplication = "APPLICATION_SWITCHING";
+    activeMeasurementTransition = transition;
+    drivers.renderNotebook({
+      transitionId: transition.id,
+      complete: () => finishNotebookEntry(transition),
+    });
+    return accept(transition);
+  };
+
+  const finishNotebookExit = (transition) => {
+    if (activeMeasurementTransition !== transition || transition.cancelled ||
+        state.workshop !== "READY" || state.boardApplication !== "APPLICATION_SWITCHING" ||
+        state.measurement !== "ENGINEERING_NOTEBOOK" || !activeMeasurementSelection) return false;
+    const application = validateTransition(
+      "boardApplication", state.boardApplication, "MEASUREMENT_ASSISTANT",
+    );
+    const measurement = validateTransition(
+      "measurement", state.measurement, "SELECTED_OBJECT", { selectionStillValid: true },
+    );
+    if (!application.ok || !measurement.ok) return false;
+    state.boardApplication = "MEASUREMENT_ASSISTANT";
+    state.measurement = "SELECTED_OBJECT";
+    activeMeasurementTransition = null;
+    publish(transition, "smartboard:app-changed", {
+      application: "MEASUREMENT_ASSISTANT",
+      timingCompliance: "ws025c-two-frame-render-settlement",
+      temporaryCompatibility: false,
+    });
+    return true;
+  };
+
+  const requestNotebookExit = (payload) => {
+    const requestedApplication = payload.application || payload.target;
+    if (requestedApplication !== "MEASUREMENT_ASSISTANT") {
+      return reject("APPLICATION_NOT_APPROVED", "Only the approved return to Measurements is available.");
+    }
+    if (activeMeasurementTransition?.domain === "boardApplication" &&
+        activeMeasurementTransition.to === "MEASUREMENT_ASSISTANT") {
+      return freezeResult({ ok: true, code: "IDEMPOTENT" });
+    }
+    if (state.boardApplication === "MEASUREMENT_ASSISTANT" && state.measurement !== "ENGINEERING_NOTEBOOK") {
+      return freezeResult({ ok: true, code: "IDEMPOTENT" });
+    }
+    if (state.workshop !== "READY" || state.boardApplication !== "ENGINEERING_NOTEBOOK" ||
+        state.measurement !== "ENGINEERING_NOTEBOOK" || !activeMeasurementSelection) {
+      return reject("ENGINEERING_NOTEBOOK_NOT_ACTIVE", "Engineering Notebook is not active.");
+    }
+    if (typeof drivers.clearNotebook !== "function") {
+      return reject("REQUIRED_DRIVER_UNAVAILABLE", "Engineering Notebook clear driver unavailable.");
+    }
+    const switching = validateTransition(
+      "boardApplication", state.boardApplication, "APPLICATION_SWITCHING",
+      { blockingModal: false, autosaveComplete: true },
+    );
+    if (!switching.ok) return reject(switching.code, switching.reason);
+    const transition = nextTransition("boardApplication", state.boardApplication, "MEASUREMENT_ASSISTANT");
+    state.boardApplication = "APPLICATION_SWITCHING";
+    activeMeasurementTransition = transition;
+    drivers.clearNotebook({
+      transitionId: transition.id,
+      complete: () => finishNotebookExit(transition),
+    });
+    return accept(transition);
+  };
+
   const requestMeasurement = (action, payload) => {
     const target = action === "SELECT_MEASURABLE_OBJECT" ? "SELECTED_OBJECT" : "IDLE";
     const selectedObjects = Array.isArray(payload.objects) ? payload.objects : [];
     const measurementContext = {
       workshopReady: state.workshop === "READY",
-      measurementAppActive: state.boardApplication === "MEASUREMENT_ASSISTANT",
+      measurementAppActive: ["MEASUREMENT_ASSISTANT", "ENGINEERING_NOTEBOOK", "APPLICATION_SWITCHING"]
+        .includes(state.boardApplication),
       objectMeasurable: payload.objectMeasurable === true,
     };
     if (target === "SELECTED_OBJECT" &&
@@ -1149,12 +1301,19 @@ export function createWorkshopRuntimeController({
       return reject(guarded.code, guarded.reason);
     }
     const sameSelection = target === "SELECTED_OBJECT" &&
-      (state.measurement === "SELECTED_OBJECT" || state.measurement === "LEARNING_MODE") &&
+      (state.measurement === "SELECTED_OBJECT" || state.measurement === "LEARNING_MODE" ||
+       state.measurement === "ENGINEERING_NOTEBOOK") &&
       activeMeasurementSelection?.objectId === payload.objectId &&
       activeMeasurementSelection.objects.length === selectedObjects.length &&
       activeMeasurementSelection.objects.every((object, index) => object === selectedObjects[index]);
     if (sameSelection || (target === "IDLE" && state.measurement === "IDLE" && !activeMeasurementTransition)) {
       return freezeResult({ ok: true, code: "IDEMPOTENT" });
+    }
+    if (state.boardApplication === "ENGINEERING_NOTEBOOK" ||
+        state.boardApplication === "APPLICATION_SWITCHING" ||
+        state.measurement === "ENGINEERING_NOTEBOOK" ||
+        activeMeasurementTransition?.domain === "boardApplication") {
+      restoreMeasurementsFromNotebook();
     }
     if (activeMeasurementTransition || state.measurement === "LEARNING_MODE") {
       cancelMeasurementLearningMode();
@@ -1193,6 +1352,8 @@ export function createWorkshopRuntimeController({
       if (normalized.action === "SELECT_MEASURABLE_OBJECT" || normalized.action === "CLEAR_SELECTION") return requestMeasurement(normalized.action, normalized.payload);
       if (normalized.action === "ENTER_LEARNING_MODE") return requestLearningMode();
       if (normalized.action === "EXIT_LEARNING_MODE") return requestLearningModeExit();
+      if (normalized.action === "OPEN_NOTEBOOK") return requestNotebook();
+      if (normalized.action === "SELECT_APPLICATION") return requestNotebookExit(normalized.payload);
       return reject("UNIMPLEMENTED_ACTION", `${normalized.action} is not wired in WS-016.`);
     },
     reportProjectorRendererUnavailable,

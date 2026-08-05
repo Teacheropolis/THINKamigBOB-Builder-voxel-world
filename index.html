@@ -4305,8 +4305,8 @@ Nature ▶
         <span id="workshopMeasurementLearningStatus" class="sr-only" aria-live="polite" aria-atomic="true"></span>
       </div>
       <div id="workshopMeasurementNotebookControls">
-        <button id="workshopOpenEngineeringNotebook" type="button" hidden disabled>OPEN ENGINEERING NOTEBOOK</button>
-        <button id="workshopBackToMeasurementsFromNotebook" type="button" hidden disabled>BACK TO MEASUREMENTS</button>
+        <button id="workshopOpenEngineeringNotebook" type="button" hidden disabled onclick="openWorkshopEngineeringNotebook(event)">OPEN ENGINEERING NOTEBOOK</button>
+        <button id="workshopBackToMeasurementsFromNotebook" type="button" hidden disabled onclick="returnWorkshopNotebookToMeasurements(event)">BACK TO MEASUREMENTS</button>
       </div>
       <button id="workshopRestoreSelection" type="button" onclick="restorePreviousWorkshopSelection()" hidden disabled><span class="workshop-control-icon" aria-hidden="true">↶</span><span>Restore Selection</span></button>
     </section>
@@ -30647,6 +30647,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopSmartBoardApplicationView=null;
   var workshopSmartBoardMeasurementDisplay=null;
   var workshopSmartBoardLearningModeView=null;
+  var workshopSmartBoardNotebookView=null;
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
   var workshopStartupState="OFF";
@@ -32532,6 +32533,31 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     return result.ok;
   }
 
+  function workshopNotebookInputSource(event){
+    if(event && event.detail===0) return "keyboard";
+    if(event && event.pointerType==="touch") return "touch";
+    return "pointer";
+  }
+
+  function openWorkshopEngineeringNotebook(event){
+    if(!workshopStateController) return false;
+    var result=workshopStateController.request({
+      action:"OPEN_NOTEBOOK",
+      input:workshopNotebookInputSource(event)
+    });
+    return result.ok;
+  }
+
+  function returnWorkshopNotebookToMeasurements(event){
+    if(!workshopStateController) return false;
+    var result=workshopStateController.request({
+      action:"SELECT_APPLICATION",
+      input:workshopNotebookInputSource(event),
+      payload:{application:"MEASUREMENT_ASSISTANT"}
+    });
+    return result.ok;
+  }
+
   function updateWorkshopMeasurementAssistant(){
     var assistant=document.getElementById("workshopMeasurementAssistant");
     var selectionLabel=document.getElementById("workshopMeasurementAssistantSelection");
@@ -32565,6 +32591,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       if(workshopSmartBoardLearningModeView){
         workshopSmartBoardLearningModeView.syncSelection({hasSelection:false});
       }
+      if(workshopSmartBoardNotebookView){
+        workshopSmartBoardNotebookView.syncSelection({hasSelection:false});
+      }
       return;
     }
 
@@ -32596,6 +32625,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     }
     if(workshopSmartBoardLearningModeView){
       workshopSmartBoardLearningModeView.syncSelection({hasSelection:true});
+    }
+    if(workshopSmartBoardNotebookView){
+      workshopSmartBoardNotebookView.syncSelection({hasSelection:true});
     }
   }
 
@@ -34346,6 +34378,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   window.updateWorkshopMeasurementAssistant=updateWorkshopMeasurementAssistant;
   window.enterWorkshopMeasurementLearningMode=enterWorkshopMeasurementLearningMode;
   window.exitWorkshopMeasurementLearningMode=exitWorkshopMeasurementLearningMode;
+  window.openWorkshopEngineeringNotebook=openWorkshopEngineeringNotebook;
+  window.returnWorkshopNotebookToMeasurements=returnWorkshopNotebookToMeasurements;
   window.getWorkshopMeasurementUnit=function(){
     return {
       unit:workshopMeasurementUnit,
@@ -34369,7 +34403,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/smartboard/smart-board-lifecycle-view.mjs"),
     import("./js/workshop/smartboard/smart-board-application-view.mjs"),
     import("./js/workshop/smartboard/smart-board-measurement-display.mjs"),
-    import("./js/workshop/smartboard/smart-board-learning-mode-view.mjs")
+    import("./js/workshop/smartboard/smart-board-learning-mode-view.mjs"),
+    import("./js/workshop/smartboard/smart-board-notebook-view.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -34383,6 +34418,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var smartBoardApplicationModule=modules[8];
       var smartBoardMeasurementModule=modules[9];
       var smartBoardLearningModeModule=modules[10];
+      var smartBoardNotebookModule=modules[11];
       workshopStartupTestDouble=startupModule.createWorkshopStartupTestDouble({
         reducedMotion:function(){
           return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -34513,6 +34549,31 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           groupNote:document.getElementById("engineeringSmartBoardLearningGroupNote")
         }
       });
+      workshopSmartBoardNotebookView=smartBoardNotebookModule.createSmartBoardNotebookView({
+        screen:document.getElementById("engineeringSmartBoardScreen"),
+        measurementDisplay:document.getElementById("engineeringSmartBoardMeasurementDisplay"),
+        learningDisplay:document.getElementById("engineeringSmartBoardLearningDisplay"),
+        notebookDisplay:document.getElementById("engineeringSmartBoardNotebookDisplay"),
+        openControl:document.getElementById("workshopOpenEngineeringNotebook"),
+        backControl:document.getElementById("workshopBackToMeasurementsFromNotebook"),
+        controlsConnected:true,
+        source:{
+          assistant:document.getElementById("workshopMeasurementAssistant"),
+          selection:document.getElementById("workshopMeasurementAssistantSelection"),
+          unit:document.getElementById("workshopMeasurementAssistantUnit"),
+          width:document.getElementById("workshopMeasurementAssistantWidth"),
+          length:document.getElementById("workshopMeasurementAssistantLength"),
+          height:document.getElementById("workshopMeasurementAssistantHeight")
+        },
+        target:{
+          selection:document.getElementById("engineeringSmartBoardNotebookSelection"),
+          unit:document.getElementById("engineeringSmartBoardNotebookUnit"),
+          width:document.getElementById("engineeringSmartBoardNotebookWidth"),
+          length:document.getElementById("engineeringSmartBoardNotebookLength"),
+          height:document.getElementById("engineeringSmartBoardNotebookHeight"),
+          groupNote:document.getElementById("engineeringSmartBoardNotebookGroupNote")
+        }
+      });
       window.addEventListener("smartboard:app-changed",function(event){
         if(!workshopSmartBoardMeasurementDisplay) return;
         if(event.detail && event.detail.application==="MEASUREMENT_ASSISTANT"){
@@ -34520,6 +34581,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         }else{
           workshopSmartBoardMeasurementDisplay.reset();
           if(workshopSmartBoardLearningModeView) workshopSmartBoardLearningModeView.cancel();
+        }
+        if(workshopSmartBoardNotebookView && event.detail && event.detail.application==="NONE"){
+          workshopSmartBoardNotebookView.reset({syncApplication:false});
         }
       });
       workshopStateController=module.createWorkshopRuntimeController({
@@ -34639,6 +34703,19 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           cancelLearningMode:function(){
             if(workshopSmartBoardLearningModeView) workshopSmartBoardLearningModeView.cancel();
           },
+          renderNotebook:function(transition){
+            if(workshopSmartBoardLearningModeView) workshopSmartBoardLearningModeView.cancel();
+            return workshopSmartBoardNotebookView.enter(transition);
+          },
+          clearNotebook:function(transition){
+            return workshopSmartBoardNotebookView.exit(transition);
+          },
+          cancelNotebook:function(options){
+            if(workshopSmartBoardNotebookView) workshopSmartBoardNotebookView.cancel(options);
+          },
+          showNotebookMeasurements:function(){
+            if(workshopSmartBoardNotebookView) workshopSmartBoardNotebookView.showMeasurements();
+          },
           exitWorkshop:function(transition){
             workshopStartupTestDouble.cancel();
             if(workshopSmartBoardLifecycleView) workshopSmartBoardLifecycleView.cancel();
@@ -34749,6 +34826,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           renderMeasurement:function(transition){
             if(workshopSmartBoardLearningModeView){
               workshopSmartBoardLearningModeView.showMeasurements();
+            }
+            if(workshopSmartBoardNotebookView){
+              workshopSmartBoardNotebookView.showMeasurements();
             }
             applyWorkshopRulerSelectedObjects(transition.payload.objects || []);
           }

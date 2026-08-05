@@ -57,16 +57,16 @@ function harness({ deferDrawerSecurity = false } = {}) {
   };
 }
 
-test("closes Learning Mode as production while Notebook and application switching stay deferred", () => {
+test("keeps Learning Mode production while the read-only Notebook lifecycle is connected", () => {
   const declaration = WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard;
-  assert.match(declaration, /production Measurement Assistant application, read-only display, and read-only Learning Mode/i);
-  assert.match(declaration, /Engineering Notebook and application switching remain deferred/i);
+  assert.match(declaration, /production Measurement Assistant application, read-only display, read-only Learning Mode/i);
+  assert.match(declaration, /read-only Engineering Notebook lifecycle/i);
+  assert.match(declaration, /general application-switching menu remains deferred/i);
   assert.doesNotMatch(declaration, /Learning Mode[^;]*remain deferred/i);
   const h = harness();
   h.start();
-  for (const action of ["OPEN_NOTEBOOK", "SELECT_APPLICATION"]) {
-    assert.equal(h.controller.request({ action, input: "pointer" }).code, "UNIMPLEMENTED_ACTION");
-  }
+  assert.equal(h.controller.request({ action: "OPEN_NOTEBOOK", input: "pointer" }).code,
+    "MEASUREMENT_SELECTION_REQUIRED");
 });
 
 test("production entry and Back remain selection-bound and render-settled", () => {

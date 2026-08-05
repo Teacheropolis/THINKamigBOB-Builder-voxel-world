@@ -19,7 +19,7 @@ test("mounts one separate read-only Engineering Notebook application section", (
   assert.match(source, /#engineeringSmartBoardNotebookDisplay\{[\s\S]*?pointer-events:none;[\s\S]*?user-select:none;/);
 });
 
-test("adds unique locked right-panel controls without exposing unfinished behavior", () => {
+test("adds unique native right-panel controls and connects the approved lifecycle", () => {
   for (const [id, label] of [
     ["workshopOpenEngineeringNotebook", "OPEN ENGINEERING NOTEBOOK"],
     ["workshopBackToMeasurementsFromNotebook", "BACK TO MEASUREMENTS"],
@@ -29,7 +29,7 @@ test("adds unique locked right-panel controls without exposing unfinished behavi
     assert.match(button, /type="button"/);
     assert.match(button, /hidden/);
     assert.match(button, /disabled/);
-    assert.doesNotMatch(button, /onclick=/);
+    assert.match(button, /onclick=/);
   }
 });
 
@@ -43,11 +43,14 @@ test("defines authoritative Notebook source and target fields without dimension 
   assert.doesNotMatch(notebookSource, /Box3|Vector3|boundingBox|getBoundingClientRect|parseFloat/);
 });
 
-test("keeps the Notebook foundation disconnected from application state and runtime events", () => {
-  assert.doesNotMatch(source, /import\("\.\/js\/workshop\/smartboard\/smart-board-notebook-view\.mjs"\)/);
-  assert.doesNotMatch(source, /action:"OPEN_NOTEBOOK"|action:"SELECT_APPLICATION"/);
+test("connects only the approved Notebook application lifecycle", () => {
+  assert.match(source, /import\("\.\/js\/workshop\/smartboard\/smart-board-notebook-view\.mjs"\)/);
+  assert.match(source, /action:"OPEN_NOTEBOOK"/);
+  assert.match(source, /action:"SELECT_APPLICATION"/);
+  assert.match(source, /payload:\{application:"MEASUREMENT_ASSISTANT"\}/);
   assert.doesNotMatch(notebookSource, /measurement:notebook-opened|smartboard:app-changed|dispatchEvent|CustomEvent/);
   assert.doesNotMatch(notebookSource, /ENGINEERING_NOTEBOOK|APPLICATION_SWITCHING/);
+  assert.doesNotMatch(source, /application-switching-menu|SELECT ENGINEERING NOTEBOOK/i);
 });
 
 test("adds no editing, prompts, persistence, audio, scoring, rewards, or assets", () => {
