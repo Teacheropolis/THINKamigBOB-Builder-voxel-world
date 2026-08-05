@@ -142,6 +142,7 @@ test("power-on changes visuals only through the accepted driver and settles once
     "projector:active",
     "smartboard:extended",
     "smartboard:powered-on",
+    "smartboard:app-changed",
     "smartboard:ready",
     "toolchest:deployed",
     "workshop:ready",
@@ -284,11 +285,12 @@ test("shutdown publishes Table projection stop before Table and Projector power-
   assert.equal(pending.standby(), true);
   assert.equal(pending.poweredOff(), true);
   assert.equal(pending.exit(), true);
-  const shutdownEvents = events.map((event) => event.name).slice(-8);
+  const shutdownEvents = events.map((event) => event.name).slice(-9);
   assert.deepEqual(shutdownEvents, [
     "workshop:shutdown-begun",
     "toolchest:drawers-secured",
     "toolchest:parked",
+    "smartboard:app-changed",
     "smartboard:retracted",
     "table:projection-stopped",
     "table:powered-off",

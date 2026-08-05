@@ -70,8 +70,8 @@ test("settled shutdown secures Table emitters before Projector completion", () =
   assert.equal(h.pending.poweredOff(), true);
   assert.equal(h.pending.complete(), true);
   assert.equal(h.controller.getSnapshot().workshop, "OFF");
-  assert.deepEqual(h.events.slice(-8), [
-    "workshop:shutdown-begun", "toolchest:drawers-secured", "toolchest:parked", "smartboard:retracted",
+  assert.deepEqual(h.events.slice(-9), [
+    "workshop:shutdown-begun", "toolchest:drawers-secured", "toolchest:parked", "smartboard:app-changed", "smartboard:retracted",
     "table:projection-stopped", "table:powered-off", "projector:powered-off", "workshop:off",
   ]);
 });

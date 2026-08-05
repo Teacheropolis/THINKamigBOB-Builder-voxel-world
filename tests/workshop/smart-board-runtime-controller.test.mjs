@@ -41,7 +41,7 @@ test("Smart Board rendered phases exclusively gate Tool Chest deployment and pro
   assert.equal(deployments, 1);
   assert.equal(controller.getSnapshot().workshop, "READY");
   assert.deepEqual(events.filter((name) => name.startsWith("smartboard:")), [
-    "smartboard:extended", "smartboard:powered-on", "smartboard:ready",
+    "smartboard:extended", "smartboard:powered-on", "smartboard:app-changed", "smartboard:ready",
   ]);
 
   controller.request({ action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true } });
