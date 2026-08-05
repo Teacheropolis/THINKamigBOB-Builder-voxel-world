@@ -49,12 +49,12 @@ function harness({ deferDrawerSecurity = false } = {}) {
   };
 }
 
-test("declares Measurement Assistant production while later applications remain deferred", () => {
+test("declares Measurement Assistant and Learning Mode production while later applications remain deferred", () => {
   const declaration = WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard;
-  assert.match(declaration, /production Measurement Assistant application and read-only display/i);
-  assert.match(declaration, /Learning Mode/i);
-  assert.match(declaration, /Engineering Notebook/i);
-  assert.match(declaration, /application switching remain deferred/i);
+  assert.match(declaration, /production Measurement Assistant application, read-only display/i);
+  assert.match(declaration, /read-only Learning Mode/i);
+  assert.match(declaration, /Engineering Notebook and application switching remain deferred/i);
+  assert.doesNotMatch(declaration, /Learning Mode[^;]*remain deferred/i);
   assert.doesNotMatch(declaration, /application content remains deferred/i);
 });
 

@@ -86,11 +86,12 @@ test("starts from deterministic protected states", () => {
   });
 });
 
-test("identifies Measurement Assistant as production while later applications remain deferred", () => {
+test("identifies Measurement Assistant and Learning Mode as production while later applications remain deferred", () => {
   assert.deepEqual(Object.keys(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES), ["smartboard"]);
   assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /production Measurement Assistant application/i);
-  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /Learning Mode/i);
-  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /Engineering Notebook/i);
+  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /read-only Learning Mode/i);
+  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /Engineering Notebook and application switching remain deferred/i);
+  assert.doesNotMatch(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /Learning Mode[^;]*remain deferred/i);
 });
 
 test("power-on changes visuals only through the accepted driver and settles once", () => {
