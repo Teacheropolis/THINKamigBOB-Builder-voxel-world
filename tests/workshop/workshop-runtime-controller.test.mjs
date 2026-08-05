@@ -86,9 +86,10 @@ test("starts from deterministic protected states", () => {
   });
 });
 
-test("identifies future subsystem readiness as temporary test doubles", () => {
+test("identifies Smart Board mechanics and power as production while application content remains deferred", () => {
   assert.deepEqual(Object.keys(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES), ["smartboard"]);
-  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /temporary/i);
+  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /production mechanical and power lifecycle/i);
+  assert.match(WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES.smartboard, /application content remains deferred/i);
 });
 
 test("power-on changes visuals only through the accepted driver and settles once", () => {

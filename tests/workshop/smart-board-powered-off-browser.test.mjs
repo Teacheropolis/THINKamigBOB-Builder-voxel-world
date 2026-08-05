@@ -20,11 +20,11 @@ test("keeps the empty application surface separate from decorative hardware", ()
   assert.match(source, /#engineeringSmartBoardScreen\{[\s\S]*?background:transparent;[\s\S]*?pointer-events:none;/);
 });
 
-test("declares deterministic endpoints without claiming a real lifecycle", () => {
-  assert.match(source, /#engineeringSmartBoardCabinet\{[\s\S]*?transform:translateX\(var\(--smart-board-retracted-x\)\);[\s\S]*?transition:none;/);
+test("declares deterministic endpoints for the real lifecycle", () => {
+  assert.match(source, /#engineeringSmartBoardCabinet\{[\s\S]*?transform:translateX\(var\(--smart-board-retracted-x\)\);[\s\S]*?transition:transform 320ms/);
   assert.match(source, /data-board-mechanical="extended"[^}]*transform:translateX\(var\(--smart-board-extended-x\)\)/);
-  assert.match(source, /return workshopStartupTestDouble\.activateSmartBoard\(transition\)/);
-  assert.match(source, /return workshopShutdownTestDouble\.retractSmartBoard\(transition\)/);
+  assert.match(source, /return workshopSmartBoardLifecycleView\.activate\(transition\)/);
+  assert.match(source, /return workshopSmartBoardLifecycleView\.retract\(transition\)/);
 });
 
 test("wires responsive registration while preserving pointer and focus isolation", () => {

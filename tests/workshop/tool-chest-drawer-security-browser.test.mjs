@@ -7,7 +7,7 @@ const source = readFileSync(new URL("../../index.html", import.meta.url), "utf8"
 test("browser wires real drawer security without the shutdown timer double", () => {
   assert.match(source, /import\("\.\/js\/workshop\/toolchest\/tool-chest-drawer-security-view\.mjs"\)/);
   assert.match(source, /createToolChestDrawerSecurityView\(\{[\s\S]*?root:document\.getElementById\("engineeringToolChest"\)[\s\S]*?closeDrawer:closeEngineeringToolChestDrawer/);
-  assert.match(source, /secureDrawers:function\(transition\)\{\s*return workshopToolChestDrawerSecurityView\.secure\(transition\);\s*\}/);
+  assert.match(source, /secureDrawers:function\(transition\)\{[\s\S]*?workshopSmartBoardLifecycleView\.cancel\(\);[\s\S]*?return workshopToolChestDrawerSecurityView\.secure\(transition\);\s*\}/);
   assert.doesNotMatch(source, /workshopShutdownTestDouble\.secureDrawers/);
   assert.doesNotMatch(source, /closeAllEngineeringToolChestDrawers\(true\);\s*return workshopShutdownTestDouble\.secureDrawers/);
 });

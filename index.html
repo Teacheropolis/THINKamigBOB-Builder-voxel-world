@@ -27328,11 +27328,12 @@ body.workshopMode:not(.starterScreenActive) #engineeringSmartBoard{
   position:absolute;
   inset:0;
   transform:translateX(var(--smart-board-retracted-x));
-  transition:none;
+  transition:transform 320ms cubic-bezier(.22,.72,.2,1);
   pointer-events:none;
   will-change:transform;
 }
 
+#engineeringSmartBoard[data-board-mechanical="extending"] #engineeringSmartBoardCabinet,
 #engineeringSmartBoard[data-board-mechanical="extended"] #engineeringSmartBoardCabinet{
   transform:translateX(var(--smart-board-extended-x));
 }
@@ -27354,9 +27355,28 @@ body.workshopMode:not(.starterScreenActive) #engineeringSmartBoard{
   width:48.5%;
   height:36.6%;
   overflow:hidden;
-  background:transparent;
+  opacity:0;
+  background:
+    radial-gradient(circle at 45% 38%,rgba(90,199,255,.20),transparent 55%),
+    linear-gradient(145deg,rgba(18,59,82,.96),rgba(3,15,25,.98));
+  box-shadow:inset 0 0 22px rgba(76,202,255,.18);
+  transition:opacity 80ms ease-out;
   pointer-events:none;
   user-select:none;
+}
+
+#engineeringSmartBoard[data-board-power="powering-on"] #engineeringSmartBoardScreen,
+#engineeringSmartBoard[data-board-power="ready"] #engineeringSmartBoardScreen{
+  opacity:1;
+}
+
+@media (prefers-reduced-motion:reduce){
+  #engineeringSmartBoardCabinet{
+    transition-duration:1ms;
+  }
+  #engineeringSmartBoardScreen{
+    transition-duration:1ms;
+  }
 }
 
 .workshop-ruler{
@@ -30173,6 +30193,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopToolChestDrawerSecurityView=null;
   var workshopReadyRenderSettlement=null;
   var workshopSmartBoardRegistration=null;
+  var workshopSmartBoardLifecycleView=null;
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
   var workshopStartupState="OFF";
@@ -33850,7 +33871,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/toolchest/tool-chest-lifecycle-view.mjs"),
     import("./js/workshop/toolchest/tool-chest-drawer-security-view.mjs"),
     import("./js/workshop/runtime/workshop-ready-render-settlement.mjs"),
-    import("./js/workshop/smartboard/responsive-smart-board-registration.mjs")
+    import("./js/workshop/smartboard/responsive-smart-board-registration.mjs"),
+    import("./js/workshop/smartboard/smart-board-lifecycle-view.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -33860,6 +33882,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var drawerSecurityModule=modules[4];
       var readySettlementModule=modules[5];
       var smartBoardRegistrationModule=modules[6];
+      var smartBoardLifecycleModule=modules[7];
       workshopStartupTestDouble=startupModule.createWorkshopStartupTestDouble({
         reducedMotion:function(){
           return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -33919,6 +33942,20 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           document.getElementById("workshopMeasurementAssistant"),
           document.getElementById("workshopDashboard")
         ]
+      });
+      workshopSmartBoardLifecycleView=smartBoardLifecycleModule.createSmartBoardLifecycleView({
+        root:document.getElementById("engineeringSmartBoard"),
+        cabinet:document.getElementById("engineeringSmartBoardCabinet"),
+        screen:document.getElementById("engineeringSmartBoardScreen"),
+        setMechanicalState:function(state){
+          document.getElementById("engineeringSmartBoard").dataset.boardMechanical=state;
+        },
+        setPowerState:function(state){
+          document.getElementById("engineeringSmartBoard").dataset.boardPower=state;
+        },
+        reducedMotion:function(){
+          return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+        }
       });
       workshopStateController=module.createWorkshopRuntimeController({
         stateChanged:syncWorkshopControllerPresentation,
@@ -34004,7 +34041,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             });
           },
           activateSmartBoard:function(transition){
-            return workshopStartupTestDouble.activateSmartBoard(transition);
+            return workshopSmartBoardLifecycleView.activate(transition);
           },
           deployToolChest:function(transition){
             return workshopToolChestLifecycleView.deploy(transition);
@@ -34013,16 +34050,18 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             return workshopReadyRenderSettlement.settle(transition);
           },
           secureDrawers:function(transition){
+            if(workshopSmartBoardLifecycleView) workshopSmartBoardLifecycleView.cancel();
             return workshopToolChestDrawerSecurityView.secure(transition);
           },
           parkToolChest:function(transition){
             return workshopToolChestLifecycleView.park(transition);
           },
           retractSmartBoard:function(transition){
-            return workshopShutdownTestDouble.retractSmartBoard(transition);
+            return workshopSmartBoardLifecycleView.retract(transition);
           },
           exitWorkshop:function(transition){
             workshopStartupTestDouble.cancel();
+            if(workshopSmartBoardLifecycleView) workshopSmartBoardLifecycleView.cancel();
             workshopActiveTableShutdown=transition;
             workshopProjectorLifecycleSafety.shutdown({
               transitionId:transition.transitionId,
@@ -34033,6 +34072,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           },
           restoreProjectorShutdown:function(transition){
             workshopShutdownTestDouble.cancel();
+            if(workshopSmartBoardLifecycleView) workshopSmartBoardLifecycleView.cancel();
             if(workshopTableLifecycleSafety) workshopTableLifecycleSafety.cancel();
             workshopProjectorLifecycleSafety.restore({
               transitionId:transition.transitionId,
@@ -34057,6 +34097,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           secureProjectorFault:function(transition){
             workshopStartupTestDouble.cancel();
             workshopShutdownTestDouble.cancel();
+            if(workshopSmartBoardLifecycleView) workshopSmartBoardLifecycleView.cancel();
             if(!workshopProjectorLifecycleSafety){
               setWorkshopStartupState(
                 "FAILED",
@@ -34075,6 +34116,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           secureTableFault:function(transition){
             workshopStartupTestDouble.cancel();
             workshopShutdownTestDouble.cancel();
+            if(workshopSmartBoardLifecycleView) workshopSmartBoardLifecycleView.cancel();
             if(!workshopTablePowerOnView){
               setWorkshopStartupState(
                 "FAILED",

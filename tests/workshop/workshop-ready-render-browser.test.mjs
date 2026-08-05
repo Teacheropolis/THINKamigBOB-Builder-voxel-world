@@ -11,7 +11,9 @@ test("browser replaces the final-ready timer double with rendered settlement", (
   assert.doesNotMatch(source, /workshopStartupTestDouble\.settleWorkshopReady/);
 });
 
-test("Smart Board activation and retraction remain explicit test doubles", () => {
-  assert.match(source, /return workshopStartupTestDouble\.activateSmartBoard\(transition\)/);
-  assert.match(source, /return workshopShutdownTestDouble\.retractSmartBoard\(transition\)/);
+test("Smart Board lifecycle is independent of final-ready render settlement", () => {
+  assert.match(source, /return workshopSmartBoardLifecycleView\.activate\(transition\)/);
+  assert.match(source, /return workshopSmartBoardLifecycleView\.retract\(transition\)/);
+  assert.doesNotMatch(source, /workshopStartupTestDouble\.activateSmartBoard/);
+  assert.doesNotMatch(source, /workshopShutdownTestDouble\.retractSmartBoard/);
 });

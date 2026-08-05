@@ -11,7 +11,7 @@ export const WORKSHOP_UI_DRAWER_MAP = Object.freeze({
 });
 
 export const WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES = Object.freeze({
-  smartboard: "WS-017 temporary readiness state; no mechanical or power driver is claimed.",
+  smartboard: "WS-022B production mechanical and power lifecycle; application content remains deferred.",
 });
 
 const INITIAL_STATE = Object.freeze({
@@ -183,37 +183,45 @@ export function createWorkshopRuntimeController({
     return true;
   };
 
-  const finishSmartBoardActivation = (transition) => {
-    if (activeTransition !== transition || transition.cancelled || transition.smartBoardReady === true) return false;
+  const finishSmartBoardExtended = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.smartBoardExtended === true) return false;
     if (state.projector !== "FULLY_ACTIVE" || state.table !== "FULLY_ACTIVE") return false;
     if (state.boardMechanical === "EXTENDING") {
       const extended = validateTransition("boardMechanical", state.boardMechanical, "EXTENDED");
       if (!extended.ok) return false;
       state.boardMechanical = "EXTENDED";
-      publish(transition, "smartboard:extended", { temporaryCompatibility: true });
+    }
+    if (state.boardMechanical !== "EXTENDED") return false;
+    transition.smartBoardExtended = true;
+    publish(transition, "smartboard:extended", {
+      timingCompliance: "ws022b-rendered-extension",
+      temporaryCompatibility: false,
+    });
+    if (state.boardPower === "POWERED_OFF" || state.boardPower === "POWERING_OFF") {
       const powering = validateTransition("boardPower", state.boardPower, "POWERING_ON", {
         boardExtended: true,
         projectionStable: true,
       });
       if (!powering.ok) return false;
       state.boardPower = "POWERING_ON";
+    }
+    return state.boardPower === "POWERING_ON" || state.boardPower === "READY";
+  };
+
+  const finishSmartBoardPoweredOn = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.smartBoardPoweredOn === true) return false;
+    if (transition.smartBoardExtended !== true || state.boardMechanical !== "EXTENDED") return false;
+    if (state.boardPower === "POWERING_ON") {
       const powered = validateTransition("boardPower", state.boardPower, "READY");
       if (!powered.ok) return false;
       state.boardPower = "READY";
-      publish(transition, "smartboard:powered-on", { temporaryCompatibility: true });
-      const application = validateTransition("boardApplication", state.boardApplication, "MEASUREMENT_ASSISTANT", {
-        boardReady: true,
-      });
-      if (!application.ok) return false;
-      state.boardApplication = "MEASUREMENT_ASSISTANT";
-      state.measurement = "IDLE";
     }
-    if (state.boardMechanical === "EXTENDED" && state.boardPower === "POWERING_ON") {
-      const powered = validateTransition("boardPower", state.boardPower, "READY");
-      if (!powered.ok) return false;
-      state.boardPower = "READY";
-      publish(transition, "smartboard:powered-on", { temporaryCompatibility: true });
-    }
+    if (state.boardPower !== "READY") return false;
+    transition.smartBoardPoweredOn = true;
+    publish(transition, "smartboard:powered-on", {
+      timingCompliance: "ws022b-rendered-screen-power",
+      temporaryCompatibility: false,
+    });
     if (state.boardPower === "READY" && state.boardApplication === "NONE") {
       const application = validateTransition("boardApplication", state.boardApplication, "MEASUREMENT_ASSISTANT", {
         boardReady: true,
@@ -222,10 +230,19 @@ export function createWorkshopRuntimeController({
       state.boardApplication = "MEASUREMENT_ASSISTANT";
       state.measurement = "IDLE";
     }
+    return state.boardApplication === "MEASUREMENT_ASSISTANT";
+  };
+
+  const finishSmartBoardActivation = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.smartBoardReady === true) return false;
+    if (transition.smartBoardExtended !== true || transition.smartBoardPoweredOn !== true) return false;
     if (state.boardMechanical !== "EXTENDED" || state.boardPower !== "READY" ||
         state.boardApplication !== "MEASUREMENT_ASSISTANT") return false;
     transition.smartBoardReady = true;
-    publish(transition, "smartboard:ready", { temporaryCompatibility: true });
+    publish(transition, "smartboard:ready", {
+      timingCompliance: "ws022b-rendered-ready",
+      temporaryCompatibility: false,
+    });
     return beginToolChestDeploy(transition);
   };
 
@@ -251,7 +268,13 @@ export function createWorkshopRuntimeController({
     transition.smartBoardActivationRequested = true;
     drivers.activateSmartBoard({
       transitionId: transition.id,
-      complete: () => finishSmartBoardActivation(transition),
+      extended: () => finishSmartBoardExtended(transition),
+      poweredOn: () => finishSmartBoardPoweredOn(transition),
+      complete: () => {
+        finishSmartBoardExtended(transition);
+        finishSmartBoardPoweredOn(transition);
+        return finishSmartBoardActivation(transition);
+      },
     });
     return true;
   };
@@ -520,14 +543,25 @@ export function createWorkshopRuntimeController({
     return true;
   };
 
-  const finishSmartBoardRetraction = (transition) => {
-    if (activeTransition !== transition || transition.cancelled || transition.smartBoardRetracted === true) return false;
+  const finishSmartBoardPoweredOff = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.smartBoardPoweredOff === true) return false;
     if (state.chest !== "PARKED") return false;
     if (state.boardPower === "POWERING_OFF") {
       const poweredOff = validateTransition("boardPower", state.boardPower, "POWERED_OFF");
       if (!poweredOff.ok) return false;
       state.boardPower = "POWERED_OFF";
     }
+    if (state.boardPower !== "POWERED_OFF") return false;
+    state.boardApplication = "NONE";
+    state.measurement = "IDLE";
+    transition.smartBoardPoweredOff = true;
+    return true;
+  };
+
+  const finishSmartBoardRetraction = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.smartBoardRetracted === true) return false;
+    if (state.chest !== "PARKED" || transition.smartBoardPoweredOff !== true ||
+        state.boardPower !== "POWERED_OFF") return false;
     if (state.boardMechanical === "EXTENDED") {
       const retracting = validateTransition("boardMechanical", state.boardMechanical, "RETRACTING", {
         boardPoweredOff: true,
@@ -547,11 +581,12 @@ export function createWorkshopRuntimeController({
       if (!retracted.ok) return false;
       state.boardMechanical = "RETRACTED";
     }
-    if (state.boardPower !== "POWERED_OFF" || state.boardMechanical !== "RETRACTED") return false;
-    state.boardApplication = "NONE";
-    state.measurement = "IDLE";
+    if (state.boardMechanical !== "RETRACTED") return false;
     transition.smartBoardRetracted = true;
-    publish(transition, "smartboard:retracted", { temporaryCompatibility: true });
+    publish(transition, "smartboard:retracted", {
+      timingCompliance: "ws022b-rendered-retraction",
+      temporaryCompatibility: false,
+    });
     return beginProjectionShutdown(transition);
   };
 
@@ -568,7 +603,11 @@ export function createWorkshopRuntimeController({
     transition.smartBoardRetractionRequested = true;
     drivers.retractSmartBoard({
       transitionId: transition.id,
-      complete: () => finishSmartBoardRetraction(transition),
+      poweredOff: () => finishSmartBoardPoweredOff(transition),
+      complete: () => {
+        finishSmartBoardPoweredOff(transition);
+        return finishSmartBoardRetraction(transition);
+      },
     });
     return true;
   };
