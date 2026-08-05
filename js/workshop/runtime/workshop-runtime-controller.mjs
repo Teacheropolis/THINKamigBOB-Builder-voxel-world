@@ -11,7 +11,7 @@ export const WORKSHOP_UI_DRAWER_MAP = Object.freeze({
 });
 
 export const WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES = Object.freeze({
-  smartboard: "WS-022B production mechanical and power lifecycle; application content remains deferred.",
+  smartboard: "WS-023C production Measurement Assistant application and read-only display; Learning Mode, Engineering Notebook, and application switching remain deferred.",
 });
 
 const INITIAL_STATE = Object.freeze({
@@ -41,6 +41,7 @@ export function createWorkshopRuntimeController({
   let transitionSerial = 0;
   let activeTransition = null;
   let activeDrawer = null;
+  let activeMeasurementSelection = null;
   let busy = false;
 
   const nextTransition = (domain, from, to) => ({
@@ -236,6 +237,7 @@ export function createWorkshopRuntimeController({
       if (!application.ok) return false;
       state.boardApplication = "MEASUREMENT_ASSISTANT";
       state.measurement = "IDLE";
+      activeMeasurementSelection = null;
     }
     if (state.boardApplication !== "MEASUREMENT_ASSISTANT") return false;
     transition.smartBoardApplicationReady = true;
@@ -649,13 +651,21 @@ export function createWorkshopRuntimeController({
     if (state.chest !== "PARKED" || transition.toolChestParked !== true) return false;
     const previousApplication = state.boardApplication;
     state.boardApplication = "NONE";
+    const hadMeasurementSelection = state.measurement !== "IDLE";
     state.measurement = "IDLE";
+    activeMeasurementSelection = null;
     transition.smartBoardApplicationCleared = true;
     if (previousApplication !== "NONE") {
       publish(transition, "smartboard:app-changed", {
         application: "NONE",
         timingCompliance: "ws023a-render-settlement",
         temporaryCompatibility: false,
+      });
+    }
+    if (hadMeasurementSelection) {
+      drivers.renderMeasurement?.({ state: "IDLE", payload: {} });
+      publish(transition, "measurement:selection-cleared", {
+        reason: "SMART_BOARD_APPLICATION_CLEARED",
       });
     }
     return beginSmartBoardPhysicalRetraction(transition);
@@ -784,6 +794,7 @@ export function createWorkshopRuntimeController({
     state.boardApplication = "NONE";
     state.chest = "PARKED";
     state.measurement = "IDLE";
+    activeMeasurementSelection = null;
     Object.keys(drawerStates).forEach((id) => { drawerStates[id] = "CLOSED"; });
     activeDrawer = null;
     busy = false;
@@ -903,7 +914,9 @@ export function createWorkshopRuntimeController({
     state.workshop = "FAULT_SAFE";
     const previousApplication = state.boardApplication;
     state.boardApplication = "NONE";
+    const hadMeasurementSelection = state.measurement !== "IDLE";
     state.measurement = "IDLE";
+    activeMeasurementSelection = null;
     busy = true;
     publish(transition, "projector:fault", { code, message });
     if (previousApplication !== "NONE") {
@@ -911,6 +924,12 @@ export function createWorkshopRuntimeController({
         application: "NONE",
         timingCompliance: "ws023a-fault-safe-clear",
         temporaryCompatibility: false,
+      });
+    }
+    if (hadMeasurementSelection) {
+      drivers.renderMeasurement?.({ state: "IDLE", payload: {} });
+      publish(transition, "measurement:selection-invalidated", {
+        reason: "PROJECTOR_FAULT",
       });
     }
     announceTopLevelState();
@@ -944,13 +963,21 @@ export function createWorkshopRuntimeController({
     state.workshop = "FAULT_SAFE";
     const previousApplication = state.boardApplication;
     state.boardApplication = "NONE";
+    const hadMeasurementSelection = state.measurement !== "IDLE";
     state.measurement = "IDLE";
+    activeMeasurementSelection = null;
     busy = true;
     if (previousApplication !== "NONE") {
       publish(transition, "smartboard:app-changed", {
         application: "NONE",
         timingCompliance: "ws023a-fault-safe-clear",
         temporaryCompatibility: false,
+      });
+    }
+    if (hadMeasurementSelection) {
+      drivers.renderMeasurement?.({ state: "IDLE", payload: {} });
+      publish(transition, "measurement:selection-invalidated", {
+        reason: "TABLE_FAULT",
       });
     }
     announceTopLevelState();
@@ -1020,15 +1047,32 @@ export function createWorkshopRuntimeController({
 
   const requestMeasurement = (action, payload) => {
     const target = action === "SELECT_MEASURABLE_OBJECT" ? "SELECTED_OBJECT" : "IDLE";
-    const result = validateTransition("measurement", state.measurement, target, {
+    const selectedObjects = Array.isArray(payload.objects) ? payload.objects : [];
+    const measurementContext = {
       workshopReady: state.workshop === "READY",
       measurementAppActive: state.boardApplication === "MEASUREMENT_ASSISTANT",
       objectMeasurable: payload.objectMeasurable === true,
-    });
+    };
+    if (target === "SELECTED_OBJECT" &&
+        (!measurementContext.workshopReady || !measurementContext.measurementAppActive ||
+         !measurementContext.objectMeasurable)) {
+      const guarded = validateTransition("measurement", "IDLE", target, measurementContext);
+      return reject(guarded.code, guarded.reason);
+    }
+    const sameSelection = target === "SELECTED_OBJECT" && state.measurement === "SELECTED_OBJECT" &&
+      activeMeasurementSelection?.objectId === payload.objectId &&
+      activeMeasurementSelection.objects.length === selectedObjects.length &&
+      activeMeasurementSelection.objects.every((object, index) => object === selectedObjects[index]);
+    if (sameSelection || (target === "IDLE" && state.measurement === "IDLE")) {
+      return freezeResult({ ok: true, code: "IDEMPOTENT" });
+    }
+    const result = validateTransition("measurement", state.measurement, target, measurementContext);
     if (!result.ok) return reject(result.code, result.reason);
-    if (result.code === "IDEMPOTENT") return freezeResult({ ok: true, code: result.code });
     const transition = nextTransition("measurement", state.measurement, target);
     state.measurement = target;
+    activeMeasurementSelection = target === "SELECTED_OBJECT"
+      ? { objectId: payload.objectId, objects: [...selectedObjects] }
+      : null;
     drivers.renderMeasurement?.({ state: target, payload });
     publish(
       transition,
