@@ -4201,7 +4201,21 @@ Nature ▶
       <div id="engineeringSmartBoard" data-board-mechanical="retracted" data-board-power="powered-off" aria-hidden="true">
         <div id="engineeringSmartBoardCabinet">
           <img id="engineeringSmartBoardHardware" src="assets/images/workshop/production/engineering-smart-board/engineering-smart-board-production-v2-extended.png" alt="" aria-hidden="true" draggable="false" />
-          <div id="engineeringSmartBoardScreen" data-board-application="none" aria-hidden="true"></div>
+          <div id="engineeringSmartBoardScreen" data-board-application="none" aria-hidden="true">
+            <section id="engineeringSmartBoardMeasurementDisplay" data-measurement-state="empty" aria-hidden="true">
+              <header class="engineering-smart-board-measurement-header">
+                <strong>MEASUREMENT ASSISTANT</strong>
+                <span id="engineeringSmartBoardMeasurementUnit">CM</span>
+              </header>
+              <small id="engineeringSmartBoardMeasurementSelection">Ready to measure</small>
+              <div class="engineering-smart-board-measurement-values">
+                <span><small>WIDTH</small><strong id="engineeringSmartBoardMeasurementWidth">—</strong></span>
+                <span><small>LENGTH</small><strong id="engineeringSmartBoardMeasurementLength">—</strong></span>
+                <span><small>HEIGHT</small><strong id="engineeringSmartBoardMeasurementHeight">—</strong></span>
+              </div>
+              <p id="engineeringSmartBoardMeasurementHint">Select one or more objects to see their size.</p>
+            </section>
+          </div>
         </div>
       </div>
     </div>
@@ -27370,6 +27384,116 @@ body.workshopMode:not(.starterScreenActive) #engineeringSmartBoard{
   opacity:1;
 }
 
+#engineeringSmartBoardMeasurementDisplay{
+  display:none;
+  position:absolute;
+  inset:7% 6%;
+  grid-template-rows:auto auto minmax(0,1fr) auto;
+  gap:5%;
+  box-sizing:border-box;
+  overflow:hidden;
+  color:#eafaff;
+  font-family:"Lexend",Arial,sans-serif;
+  pointer-events:none;
+  user-select:none;
+}
+
+#engineeringSmartBoard[data-board-power="ready"]
+  #engineeringSmartBoardScreen[data-board-application="measurement-assistant"]
+  #engineeringSmartBoardMeasurementDisplay{
+  display:grid;
+}
+
+.engineering-smart-board-measurement-header{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:4%;
+  align-items:center;
+  min-width:0;
+}
+
+.engineering-smart-board-measurement-header strong{
+  overflow:hidden;
+  color:#8ff6ff;
+  font-size:clamp(5px,.55vw,9px);
+  line-height:1;
+  letter-spacing:.06em;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#engineeringSmartBoardMeasurementUnit{
+  padding:3% 12%;
+  border:1px solid rgba(255,228,124,.72);
+  border-radius:4px;
+  color:#ffe47c;
+  background:rgba(3,15,25,.72);
+  font-size:clamp(4px,.42vw,7px);
+  font-weight:900;
+  line-height:1;
+}
+
+#engineeringSmartBoardMeasurementSelection{
+  overflow:hidden;
+  color:#d8e9ef;
+  font-size:clamp(4px,.42vw,7px);
+  line-height:1;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.engineering-smart-board-measurement-values{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:3%;
+  min-height:0;
+}
+
+.engineering-smart-board-measurement-values > span{
+  display:grid;
+  place-content:center;
+  gap:8%;
+  min-width:0;
+  border:1px solid rgba(143,246,255,.34);
+  border-radius:5px;
+  background:rgba(4,18,27,.64);
+  text-align:center;
+}
+
+.engineering-smart-board-measurement-values small{
+  color:#9fc3d1;
+  font-size:clamp(3px,.34vw,6px);
+  font-weight:800;
+  line-height:1;
+  letter-spacing:.05em;
+}
+
+.engineering-smart-board-measurement-values strong{
+  overflow:hidden;
+  color:#fff;
+  font-size:clamp(5px,.56vw,10px);
+  font-weight:900;
+  line-height:1;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#engineeringSmartBoardMeasurementHint{
+  overflow:hidden;
+  margin:0;
+  color:#c9e5ed;
+  font-size:clamp(3px,.35vw,6px);
+  line-height:1.15;
+  text-align:center;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#engineeringSmartBoardMeasurementDisplay[data-measurement-state="empty"]
+  .engineering-smart-board-measurement-values{
+  opacity:.58;
+}
+
 @media (prefers-reduced-motion:reduce){
   #engineeringSmartBoardCabinet{
     transition-duration:1ms;
@@ -30195,6 +30319,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopSmartBoardRegistration=null;
   var workshopSmartBoardLifecycleView=null;
   var workshopSmartBoardApplicationView=null;
+  var workshopSmartBoardMeasurementDisplay=null;
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
   var workshopStartupState="OFF";
@@ -32081,6 +32206,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         "aria-label",
         "Measurement Assistant. Select one or more objects to see their measurements."
       );
+      if(workshopSmartBoardMeasurementDisplay){
+        workshopSmartBoardMeasurementDisplay.sync();
+      }
       return;
     }
 
@@ -32106,6 +32234,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         ". Length "+lengthMeasurement.text+" "+lengthMeasurement.spokenUnit+
         ". Height "+heightMeasurement.text+" "+heightMeasurement.spokenUnit+"."
     );
+    if(workshopSmartBoardMeasurementDisplay){
+      workshopSmartBoardMeasurementDisplay.sync();
+    }
   }
 
   function clearWorkshopRulerSelectionHighlight(){
@@ -33874,7 +34005,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/runtime/workshop-ready-render-settlement.mjs"),
     import("./js/workshop/smartboard/responsive-smart-board-registration.mjs"),
     import("./js/workshop/smartboard/smart-board-lifecycle-view.mjs"),
-    import("./js/workshop/smartboard/smart-board-application-view.mjs")
+    import("./js/workshop/smartboard/smart-board-application-view.mjs"),
+    import("./js/workshop/smartboard/smart-board-measurement-display.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -33886,6 +34018,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var smartBoardRegistrationModule=modules[6];
       var smartBoardLifecycleModule=modules[7];
       var smartBoardApplicationModule=modules[8];
+      var smartBoardMeasurementModule=modules[9];
       workshopStartupTestDouble=startupModule.createWorkshopStartupTestDouble({
         reducedMotion:function(){
           return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -33967,6 +34100,36 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           var snapshot=workshopStateController.getSnapshot();
           return snapshot.activeTransitionId===transitionId &&
             (snapshot.workshop==="STARTING" || snapshot.workshop==="SHUTTING_DOWN");
+        }
+      });
+      workshopSmartBoardMeasurementDisplay=smartBoardMeasurementModule.createSmartBoardMeasurementDisplay({
+        root:document.getElementById("engineeringSmartBoard"),
+        screen:document.getElementById("engineeringSmartBoardScreen"),
+        display:document.getElementById("engineeringSmartBoardMeasurementDisplay"),
+        source:{
+          assistant:document.getElementById("workshopMeasurementAssistant"),
+          selection:document.getElementById("workshopMeasurementAssistantSelection"),
+          unit:document.getElementById("workshopMeasurementAssistantUnit"),
+          width:document.getElementById("workshopMeasurementAssistantWidth"),
+          length:document.getElementById("workshopMeasurementAssistantLength"),
+          height:document.getElementById("workshopMeasurementAssistantHeight"),
+          hint:document.getElementById("workshopMeasurementAssistantHint")
+        },
+        target:{
+          selection:document.getElementById("engineeringSmartBoardMeasurementSelection"),
+          unit:document.getElementById("engineeringSmartBoardMeasurementUnit"),
+          width:document.getElementById("engineeringSmartBoardMeasurementWidth"),
+          length:document.getElementById("engineeringSmartBoardMeasurementLength"),
+          height:document.getElementById("engineeringSmartBoardMeasurementHeight"),
+          hint:document.getElementById("engineeringSmartBoardMeasurementHint")
+        }
+      });
+      window.addEventListener("smartboard:app-changed",function(event){
+        if(!workshopSmartBoardMeasurementDisplay) return;
+        if(event.detail && event.detail.application==="MEASUREMENT_ASSISTANT"){
+          workshopSmartBoardMeasurementDisplay.sync();
+        }else{
+          workshopSmartBoardMeasurementDisplay.reset();
         }
       });
       workshopStateController=module.createWorkshopRuntimeController({

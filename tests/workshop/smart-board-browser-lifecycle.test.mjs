@@ -21,10 +21,9 @@ test("declares accessible, noninteractive mechanical and power visual states", (
   assert.match(source, /@media \(prefers-reduced-motion:reduce\)[\s\S]*?#engineeringSmartBoardCabinet[\s\S]*?transition-duration:1ms/);
 });
 
-test("keeps the application surface empty and the approved asset singular", () => {
+test("keeps the application surface HTML-only and the approved asset singular", () => {
   const approved = "assets/images/workshop/production/engineering-smart-board/engineering-smart-board-production-v2-extended.png";
   assert.equal(source.split(approved).length - 1, 1);
-  const screen = source.match(/<div id="engineeringSmartBoardScreen" data-board-application="none" aria-hidden="true">([\s\S]*?)<\/div>/);
-  assert.ok(screen);
-  assert.equal(screen[1], "");
+  assert.match(source, /<div id="engineeringSmartBoardScreen" data-board-application="none" aria-hidden="true">[\s\S]*?engineeringSmartBoardMeasurementDisplay/);
+  assert.doesNotMatch(source, /engineering-smart-board-production-v4-measurement-assistant\.png/);
 });

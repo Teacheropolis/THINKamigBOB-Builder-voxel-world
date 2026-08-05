@@ -13,11 +13,10 @@ test("mounts one approved noninteractive Smart Board hardware foundation", () =>
   assert.doesNotMatch(source, /engineering-smart-board-production-v4-measurement-assistant\.png/);
 });
 
-test("keeps the empty application surface separate from decorative hardware", () => {
-  const screen = source.match(/<div id="engineeringSmartBoardScreen" data-board-application="none" aria-hidden="true">([\s\S]*?)<\/div>/);
-  assert.ok(screen);
-  assert.equal(screen[1], "");
+test("keeps the read-only application surface separate from decorative hardware", () => {
+  assert.match(source, /<div id="engineeringSmartBoardScreen" data-board-application="none" aria-hidden="true">[\s\S]*?<section id="engineeringSmartBoardMeasurementDisplay"[^>]*aria-hidden="true">/);
   assert.match(source, /#engineeringSmartBoardScreen\{[\s\S]*?background:transparent;[\s\S]*?pointer-events:none;/);
+  assert.doesNotMatch(source, /id="engineeringSmartBoardMeasurementDisplay"[^>]*tabindex=/);
 });
 
 test("declares deterministic endpoints for the real lifecycle", () => {
