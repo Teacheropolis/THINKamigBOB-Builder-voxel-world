@@ -33268,8 +33268,11 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     window.requestAnimationFrame(step);
   }
 
-  function applyWorkshopBuildAreaVisuals(workshopIsActive,onComplete){
+  function applyWorkshopBuildAreaVisuals(workshopIsActive,onComplete,options){
     var gridButton=document.getElementById("engineeringGridToggle");
+    var deferProjectionStart=!!(
+      options && options.deferProjectionStart===true
+    );
 
     if(workshopIsActive){
       if(!workshopBuildAreaSnapshot){
@@ -33322,6 +33325,15 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         gridButton.textContent="▦ Grid: On";
         gridButton.setAttribute("aria-pressed","true");
       }
+      if(deferProjectionStart){
+        // Establish the Workshop room before machinery powers on, but keep
+        // every WS-013 Projection primitive at its powered-off endpoint.
+        // startWorkshopProjectionVisuals owns the later 500 ms activation.
+        workshopProjectionTransitionToken+=1;
+        applyWorkshopProjectionProgress(0);
+        if(typeof onComplete==="function") onComplete();
+        return;
+      }
       animateWorkshopProjection(true,onComplete);
       return;
     }
@@ -33370,7 +33382,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     if(typeof onComplete==="function") onComplete();
   }
 
-  function applyWorkspaceModeVisuals(requestedMode,onComplete){
+  function applyWorkspaceModeVisuals(requestedMode,onComplete,options){
     if(requestedMode==="workshop"){
       workshopPlatformTint=0x5f8fa8;
       captureBuilderCameraState();
@@ -33400,7 +33412,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     if(requestedMode!=="workshop") restoreBuilderCameraState();
     if(requestedMode!=="workshop") hideWorkshopPrecisionCursor();
     if(requestedMode==="workshop"){
-      applyWorkshopBuildAreaVisuals(true,onComplete);
+      applyWorkshopBuildAreaVisuals(true,onComplete,options);
     }else{
       animateWorkshopProjection(false,function(){
         if(currentWorkspaceMode!=="workshop"){
@@ -33418,6 +33430,12 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     window.dispatchEvent(new CustomEvent("workspace-mode-change",{
       detail:{mode:requestedMode}
     }));
+  }
+
+  function startWorkshopProjectionVisuals(){
+    // WS-013 owns this activation point. The visual shell is already active,
+    // so Projector/Table power-on cannot leak across the Mission surface.
+    animateWorkshopProjection(true);
   }
 
   function requestWorkshopPowerOn(){
@@ -33670,10 +33688,16 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         },
         drivers:{
           powerOnProjector:function(transition){
+            if(transition.begin()===false) return;
+            applyWorkspaceModeVisuals(
+              "workshop",
+              null,
+              {deferProjectionStart:true}
+            );
             workshopProjectorLifecycleSafety.playAudio("relay-on");
             workshopProjectorPowerOnView.start({
               transitionId:transition.transitionId,
-              begin:transition.begin,
+              begin:function(){ return true; },
               complete:transition.complete
             });
           },
@@ -33689,7 +33713,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             });
           },
           startTableProjection:function(transition){
-            applyWorkspaceModeVisuals("workshop");
+            startWorkshopProjectionVisuals();
             workshopTableProjectionStartView.start({
               transitionId:transition.transitionId,
               complete:function(){
