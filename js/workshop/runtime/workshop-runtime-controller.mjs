@@ -42,6 +42,7 @@ export function createWorkshopRuntimeController({
   let activeTransition = null;
   let activeDrawer = null;
   let activeMeasurementSelection = null;
+  let activeMeasurementTransition = null;
   let busy = false;
 
   const nextTransition = (domain, from, to) => ({
@@ -86,6 +87,17 @@ export function createWorkshopRuntimeController({
     } catch {
       // Presentation observers never own or gate the canonical lifecycle.
     }
+  };
+
+  const cancelMeasurementLearningMode = () => {
+    const cancelled = activeMeasurementTransition !== null;
+    if (activeMeasurementTransition) activeMeasurementTransition.cancelled = true;
+    activeMeasurementTransition = null;
+    drivers.cancelLearningMode?.();
+    if (state.measurement === "LEARNING_MODE") {
+      state.measurement = activeMeasurementSelection ? "SELECTED_OBJECT" : "IDLE";
+    }
+    return cancelled;
   };
 
   const missingDriver = (names) => names.find((name) => typeof drivers[name] !== "function");
@@ -649,6 +661,7 @@ export function createWorkshopRuntimeController({
     if (activeTransition !== transition || transition.cancelled ||
         transition.smartBoardApplicationCleared === true) return false;
     if (state.chest !== "PARKED" || transition.toolChestParked !== true) return false;
+    cancelMeasurementLearningMode();
     const previousApplication = state.boardApplication;
     state.boardApplication = "NONE";
     const hadMeasurementSelection = state.measurement !== "IDLE";
@@ -869,6 +882,7 @@ export function createWorkshopRuntimeController({
     activeTransition = transition;
     state.workshop = "SHUTTING_DOWN";
     busy = true;
+    cancelMeasurementLearningMode();
     publish(transition, "workshop:shutdown-begun");
     announceTopLevelState();
     beginDrawerSecurity(transition);
@@ -909,6 +923,7 @@ export function createWorkshopRuntimeController({
       );
     }
     activeTransition = transition;
+    cancelMeasurementLearningMode();
     state.projector = "FAULT_SAFE";
     state.table = "FAULT_SAFE";
     state.workshop = "FAULT_SAFE";
@@ -959,6 +974,7 @@ export function createWorkshopRuntimeController({
       return reject("FAULT_TRANSITION_REJECTED", tableResult.reason || workshopResult.reason);
     }
     activeTransition = transition;
+    cancelMeasurementLearningMode();
     state.table = "FAULT_SAFE";
     state.workshop = "FAULT_SAFE";
     const previousApplication = state.boardApplication;
@@ -1045,6 +1061,79 @@ export function createWorkshopRuntimeController({
     return accept(transition);
   };
 
+  const finishLearningModeEntry = (transition) => {
+    if (activeMeasurementTransition !== transition || transition.cancelled ||
+        state.workshop !== "READY" || state.boardApplication !== "MEASUREMENT_ASSISTANT" ||
+        state.measurement !== "SELECTED_OBJECT" || !activeMeasurementSelection) return false;
+    const result = validateTransition("measurement", state.measurement, "LEARNING_MODE");
+    if (!result.ok) return false;
+    state.measurement = "LEARNING_MODE";
+    activeMeasurementTransition = null;
+    publish(transition, "measurement:learning-mode-entered", {
+      objectId: activeMeasurementSelection.objectId,
+      selectionCount: activeMeasurementSelection.objects.length,
+    });
+    return true;
+  };
+
+  const requestLearningMode = () => {
+    if (state.measurement === "LEARNING_MODE" ||
+        (activeMeasurementTransition && activeMeasurementTransition.to === "LEARNING_MODE")) {
+      return freezeResult({ ok: true, code: "IDEMPOTENT" });
+    }
+    if (state.workshop !== "READY" || state.boardApplication !== "MEASUREMENT_ASSISTANT" ||
+        state.measurement !== "SELECTED_OBJECT" || !activeMeasurementSelection) {
+      return reject("MEASUREMENT_SELECTION_REQUIRED", "Learning Mode requires an active measurable selection.");
+    }
+    if (typeof drivers.renderLearningMode !== "function") {
+      return reject("REQUIRED_DRIVER_UNAVAILABLE", "Learning Mode render driver unavailable.");
+    }
+    const result = validateTransition("measurement", state.measurement, "LEARNING_MODE");
+    if (!result.ok) return reject(result.code, result.reason);
+    const transition = nextTransition("measurement", state.measurement, "LEARNING_MODE");
+    activeMeasurementTransition = transition;
+    drivers.renderLearningMode({
+      transitionId: transition.id,
+      complete: () => finishLearningModeEntry(transition),
+    });
+    return accept(transition);
+  };
+
+  const finishLearningModeExit = (transition) => {
+    if (activeMeasurementTransition !== transition || transition.cancelled ||
+        state.measurement !== "LEARNING_MODE" || !activeMeasurementSelection) return false;
+    const result = validateTransition("measurement", state.measurement, "SELECTED_OBJECT");
+    if (!result.ok) return false;
+    state.measurement = "SELECTED_OBJECT";
+    activeMeasurementTransition = null;
+    return true;
+  };
+
+  const requestLearningModeExit = () => {
+    if (activeMeasurementTransition?.to === "LEARNING_MODE") {
+      cancelMeasurementLearningMode();
+      return freezeResult({ ok: true, code: "CANCELLED_TO_MEASUREMENTS" });
+    }
+    if (state.measurement === "SELECTED_OBJECT") {
+      return freezeResult({ ok: true, code: "IDEMPOTENT" });
+    }
+    if (state.measurement !== "LEARNING_MODE" || !activeMeasurementSelection) {
+      return reject("LEARNING_MODE_NOT_ACTIVE", "Learning Mode is not active.");
+    }
+    if (typeof drivers.clearLearningMode !== "function") {
+      return reject("REQUIRED_DRIVER_UNAVAILABLE", "Learning Mode clear driver unavailable.");
+    }
+    const result = validateTransition("measurement", state.measurement, "SELECTED_OBJECT");
+    if (!result.ok) return reject(result.code, result.reason);
+    const transition = nextTransition("measurement", state.measurement, "SELECTED_OBJECT");
+    activeMeasurementTransition = transition;
+    drivers.clearLearningMode({
+      transitionId: transition.id,
+      complete: () => finishLearningModeExit(transition),
+    });
+    return accept(transition);
+  };
+
   const requestMeasurement = (action, payload) => {
     const target = action === "SELECT_MEASURABLE_OBJECT" ? "SELECTED_OBJECT" : "IDLE";
     const selectedObjects = Array.isArray(payload.objects) ? payload.objects : [];
@@ -1059,12 +1148,16 @@ export function createWorkshopRuntimeController({
       const guarded = validateTransition("measurement", "IDLE", target, measurementContext);
       return reject(guarded.code, guarded.reason);
     }
-    const sameSelection = target === "SELECTED_OBJECT" && state.measurement === "SELECTED_OBJECT" &&
+    const sameSelection = target === "SELECTED_OBJECT" &&
+      (state.measurement === "SELECTED_OBJECT" || state.measurement === "LEARNING_MODE") &&
       activeMeasurementSelection?.objectId === payload.objectId &&
       activeMeasurementSelection.objects.length === selectedObjects.length &&
       activeMeasurementSelection.objects.every((object, index) => object === selectedObjects[index]);
-    if (sameSelection || (target === "IDLE" && state.measurement === "IDLE")) {
+    if (sameSelection || (target === "IDLE" && state.measurement === "IDLE" && !activeMeasurementTransition)) {
       return freezeResult({ ok: true, code: "IDEMPOTENT" });
+    }
+    if (activeMeasurementTransition || state.measurement === "LEARNING_MODE") {
+      cancelMeasurementLearningMode();
     }
     const result = validateTransition("measurement", state.measurement, target, measurementContext);
     if (!result.ok) return reject(result.code, result.reason);
@@ -1098,6 +1191,8 @@ export function createWorkshopRuntimeController({
       }
       if (normalized.action === "OPEN_DRAWER" || normalized.action === "CLOSE_DRAWER") return requestDrawer(normalized.action, normalized.payload);
       if (normalized.action === "SELECT_MEASURABLE_OBJECT" || normalized.action === "CLEAR_SELECTION") return requestMeasurement(normalized.action, normalized.payload);
+      if (normalized.action === "ENTER_LEARNING_MODE") return requestLearningMode();
+      if (normalized.action === "EXIT_LEARNING_MODE") return requestLearningModeExit();
       return reject("UNIMPLEMENTED_ACTION", `${normalized.action} is not wired in WS-016.`);
     },
     reportProjectorRendererUnavailable,

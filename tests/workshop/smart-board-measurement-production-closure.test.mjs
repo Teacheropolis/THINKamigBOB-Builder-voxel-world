@@ -141,10 +141,10 @@ test("fault invalidates a live selection exactly once and repeated fault is idem
   assert.equal(invalidations[0].detail.reason, "PROJECTOR_FAULT");
 });
 
-test("Learning Mode, Notebook, and application switching remain unwired", () => {
+test("Notebook and application switching remain unwired", () => {
   const h = harness();
   h.start();
-  ["ENTER_LEARNING_MODE", "OPEN_NOTEBOOK", "SELECT_APPLICATION"].forEach((action) => {
+  ["OPEN_NOTEBOOK", "SELECT_APPLICATION"].forEach((action) => {
     assert.equal(h.controller.request({ action, input: "pointer" }).code, "UNIMPLEMENTED_ACTION");
   });
 });
