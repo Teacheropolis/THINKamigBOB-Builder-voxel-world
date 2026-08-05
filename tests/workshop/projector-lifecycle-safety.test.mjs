@@ -77,6 +77,9 @@ function controllerHarness() {
       activateSmartBoard({ complete }) { pending.smartBoard = complete; },
       deployToolChest({ complete }) { pending.toolChest = complete; },
       settleWorkshopReady({ complete }) { pending.ready = complete; },
+      secureDrawers({ complete }) { pending.drawersSecured = complete; },
+      parkToolChest({ complete }) { pending.toolChestParked = complete; },
+      retractSmartBoard({ complete }) { pending.smartBoardRetracted = complete; },
       exitWorkshop(callbacks) { Object.assign(pending, callbacks); },
       restoreProjectorShutdown({ complete }) { pending.restore = complete; },
       lowerProjectorToStandby({ complete }) { pending.lower = complete; },
@@ -222,6 +225,7 @@ test("controller owns once-only powered-off, reversal, standby, and fault events
   const { controller, pending, events, start } = controllerHarness();
   start();
   controller.request({ action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true } });
+  pending.drawersSecured(); pending.toolChestParked(); pending.smartBoardRetracted();
   assert.equal(pending.tableStandby(), true);
   assert.equal(pending.tablePoweredOff(), true);
   assert.equal(pending.standby(), true);
@@ -251,6 +255,7 @@ test("controller reverses SHUTTING_DOWN with a new transition and rejects stale 
   const shutdown = controller.request({
     action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true },
   });
+  pending.drawersSecured(); pending.toolChestParked(); pending.smartBoardRetracted();
   const staleStandby = pending.standby;
   const stalePoweredOff = pending.poweredOff;
   const restart = controller.request({

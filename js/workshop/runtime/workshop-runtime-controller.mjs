@@ -103,6 +103,14 @@ export function createWorkshopRuntimeController({
       : null;
   };
 
+  const validateShutdownDrivers = () => {
+    const required = ["secureDrawers", "parkToolChest", "retractSmartBoard", "exitWorkshop"];
+    const missing = missingDriver(required);
+    return missing
+      ? reject("REQUIRED_DRIVER_UNAVAILABLE", `Required Workshop shutdown driver unavailable: ${missing}.`)
+      : null;
+  };
+
   const finishPowerOn = (transition) => {
     if (activeTransition !== transition || transition.cancelled) return false;
     if (state.projector !== "FULLY_ACTIVE" || state.table !== "FULLY_ACTIVE" ||
@@ -198,6 +206,20 @@ export function createWorkshopRuntimeController({
       state.boardApplication = "MEASUREMENT_ASSISTANT";
       state.measurement = "IDLE";
     }
+    if (state.boardMechanical === "EXTENDED" && state.boardPower === "POWERING_ON") {
+      const powered = validateTransition("boardPower", state.boardPower, "READY");
+      if (!powered.ok) return false;
+      state.boardPower = "READY";
+      publish(transition, "smartboard:powered-on", { temporaryCompatibility: true });
+    }
+    if (state.boardPower === "READY" && state.boardApplication === "NONE") {
+      const application = validateTransition("boardApplication", state.boardApplication, "MEASUREMENT_ASSISTANT", {
+        boardReady: true,
+      });
+      if (!application.ok) return false;
+      state.boardApplication = "MEASUREMENT_ASSISTANT";
+      state.measurement = "IDLE";
+    }
     if (state.boardMechanical !== "EXTENDED" || state.boardPower !== "READY" ||
         state.boardApplication !== "MEASUREMENT_ASSISTANT") return false;
     transition.smartBoardReady = true;
@@ -209,7 +231,14 @@ export function createWorkshopRuntimeController({
     if (activeTransition !== transition || transition.cancelled || transition.smartBoardActivationRequested === true) return false;
     if (state.projector !== "FULLY_ACTIVE" || state.table !== "FULLY_ACTIVE" ||
         transition.tableProjectionStable !== true) return false;
-    if (state.boardMechanical !== "EXTENDED" || state.boardPower !== "READY" ||
+    if (state.boardMechanical === "EXTENDED" && state.boardPower === "POWERING_OFF") {
+      const reversingPower = validateTransition("boardPower", state.boardPower, "POWERING_ON", {
+        boardExtended: true,
+        projectionStable: true,
+      });
+      if (!reversingPower.ok) return false;
+      state.boardPower = "POWERING_ON";
+    } else if (state.boardMechanical !== "EXTENDED" || state.boardPower !== "READY" ||
         state.boardApplication !== "MEASUREMENT_ASSISTANT") {
       const result = validateTransition("boardMechanical", state.boardMechanical, "EXTENDING", {
         projectionStable: true,
@@ -473,15 +502,140 @@ export function createWorkshopRuntimeController({
     return publish(transition, "table:powered-off");
   };
 
-  const finishPowerOff = (transition) => {
-    if (activeTransition !== transition || transition.cancelled) return false;
-    if (state.projector !== "POWERED_OFF" || state.table !== "POWERED_OFF") return false;
+  const beginProjectionShutdown = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.projectionShutdownRequested === true) return false;
+    if (state.chest !== "PARKED" || state.boardMechanical !== "RETRACTED" ||
+        state.boardPower !== "POWERED_OFF") return false;
+    transition.projectionShutdownRequested = true;
+    drivers.exitWorkshop({
+      transitionId: transition.id,
+      tableStandby: () => markTableStandby(transition),
+      tablePoweredOff: () => markTablePoweredOff(transition),
+      standby: () => markProjectorStandby(transition),
+      poweredOff: () => markProjectorPoweredOff(transition),
+      complete: () => finishPowerOff(transition),
+    });
+    return true;
+  };
+
+  const finishSmartBoardRetraction = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.smartBoardRetracted === true) return false;
+    if (state.chest !== "PARKED") return false;
+    if (state.boardPower === "POWERING_OFF") {
+      const poweredOff = validateTransition("boardPower", state.boardPower, "POWERED_OFF");
+      if (!poweredOff.ok) return false;
+      state.boardPower = "POWERED_OFF";
+    }
+    if (state.boardMechanical === "EXTENDED") {
+      const retracting = validateTransition("boardMechanical", state.boardMechanical, "RETRACTING", {
+        boardPoweredOff: true,
+        blockingModal: false,
+        unsavedNotebookEdit: false,
+      });
+      if (!retracting.ok) return false;
+      state.boardMechanical = "RETRACTING";
+    }
+    if (state.boardMechanical === "EXTENDING") {
+      const reversing = validateTransition("boardMechanical", state.boardMechanical, "RETRACTING");
+      if (!reversing.ok) return false;
+      state.boardMechanical = "RETRACTING";
+    }
+    if (state.boardMechanical === "RETRACTING") {
+      const retracted = validateTransition("boardMechanical", state.boardMechanical, "RETRACTED");
+      if (!retracted.ok) return false;
+      state.boardMechanical = "RETRACTED";
+    }
+    if (state.boardPower !== "POWERED_OFF" || state.boardMechanical !== "RETRACTED") return false;
+    state.boardApplication = "NONE";
+    state.measurement = "IDLE";
+    transition.smartBoardRetracted = true;
+    publish(transition, "smartboard:retracted", { temporaryCompatibility: true });
+    return beginProjectionShutdown(transition);
+  };
+
+  const beginSmartBoardRetraction = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.smartBoardRetractionRequested === true) return false;
+    if (state.chest !== "PARKED" || transition.toolChestParked !== true) return false;
+    if (state.boardPower === "READY" || state.boardPower === "POWERING_ON") {
+      const poweringOff = validateTransition("boardPower", state.boardPower, "POWERING_OFF", {
+        applicationStateSecured: true,
+      });
+      if (!poweringOff.ok) return false;
+      state.boardPower = "POWERING_OFF";
+    }
+    transition.smartBoardRetractionRequested = true;
+    drivers.retractSmartBoard({
+      transitionId: transition.id,
+      complete: () => finishSmartBoardRetraction(transition),
+    });
+    return true;
+  };
+
+  const finishToolChestParking = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.toolChestParked === true) return false;
+    if (transition.drawersSecured !== true) return false;
+    if (state.chest === "DOCKING") {
+      const parked = validateTransition("chest", state.chest, "PARKED");
+      if (!parked.ok) return false;
+      state.chest = "PARKED";
+    }
+    if (state.chest !== "PARKED") return false;
+    transition.toolChestParked = true;
+    publish(transition, "toolchest:parked", { temporaryCompatibility: true });
+    return beginSmartBoardRetraction(transition);
+  };
+
+  const beginToolChestParking = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.toolChestParkingRequested === true) return false;
+    if (transition.drawersSecured !== true ||
+        !Object.values(drawerStates).every((value) => value === "CLOSED")) return false;
+    if (state.chest === "DEPLOYED") {
+      const docking = validateTransition("chest", state.chest, "DOCKING", {
+        allDrawersClosed: true,
+        obstructionClear: true,
+      });
+      if (!docking.ok) return false;
+      state.chest = "DOCKING";
+    } else if (state.chest === "UNDOCKING") {
+      const reversing = validateTransition("chest", state.chest, "DOCKING", {
+        allDrawersClosed: true,
+      });
+      if (!reversing.ok) return false;
+      state.chest = "DOCKING";
+    }
+    transition.toolChestParkingRequested = true;
+    drivers.parkToolChest({
+      transitionId: transition.id,
+      complete: () => finishToolChestParking(transition),
+    });
+    return true;
+  };
+
+  const finishDrawerSecurity = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.drawersSecured === true) return false;
     Object.keys(drawerStates).forEach((id) => { drawerStates[id] = "CLOSED"; });
     activeDrawer = null;
-    state.chest = "PARKED";
-    state.boardApplication = "NONE";
-    state.boardPower = "POWERED_OFF";
-    state.boardMechanical = "RETRACTED";
+    transition.drawersSecured = true;
+    publish(transition, "toolchest:drawers-secured", { temporaryCompatibility: true });
+    return beginToolChestParking(transition);
+  };
+
+  const beginDrawerSecurity = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.drawerSecurityRequested === true) return false;
+    transition.drawerSecurityRequested = true;
+    drivers.secureDrawers({
+      transitionId: transition.id,
+      complete: () => finishDrawerSecurity(transition),
+    });
+    return true;
+  };
+
+  const finishPowerOff = (transition) => {
+    if (activeTransition !== transition || transition.cancelled) return false;
+    if (state.projector !== "POWERED_OFF" || state.table !== "POWERED_OFF" ||
+        state.chest !== "PARKED" || state.boardPower !== "POWERED_OFF" ||
+        state.boardMechanical !== "RETRACTED" || transition.drawersSecured !== true ||
+        transition.toolChestParked !== true || transition.smartBoardRetracted !== true) return false;
     const result = validateTransition("workshop", state.workshop, "OFF", {
       shutdownSequenceComplete: true,
     });
@@ -584,9 +738,9 @@ export function createWorkshopRuntimeController({
       applicationStateSecured: context.applicationStateSecured !== false,
     });
     if (!result.ok) return reject(result.code, result.reason);
-    if (typeof drivers.exitWorkshop !== "function") {
-      return reject("REQUIRED_DRIVER_UNAVAILABLE", "Required Workshop shutdown driver unavailable: exitWorkshop.");
-    }
+    const driverFailure = validateShutdownDrivers();
+    if (driverFailure) return driverFailure;
+    if (state.workshop === "SHUTTING_DOWN") return freezeResult({ ok: true, code: "IDEMPOTENT" });
     if (activeTransition) activeTransition.cancelled = true;
     const transition = nextTransition("workshop", state.workshop, "SHUTTING_DOWN");
     activeTransition = transition;
@@ -594,14 +748,7 @@ export function createWorkshopRuntimeController({
     busy = true;
     publish(transition, "workshop:shutdown-begun");
     announceTopLevelState();
-    drivers.exitWorkshop?.({
-      transitionId: transition.id,
-      tableStandby: () => markTableStandby(transition),
-      tablePoweredOff: () => markTablePoweredOff(transition),
-      standby: () => markProjectorStandby(transition),
-      poweredOff: () => markProjectorPoweredOff(transition),
-      complete: () => finishPowerOff(transition),
-    });
+    beginDrawerSecurity(transition);
     return accept(transition);
   };
 

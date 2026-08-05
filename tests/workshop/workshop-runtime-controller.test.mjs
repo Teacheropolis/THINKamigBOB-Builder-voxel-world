@@ -31,6 +31,10 @@ function harness() {
       activateSmartBoard: ({ complete }) => { pending.smartBoard = complete; },
       deployToolChest: ({ complete }) => { pending.toolChest = complete; },
       settleWorkshopReady: ({ complete }) => { pending.ready = complete; },
+      secureDrawers: ({ complete }) => { pending.drawersSecured = complete; },
+      parkToolChest: ({ complete }) => { pending.toolChestParked = complete; },
+      retractSmartBoard: ({ complete }) => { pending.smartBoardRetracted = complete; },
+      restoreProjectorShutdown: ({ complete }) => { pending.restoreShutdown = complete; },
       exitWorkshop: ({ tableStandby, tablePoweredOff, standby, poweredOff, complete }) => {
         pending.tableStandby = tableStandby;
         pending.tablePoweredOff = tablePoweredOff;
@@ -58,6 +62,12 @@ function completeStartup(pending) {
   assert.equal(pending.smartBoard(), true);
   assert.equal(pending.toolChest(), true);
   assert.equal(pending.ready(), true);
+}
+
+function beginProjectionShutdown(pending) {
+  assert.equal(pending.drawersSecured(), true);
+  assert.equal(pending.toolChestParked(), true);
+  assert.equal(pending.smartBoardRetracted(), true);
 }
 
 test("starts from deterministic protected states", () => {
@@ -155,9 +165,13 @@ test("shutdown cancels an unsettled startup transition", () => {
   assert.equal(result.ok, true);
   assert.equal(staleBegin(), false);
   assert.equal(staleCompletion(), false);
+  beginProjectionShutdown(pending);
   assert.equal(pending.exit(), true);
   assert.equal(controller.getSnapshot().workshop, "OFF");
-  assert.deepEqual(events.map((event) => event.name), ["workshop:startup-begun", "workshop:shutdown-begun", "workshop:off"]);
+  assert.deepEqual(events.map((event) => event.name), [
+    "workshop:startup-begun", "workshop:shutdown-begun",
+    "toolchest:drawers-secured", "toolchest:parked", "smartboard:retracted", "workshop:off",
+  ]);
 });
 
 test("uses only approved WS-002 mappings for current drawer UI", () => {
@@ -248,6 +262,7 @@ test("rejects stale Table, Projector, and active-settle callbacks after cancella
   staleTable();
   const staleActive = pending.tableActive;
   controller.request({ action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true } });
+  beginProjectionShutdown(pending);
   assert.equal(staleTable(), false);
   assert.equal(staleProjector(), false);
   assert.equal(staleActive(), false);
@@ -259,19 +274,48 @@ test("shutdown publishes Table projection stop before Table and Projector power-
   controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
   completeStartup(pending);
   controller.request({ action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true } });
+  assert.equal(
+    controller.request({ action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true } }).code,
+    "IDEMPOTENT",
+  );
+  beginProjectionShutdown(pending);
   assert.equal(pending.tableStandby(), true);
   assert.equal(pending.tablePoweredOff(), true);
   assert.equal(pending.standby(), true);
   assert.equal(pending.poweredOff(), true);
   assert.equal(pending.exit(), true);
-  const shutdownEvents = events.map((event) => event.name).slice(-5);
+  const shutdownEvents = events.map((event) => event.name).slice(-8);
   assert.deepEqual(shutdownEvents, [
     "workshop:shutdown-begun",
+    "toolchest:drawers-secured",
+    "toolchest:parked",
+    "smartboard:retracted",
     "table:projection-stopped",
     "table:powered-off",
     "projector:powered-off",
     "workshop:off",
   ]);
+});
+
+test("shutdown reversal rejects stale pre-projection child callbacks", () => {
+  const { controller, events, pending } = harness();
+  controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
+  completeStartup(pending);
+  const shutdown = controller.request({
+    action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true },
+  });
+  const staleDrawers = pending.drawersSecured;
+  const restart = controller.request({
+    action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true },
+  });
+  assert.equal(restart.code, "REVERSING");
+  assert.notEqual(restart.transitionId, shutdown.transitionId);
+  assert.equal(staleDrawers(), false);
+  assert.equal(controller.getSnapshot().workshop, "STARTING");
+  assert.equal(controller.getSnapshot().disabled.drawers, true);
+  assert.equal(events.filter((event) => event.name === "toolchest:drawers-secured").length, 0);
+  assert.equal(pending.restoreShutdown(), true);
+  assert.equal(controller.getSnapshot().workshop, "STARTING");
 });
 
 test("publishes canonical top-level state and busy snapshots without host-only states", () => {
@@ -291,6 +335,7 @@ test("publishes canonical top-level state and busy snapshots without host-only s
     { workshop: stateChanges.at(-1).workshop, busy: stateChanges.at(-1).busy },
     { workshop: "SHUTTING_DOWN", busy: true },
   );
+  beginProjectionShutdown(pending);
   pending.tableStandby(); pending.tablePoweredOff(); pending.standby(); pending.poweredOff(); pending.exit();
   assert.deepEqual(
     { workshop: stateChanges.at(-1).workshop, busy: stateChanges.at(-1).busy },
@@ -320,6 +365,9 @@ test("missing required lifecycle drivers fail closed without changing canonical 
       activateSmartBoard: ({ complete }) => complete(),
       deployToolChest: ({ complete }) => complete(),
       settleWorkshopReady: ({ complete }) => complete(),
+      secureDrawers: ({ complete }) => complete(),
+      parkToolChest: ({ complete }) => complete(),
+      retractSmartBoard: ({ complete }) => complete(),
     },
   });
   noExit.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });

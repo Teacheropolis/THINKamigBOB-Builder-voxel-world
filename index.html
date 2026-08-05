@@ -30110,6 +30110,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopStateController=null;
   var workshopControllerReady=null;
   var workshopStartupTestDouble=null;
+  var workshopShutdownTestDouble=null;
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
   var workshopStartupState="OFF";
@@ -33782,12 +33783,19 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
 
   workshopControllerReady=Promise.all([
     import("./js/workshop/runtime/workshop-runtime-controller.mjs"),
-    import("./js/workshop/runtime/workshop-startup-test-double.mjs")
+    import("./js/workshop/runtime/workshop-startup-test-double.mjs"),
+    import("./js/workshop/runtime/workshop-shutdown-test-double.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
       var startupModule=modules[1];
+      var shutdownModule=modules[2];
       workshopStartupTestDouble=startupModule.createWorkshopStartupTestDouble({
+        reducedMotion:function(){
+          return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+        }
+      });
+      workshopShutdownTestDouble=shutdownModule.createWorkshopShutdownTestDouble({
         reducedMotion:function(){
           return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
         }
@@ -33884,6 +33892,17 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           settleWorkshopReady:function(transition){
             return workshopStartupTestDouble.settleWorkshopReady(transition);
           },
+          secureDrawers:function(transition){
+            closeAllEngineeringToolChestDrawers(true);
+            return workshopShutdownTestDouble.secureDrawers(transition);
+          },
+          parkToolChest:function(transition){
+            setEngineeringToolChestCabinetState("retracted");
+            return workshopShutdownTestDouble.parkToolChest(transition);
+          },
+          retractSmartBoard:function(transition){
+            return workshopShutdownTestDouble.retractSmartBoard(transition);
+          },
           exitWorkshop:function(transition){
             workshopStartupTestDouble.cancel();
             workshopActiveTableShutdown=transition;
@@ -33895,6 +33914,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             });
           },
           restoreProjectorShutdown:function(transition){
+            workshopShutdownTestDouble.cancel();
             if(workshopTableLifecycleSafety) workshopTableLifecycleSafety.cancel();
             workshopProjectorLifecycleSafety.restore({
               transitionId:transition.transitionId,
@@ -33918,6 +33938,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           },
           secureProjectorFault:function(transition){
             workshopStartupTestDouble.cancel();
+            workshopShutdownTestDouble.cancel();
             if(!workshopProjectorLifecycleSafety){
               setWorkshopStartupState(
                 "FAILED",
@@ -33935,6 +33956,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           },
           secureTableFault:function(transition){
             workshopStartupTestDouble.cancel();
+            workshopShutdownTestDouble.cancel();
             if(!workshopTablePowerOnView){
               setWorkshopStartupState(
                 "FAILED",

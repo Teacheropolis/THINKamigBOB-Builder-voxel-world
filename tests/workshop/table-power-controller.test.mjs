@@ -16,6 +16,9 @@ function harness() {
       activateSmartBoard: ({ complete }) => { pending.smartBoard = complete; },
       deployToolChest: ({ complete }) => { pending.toolChest = complete; },
       settleWorkshopReady: ({ complete }) => { pending.ready = complete; },
+      secureDrawers: ({ complete }) => { pending.drawersSecured = complete; },
+      parkToolChest: ({ complete }) => { pending.toolChestParked = complete; },
+      retractSmartBoard: ({ complete }) => { pending.smartBoardRetracted = complete; },
       exitWorkshop: (callbacks) => Object.assign(pending, callbacks),
       restoreProjectorShutdown: ({ complete }) => { pending.restoreProjector = complete; },
       secureTableFault: ({ complete }) => { pending.tableFault = complete; },
@@ -58,6 +61,7 @@ test("settled shutdown secures Table emitters before Projector completion", () =
   h.begin();
   h.complete();
   h.controller.request({ action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true } });
+  h.pending.drawersSecured(); h.pending.toolChestParked(); h.pending.smartBoardRetracted();
   assert.equal(h.pending.tableStandby(), true);
   assert.equal(h.controller.getSnapshot().table, "POWERED_ON");
   assert.equal(h.pending.tablePoweredOff(), true);
@@ -66,8 +70,9 @@ test("settled shutdown secures Table emitters before Projector completion", () =
   assert.equal(h.pending.poweredOff(), true);
   assert.equal(h.pending.complete(), true);
   assert.equal(h.controller.getSnapshot().workshop, "OFF");
-  assert.deepEqual(h.events.slice(-5), [
-    "workshop:shutdown-begun", "table:projection-stopped", "table:powered-off", "projector:powered-off", "workshop:off",
+  assert.deepEqual(h.events.slice(-8), [
+    "workshop:shutdown-begun", "toolchest:drawers-secured", "toolchest:parked", "smartboard:retracted",
+    "table:projection-stopped", "table:powered-off", "projector:powered-off", "workshop:off",
   ]);
 });
 
