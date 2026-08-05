@@ -622,7 +622,10 @@ export function createWorkshopRuntimeController({
     Object.keys(drawerStates).forEach((id) => { drawerStates[id] = "CLOSED"; });
     activeDrawer = null;
     transition.drawersSecured = true;
-    publish(transition, "toolchest:drawers-secured", { temporaryCompatibility: true });
+    publish(transition, "toolchest:drawers-secured", {
+      timingCompliance: "ws020-rendered-drawer-security",
+      temporaryCompatibility: false,
+    });
     return beginToolChestParking(transition);
   };
 

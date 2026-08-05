@@ -21,7 +21,6 @@ function harness({ reduced = false } = {}) {
 
 test("declares locked shutdown placeholder durations", () => {
   assert.deepEqual(WORKSHOP_SHUTDOWN_PLACEHOLDER_TIMING, {
-    drawers: 200,
     smartBoard: 400,
     reducedMotion: 150,
   });
@@ -30,19 +29,15 @@ test("declares locked shutdown placeholder durations", () => {
 test("each shutdown stage completes only through its owned callback", () => {
   const { driver, tasks } = harness();
   let completions = 0;
-  assert.equal(driver.secureDrawers({ transitionId: "stop-1", complete: () => { completions += 1; } }).duration, 200);
-  assert.equal(completions, 0);
+  assert.equal(driver.retractSmartBoard({ transitionId: "stop-1", complete: () => { completions += 1; } }).duration, 400);
   tasks[0].callback(); tasks[0].callback();
   assert.equal(completions, 1);
-  assert.equal(driver.retractSmartBoard({ transitionId: "stop-1", complete: () => { completions += 1; } }).duration, 400);
-  tasks[1].callback();
-  assert.equal(completions, 2);
 });
 
 test("cancel rejects stale shutdown completion", () => {
   const { driver, tasks } = harness();
   let completions = 0;
-  driver.secureDrawers({ transitionId: "stop-2", complete: () => { completions += 1; } });
+  driver.retractSmartBoard({ transitionId: "stop-2", complete: () => { completions += 1; } });
   assert.equal(driver.cancel().code, "CANCELLED");
   assert.equal(tasks[0].cancelled, true);
   tasks[0].callback();
