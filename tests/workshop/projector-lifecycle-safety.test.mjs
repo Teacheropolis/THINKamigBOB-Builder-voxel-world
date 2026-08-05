@@ -74,6 +74,9 @@ function controllerHarness() {
       startLegacyTableProjection({ stable }) { pending.tableStable = stable; },
       startProjectorProjection({ complete }) { pending.projection = complete; },
       settleProjectorProjection({ complete }) { pending.active = complete; },
+      activateSmartBoard({ complete }) { pending.smartBoard = complete; },
+      deployToolChest({ complete }) { pending.toolChest = complete; },
+      settleWorkshopReady({ complete }) { pending.ready = complete; },
       exitWorkshop(callbacks) { Object.assign(pending, callbacks); },
       restoreProjectorShutdown({ complete }) { pending.restore = complete; },
       lowerProjectorToStandby({ complete }) { pending.lower = complete; },
@@ -83,6 +86,7 @@ function controllerHarness() {
   const start = () => {
     controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
     pending.powerBegin(); pending.powerOn(); pending.tableBegin(); pending.tablePower(); pending.projection(); pending.tableStable(); pending.active();
+    pending.smartBoard(); pending.toolChest(); pending.ready();
   };
   return { controller, pending, events, start };
 }
@@ -263,6 +267,9 @@ test("controller reverses SHUTTING_DOWN with a new transition and rejects stale 
   assert.equal(pending.projection(), true);
   assert.equal(pending.tableStable(), true);
   assert.equal(pending.active(), true);
+  assert.equal(pending.smartBoard(), true);
+  assert.equal(pending.toolChest(), true);
+  assert.equal(pending.ready(), true);
   assert.equal(controller.getSnapshot().workshop, "READY");
   assert.equal(events.filter((event) => event.name === "projector:powered-off").length, 0);
 });

@@ -30109,6 +30109,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var currentWorkspaceMode="mission";
   var workshopStateController=null;
   var workshopControllerReady=null;
+  var workshopStartupTestDouble=null;
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
   var workshopStartupState="OFF";
@@ -33779,8 +33780,18 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     };
   };
 
-  workshopControllerReady=import("./js/workshop/runtime/workshop-runtime-controller.mjs")
-    .then(function(module){
+  workshopControllerReady=Promise.all([
+    import("./js/workshop/runtime/workshop-runtime-controller.mjs"),
+    import("./js/workshop/runtime/workshop-startup-test-double.mjs")
+  ])
+    .then(function(modules){
+      var module=modules[0];
+      var startupModule=modules[1];
+      workshopStartupTestDouble=startupModule.createWorkshopStartupTestDouble({
+        reducedMotion:function(){
+          return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+        }
+      });
       workshopStateController=module.createWorkshopRuntimeController({
         stateChanged:syncWorkshopControllerPresentation,
         emit:function(eventName,detail){
@@ -33864,7 +33875,17 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
               }
             });
           },
+          activateSmartBoard:function(transition){
+            return workshopStartupTestDouble.activateSmartBoard(transition);
+          },
+          deployToolChest:function(transition){
+            return workshopStartupTestDouble.deployToolChest(transition);
+          },
+          settleWorkshopReady:function(transition){
+            return workshopStartupTestDouble.settleWorkshopReady(transition);
+          },
           exitWorkshop:function(transition){
+            workshopStartupTestDouble.cancel();
             workshopActiveTableShutdown=transition;
             workshopProjectorLifecycleSafety.shutdown({
               transitionId:transition.transitionId,
@@ -33896,6 +33917,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             });
           },
           secureProjectorFault:function(transition){
+            workshopStartupTestDouble.cancel();
             if(!workshopProjectorLifecycleSafety){
               setWorkshopStartupState(
                 "FAILED",
@@ -33912,6 +33934,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             });
           },
           secureTableFault:function(transition){
+            workshopStartupTestDouble.cancel();
             if(!workshopTablePowerOnView){
               setWorkshopStartupState(
                 "FAILED",

@@ -13,6 +13,9 @@ function harness() {
       startProjectorProjection: ({ complete }) => { pending.projectionStart = complete; },
       startLegacyTableProjection: ({ stable }) => { pending.tableStable = stable; },
       settleProjectorProjection: ({ complete }) => { pending.projectorActive = complete; },
+      activateSmartBoard: ({ complete }) => { pending.smartBoard = complete; },
+      deployToolChest: ({ complete }) => { pending.toolChest = complete; },
+      settleWorkshopReady: ({ complete }) => { pending.ready = complete; },
       exitWorkshop: (callbacks) => Object.assign(pending, callbacks),
       restoreProjectorShutdown: ({ complete }) => { pending.restoreProjector = complete; },
       secureTableFault: ({ complete }) => { pending.tableFault = complete; },
@@ -29,6 +32,9 @@ function harness() {
     pending.tableStable();
     pending.projectionStart();
     pending.projectorActive();
+    pending.smartBoard();
+    pending.toolChest();
+    pending.ready();
   };
   return { controller, events, pending, begin, complete };
 }

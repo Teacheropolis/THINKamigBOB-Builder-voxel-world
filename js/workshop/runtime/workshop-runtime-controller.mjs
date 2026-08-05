@@ -96,6 +96,7 @@ export function createWorkshopRuntimeController({
       : ["powerOnProjector", "powerOnTable", "startProjectorProjection", "settleProjectorProjection"];
     if (typeof drivers.startTableProjection === "function") required.push("settleTableProjection");
     else required.push("startLegacyTableProjection");
+    required.push("activateSmartBoard", "deployToolChest", "settleWorkshopReady");
     const missing = missingDriver(required);
     return missing
       ? reject("REQUIRED_DRIVER_UNAVAILABLE", `Required Workshop startup driver unavailable: ${missing}.`)
@@ -105,14 +106,10 @@ export function createWorkshopRuntimeController({
   const finishPowerOn = (transition) => {
     if (activeTransition !== transition || transition.cancelled) return false;
     if (state.projector !== "FULLY_ACTIVE" || state.table !== "FULLY_ACTIVE" ||
-        transition.tableProjectionStable !== true) return false;
-    // Explicit temporary test doubles preserve the verified shell until the
-    // Smart Board and Tool Chest receive their own lifecycle drivers.
-    state.boardMechanical = "EXTENDED";
-    state.boardPower = "READY";
-    state.boardApplication = "MEASUREMENT_ASSISTANT";
-    state.chest = "DEPLOYED";
-    state.measurement = "IDLE";
+        transition.tableProjectionStable !== true ||
+        transition.smartBoardReady !== true ||
+        transition.toolChestDeployed !== true ||
+        transition.readySettled !== true) return false;
     const result = validateTransition("workshop", state.workshop, "READY", {
       startupSequenceComplete: true,
     });
@@ -120,8 +117,111 @@ export function createWorkshopRuntimeController({
     state.workshop = "READY";
     busy = false;
     activeTransition = null;
-    publish(transition, "workshop:ready", { timingCompliance: "ws014-table-fully-active" });
+    publish(transition, "workshop:ready", { timingCompliance: "ws017-eight-stage-startup" });
     announceTopLevelState();
+    return true;
+  };
+
+  const finishWorkshopReadySettle = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.readySettled === true) return false;
+    if (state.chest !== "DEPLOYED" || transition.toolChestDeployed !== true) return false;
+    transition.readySettled = true;
+    return finishPowerOn(transition);
+  };
+
+  const beginWorkshopReadySettle = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.readySettleRequested === true) return false;
+    if (state.chest !== "DEPLOYED" || transition.toolChestDeployed !== true) return false;
+    transition.readySettleRequested = true;
+    drivers.settleWorkshopReady({
+      transitionId: transition.id,
+      complete: () => finishWorkshopReadySettle(transition),
+    });
+    return true;
+  };
+
+  const finishToolChestDeploy = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.toolChestDeployed === true) return false;
+    if (state.boardPower !== "READY") return false;
+    if (state.chest === "UNDOCKING") {
+      const result = validateTransition("chest", state.chest, "DEPLOYED");
+      if (!result.ok) return false;
+      state.chest = "DEPLOYED";
+    }
+    if (state.chest !== "DEPLOYED") return false;
+    transition.toolChestDeployed = true;
+    publish(transition, "toolchest:deployed", { temporaryCompatibility: true });
+    return beginWorkshopReadySettle(transition);
+  };
+
+  const beginToolChestDeploy = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.toolChestDeployRequested === true) return false;
+    if (state.boardPower !== "READY" || transition.smartBoardReady !== true) return false;
+    if (state.chest !== "DEPLOYED") {
+      const result = validateTransition("chest", state.chest, "UNDOCKING", {
+        boardReady: true,
+        allDrawersClosed: Object.values(drawerStates).every((value) => value === "CLOSED"),
+      });
+      if (!result.ok) return false;
+      state.chest = "UNDOCKING";
+    }
+    transition.toolChestDeployRequested = true;
+    drivers.deployToolChest({
+      transitionId: transition.id,
+      complete: () => finishToolChestDeploy(transition),
+    });
+    return true;
+  };
+
+  const finishSmartBoardActivation = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.smartBoardReady === true) return false;
+    if (state.projector !== "FULLY_ACTIVE" || state.table !== "FULLY_ACTIVE") return false;
+    if (state.boardMechanical === "EXTENDING") {
+      const extended = validateTransition("boardMechanical", state.boardMechanical, "EXTENDED");
+      if (!extended.ok) return false;
+      state.boardMechanical = "EXTENDED";
+      publish(transition, "smartboard:extended", { temporaryCompatibility: true });
+      const powering = validateTransition("boardPower", state.boardPower, "POWERING_ON", {
+        boardExtended: true,
+        projectionStable: true,
+      });
+      if (!powering.ok) return false;
+      state.boardPower = "POWERING_ON";
+      const powered = validateTransition("boardPower", state.boardPower, "READY");
+      if (!powered.ok) return false;
+      state.boardPower = "READY";
+      publish(transition, "smartboard:powered-on", { temporaryCompatibility: true });
+      const application = validateTransition("boardApplication", state.boardApplication, "MEASUREMENT_ASSISTANT", {
+        boardReady: true,
+      });
+      if (!application.ok) return false;
+      state.boardApplication = "MEASUREMENT_ASSISTANT";
+      state.measurement = "IDLE";
+    }
+    if (state.boardMechanical !== "EXTENDED" || state.boardPower !== "READY" ||
+        state.boardApplication !== "MEASUREMENT_ASSISTANT") return false;
+    transition.smartBoardReady = true;
+    publish(transition, "smartboard:ready", { temporaryCompatibility: true });
+    return beginToolChestDeploy(transition);
+  };
+
+  const beginSmartBoardActivation = (transition) => {
+    if (activeTransition !== transition || transition.cancelled || transition.smartBoardActivationRequested === true) return false;
+    if (state.projector !== "FULLY_ACTIVE" || state.table !== "FULLY_ACTIVE" ||
+        transition.tableProjectionStable !== true) return false;
+    if (state.boardMechanical !== "EXTENDED" || state.boardPower !== "READY" ||
+        state.boardApplication !== "MEASUREMENT_ASSISTANT") {
+      const result = validateTransition("boardMechanical", state.boardMechanical, "EXTENDING", {
+        projectionStable: true,
+      });
+      if (!result.ok) return false;
+      state.boardMechanical = "EXTENDING";
+    }
+    transition.smartBoardActivationRequested = true;
+    drivers.activateSmartBoard({
+      transitionId: transition.id,
+      complete: () => finishSmartBoardActivation(transition),
+    });
     return true;
   };
 
@@ -134,7 +234,7 @@ export function createWorkshopRuntimeController({
     if (!result.ok) return false;
     state.projector = "FULLY_ACTIVE";
     publish(transition, "projector:active");
-    return finishPowerOn(transition);
+    return beginSmartBoardActivation(transition);
   };
 
   const beginProjectorActiveSettle = (transition) => {

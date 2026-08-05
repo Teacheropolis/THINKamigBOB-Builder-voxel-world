@@ -28,6 +28,9 @@ function harness() {
       settleTableProjection: ({ complete }) => { pending.tableActive = complete; },
       startProjectorProjection: ({ complete }) => { pending.projectionStart = complete; },
       settleProjectorProjection: ({ complete }) => { pending.projectorActive = complete; },
+      activateSmartBoard: ({ complete }) => { pending.smartBoard = complete; },
+      deployToolChest: ({ complete }) => { pending.toolChest = complete; },
+      settleWorkshopReady: ({ complete }) => { pending.ready = complete; },
       exitWorkshop: ({ tableStandby, tablePoweredOff, standby, poweredOff, complete }) => {
         pending.tableStandby = tableStandby;
         pending.tablePoweredOff = tablePoweredOff;
@@ -52,6 +55,9 @@ function completeStartup(pending) {
   assert.equal(pending.tableProjection(), true);
   assert.equal(pending.tableActive(), true);
   assert.equal(pending.projectorActive(), true);
+  assert.equal(pending.smartBoard(), true);
+  assert.equal(pending.toolChest(), true);
+  assert.equal(pending.ready(), true);
 }
 
 test("starts from deterministic protected states", () => {
@@ -105,6 +111,16 @@ test("power-on changes visuals only through the accepted driver and settles once
   assert.equal(pending.tableActive(), false);
   assert.equal(pending.projectorActive(), true);
   assert.equal(pending.projectorActive(), false);
+  assert.equal(controller.getSnapshot().workshop, "STARTING");
+  assert.equal(controller.getSnapshot().disabled.drawers, true);
+  assert.equal(pending.smartBoard(), true);
+  assert.equal(controller.getSnapshot().workshop, "STARTING");
+  assert.equal(pending.smartBoard(), false);
+  assert.equal(pending.toolChest(), true);
+  assert.equal(controller.getSnapshot().workshop, "STARTING");
+  assert.equal(pending.toolChest(), false);
+  assert.equal(pending.ready(), true);
+  assert.equal(pending.ready(), false);
   assert.equal(controller.getSnapshot().workshop, "READY");
   assert.deepEqual(events.map((event) => event.name), [
     "workshop:startup-begun",
@@ -114,6 +130,10 @@ test("power-on changes visuals only through the accepted driver and settles once
     "projector:projection-started",
     "workspace:projection-stable",
     "projector:active",
+    "smartboard:extended",
+    "smartboard:powered-on",
+    "smartboard:ready",
+    "toolchest:deployed",
     "workshop:ready",
   ]);
 });
@@ -197,6 +217,8 @@ test("requires both readiness branches and emits real Table stability once", () 
   assert.equal(controller.getSnapshot().table, "FULLY_ACTIVE");
   assert.equal(controller.getSnapshot().workshop, "STARTING");
   pending.projectionStart(); pending.projectorActive();
+  assert.equal(controller.getSnapshot().workshop, "STARTING");
+  pending.smartBoard(); pending.toolChest(); pending.ready();
   assert.equal(controller.getSnapshot().workshop, "READY");
   assert.equal(events.filter((event) => event.name === "workspace:projection-stable").length, 1);
 });
@@ -208,6 +230,7 @@ test("labels genuine WS-014 stability at the Fully Active rendered endpoint", ()
   pending.tableProjection();
   assert.equal(events.some((event) => event.name === "workspace:projection-stable"), false);
   pending.tableActive(); pending.projectionStart(); pending.projectorActive();
+  pending.smartBoard(); pending.toolChest(); pending.ready();
   assert.equal(controller.getSnapshot().table, "FULLY_ACTIVE");
   const stable = events.find((event) => event.name === "workspace:projection-stable");
   assert.deepEqual(
@@ -294,6 +317,9 @@ test("missing required lifecycle drivers fail closed without changing canonical 
       settleTableProjection: ({ complete }) => complete(),
       startProjectorProjection: ({ complete }) => complete(),
       settleProjectorProjection: ({ complete }) => complete(),
+      activateSmartBoard: ({ complete }) => complete(),
+      deployToolChest: ({ complete }) => complete(),
+      settleWorkshopReady: ({ complete }) => complete(),
     },
   });
   noExit.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
@@ -327,6 +353,9 @@ test("presentation observer failures never gate canonical transitions", () => {
       settleTableProjection() {},
       startProjectorProjection() {},
       settleProjectorProjection() {},
+      activateSmartBoard() {},
+      deployToolChest() {},
+      settleWorkshopReady() {},
     },
   });
   const result = controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });

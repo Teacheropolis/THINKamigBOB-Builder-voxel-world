@@ -30,7 +30,7 @@ test("controller state callback is the sole canonical presentation bridge", () =
     assert.match(sync, new RegExp(`snapshot\\.workshop===\"${state}\"`));
   }
   const creation = between(
-    "workshopControllerReady=import(\"./js/workshop/runtime/workshop-runtime-controller.mjs\")",
+    "workshopControllerReady=Promise.all([",
     "drivers:{",
   );
   assert.match(creation, /stateChanged:syncWorkshopControllerPresentation/);
