@@ -4228,6 +4228,22 @@ Nature ▶
               </div>
               <p id="engineeringSmartBoardLearningGroupNote">These measurements describe the selected object.</p>
             </section>
+            <section id="engineeringSmartBoardNotebookDisplay" data-notebook-state="inactive" hidden aria-hidden="true">
+              <header class="engineering-smart-board-notebook-header">
+                <span>
+                  <strong>ENGINEERING NOTEBOOK</strong>
+                  <small>DESIGN RECORD</small>
+                </span>
+                <span id="engineeringSmartBoardNotebookUnit">CM</span>
+              </header>
+              <small id="engineeringSmartBoardNotebookSelection">1 object selected</small>
+              <div class="engineering-smart-board-notebook-values">
+                <span><small>WIDTH</small><strong id="engineeringSmartBoardNotebookWidth">—</strong></span>
+                <span><small>LENGTH</small><strong id="engineeringSmartBoardNotebookLength">—</strong></span>
+                <span><small>HEIGHT</small><strong id="engineeringSmartBoardNotebookHeight">—</strong></span>
+              </div>
+              <p id="engineeringSmartBoardNotebookGroupNote">This design record describes the selected object.</p>
+            </section>
           </div>
         </div>
       </div>
@@ -4287,6 +4303,10 @@ Nature ▶
         <button id="workshopEnterLearningMode" type="button" hidden disabled onclick="enterWorkshopMeasurementLearningMode()">LEARN ABOUT THESE MEASUREMENTS</button>
         <button id="workshopExitLearningMode" type="button" hidden disabled onclick="exitWorkshopMeasurementLearningMode()">BACK TO MEASUREMENTS</button>
         <span id="workshopMeasurementLearningStatus" class="sr-only" aria-live="polite" aria-atomic="true"></span>
+      </div>
+      <div id="workshopMeasurementNotebookControls">
+        <button id="workshopOpenEngineeringNotebook" type="button" hidden disabled>OPEN ENGINEERING NOTEBOOK</button>
+        <button id="workshopBackToMeasurementsFromNotebook" type="button" hidden disabled>BACK TO MEASUREMENTS</button>
       </div>
       <button id="workshopRestoreSelection" type="button" onclick="restorePreviousWorkshopSelection()" hidden disabled><span class="workshop-control-icon" aria-hidden="true">↶</span><span>Restore Selection</span></button>
     </section>
@@ -27513,7 +27533,8 @@ body.workshopMode:not(.starterScreenActive) #engineeringSmartBoard{
 }
 
 #engineeringSmartBoardMeasurementDisplay[hidden],
-#engineeringSmartBoardLearningDisplay[hidden]{
+#engineeringSmartBoardLearningDisplay[hidden],
+#engineeringSmartBoardNotebookDisplay[hidden]{
   display:none !important;
 }
 
@@ -27607,6 +27628,110 @@ body.workshopMode:not(.starterScreenActive) #engineeringSmartBoard{
   overflow:hidden;
   margin:0;
   color:#d9efaf;
+  font-size:clamp(3px,.35vw,6px);
+  line-height:1.15;
+  text-align:center;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#engineeringSmartBoardNotebookDisplay{
+  display:grid;
+  position:absolute;
+  inset:7% 6%;
+  grid-template-rows:auto auto minmax(0,1fr) auto;
+  gap:5%;
+  box-sizing:border-box;
+  overflow:hidden;
+  color:#eafaff;
+  font-family:"Lexend",Arial,sans-serif;
+  pointer-events:none;
+  user-select:none;
+}
+
+.engineering-smart-board-notebook-header{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:4%;
+  align-items:center;
+}
+
+.engineering-smart-board-notebook-header > span:first-child{
+  display:grid;
+  gap:2px;
+  min-width:0;
+}
+
+.engineering-smart-board-notebook-header strong{
+  overflow:hidden;
+  color:#8ff6ff;
+  font-size:clamp(5px,.55vw,9px);
+  line-height:1;
+  letter-spacing:.06em;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.engineering-smart-board-notebook-header small,
+#engineeringSmartBoardNotebookSelection{
+  overflow:hidden;
+  color:#c9dde5;
+  font-size:clamp(3px,.35vw,6px);
+  line-height:1;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#engineeringSmartBoardNotebookUnit{
+  padding:3% 12%;
+  border:1px solid rgba(143,246,255,.72);
+  border-radius:4px;
+  color:#dffcff;
+  background:rgba(3,15,25,.72);
+  font-size:clamp(4px,.42vw,7px);
+  font-weight:900;
+  line-height:1;
+}
+
+.engineering-smart-board-notebook-values{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:3%;
+  min-height:0;
+}
+
+.engineering-smart-board-notebook-values > span{
+  display:grid;
+  place-content:center;
+  gap:8%;
+  min-width:0;
+  border:1px solid rgba(143,246,255,.34);
+  border-radius:5px;
+  background:rgba(4,18,27,.68);
+  text-align:center;
+}
+
+.engineering-smart-board-notebook-values small{
+  color:#9fc3d1;
+  font-size:clamp(3px,.31vw,5px);
+  font-weight:800;
+  line-height:1.1;
+}
+
+.engineering-smart-board-notebook-values strong{
+  overflow:hidden;
+  color:#fff;
+  font-size:clamp(5px,.56vw,10px);
+  font-weight:900;
+  line-height:1;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#engineeringSmartBoardNotebookGroupNote{
+  overflow:hidden;
+  margin:0;
+  color:#cbeef2;
   font-size:clamp(3px,.35vw,6px);
   line-height:1.15;
   text-align:center;
@@ -28077,8 +28202,28 @@ body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant{
   margin-top:8px;
 }
 
+#workshopMeasurementNotebookControls{
+  display:grid;
+  gap:7px;
+}
+
 #workshopEnterLearningMode,
 #workshopExitLearningMode{
+  min-height:44px;
+  padding:8px 10px;
+  border:1px solid rgba(143,246,255,.72);
+  border-radius:8px;
+  color:#eafaff;
+  background:linear-gradient(180deg,rgba(14,54,70,.96),rgba(4,24,34,.98));
+  box-shadow:0 0 10px rgba(77,220,255,.2),inset 0 1px rgba(255,255,255,.12);
+  font:800 11px/1.2 "Lexend",Arial,sans-serif;
+  letter-spacing:.03em;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+
+#workshopOpenEngineeringNotebook,
+#workshopBackToMeasurementsFromNotebook{
   min-height:44px;
   padding:8px 10px;
   border:1px solid rgba(143,246,255,.72);
@@ -28101,8 +28246,22 @@ body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant{
   outline:none;
 }
 
+#workshopOpenEngineeringNotebook:hover,
+#workshopOpenEngineeringNotebook:focus-visible,
+#workshopBackToMeasurementsFromNotebook:hover,
+#workshopBackToMeasurementsFromNotebook:focus-visible{
+  border-color:#b9f548;
+  box-shadow:0 0 0 2px rgba(185,245,72,.22),0 0 14px rgba(77,220,255,.28);
+  outline:none;
+}
+
 #workshopEnterLearningMode[hidden],
 #workshopExitLearningMode[hidden]{
+  display:none !important;
+}
+
+#workshopOpenEngineeringNotebook[hidden],
+#workshopBackToMeasurementsFromNotebook[hidden]{
   display:none !important;
 }
 
