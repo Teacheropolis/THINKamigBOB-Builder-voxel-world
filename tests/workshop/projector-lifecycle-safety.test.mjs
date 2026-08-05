@@ -70,7 +70,8 @@ function controllerHarness() {
     emit(name, detail) { events.push({ name, detail }); },
     drivers: {
       powerOnProjector({ begin, complete }) { pending.powerBegin = begin; pending.powerOn = complete; },
-      continueLegacyStartup({ tableReady, tableStable }) { pending.tableReady = tableReady; pending.tableStable = tableStable; },
+      powerOnTable({ begin, complete }) { pending.tableBegin = begin; pending.tablePower = complete; },
+      startLegacyTableProjection({ stable }) { pending.tableStable = stable; },
       startProjectorProjection({ complete }) { pending.projection = complete; },
       settleProjectorProjection({ complete }) { pending.active = complete; },
       exitWorkshop(callbacks) { Object.assign(pending, callbacks); },
@@ -81,7 +82,7 @@ function controllerHarness() {
   });
   const start = () => {
     controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
-    pending.powerBegin(); pending.powerOn(); pending.tableReady(); pending.projection(); pending.tableStable(); pending.active();
+    pending.powerBegin(); pending.powerOn(); pending.tableBegin(); pending.tablePower(); pending.projection(); pending.tableStable(); pending.active();
   };
   return { controller, pending, events, start };
 }
@@ -217,6 +218,8 @@ test("controller owns once-only powered-off, reversal, standby, and fault events
   const { controller, pending, events, start } = controllerHarness();
   start();
   controller.request({ action: "REQUEST_POWER_OFF", input: "host", context: { applicationStateSecured: true } });
+  assert.equal(pending.tableStandby(), true);
+  assert.equal(pending.tablePoweredOff(), true);
   assert.equal(pending.standby(), true);
   assert.equal(pending.poweredOff(), true);
   assert.equal(pending.poweredOff(), false);
@@ -255,7 +258,8 @@ test("controller reverses SHUTTING_DOWN with a new transition and rejects stale 
   assert.equal(stalePoweredOff(), false);
   assert.equal(pending.restore(), true);
   assert.equal(controller.getSnapshot().projector, "POWERED_ON");
-  assert.equal(pending.tableReady(), true);
+  assert.equal(pending.tableBegin(), true);
+  assert.equal(pending.tablePower(), true);
   assert.equal(pending.projection(), true);
   assert.equal(pending.tableStable(), true);
   assert.equal(pending.active(), true);

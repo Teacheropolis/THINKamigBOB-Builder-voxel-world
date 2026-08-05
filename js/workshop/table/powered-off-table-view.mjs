@@ -2,6 +2,10 @@ export const TABLETOP_REAR_ASSET =
   "assets/images/workshop/runtime/derivatives/table/table-powered-off-tabletop-rear-1761x1174.png";
 export const FRONT_CHASSIS_ASSET =
   "assets/images/workshop/runtime/derivatives/table/table-powered-off-front-chassis-1761x1174.png";
+export const POWERING_ON_REAR_EMITTER_ASSET =
+  "assets/images/workshop/runtime/derivatives/table/table-powering-on-emitters-rear-1761x1174.png";
+export const POWERING_ON_FRONT_EMITTER_ASSET =
+  "assets/images/workshop/runtime/derivatives/table/table-powering-on-emitters-front-1761x1174.png";
 
 export const WORKSHOP_STUDENT_COMPOSITE_LAYER = 30;
 
@@ -175,6 +179,8 @@ export function createPoweredOffTableCompositor({
   lights = [],
   rearAssetPath = TABLETOP_REAR_ASSET,
   chassisAssetPath = FRONT_CHASSIS_ASSET,
+  rearEmitterAssetPath = POWERING_ON_REAR_EMITTER_ASSET,
+  frontEmitterAssetPath = POWERING_ON_FRONT_EMITTER_ASSET,
   ResizeObserver: ResizeObserverConstructor = globalThis.ResizeObserver,
 } = {}) {
   if (!THREE || typeof THREE.TextureLoader !== "function" ||
@@ -202,13 +208,25 @@ export function createPoweredOffTableCompositor({
   const chassisMaterial = new THREE.MeshBasicMaterial({
     transparent: true, opacity: 1, alphaTest: 0.01, depthTest: false, depthWrite: false,
   });
+  const rearEmitterMaterial = new THREE.MeshBasicMaterial({
+    transparent: true, opacity: 0, alphaTest: 0.01, depthTest: true, depthWrite: false,
+  });
+  const frontEmitterMaterial = new THREE.MeshBasicMaterial({
+    transparent: true, opacity: 0, alphaTest: 0.01, depthTest: false, depthWrite: false,
+  });
   const rearMesh = new THREE.Mesh(geometry, rearMaterial);
   const chassisMesh = new THREE.Mesh(geometry, chassisMaterial);
+  const rearEmitterMesh = new THREE.Mesh(geometry, rearEmitterMaterial);
+  const frontEmitterMesh = new THREE.Mesh(geometry, frontEmitterMaterial);
   rearMesh.name = "workshopPoweredOffTabletopRear";
   chassisMesh.name = "workshopPoweredOffFrontChassis";
+  rearEmitterMesh.name = "workshopTablePoweringOnRearEmitters";
+  frontEmitterMesh.name = "workshopTablePoweringOnFrontEmitters";
   rearMesh.renderOrder = -30;
+  rearEmitterMesh.renderOrder = -29;
   chassisMesh.renderOrder = 10;
-  [rearMesh, chassisMesh].forEach((mesh) => {
+  frontEmitterMesh.renderOrder = 11;
+  [rearMesh, rearEmitterMesh, chassisMesh, frontEmitterMesh].forEach((mesh) => {
     mesh.visible = false;
     mesh.raycast = function() {};
     mesh.userData.workshopDecoration = true;
@@ -218,7 +236,9 @@ export function createPoweredOffTableCompositor({
   const cameraOriginalParent = camera.parent || null;
   if (camera.parent !== scene) scene.add(camera);
   camera.add(rearMesh);
+  camera.add(rearEmitterMesh);
   camera.add(chassisMesh);
+  camera.add(frontEmitterMesh);
 
   let resolveReady;
   let rejectReady;
@@ -229,14 +249,24 @@ export function createPoweredOffTableCompositor({
   let tableVisible = false;
   let lastRegistration = null;
   const textureLoader = new THREE.TextureLoader();
-  const onLoaded = () => { loaded += 1; if (loaded === 2) { updateRegistration(); resolveReady(); } };
-  const onError = (path) => (error) => rejectReady(new Error(`Powered-off Table layer failed to load: ${path}`, { cause: error }));
+  const onLoaded = () => { loaded += 1; if (loaded === 4) { updateRegistration(); resolveReady(); } };
+  const onError = (path) => (error) => rejectReady(new Error(`Workshop Table layer failed to load: ${path}`, { cause: error }));
   const rearTexture = textureLoader.load(rearAssetPath, onLoaded, undefined, onError(rearAssetPath));
   const chassisTexture = textureLoader.load(chassisAssetPath, onLoaded, undefined, onError(chassisAssetPath));
+  const rearEmitterTexture = textureLoader.load(
+    rearEmitterAssetPath, onLoaded, undefined, onError(rearEmitterAssetPath),
+  );
+  const frontEmitterTexture = textureLoader.load(
+    frontEmitterAssetPath, onLoaded, undefined, onError(frontEmitterAssetPath),
+  );
   rearMaterial.map = rearTexture;
   chassisMaterial.map = chassisTexture;
+  rearEmitterMaterial.map = rearEmitterTexture;
+  frontEmitterMaterial.map = frontEmitterTexture;
   rearMaterial.needsUpdate = true;
   chassisMaterial.needsUpdate = true;
+  rearEmitterMaterial.needsUpdate = true;
+  frontEmitterMaterial.needsUpdate = true;
 
   const savedObjectMasks = new Map();
   const savedLightMasks = new Map();
@@ -297,17 +327,19 @@ export function createPoweredOffTableCompositor({
     const registration = calculatePoweredOffTableRegistration({ stageBounds, protectedBounds });
     if (!canvasBounds.width || !canvasBounds.height) {
       tableVisible = false;
-      rearMesh.visible = chassisMesh.visible = false;
+      rearMesh.visible = rearEmitterMesh.visible = chassisMesh.visible = frontEmitterMesh.visible = false;
       lastRegistration = registration;
       return registration;
     }
     const transform = calculateCameraPlaneTransform({ registration, canvasBounds, camera });
-    [rearMesh, chassisMesh].forEach((mesh) => {
+    [rearMesh, rearEmitterMesh, chassisMesh, frontEmitterMesh].forEach((mesh) => {
       mesh.position.set(transform.x, transform.y, transform.z);
       mesh.scale.set(transform.width, transform.height, 1);
     });
-    tableVisible = active && loaded === 2 && !registration.hidden;
+    tableVisible = active && loaded === 4 && !registration.hidden;
     rearMesh.visible = chassisMesh.visible = tableVisible;
+    rearEmitterMesh.visible = tableVisible && rearEmitterMaterial.opacity > 0;
+    frontEmitterMesh.visible = tableVisible && frontEmitterMaterial.opacity > 0;
     if (!tableVisible) restoreLayerMembership();
     lastRegistration = Object.freeze({ ...registration, transform });
     return lastRegistration;
@@ -345,7 +377,7 @@ export function createPoweredOffTableCompositor({
   function setWorkshopActive(value) {
     active = value === true;
     if (!active) {
-      rearMesh.visible = chassisMesh.visible = false;
+      rearMesh.visible = rearEmitterMesh.visible = chassisMesh.visible = frontEmitterMesh.visible = false;
       tableVisible = false;
       restoreLayerMembership();
     }
@@ -363,9 +395,24 @@ export function createPoweredOffTableCompositor({
     state: POWERED_OFF_TABLE_STATE,
     configuration: POWERED_OFF_TABLE_REGISTRATION,
     emitterPlane: POWERED_OFF_TABLE_EMITTER_PLANE,
-    meshes: Object.freeze({ rear: rearMesh, chassis: chassisMesh }),
-    materials: Object.freeze({ rear: rearMaterial, chassis: chassisMaterial }),
-    textures: Object.freeze({ rear: rearTexture, chassis: chassisTexture }),
+    meshes: Object.freeze({
+      rear: rearMesh,
+      rearEmitter: rearEmitterMesh,
+      chassis: chassisMesh,
+      frontEmitter: frontEmitterMesh,
+    }),
+    materials: Object.freeze({
+      rear: rearMaterial,
+      rearEmitter: rearEmitterMaterial,
+      chassis: chassisMaterial,
+      frontEmitter: frontEmitterMaterial,
+    }),
+    textures: Object.freeze({
+      rear: rearTexture,
+      rearEmitter: rearEmitterTexture,
+      chassis: chassisTexture,
+      frontEmitter: frontEmitterTexture,
+    }),
     get registration() { return lastRegistration; },
     get visible() { return tableVisible; },
     setWorkshopActive,
@@ -379,14 +426,20 @@ export function createPoweredOffTableCompositor({
       disposed = true;
       observer.disconnect();
       camera.remove(rearMesh);
+      camera.remove(rearEmitterMesh);
       camera.remove(chassisMesh);
+      camera.remove(frontEmitterMesh);
       if (cameraOriginalParent) cameraOriginalParent.add(camera);
       else if (camera.parent === scene) scene.remove(camera);
       geometry.dispose();
       rearMaterial.dispose();
+      rearEmitterMaterial.dispose();
       chassisMaterial.dispose();
+      frontEmitterMaterial.dispose();
       rearTexture.dispose();
+      rearEmitterTexture.dispose();
       chassisTexture.dispose();
+      frontEmitterTexture.dispose();
     },
   });
 }

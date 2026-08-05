@@ -15,17 +15,21 @@ function harness() {
         pending.projectorBegin = begin;
         pending.projectorComplete = complete;
       },
-      continueLegacyStartup: ({ tableReady, tableStable }) => {
-        pending.tableReady = tableReady;
-        pending.tableStable = tableStable;
+      powerOnTable: ({ begin, complete }) => {
+        pending.tableBegin = begin;
+        pending.tablePower = complete;
       },
+      startLegacyTableProjection: ({ stable }) => { pending.tableStable = stable; },
       startProjectorProjection: ({ complete }) => { pending.projectionStart = complete; },
       settleProjectorProjection: ({ complete }) => { pending.projectorActive = complete; },
-      exitWorkshop: ({ standby, poweredOff, complete }) => {
+      exitWorkshop: ({ tableStandby, tablePoweredOff, standby, poweredOff, complete }) => {
+        pending.tableStandby = tableStandby;
+        pending.tablePoweredOff = tablePoweredOff;
         pending.standby = standby;
         pending.poweredOff = poweredOff;
         pending.exit = complete;
       },
+      secureTableFault: ({ complete }) => { pending.tableFault = complete; },
       openDrawer: ({ complete }) => { pending.drawer = complete; },
       closeDrawer: ({ complete }) => { pending.drawer = complete; },
     },
@@ -36,7 +40,8 @@ function harness() {
 function completeStartup(pending) {
   assert.equal(pending.projectorBegin(), true);
   assert.equal(pending.projectorComplete(), true);
-  assert.equal(pending.tableReady(), true);
+  assert.equal(pending.tableBegin(), true);
+  assert.equal(pending.tablePower(), true);
   assert.equal(pending.projectionStart(), true);
   assert.equal(pending.tableStable(), true);
   assert.equal(pending.projectorActive(), true);
@@ -54,7 +59,7 @@ test("starts from deterministic protected states", () => {
     activeDrawer: null, busy: false,
     disabled: { powerOn: false, powerOff: true, drawers: true, measurement: true },
     activeTransitionId: null,
-    timingCompliance: "ws010-safe-projector-lifecycle",
+    timingCompliance: "ws012-table-power-lifecycle",
   });
 });
 
@@ -71,10 +76,13 @@ test("power-on changes visuals only through the accepted driver and settles once
   assert.equal(controller.getSnapshot().projector, "POWERED_ON");
   assert.deepEqual(events.map((event) => event.name), ["workshop:startup-begun", "projector:powered-on"]);
   assert.equal(pending.projectorComplete(), false);
-  assert.equal(pending.tableReady(), true);
+  assert.equal(pending.tableBegin(), true);
+  assert.equal(controller.getSnapshot().table, "POWERING_ON");
+  assert.equal(pending.tablePower(), true);
+  assert.equal(controller.getSnapshot().table, "PROJECTION_STARTING");
   assert.equal(controller.getSnapshot().projector, "PROJECTION_STARTING");
   assert.equal(pending.tableStable(), true);
-  assert.equal(controller.getSnapshot().table, "POWERED_OFF");
+  assert.equal(controller.getSnapshot().table, "PROJECTION_STARTING");
   assert.equal(pending.projectionStart(), true);
   assert.equal(pending.projectionStart(), false);
   assert.equal(controller.getSnapshot().table, "FULLY_ACTIVE");
@@ -84,6 +92,7 @@ test("power-on changes visuals only through the accepted driver and settles once
   assert.deepEqual(events.map((event) => event.name), [
     "workshop:startup-begun",
     "projector:powered-on",
+    "table:powered-on",
     "projector:projection-started",
     "workspace:projection-stable",
     "projector:active",

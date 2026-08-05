@@ -3,6 +3,8 @@ import test from "node:test";
 
 import {
   FRONT_CHASSIS_ASSET,
+  POWERING_ON_FRONT_EMITTER_ASSET,
+  POWERING_ON_REAR_EMITTER_ASSET,
   POWERED_OFF_TABLE_EMITTER_PLANE,
   POWERED_OFF_TABLE_REGISTRATION,
   POWERED_OFF_TABLE_STATE,
@@ -118,6 +120,8 @@ function createHarness({ stageBounds, registrationBounds, protectedBounds = [] }
 test("records the approved powered-off Table assets, state, registration, and emitters", () => {
   assert.equal(TABLETOP_REAR_ASSET.endsWith("table-powered-off-tabletop-rear-1761x1174.png"), true);
   assert.equal(FRONT_CHASSIS_ASSET.endsWith("table-powered-off-front-chassis-1761x1174.png"), true);
+  assert.equal(POWERING_ON_REAR_EMITTER_ASSET.endsWith("table-powering-on-emitters-rear-1761x1174.png"), true);
+  assert.equal(POWERING_ON_FRONT_EMITTER_ASSET.endsWith("table-powering-on-emitters-front-1761x1174.png"), true);
   assert.deepEqual(POWERED_OFF_TABLE_STATE, { name: "POWERED_OFF", opacity: 1, scale: 1 });
   assert.equal(POWERED_OFF_TABLE_REGISTRATION.anchor, "VISUAL_BASE_CENTER");
   assert.equal(POWERED_OFF_TABLE_REGISTRATION.minimumWidth, 320);
@@ -230,17 +234,35 @@ test("honors the approved Mac and Chromebook-responsive clearance matrix", () =>
   });
 });
 
-test("mounts two camera-attached structural layers with the approved depth contract", async () => {
+test("mounts four registered structural and emitter layers with the approved depth contract", async () => {
   const harness = createHarness();
   assert.equal(harness.compositor.meshes.rear.parent, harness.camera);
+  assert.equal(harness.compositor.meshes.rearEmitter.parent, harness.camera);
   assert.equal(harness.compositor.meshes.chassis.parent, harness.camera);
+  assert.equal(harness.compositor.meshes.frontEmitter.parent, harness.camera);
   assert.equal(harness.compositor.materials.rear.depthTest, true);
   assert.equal(harness.compositor.materials.rear.depthWrite, true);
   assert.equal(harness.compositor.materials.chassis.depthTest, false);
   assert.equal(harness.compositor.materials.chassis.depthWrite, false);
+  assert.equal(harness.compositor.materials.rearEmitter.depthTest, true);
+  assert.equal(harness.compositor.materials.rearEmitter.depthWrite, false);
+  assert.equal(harness.compositor.materials.frontEmitter.depthTest, false);
+  assert.equal(harness.compositor.materials.frontEmitter.depthWrite, false);
+  assert.equal(harness.compositor.meshes.rear.renderOrder, -30);
+  assert.equal(harness.compositor.meshes.rearEmitter.renderOrder, -29);
+  assert.equal(harness.compositor.meshes.chassis.renderOrder, 10);
+  assert.equal(harness.compositor.meshes.frontEmitter.renderOrder, 11);
   assert.equal(harness.compositor.meshes.rear.raycast(), undefined);
   harness.completeLoads();
   await harness.compositor.ready;
+  assert.equal(harness.textures.length, 4);
+  harness.compositor.setWorkshopActive(true);
+  assert.equal(harness.compositor.meshes.rearEmitter.visible, false);
+  harness.compositor.materials.rearEmitter.opacity = 0.75;
+  harness.compositor.materials.frontEmitter.opacity = 0.75;
+  harness.compositor.updateRegistration();
+  assert.equal(harness.compositor.meshes.rearEmitter.visible, true);
+  assert.equal(harness.compositor.meshes.frontEmitter.visible, true);
 });
 
 test("renders exactly one bounded final student pass only while the Table is visible", async () => {
@@ -315,6 +337,8 @@ test("disconnects and disposes without changing the canonical assets", async () 
   assert.equal(harness.geometry.disposed, true);
   assert.equal(harness.compositor.materials.rear.disposed, true);
   assert.equal(harness.compositor.materials.chassis.disposed, true);
+  assert.equal(harness.compositor.materials.rearEmitter.disposed, true);
+  assert.equal(harness.compositor.materials.frontEmitter.disposed, true);
   assert.equal(harness.textures.every((texture) => texture.disposed), true);
   assert.equal(harness.student.layers.mask, 1);
 });

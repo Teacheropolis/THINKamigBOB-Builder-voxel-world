@@ -30127,6 +30127,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopPoweredOffProjectorReady=false;
   var workshopPoweredOffProjectorLoadError=null;
   var workshopPoweredOffTableCompositor=null;
+  var workshopTablePowerOnView=null;
+  var workshopActiveTableShutdown=null;
   var workshopPoweredOffTableReady=false;
   var workshopPoweredOffTableLoadError=null;
 
@@ -30310,7 +30312,29 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             powerView:workshopProjectorPowerOnView,
             opticalView:workshopProjectorProjectionActiveView,
             stopTableField:function(transition){
-              applyWorkspaceModeVisuals("mission",transition.complete);
+              animateWorkshopProjection(false,function(){
+                var shutdown=workshopActiveTableShutdown;
+                if(shutdown && typeof shutdown.tableStandby==="function"){
+                  shutdown.tableStandby();
+                }
+                if(!workshopTablePowerOnView){
+                  if(shutdown && typeof shutdown.tablePoweredOff==="function"){
+                    shutdown.tablePoweredOff();
+                  }
+                  applyWorkspaceModeVisuals("mission",transition.complete);
+                  return;
+                }
+                workshopTablePowerOnView.powerOff({
+                  transitionId:transition.transitionId,
+                  complete:function(){
+                    if(shutdown && typeof shutdown.tablePoweredOff==="function"){
+                      shutdown.tablePoweredOff();
+                    }
+                    workshopActiveTableShutdown=null;
+                    applyWorkspaceModeVisuals("mission",transition.complete);
+                  }
+                });
+              });
             },
             audio:modules[4].createProjectorAudioHooks({
               isMuted:function(){
@@ -30370,9 +30394,12 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   function loadWorkshopPoweredOffTable(){
     workshopPoweredOffTableReady=false;
     workshopPoweredOffTableLoadError=null;
-    import("./js/workshop/table/powered-off-table-view.mjs")
-      .then(function(module){
-        workshopPoweredOffTableCompositor=module.createPoweredOffTableCompositor({
+    Promise.all([
+      import("./js/workshop/table/powered-off-table-view.mjs"),
+      import("./js/workshop/table/table-power-on-view.mjs")
+    ])
+      .then(function(modules){
+        workshopPoweredOffTableCompositor=modules[0].createPoweredOffTableCompositor({
           THREE:THREE,
           scene:scene,
           camera:camera,
@@ -30389,11 +30416,27 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           getCadDimensionGroup:function(){ return workshopCadDimensionGroup; },
           lights:[light,ambient]
         });
+        workshopTablePowerOnView=modules[1].createTablePowerOnView({
+          materials:{
+            rear:workshopPoweredOffTableCompositor.materials.rearEmitter,
+            front:workshopPoweredOffTableCompositor.materials.frontEmitter
+          },
+          document:document,
+          audio:{
+            trigger:function(token){
+              return workshopProjectorLifecycleSafety ?
+                workshopProjectorLifecycleSafety.playAudio(token) : null;
+            }
+          }
+        });
         window.renderWorkshopPoweredOffTableFrame=function(){
           return workshopPoweredOffTableCompositor ?
             workshopPoweredOffTableCompositor.render() : false;
         };
-        return workshopPoweredOffTableCompositor.ready;
+        return Promise.all([
+          workshopPoweredOffTableCompositor.ready,
+          workshopTablePowerOnView.ready
+        ]);
       })
       .then(function(){
         workshopPoweredOffTableReady=true;
@@ -30407,6 +30450,13 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       })
       .catch(function(error){
         workshopPoweredOffTableLoadError=error;
+        if(workshopStateController &&
+          workshopStateController.getSnapshot().projector==="POWERED_ON"){
+          workshopStateController.reportTableFault({
+            code:"TABLE_EMITTER_ASSET_UNAVAILABLE",
+            message:"Workshop Table emitters unavailable. Workshop entered safe mode."
+          });
+        }
         console.error("Workshop Powered Off Table failed to load:",error);
         setWorkshopStartupState(
           "FAILED",
@@ -33581,9 +33631,19 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
               complete:transition.complete
             });
           },
-          continueLegacyStartup:function(transition){
-            if(transition.tableReady()===false) return;
-            applyWorkspaceModeVisuals("workshop",transition.tableStable);
+          powerOnTable:function(transition){
+            if(!workshopTablePowerOnView || transition.begin()===false) return;
+            if(workshopPoweredOffTableCompositor){
+              workshopPoweredOffTableCompositor.setWorkshopActive(true);
+            }
+            workshopTablePowerOnView.powerOn({
+              transitionId:transition.transitionId,
+              begin:function(){ return true; },
+              complete:transition.complete
+            });
+          },
+          startLegacyTableProjection:function(transition){
+            applyWorkspaceModeVisuals("workshop",transition.stable);
           },
           startProjectorProjection:function(transition){
             workshopProjectorLifecycleSafety.playAudio("projector-rise");
@@ -33603,6 +33663,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             });
           },
           exitWorkshop:function(transition){
+            workshopActiveTableShutdown=transition;
             workshopProjectorLifecycleSafety.shutdown({
               transitionId:transition.transitionId,
               standby:transition.standby,
@@ -33636,6 +33697,26 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
               code:transition.code,
               message:transition.message,
               complete:transition.complete
+            });
+          },
+          secureTableFault:function(transition){
+            if(!workshopTablePowerOnView){
+              setWorkshopStartupState(
+                "FAILED",
+                transition.message || "Workshop Table unavailable. Workshop entered safe mode."
+              );
+              transition.complete();
+              return;
+            }
+            workshopTablePowerOnView.enterFaultSafe({
+              transitionId:transition.transitionId,
+              complete:function(){
+                setWorkshopStartupState(
+                  "FAILED",
+                  transition.message || "Workshop Table unavailable. Workshop entered safe mode."
+                );
+                transition.complete();
+              }
             });
           },
           openDrawer:function(transition){
