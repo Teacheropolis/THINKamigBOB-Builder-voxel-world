@@ -5,6 +5,8 @@ import {
   createWorkshopClassroomWorkspaceReset,
   WORKSHOP_CLASSROOM_RESET_CLASS,
 } from "../../js/workshop/runtime/workshop-classroom-workspace-reset.mjs";
+import { WORKSHOP_WORKSTATION_REGISTRATION } from
+  "../../js/workshop/runtime/workshop-workstation-registration.mjs";
 
 function classList() {
   const values = new Set();
@@ -25,6 +27,8 @@ test("calculates an inset protected build zone and excludes overlapping controls
     ],
   });
   assert.equal(zone.inset, 12);
+  assert.equal(zone.inset,
+    WORKSHOP_WORKSTATION_REGISTRATION.table.essentialControlClearance);
   assert.equal(zone.left >= 282, true);
   assert.equal(zone.right <= 928, true);
   assert.equal(zone.bottom <= 668, true);

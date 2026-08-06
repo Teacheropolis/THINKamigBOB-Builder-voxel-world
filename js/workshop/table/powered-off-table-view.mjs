@@ -1,3 +1,6 @@
+import { WORKSHOP_WORKSTATION_REGISTRATION } from
+  "../runtime/workshop-workstation-registration.mjs";
+
 export const TABLETOP_REAR_ASSET =
   "assets/images/workshop/runtime/derivatives/table/table-powered-off-tabletop-rear-1761x1174.png";
 export const FRONT_CHASSIS_ASSET =
@@ -17,13 +20,14 @@ export const POWERED_OFF_TABLE_STATE = Object.freeze({
 
 export const POWERED_OFF_TABLE_REGISTRATION = Object.freeze({
   registrationRectangle: "WORKSHOP_VIEWPORT_STAGE",
-  anchor: "VISUAL_BASE_CENTER",
+  anchor: WORKSHOP_WORKSTATION_REGISTRATION.table.anchor,
   anchorX: 0.5,
   anchorY: 1,
-  preferredWidthRatio: 0.96,
-  minimumWidth: 320,
-  maximumWidth: 1150,
-  essentialControlClearance: 12,
+  preferredWidthRatio: WORKSHOP_WORKSTATION_REGISTRATION.table.preferredWidthRatio,
+  minimumWidth: WORKSHOP_WORKSTATION_REGISTRATION.table.minimumWidth,
+  maximumWidth: WORKSHOP_WORKSTATION_REGISTRATION.table.maximumWidth,
+  essentialControlClearance:
+    WORKSHOP_WORKSTATION_REGISTRATION.table.essentialControlClearance,
   sourceWidth: 1761,
   sourceHeight: 1174,
   visibleBounds: Object.freeze({ left: 42, top: 229, right: 1714, bottom: 1084 }),

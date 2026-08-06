@@ -30776,6 +30776,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopSmartBoardLearningModeView=null;
   var workshopSmartBoardNotebookView=null;
   var workshopClassroomWorkspaceReset=null;
+  var workshopWorkstationRegistrationModule=null;
+  var workshopWorkstationRegistration=null;
   var workshopClassroomNeutralBackground=new THREE.Color(0x07131c);
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
@@ -31128,9 +31130,12 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       import("./js/workshop/table/table-power-on-view.mjs"),
       import("./js/workshop/table/table-projection-start-view.mjs"),
       import("./js/workshop/table/table-projection-active-view.mjs"),
-      import("./js/workshop/table/table-lifecycle-safety.mjs")
+      import("./js/workshop/table/table-lifecycle-safety.mjs"),
+      import("./js/workshop/runtime/workshop-workstation-registration.mjs")
     ])
       .then(function(modules){
+        workshopWorkstationRegistrationModule=modules[5];
+        configureWorkshopWorkstationCorners(workshopWorkstationRegistrationModule);
         workshopPoweredOffTableCompositor=modules[0].createPoweredOffTableCompositor({
           THREE:THREE,
           scene:scene,
@@ -31264,15 +31269,26 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var platformColorDialogReturnFocus=null;
   var builderSessionSnapshot=null;
   var workshopMeasurementUnit="cm";
-  var workshopProjectedRulerCorners=[
-    new THREE.Vector3(-25,-0.485,-25),
-    new THREE.Vector3(-25,-0.485,25),
-    new THREE.Vector3(25,-0.485,-25),
-    new THREE.Vector3(25,-0.485,25)
-  ];
-  var workshopProjectedRulerScratch=workshopProjectedRulerCorners.map(function(){
-    return new THREE.Vector3();
-  });
+  var workshopProjectedRulerCorners=[];
+  var workshopProjectedRulerScratch=[];
+
+  function configureWorkshopWorkstationCorners(module){
+    if(!module || !Array.isArray(module.WORKSHOP_WORKSTATION_WORLD_CORNERS) ||
+      module.WORKSHOP_WORKSTATION_WORLD_CORNERS.length!==4){
+      return false;
+    }
+    workshopProjectedRulerCorners=
+      module.WORKSHOP_WORKSTATION_WORLD_CORNERS.map(function(corner){
+        return new THREE.Vector3(corner.x,corner.y,corner.z);
+      });
+    workshopProjectedRulerScratch=workshopProjectedRulerCorners.map(function(){
+      return new THREE.Vector3();
+    });
+    workshopProjectedRulerBoundsSignature="";
+    workshopTableHomeRegistrationSignature="";
+    workshopTableHomeRegistrationBounds=null;
+    return true;
+  }
   var workshopProjectedRulerBoundsSignature="";
   var workshopConsoleModes={
     student:"student",
@@ -31342,6 +31358,37 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     });
   }
 
+  function projectWorkshopWorkstationBounds(projectionCamera){
+    if(!projectionCamera || workshopProjectedRulerCorners.length!==4 ||
+      workshopProjectedRulerScratch.length!==4) return null;
+    var canvasBounds=renderer.domElement.getBoundingClientRect();
+    if(!canvasBounds.width || !canvasBounds.height) return null;
+    var minimumX=Infinity;
+    var maximumX=-Infinity;
+    var minimumY=Infinity;
+    var maximumY=-Infinity;
+
+    workshopProjectedRulerCorners.forEach(function(corner,index){
+      var projected=workshopProjectedRulerScratch[index]
+        .copy(corner)
+        .project(projectionCamera);
+      var screenX=canvasBounds.left+(projected.x+1)*canvasBounds.width/2;
+      var screenY=canvasBounds.top+(1-projected.y)*canvasBounds.height/2;
+      minimumX=Math.min(minimumX,screenX);
+      maximumX=Math.max(maximumX,screenX);
+      minimumY=Math.min(minimumY,screenY);
+      maximumY=Math.max(maximumY,screenY);
+    });
+    if(!Number.isFinite(minimumX) || !Number.isFinite(minimumY) ||
+      maximumX<minimumX || maximumY<minimumY) return null;
+    return Object.freeze({
+      left:minimumX,
+      top:minimumY,
+      width:maximumX-minimumX,
+      height:maximumY-minimumY
+    });
+  }
+
   function updateWorkshopProjectedRulerBounds(){
     if(currentWorkspaceMode!=="workshop" ||
       !document.body.classList.contains("workshopMode") ||
@@ -31354,43 +31401,24 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     var leftRuler=document.getElementById("workshopRulerLeft");
     if(!container || !topRuler || !leftRuler) return false;
 
-    var canvasBounds=renderer.domElement.getBoundingClientRect();
-    if(!canvasBounds.width || !canvasBounds.height) return false;
-
     camera.updateMatrixWorld();
     syncWorkshopCadHeightLabelPresentation();
-    var minimumX=Infinity;
-    var maximumX=-Infinity;
-    var minimumY=Infinity;
-    var maximumY=-Infinity;
-
-    workshopProjectedRulerCorners.forEach(function(corner,index){
-      var projected=workshopProjectedRulerScratch[index]
-        .copy(corner)
-        .project(camera);
-      var screenX=canvasBounds.left+(projected.x+1)*canvasBounds.width/2;
-      var screenY=canvasBounds.top+(1-projected.y)*canvasBounds.height/2;
-      minimumX=Math.min(minimumX,screenX);
-      maximumX=Math.max(maximumX,screenX);
-      minimumY=Math.min(minimumY,screenY);
-      maximumY=Math.max(maximumY,screenY);
-    });
-
-    if(!Number.isFinite(minimumX) || !Number.isFinite(minimumY)) return false;
+    var projectedBounds=projectWorkshopWorkstationBounds(camera);
+    if(!projectedBounds) return false;
 
     var horizontalThickness=
       parseFloat(window.getComputedStyle(topRuler).height) || 32;
     var verticalThickness=
       parseFloat(window.getComputedStyle(leftRuler).width) || 36;
-    var left=Math.round(minimumX-verticalThickness);
-    var top=Math.round(minimumY-horizontalThickness);
+    var left=Math.round(projectedBounds.left-verticalThickness);
+    var top=Math.round(projectedBounds.top-horizontalThickness);
     var width=Math.max(
       verticalThickness*2+1,
-      Math.round(maximumX-minimumX+verticalThickness*2)
+      Math.round(projectedBounds.width+verticalThickness*2)
     );
     var height=Math.max(
       horizontalThickness*2+1,
-      Math.round(maximumY-minimumY+horizontalThickness*2)
+      Math.round(projectedBounds.height+horizontalThickness*2)
     );
     var signature=[left,top,width,height].join(":");
     if(signature===workshopProjectedRulerBoundsSignature) return true;
@@ -33589,7 +33617,6 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   }
 
   var workshopTableHomeRegistrationCamera=null;
-  var workshopTableHomeRegistrationScratch=null;
   var workshopTableHomeRegistrationSignature="";
   var workshopTableHomeRegistrationBounds=null;
 
@@ -33611,9 +33638,6 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     var config=getWorkshopHomeCameraConfig();
     if(!workshopTableHomeRegistrationCamera){
       workshopTableHomeRegistrationCamera=new THREE.PerspectiveCamera();
-      workshopTableHomeRegistrationScratch=workshopProjectedRulerCorners.map(function(){
-        return new THREE.Vector3();
-      });
     }
     var referenceCamera=workshopTableHomeRegistrationCamera;
     referenceCamera.near=camera.near;
@@ -33626,29 +33650,13 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     referenceCamera.updateProjectionMatrix();
     referenceCamera.updateMatrixWorld();
 
-    var minimumX=Infinity;
-    var maximumX=-Infinity;
-    var minimumY=Infinity;
-    var maximumY=-Infinity;
-    workshopProjectedRulerCorners.forEach(function(corner,index){
-      var projected=workshopTableHomeRegistrationScratch[index]
-        .copy(corner)
-        .project(referenceCamera);
-      var screenX=canvasBounds.left+(projected.x+1)*canvasBounds.width/2;
-      var screenY=canvasBounds.top+(1-projected.y)*canvasBounds.height/2;
-      minimumX=Math.min(minimumX,screenX);
-      maximumX=Math.max(maximumX,screenX);
-      minimumY=Math.min(minimumY,screenY);
-      maximumY=Math.max(maximumY,screenY);
-    });
+    var projectedBounds=projectWorkshopWorkstationBounds(referenceCamera);
+    if(!projectedBounds){
+      return {left:canvasBounds.left,top:canvasBounds.top,width:0,height:0};
+    }
 
     workshopTableHomeRegistrationSignature=signature;
-    workshopTableHomeRegistrationBounds=Object.freeze({
-      left:minimumX,
-      top:minimumY,
-      width:maximumX-minimumX,
-      height:maximumY-minimumY
-    });
+    workshopTableHomeRegistrationBounds=projectedBounds;
     return workshopTableHomeRegistrationBounds;
   }
 
@@ -34664,7 +34672,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/smartboard/smart-board-measurement-display.mjs"),
     import("./js/workshop/smartboard/smart-board-learning-mode-view.mjs"),
     import("./js/workshop/smartboard/smart-board-notebook-view.mjs"),
-    import("./js/workshop/runtime/workshop-classroom-workspace-reset.mjs")
+    import("./js/workshop/runtime/workshop-classroom-workspace-reset.mjs"),
+    import("./js/workshop/runtime/workshop-workstation-registration.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -34680,6 +34689,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var smartBoardLearningModeModule=modules[10];
       var smartBoardNotebookModule=modules[11];
       var classroomWorkspaceResetModule=modules[12];
+      var workstationRegistrationModule=modules[13];
+      workshopWorkstationRegistrationModule=workstationRegistrationModule;
+      configureWorkshopWorkstationCorners(workstationRegistrationModule);
       workshopClassroomWorkspaceReset=
         classroomWorkspaceResetModule.createWorkshopClassroomWorkspaceReset({
           body:document.body,
@@ -34696,6 +34708,25 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       window.workshopClassroomWorkspaceReset=workshopClassroomWorkspaceReset;
       window.getWorkshopProtectedBuildZone=function(){
         return workshopClassroomWorkspaceReset.measureProtectedBuildZone();
+      };
+      workshopWorkstationRegistration=
+        workstationRegistrationModule.createWorkshopWorkstationRegistration({
+          getStableHomeScreenBounds:getWorkshopTableHomeRegistrationBounds,
+          getLiveProjectedScreenBounds:function(){
+            camera.updateMatrixWorld();
+            return projectWorkshopWorkstationBounds(camera);
+          },
+          getProtectedBuildZone:function(){
+            return workshopClassroomWorkspaceReset.measureProtectedBuildZone();
+          },
+          getTableRegistration:function(){
+            return workshopPoweredOffTableCompositor
+              ? workshopPoweredOffTableCompositor.registration
+              : null;
+          }
+        });
+      window.getWorkshopWorkstationRegistration=function(){
+        return workshopWorkstationRegistration.update();
       };
       if(currentWorkspaceMode==="workshop"){
         workshopClassroomWorkspaceReset.activate();

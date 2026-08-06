@@ -14,6 +14,8 @@ import {
   calculatePoweredOffTableRegistration,
   createPoweredOffTableCompositor,
 } from "../../js/workshop/table/powered-off-table-view.mjs";
+import { WORKSHOP_WORKSTATION_REGISTRATION } from
+  "../../js/workshop/runtime/workshop-workstation-registration.mjs";
 
 class Layers {
   constructor() { this.mask = 1; }
@@ -129,6 +131,16 @@ test("records the approved powered-off Table assets, state, registration, and em
   assert.equal(POWERED_OFF_TABLE_REGISTRATION.essentialControlClearance, 12);
   assert.equal(POWERED_OFF_TABLE_EMITTER_PLANE.length, 4);
   assert.equal(WORKSHOP_STUDENT_COMPOSITE_LAYER, 30);
+  assert.equal(POWERED_OFF_TABLE_REGISTRATION.anchor,
+    WORKSHOP_WORKSTATION_REGISTRATION.table.anchor);
+  assert.equal(POWERED_OFF_TABLE_REGISTRATION.preferredWidthRatio,
+    WORKSHOP_WORKSTATION_REGISTRATION.table.preferredWidthRatio);
+  assert.equal(POWERED_OFF_TABLE_REGISTRATION.minimumWidth,
+    WORKSHOP_WORKSTATION_REGISTRATION.table.minimumWidth);
+  assert.equal(POWERED_OFF_TABLE_REGISTRATION.maximumWidth,
+    WORKSHOP_WORKSTATION_REGISTRATION.table.maximumWidth);
+  assert.equal(POWERED_OFF_TABLE_REGISTRATION.essentialControlClearance,
+    WORKSHOP_WORKSTATION_REGISTRATION.table.essentialControlClearance);
 });
 
 test("uses 96% stage width and clamps to classroom endpoints", () => {
