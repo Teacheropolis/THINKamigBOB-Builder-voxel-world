@@ -281,6 +281,21 @@ summary:focus-visible {
 .platform-timer-duration button:disabled,
 .platform-timer-duration input:disabled { border-color: #b9c7cd; color: #64757d; background: #edf2f4; cursor: not-allowed; }
 .platform-timer-error { font-size: 0.72rem; }
+.platform-command-card-memo { min-width: 0; }
+.platform-teacher-memo-form { display: grid; gap: 0.55rem; }
+.platform-teacher-memo-form label { font-size: 0.75rem; font-weight: 700; }
+.platform-teacher-memo-form textarea { width: 100%; min-height: 5.5rem; resize: vertical; padding: 0.6rem; border: 2px solid var(--platform-border); border-radius: 0.5rem; color: var(--platform-ink); background: #fff; font: inherit; line-height: 1.4; }
+.platform-teacher-memo-meta { display: flex; justify-content: space-between; gap: 0.75rem; color: var(--platform-muted); }
+.platform-teacher-memo-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; }
+.platform-teacher-memo-actions button { min-height: 2.75rem; padding: 0.45rem 0.65rem; border: 2px solid var(--platform-blue); border-radius: 0.5rem; color: var(--platform-navy); background: #f3fafc; font-weight: 700; cursor: pointer; }
+.platform-teacher-memo-actions button:disabled { border-color: #b9c7cd; color: #64757d; background: #edf2f4; cursor: not-allowed; }
+.platform-teacher-memo-error { min-height: 1em; margin: 0; font-size: 0.72rem; }
+.platform-teacher-memo-status { min-height: 2.75rem; margin: 0; padding: 0.65rem 0.75rem; border: 2px solid var(--platform-border); border-radius: 0.5rem; color: var(--platform-ink); background: #f4f7f8; font-size: 0.82rem; font-weight: 700; line-height: 1.35; }
+.platform-teacher-memo-status[data-state="saved"] { border-color: var(--platform-green); color: #174a35; background: #eaf6ef; }
+.platform-teacher-memo-status[data-state="unsaved"] { border-color: #c28b12; color: #684900; background: #fff8e4; }
+.platform-teacher-memo-saved { padding-top: 0.65rem; border-top: 1px solid var(--platform-border); }
+.platform-teacher-memo-saved p:last-child { margin: 0.35rem 0 0; color: var(--platform-ink); overflow-wrap: anywhere; white-space: pre-wrap; }
+.platform-teacher-memo-display-guidance { margin: 0.75rem 0 0.45rem; color: var(--platform-muted); font-size: 0.78rem; line-height: 1.4; }
 .platform-student-display-button { width: 100%; padding: 0.55rem; color: #fff; background: var(--platform-green); border-color: var(--platform-green); cursor: pointer; }
 .platform-student-display-button:hover { background: #205f45; }
 .platform-rhythm-title { margin: 1.25rem 0 0.55rem; color: var(--platform-navy); font-size: 0.82rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
@@ -309,6 +324,10 @@ summary:focus-visible {
 .platform-student-display-brand { margin: 0 0 2rem; color: #b9dce8; font-size: clamp(1rem, 2vw, 1.4rem); font-weight: 800; letter-spacing: 0.08em; }
 .platform-student-timer-display h2 { margin: 0; font-size: clamp(2rem, 6vw, 5rem); line-height: 1.1; }
 .platform-student-timer-display output { margin-top: 1.5rem; color: var(--platform-focus); font-size: clamp(5rem, 20vw, 15rem); font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: 0.03em; line-height: 1; }
+.platform-student-memo[hidden] { display: none !important; }
+.platform-student-memo { width: min(60rem, 90vw); margin: 1.25rem auto 0; padding: 1rem 1.25rem; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 0.75rem; background: rgba(255, 255, 255, 0.08); }
+.platform-student-memo h3 { margin: 0 0 0.4rem; color: #b9dce8; font-size: clamp(1rem, 2vw, 1.35rem); }
+.platform-student-memo p { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; font-size: clamp(1rem, 2.2vw, 1.5rem); line-height: 1.35; }
 
 .platform-footer { padding: 1.25rem; color: #d1e3ea; background: #17394d; text-align: center; font-size: 0.78rem; }
 .platform-noscript { max-width: 45rem; margin: 3rem auto; padding: 2rem; }

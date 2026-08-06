@@ -41,7 +41,6 @@ test("TODAY board contains every approved PB-002A placeholder verbatim", () => {
     "Coming in future build",
     "Today's Engineering Time",
     "Teacher Memo",
-    "Class message coming in future build",
     "Wins",
     "Future classroom accomplishments will appear here.",
     "Blockers",
@@ -56,13 +55,15 @@ test("TODAY board contains every approved PB-002A placeholder verbatim", () => {
   }
 });
 
-test("command board preserves PB-002A exclusions outside the authorized PB-002B timer", () => {
+test("command board preserves PB-002A exclusions outside authorized timer and memo areas", () => {
   assert.doesNotMatch(teacherViewSource, /setInterval|setTimeout|fetch\s*\(|localStorage|WebSocket|EventSource/);
   assert.doesNotMatch(teacherViewSource, /student progress|support signal|teacher moment|shoutout|kit checkout|hall of fame|google drive|google forms|artificial intelligence/i);
   assert.doesNotMatch(teacherViewSource, /href=.*(?:builder|workshop)/i);
   assert.equal((teacherViewSource.match(/<input/g) ?? []).length, 1);
   assert.match(teacherViewSource, /<input[^>]+data-timer-duration/);
-  assert.doesNotMatch(teacherViewSource, /<textarea|contenteditable/i);
+  assert.equal((teacherViewSource.match(/<textarea/g) ?? []).length, 1);
+  assert.match(teacherViewSource, /<textarea[^>]+data-teacher-memo/);
+  assert.doesNotMatch(teacherViewSource, /contenteditable/i);
 });
 
 test("command board CSS is namespaced, responsive, and overflow-safe", () => {

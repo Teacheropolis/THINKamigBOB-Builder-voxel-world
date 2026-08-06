@@ -19,6 +19,10 @@ import {
   MAX_LESSON_MINUTES,
   MIN_LESSON_MINUTES,
 } from "./lesson-timer.mjs";
+import {
+  createTeacherMemoStore,
+  TEACHER_MEMO_MAX_CHARACTERS,
+} from "./teacher-memo.mjs";
 
 export const ROUTES = Object.freeze({
   WELCOME: "/welcome",
@@ -35,6 +39,7 @@ export const ROUTES = Object.freeze({
 const root = document.querySelector("#platform-root");
 const session = createSessionStore(window.sessionStorage);
 const lessonTimer = createLessonTimer({ storage: window.sessionStorage });
+const teacherMemo = createTeacherMemoStore({ storage: window.sessionStorage });
 const LESSON_TIMER_DISPLAY_SESSION_KEY = "thinkamigbob.pb002b.lesson-timer-display.v1";
 const knownRoutes = new Set(Object.values(ROUTES));
 let lessonTimerPresentationInterval = null;
@@ -296,6 +301,8 @@ function teacherDashboardView(state) {
   const periodLabel = classRecord?.periodLabel ?? "Period not selected";
   const timerState = lessonTimer.read();
   const timerMinutes = Math.max(1, Math.round(timerState.durationSeconds / 60));
+  const memoState = teacherMemo.read();
+  const memoText = escapeHtml(memoState.text);
   return shell(`
     <div class="platform-command-layout">
       <nav class="platform-teacher-nav" aria-label="Teacher navigation">
@@ -349,10 +356,29 @@ function teacherDashboardView(state) {
               <button class="platform-student-display-button" type="button" data-action="open-timer-display">Open Student Display</button>
             </div>
           </section>
-          <section class="platform-command-card">
+          <section class="platform-command-card platform-command-card-memo">
             <p class="platform-command-label">Class communication</p>
             <h3>Teacher Memo</h3>
-            <p>Class message coming in future build</p>
+            <form class="platform-teacher-memo-form" data-form="teacher-memo" novalidate>
+              <label for="teacher-memo">Class-wide message or agenda</label>
+              <textarea id="teacher-memo" name="memo" maxlength="${TEACHER_MEMO_MAX_CHARACTERS}" aria-describedby="teacher-memo-guidance teacher-memo-count" data-teacher-memo>${memoText}</textarea>
+              <div class="platform-teacher-memo-meta">
+                <small id="teacher-memo-guidance">Plain text for the whole class.</small>
+                <small id="teacher-memo-count"><span data-teacher-memo-count>${memoState.text.length}</span>/${TEACHER_MEMO_MAX_CHARACTERS}</small>
+              </div>
+              <div class="platform-teacher-memo-actions">
+                <button type="submit">Save Memo</button>
+                <button type="button" data-action="clear-teacher-memo"${memoState.text ? "" : " disabled"}>Clear Memo</button>
+              </div>
+              <p class="platform-error platform-teacher-memo-error" data-teacher-memo-error role="alert" hidden></p>
+              <p class="platform-teacher-memo-status" data-teacher-memo-status data-state="${memoState.text ? "saved" : "empty"}" role="status" aria-live="polite">${memoState.text ? "Saved for refresh and Student Display." : "No memo saved yet."}</p>
+            </form>
+            <div class="platform-teacher-memo-saved">
+              <p class="platform-command-label">Current class message</p>
+              <p data-teacher-memo-saved>${memoText || "No class message saved."}</p>
+            </div>
+            <p class="platform-teacher-memo-display-guidance">Student Display shows the lesson timer and the saved memo together.</p>
+            <button class="platform-student-display-button" type="button" data-action="open-timer-display">Open Student Display</button>
           </section>
         </div>
 
@@ -385,6 +411,10 @@ function teacherDashboardView(state) {
       <p class="platform-student-display-brand">THINKamigBOB</p>
       <h2 id="student-timer-title">Today's Engineering Time</h2>
       <output data-timer-remaining>${formatLessonTime(timerState.remainingSeconds)}</output>
+      <div class="platform-student-memo" data-student-memo${memoState.text ? "" : " hidden"}>
+        <h3>Teacher Memo</h3>
+        <p data-student-memo-text>${memoText}</p>
+      </div>
     </section>
   `, {
     title: "Teacher Command Center",
@@ -456,6 +486,22 @@ function syncLessonTimerPresentation() {
   const durationLocked = state.status === LESSON_TIMER_STATES.RUNNING || state.status === LESSON_TIMER_STATES.PAUSED;
   if (durationInput) durationInput.disabled = durationLocked;
   if (durationButton) durationButton.disabled = durationLocked;
+}
+
+function syncTeacherMemoPresentation() {
+  const state = teacherMemo.read();
+  const field = document.querySelector("[data-teacher-memo]");
+  const count = document.querySelector("[data-teacher-memo-count]");
+  const clearButton = document.querySelector('[data-action="clear-teacher-memo"]');
+  const saved = document.querySelector("[data-teacher-memo-saved]");
+  const studentMemo = document.querySelector("[data-student-memo]");
+  const studentMemoText = document.querySelector("[data-student-memo-text]");
+  if (field) field.value = state.text;
+  if (count) count.textContent = String(state.text.length);
+  if (clearButton) clearButton.disabled = !state.text;
+  if (saved) saved.textContent = state.text || "No class message saved.";
+  if (studentMemo) studentMemo.hidden = !state.text;
+  if (studentMemoText) studentMemoText.textContent = state.text;
 }
 
 function manageLessonTimerPresentation(route) {
@@ -530,6 +576,31 @@ function handleSubmit(event) {
     }
     syncLessonTimerPresentation();
   }
+
+  if (form.dataset.form === "teacher-memo") {
+    const result = teacherMemo.save(data.get("memo"));
+    const error = form.querySelector("[data-teacher-memo-error]");
+    const status = form.querySelector("[data-teacher-memo-status]");
+    if (!result.ok) {
+      if (status) status.textContent = "";
+      if (error) {
+        error.textContent = result.reason === "too-long"
+          ? `Keep the class message to ${TEACHER_MEMO_MAX_CHARACTERS} characters or fewer.`
+          : "Enter a class message before saving.";
+        error.hidden = false;
+      }
+      return;
+    }
+    if (error) {
+      error.textContent = "";
+      error.hidden = true;
+    }
+    syncTeacherMemoPresentation();
+    if (status) {
+      status.dataset.state = "saved";
+      status.textContent = "Saved for refresh and Student Display.";
+    }
+  }
 }
 
 function handleClick(event) {
@@ -539,6 +610,7 @@ function handleClick(event) {
     storeLessonTimerDisplayOpen(false);
     lessonTimer.clear();
     session.signOut();
+    teacherMemo.clear();
     navigate(ROUTES.WELCOME, { replace: true });
   }
   if (action.dataset.action === "reserved-nav") {
@@ -564,6 +636,20 @@ function handleClick(event) {
   if (timerActions[action.dataset.action]) {
     timerActions[action.dataset.action]();
     syncLessonTimerPresentation();
+  }
+  if (action.dataset.action === "clear-teacher-memo") {
+    teacherMemo.clear();
+    syncTeacherMemoPresentation();
+    const error = document.querySelector("[data-teacher-memo-error]");
+    const status = document.querySelector("[data-teacher-memo-status]");
+    if (error) {
+      error.textContent = "";
+      error.hidden = true;
+    }
+    if (status) {
+      status.dataset.state = "empty";
+      status.textContent = "Memo cleared. No memo is currently saved.";
+    }
   }
   if (action.dataset.action === "open-timer-display") {
     const display = document.querySelector("#platform-student-timer-display");
@@ -595,6 +681,26 @@ function render() {
 
 root.addEventListener("submit", handleSubmit);
 root.addEventListener("click", handleClick);
+root.addEventListener("input", (event) => {
+  const field = event.target.closest("[data-teacher-memo]");
+  if (!field) return;
+  const count = document.querySelector("[data-teacher-memo-count]");
+  const error = document.querySelector("[data-teacher-memo-error]");
+  const status = document.querySelector("[data-teacher-memo-status]");
+  if (count) count.textContent = String(field.value.length);
+  if (error) {
+    error.textContent = "";
+    error.hidden = true;
+  }
+  if (status) {
+    const savedText = teacherMemo.read().text;
+    const hasUnsavedChanges = field.value.trim() !== savedText;
+    status.dataset.state = hasUnsavedChanges ? "unsaved" : (savedText ? "saved" : "empty");
+    status.textContent = hasUnsavedChanges
+      ? "Unsaved changes. Save before refreshing or opening Student Display."
+      : (savedText ? "Saved for refresh and Student Display." : "No memo saved yet.");
+  }
+});
 window.addEventListener("hashchange", render);
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
