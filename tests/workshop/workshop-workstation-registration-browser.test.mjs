@@ -38,6 +38,15 @@ test("preserves the physical platform and Grid elevations", () => {
 test("exposes stable, live, protected-zone, and Table registration providers", () => {
   assert.match(source, /getStableHomeScreenBounds:getWorkshopTableHomeRegistrationBounds/);
   assert.match(source, /getLiveProjectedScreenBounds:function\(\)/);
+  assert.match(source, /getLiveProjectedTabletop:function\(\)/);
   assert.match(source, /getProtectedBuildZone:function\(\)/);
   assert.match(source, /getTableRegistration:function\(\)/);
+});
+
+test("connects one isolated unified-surface view without changing Table ownership", () => {
+  assert.match(source, /import\("\.\/js\/workshop\/runtime\/workshop-unified-workstation-view\.mjs"\)/);
+  assert.match(source, /createWorkshopUnifiedWorkstationView\(\{/);
+  assert.match(source, /top:document\.getElementById\("workshopRulerTop"\)/);
+  assert.match(source, /engineeringGrid\.position\.y===-0\.498/);
+  assert.match(source, /workshopPoweredOffTableCompositor\.registration/);
 });

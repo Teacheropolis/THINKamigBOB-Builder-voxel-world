@@ -4,10 +4,17 @@ import test from "node:test";
 import {
   WORKSHOP_WORKSTATION_REGISTRATION,
   WORKSHOP_WORKSTATION_WORLD_CORNERS,
+  createProjectedTabletopRegistration,
   createWorkshopWorkstationRegistration,
 } from "../../js/workshop/runtime/workshop-workstation-registration.mjs";
 
 const bounds = (left, top, width, height) => ({ left, top, width, height });
+const projectedTabletop = () => createProjectedTabletopRegistration([
+  { x: 100, y: 100, depth: 0 },
+  { x: 120, y: 500, depth: 0 },
+  { x: 900, y: 120, depth: 0 },
+  { x: 880, y: 480, depth: 0 },
+]);
 const tableRegistration = () => ({
   width: 960,
   height: 640,
@@ -59,6 +66,7 @@ test("publishes a complete frozen registration snapshot", () => {
   const registration = createWorkshopWorkstationRegistration({
     getStableHomeScreenBounds: () => bounds(100, 80, 800, 500),
     getLiveProjectedScreenBounds: () => bounds(120, 90, 760, 470),
+    getLiveProjectedTabletop: projectedTabletop,
     getProtectedBuildZone: () => ({ ...bounds(140, 110, 720, 430), inset: 12 }),
     getTableRegistration: tableRegistration,
   });
@@ -72,6 +80,10 @@ test("publishes a complete frozen registration snapshot", () => {
   assert.deepEqual(snapshot.liveProjectedScreenBounds, {
     left: 120, top: 90, right: 880, bottom: 560, width: 760, height: 470,
   });
+  assert.equal(snapshot.liveProjectedCorners.length, 4);
+  assert.deepEqual(snapshot.orderedTabletopEdges.map((edge) => edge.id),
+    ["top", "right", "bottom", "left"]);
+  assert.equal(snapshot.edgePresentationUsable, true);
   assert.equal(snapshot.protectedBuildZone.inset, 12);
   assert.equal(snapshot.tableRegistration.anchorScreenX, 500);
   assert.equal(Object.isFrozen(snapshot), true);
@@ -83,6 +95,7 @@ test("returns the same snapshot for repeated unchanged registration updates", ()
   const registration = createWorkshopWorkstationRegistration({
     getStableHomeScreenBounds: () => bounds(100, 80, 800, 500),
     getLiveProjectedScreenBounds: () => live,
+    getLiveProjectedTabletop: projectedTabletop,
     getProtectedBuildZone: () => ({ ...bounds(140, 110, 720, 430), inset: 12 }),
     getTableRegistration: tableRegistration,
   });
@@ -105,6 +118,7 @@ test("fails closed for invalid, blocked, or hidden registration geometry", () =>
       getStableHomeScreenBounds: () => scenario.stable === undefined
         ? bounds(0, 0, 100, 100) : scenario.stable,
       getLiveProjectedScreenBounds: () => scenario.live || bounds(0, 0, 100, 100),
+      getLiveProjectedTabletop: projectedTabletop,
       getProtectedBuildZone: () => scenario.protectedZone || {
         ...bounds(0, 0, 100, 100), inset: 12,
       },
@@ -112,6 +126,22 @@ test("fails closed for invalid, blocked, or hidden registration geometry", () =>
     });
     assert.equal(registration.update().blocked, true);
   });
+});
+
+test("orders projected tabletop edges and detects edge-on fallback", () => {
+  const projected = projectedTabletop();
+  assert.deepEqual(projected.edges.map((edge) => edge.id),
+    ["top", "right", "bottom", "left"]);
+  assert.equal(projected.usable, true);
+  assert.equal(projected.edges.every((edge) => edge.usable), true);
+  assert.equal(Object.isFrozen(projected.corners), true);
+  const edgeOn = createProjectedTabletopRegistration([
+    { x: 100, y: 100, depth: 0 },
+    { x: 100, y: 100, depth: 0 },
+    { x: 900, y: 100, depth: 0 },
+    { x: 900, y: 100, depth: 0 },
+  ]);
+  assert.equal(edgeOn.usable, false);
 });
 
 test("requires all registration geometry providers", () => {

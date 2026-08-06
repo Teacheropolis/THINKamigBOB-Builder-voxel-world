@@ -36,6 +36,15 @@ export const WORKSHOP_WORKSTATION_WORLD_CORNERS = Object.freeze(
   })),
 );
 
+export const WORKSHOP_WORKSTATION_EDGE_MINIMUM_SCREEN_LENGTH = 72;
+
+const EDGE_DEFINITIONS = Object.freeze([
+  Object.freeze({ id: "top", axis: "x", start: 0, end: 2 }),
+  Object.freeze({ id: "right", axis: "z", start: 3, end: 2 }),
+  Object.freeze({ id: "bottom", axis: "x", start: 1, end: 3 }),
+  Object.freeze({ id: "left", axis: "z", start: 1, end: 0 }),
+]);
+
 const finite = (value) => Number.isFinite(value);
 
 function frozenBounds(value) {
@@ -102,14 +111,74 @@ function signatureFor(value) {
   return JSON.stringify(value);
 }
 
+export function createProjectedTabletopRegistration(
+  projectedCorners,
+  minimumEdgeLength = WORKSHOP_WORKSTATION_EDGE_MINIMUM_SCREEN_LENGTH,
+) {
+  if (!Array.isArray(projectedCorners) || projectedCorners.length !== 4 ||
+      !finite(minimumEdgeLength) || minimumEdgeLength <= 0) return null;
+  const corners = projectedCorners.map((corner, index) => {
+    if (!corner || !finite(corner.x) || !finite(corner.y) ||
+        !finite(corner.depth)) return null;
+    return Object.freeze({
+      id: `corner-${index}`,
+      x: corner.x,
+      y: corner.y,
+      depth: corner.depth,
+      clipped: corner.depth < -1 || corner.depth > 1,
+    });
+  });
+  if (corners.some((corner) => !corner)) return null;
+  const perimeter = [corners[0], corners[2], corners[3], corners[1]];
+  const signedDoubleArea = perimeter.reduce((sum, point, index) => {
+    const next = perimeter[(index + 1) % perimeter.length];
+    return sum + point.x * next.y - next.x * point.y;
+  }, 0);
+  const area = Math.abs(signedDoubleArea) / 2;
+  const edges = EDGE_DEFINITIONS.map((definition) => {
+    const start = corners[definition.start];
+    const end = corners[definition.end];
+    const deltaX = end.x - start.x;
+    const deltaY = end.y - start.y;
+    const length = Math.hypot(deltaX, deltaY);
+    return Object.freeze({
+      id: definition.id,
+      axis: definition.axis,
+      start,
+      end,
+      length,
+      angleDegrees: Math.atan2(deltaY, deltaX) * 180 / Math.PI,
+      usable: length >= minimumEdgeLength && !start.clipped && !end.clipped,
+    });
+  });
+  const bounds = frozenBounds({
+    left: Math.min(...corners.map((corner) => corner.x)),
+    top: Math.min(...corners.map((corner) => corner.y)),
+    right: Math.max(...corners.map((corner) => corner.x)),
+    bottom: Math.max(...corners.map((corner) => corner.y)),
+  });
+  const usable = !!bounds && area >= minimumEdgeLength * minimumEdgeLength &&
+    edges.every((edge) => edge.usable);
+  return Object.freeze({
+    corners: Object.freeze(corners),
+    edges: Object.freeze(edges),
+    bounds,
+    area,
+    minimumEdgeLength,
+    usable,
+  });
+}
+
 export function createWorkshopWorkstationRegistration({
   getStableHomeScreenBounds,
   getLiveProjectedScreenBounds,
+  getLiveProjectedTabletop,
   getProtectedBuildZone,
   getTableRegistration,
 } = {}) {
   if (typeof getStableHomeScreenBounds !== "function" ||
       typeof getLiveProjectedScreenBounds !== "function" ||
+      typeof getLiveProjectedTabletop !== "function" ||
       typeof getProtectedBuildZone !== "function" ||
       typeof getTableRegistration !== "function") {
     throw new TypeError("All Workshop workstation registration providers are required.");
@@ -121,9 +190,14 @@ export function createWorkshopWorkstationRegistration({
   function update() {
     const stableHomeScreenBounds = frozenBounds(getStableHomeScreenBounds());
     const liveProjectedScreenBounds = frozenBounds(getLiveProjectedScreenBounds());
+    const liveProjectedTabletop = getLiveProjectedTabletop();
     const protectedBuildZone = frozenProtectedZone(getProtectedBuildZone());
     const tableRegistration = frozenTableRegistration(getTableRegistration());
+    const validLiveTabletop = liveProjectedTabletop &&
+      Array.isArray(liveProjectedTabletop.corners) &&
+      Array.isArray(liveProjectedTabletop.edges);
     const blocked = !stableHomeScreenBounds || !liveProjectedScreenBounds ||
+      !validLiveTabletop ||
       !protectedBuildZone || protectedBuildZone.blocked || !tableRegistration ||
       tableRegistration.hidden;
     const next = {
@@ -132,6 +206,15 @@ export function createWorkshopWorkstationRegistration({
       worldCorners: WORKSHOP_WORKSTATION_WORLD_CORNERS,
       stableHomeScreenBounds,
       liveProjectedScreenBounds,
+      liveProjectedCorners: validLiveTabletop
+        ? liveProjectedTabletop.corners
+        : null,
+      orderedTabletopEdges: validLiveTabletop
+        ? liveProjectedTabletop.edges
+        : null,
+      edgePresentationUsable: validLiveTabletop
+        ? liveProjectedTabletop.usable === true
+        : false,
       protectedBuildZone,
       tableRegistration,
       blocked,

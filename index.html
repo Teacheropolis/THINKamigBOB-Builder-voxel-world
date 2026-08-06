@@ -30778,6 +30778,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopClassroomWorkspaceReset=null;
   var workshopWorkstationRegistrationModule=null;
   var workshopWorkstationRegistration=null;
+  var workshopUnifiedWorkstationView=null;
   var workshopClassroomNeutralBackground=new THREE.Color(0x07131c);
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
@@ -31350,6 +31351,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   function clearWorkshopProjectedRulerBounds(){
     var container=document.getElementById("workshopViewportContainer");
     workshopProjectedRulerBoundsSignature="";
+    if(workshopUnifiedWorkstationView){
+      workshopUnifiedWorkstationView.reset();
+    }
     if(!container) return;
     [
       "position","left","top","right","bottom","width","height","grid-area"
@@ -31358,35 +31362,38 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     });
   }
 
-  function projectWorkshopWorkstationBounds(projectionCamera){
+  function projectWorkshopWorkstationTabletop(projectionCamera){
     if(!projectionCamera || workshopProjectedRulerCorners.length!==4 ||
-      workshopProjectedRulerScratch.length!==4) return null;
+      workshopProjectedRulerScratch.length!==4 ||
+      !workshopWorkstationRegistrationModule) return null;
     var canvasBounds=renderer.domElement.getBoundingClientRect();
     if(!canvasBounds.width || !canvasBounds.height) return null;
-    var minimumX=Infinity;
-    var maximumX=-Infinity;
-    var minimumY=Infinity;
-    var maximumY=-Infinity;
-
-    workshopProjectedRulerCorners.forEach(function(corner,index){
+    var projectedCorners=workshopProjectedRulerCorners.map(function(corner,index){
       var projected=workshopProjectedRulerScratch[index]
         .copy(corner)
         .project(projectionCamera);
-      var screenX=canvasBounds.left+(projected.x+1)*canvasBounds.width/2;
-      var screenY=canvasBounds.top+(1-projected.y)*canvasBounds.height/2;
-      minimumX=Math.min(minimumX,screenX);
-      maximumX=Math.max(maximumX,screenX);
-      minimumY=Math.min(minimumY,screenY);
-      maximumY=Math.max(maximumY,screenY);
+      return {
+        x:canvasBounds.left+(projected.x+1)*canvasBounds.width/2,
+        y:canvasBounds.top+(1-projected.y)*canvasBounds.height/2,
+        depth:projected.z
+      };
     });
-    if(!Number.isFinite(minimumX) || !Number.isFinite(minimumY) ||
-      maximumX<minimumX || maximumY<minimumY) return null;
-    return Object.freeze({
-      left:minimumX,
-      top:minimumY,
-      width:maximumX-minimumX,
-      height:maximumY-minimumY
-    });
+    return workshopWorkstationRegistrationModule
+      .createProjectedTabletopRegistration(projectedCorners);
+  }
+
+  function projectWorkshopWorkstationBounds(projectionCamera){
+    var tabletop=projectWorkshopWorkstationTabletop(projectionCamera);
+    return tabletop ? tabletop.bounds : null;
+  }
+
+  function syncWorkshopUnifiedWorkstationView(){
+    if(!workshopUnifiedWorkstationView || !workshopWorkstationRegistration){
+      return false;
+    }
+    return workshopUnifiedWorkstationView.update(
+      workshopWorkstationRegistration.update()
+    ).mode==="edges";
   }
 
   function updateWorkshopProjectedRulerBounds(){
@@ -31421,7 +31428,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       Math.round(projectedBounds.height+horizontalThickness*2)
     );
     var signature=[left,top,width,height].join(":");
-    if(signature===workshopProjectedRulerBoundsSignature) return true;
+    if(signature===workshopProjectedRulerBoundsSignature){
+      syncWorkshopUnifiedWorkstationView();
+      return true;
+    }
 
     workshopProjectedRulerBoundsSignature=signature;
     container.style.position="fixed";
@@ -31432,6 +31442,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     container.style.bottom="auto";
     container.style.width=width+"px";
     container.style.height=height+"px";
+    syncWorkshopUnifiedWorkstationView();
     return true;
   }
 
@@ -34673,7 +34684,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/smartboard/smart-board-learning-mode-view.mjs"),
     import("./js/workshop/smartboard/smart-board-notebook-view.mjs"),
     import("./js/workshop/runtime/workshop-classroom-workspace-reset.mjs"),
-    import("./js/workshop/runtime/workshop-workstation-registration.mjs")
+    import("./js/workshop/runtime/workshop-workstation-registration.mjs"),
+    import("./js/workshop/runtime/workshop-unified-workstation-view.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -34690,6 +34702,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var smartBoardNotebookModule=modules[11];
       var classroomWorkspaceResetModule=modules[12];
       var workstationRegistrationModule=modules[13];
+      var unifiedWorkstationModule=modules[14];
       workshopWorkstationRegistrationModule=workstationRegistrationModule;
       configureWorkshopWorkstationCorners(workstationRegistrationModule);
       workshopClassroomWorkspaceReset=
@@ -34716,6 +34729,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             camera.updateMatrixWorld();
             return projectWorkshopWorkstationBounds(camera);
           },
+          getLiveProjectedTabletop:function(){
+            camera.updateMatrixWorld();
+            return projectWorkshopWorkstationTabletop(camera);
+          },
           getProtectedBuildZone:function(){
             return workshopClassroomWorkspaceReset.measureProtectedBuildZone();
           },
@@ -34723,6 +34740,21 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
             return workshopPoweredOffTableCompositor
               ? workshopPoweredOffTableCompositor.registration
               : null;
+          }
+        });
+      workshopUnifiedWorkstationView=
+        unifiedWorkstationModule.createWorkshopUnifiedWorkstationView({
+          rulers:{
+            top:document.getElementById("workshopRulerTop"),
+            right:document.getElementById("workshopRulerRight"),
+            bottom:document.getElementById("workshopRulerBottom"),
+            left:document.getElementById("workshopRulerLeft")
+          },
+          isWorldRegistrationValid:function(){
+            var parameters=ground && ground.geometry && ground.geometry.parameters;
+            return !!(parameters && parameters.width===50 && parameters.depth===50 &&
+              ground.position.y===-1 && engineeringGrid &&
+              engineeringGrid.position.y===-0.498 && workshopStageFrame);
           }
         });
       window.getWorkshopWorkstationRegistration=function(){
