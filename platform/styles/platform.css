@@ -258,6 +258,27 @@ summary:focus-visible {
 .platform-command-card h3, .platform-rhythm-card h3, .platform-teacher-feed h3 { margin: 0.15rem 0 0.55rem; font-size: 1.08rem; }
 .platform-command-card p:last-child, .platform-rhythm-card p { margin-bottom: 0; color: var(--platform-muted); }
 .platform-command-label { margin: 0; color: var(--platform-green); font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.platform-lesson-timer { display: grid; gap: 0.8rem; }
+.platform-timer-remaining { color: var(--platform-navy); font-size: clamp(2.4rem, 5vw, 4rem); font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: 0.03em; line-height: 1; }
+.platform-timer-state { margin: 0; color: var(--platform-muted); font-size: 0.78rem; }
+.platform-timer-state strong { color: var(--platform-ink); }
+.platform-timer-duration { display: grid; gap: 0.45rem; padding-top: 0.75rem; border-top: 1px solid var(--platform-border); }
+.platform-timer-duration label { font-size: 0.75rem; font-weight: 700; }
+.platform-timer-duration > div { display: grid; grid-template-columns: minmax(5.5rem, 1fr) auto; gap: 0.5rem; }
+.platform-timer-duration input,
+.platform-timer-duration button,
+.platform-timer-controls button,
+.platform-student-display-button { min-height: 2.75rem; border: 2px solid var(--platform-blue); border-radius: 0.5rem; font-weight: 700; }
+.platform-timer-duration input { min-width: 0; padding: 0.5rem; color: var(--platform-ink); background: #fff; }
+.platform-timer-duration button,
+.platform-timer-controls button { padding: 0.45rem 0.65rem; color: var(--platform-navy); background: #f3fafc; cursor: pointer; }
+.platform-timer-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; }
+.platform-timer-controls button:disabled,
+.platform-timer-duration button:disabled,
+.platform-timer-duration input:disabled { border-color: #b9c7cd; color: #64757d; background: #edf2f4; cursor: not-allowed; }
+.platform-timer-error { font-size: 0.72rem; }
+.platform-student-display-button { width: 100%; padding: 0.55rem; color: #fff; background: var(--platform-green); border-color: var(--platform-green); cursor: pointer; }
+.platform-student-display-button:hover { background: #205f45; }
 .platform-rhythm-title { margin: 1.25rem 0 0.55rem; color: var(--platform-navy); font-size: 0.82rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
 .platform-rhythm-card { border-top-width: 5px; }
 .platform-rhythm-wins { border-top-color: #c28b12; }
@@ -266,6 +287,24 @@ summary:focus-visible {
 
 .platform-teacher-feed { display: flex; min-height: 6.5rem; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; padding: 1.15rem; border-left: 6px solid var(--platform-blue); }
 .platform-teacher-feed p:last-child { margin: 0; color: var(--platform-muted); }
+
+.platform-student-timer-display[hidden] { display: none !important; }
+.platform-student-timer-display {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  padding: 2rem;
+  color: #fff;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(33, 123, 154, 0.55), transparent 35rem),
+    var(--platform-navy);
+  text-align: center;
+}
+.platform-student-display-brand { margin: 0 0 2rem; color: #b9dce8; font-size: clamp(1rem, 2vw, 1.4rem); font-weight: 800; letter-spacing: 0.08em; }
+.platform-student-timer-display h2 { margin: 0; font-size: clamp(2rem, 6vw, 5rem); line-height: 1.1; }
+.platform-student-timer-display output { margin-top: 1.5rem; color: var(--platform-focus); font-size: clamp(5rem, 20vw, 15rem); font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: 0.03em; line-height: 1; }
 
 .platform-footer { padding: 1.25rem; color: #d1e3ea; background: #17394d; text-align: center; font-size: 0.78rem; }
 .platform-noscript { max-width: 45rem; margin: 3rem auto; padding: 2rem; }
@@ -298,6 +337,8 @@ summary:focus-visible {
   .platform-today-heading > p { text-align: left; }
   .platform-today-primary-grid, .platform-class-rhythm { grid-template-columns: 1fr; }
   .platform-command-card-mission { grid-column: auto; }
+  .platform-timer-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .platform-timer-duration > div { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

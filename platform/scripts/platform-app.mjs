@@ -12,6 +12,13 @@ import {
   validateTeacherCredentials,
 } from "./platform-fixtures.mjs";
 import { createSessionStore, PLATFORM_ROLES } from "./platform-session.mjs";
+import {
+  createLessonTimer,
+  formatLessonTime,
+  LESSON_TIMER_STATES,
+  MAX_LESSON_MINUTES,
+  MIN_LESSON_MINUTES,
+} from "./lesson-timer.mjs";
 
 export const ROUTES = Object.freeze({
   WELCOME: "/welcome",
@@ -27,7 +34,30 @@ export const ROUTES = Object.freeze({
 
 const root = document.querySelector("#platform-root");
 const session = createSessionStore(window.sessionStorage);
+const lessonTimer = createLessonTimer({ storage: window.sessionStorage });
+const LESSON_TIMER_DISPLAY_SESSION_KEY = "thinkamigbob.pb002b.lesson-timer-display.v1";
 const knownRoutes = new Set(Object.values(ROUTES));
+let lessonTimerPresentationInterval = null;
+
+function lessonTimerDisplayIsStoredOpen() {
+  try {
+    return window.sessionStorage.getItem(LESSON_TIMER_DISPLAY_SESSION_KEY) === "open";
+  } catch {
+    return false;
+  }
+}
+
+function storeLessonTimerDisplayOpen(isOpen) {
+  try {
+    if (isOpen) {
+      window.sessionStorage.setItem(LESSON_TIMER_DISPLAY_SESSION_KEY, "open");
+    } else {
+      window.sessionStorage.removeItem(LESSON_TIMER_DISPLAY_SESSION_KEY);
+    }
+  } catch {
+    // The current page can still open and close the display without persistence.
+  }
+}
 
 function currentRoute() {
   return window.location.hash.replace(/^#/, "").replace(/\/$/, "") || ROUTES.WELCOME;
@@ -264,6 +294,8 @@ function teacherDashboardView(state) {
   const teacherName = teacher?.displayName ?? "Preview Teacher";
   const className = classRecord?.displayName ?? "Class not selected";
   const periodLabel = classRecord?.periodLabel ?? "Period not selected";
+  const timerState = lessonTimer.read();
+  const timerMinutes = Math.max(1, Math.round(timerState.durationSeconds / 60));
   return shell(`
     <div class="platform-command-layout">
       <nav class="platform-teacher-nav" aria-label="Teacher navigation">
@@ -291,8 +323,27 @@ function teacherDashboardView(state) {
           </section>
           <section class="platform-command-card">
             <p class="platform-command-label">Class timing</p>
-            <h3>Lesson Progress</h3>
-            <p>Timer coming in future build</p>
+            <h3>Today's Engineering Time</h3>
+            <div class="platform-lesson-timer" aria-label="Lesson Timer">
+              <output class="platform-timer-remaining" data-timer-remaining aria-live="off">${formatLessonTime(timerState.remainingSeconds)}</output>
+              <p class="platform-timer-state">Timer state: <strong data-timer-state>${escapeHtml(timerState.status)}</strong></p>
+              <form class="platform-timer-duration" data-form="lesson-timer-duration" novalidate>
+                <label for="lesson-duration">Lesson duration in minutes</label>
+                <div>
+                  <input id="lesson-duration" name="duration" type="number" inputmode="numeric" min="${MIN_LESSON_MINUTES}" max="${MAX_LESSON_MINUTES}" step="1" value="${timerMinutes}" data-timer-duration>
+                  <button type="submit" data-timer-set>Set duration</button>
+                </div>
+                <p class="platform-error platform-timer-error" data-timer-error role="alert" hidden></p>
+              </form>
+              <div class="platform-timer-controls" aria-label="Teacher Lesson Timer controls">
+                <button type="button" data-action="timer-start">Start</button>
+                <button type="button" data-action="timer-pause">Pause</button>
+                <button type="button" data-action="timer-resume">Resume</button>
+                <button type="button" data-action="timer-reset">Reset</button>
+                <button type="button" data-action="timer-end">End</button>
+              </div>
+              <button class="platform-student-display-button" type="button" data-action="open-timer-display">Open Student Display</button>
+            </div>
           </section>
           <section class="platform-command-card">
             <p class="platform-command-label">Class communication</p>
@@ -326,6 +377,11 @@ function teacherDashboardView(state) {
         </section>
       </section>
     </div>
+    <section id="platform-student-timer-display" class="platform-student-timer-display" role="dialog" aria-modal="true" aria-labelledby="student-timer-title" tabindex="-1" hidden>
+      <p class="platform-student-display-brand">THINKamigBOB</p>
+      <h2 id="student-timer-title">Today's Engineering Time</h2>
+      <output data-timer-remaining>${formatLessonTime(timerState.remainingSeconds)}</output>
+    </section>
   `, {
     title: "Teacher Command Center",
     eyebrow: "TODAY view",
@@ -367,6 +423,58 @@ function showFormError(form, message) {
   error.focus?.();
 }
 
+function syncLessonTimerPresentation() {
+  const state = lessonTimer.read();
+  document.querySelectorAll("[data-timer-remaining]").forEach((element) => {
+    element.textContent = formatLessonTime(state.remainingSeconds);
+  });
+  document.querySelectorAll("[data-timer-state]").forEach((element) => {
+    element.textContent = state.status;
+  });
+
+  const controlRules = {
+    "timer-start": state.status === LESSON_TIMER_STATES.READY,
+    "timer-pause": state.status === LESSON_TIMER_STATES.RUNNING,
+    "timer-resume": state.status === LESSON_TIMER_STATES.PAUSED,
+    "timer-reset": state.status !== LESSON_TIMER_STATES.READY,
+    "timer-end": state.status === LESSON_TIMER_STATES.RUNNING || state.status === LESSON_TIMER_STATES.PAUSED,
+  };
+  Object.entries(controlRules).forEach(([action, enabled]) => {
+    const button = document.querySelector(`[data-action="${action}"]`);
+    if (button) button.disabled = !enabled;
+  });
+
+  const durationInput = document.querySelector("[data-timer-duration]");
+  const durationButton = document.querySelector("[data-timer-set]");
+  const durationLocked = state.status === LESSON_TIMER_STATES.RUNNING || state.status === LESSON_TIMER_STATES.PAUSED;
+  if (durationInput) durationInput.disabled = durationLocked;
+  if (durationButton) durationButton.disabled = durationLocked;
+}
+
+function manageLessonTimerPresentation(route) {
+  if (lessonTimerPresentationInterval !== null) {
+    window.clearInterval(lessonTimerPresentationInterval);
+    lessonTimerPresentationInterval = null;
+  }
+  if (route !== ROUTES.TEACHER_DASHBOARD) return;
+  syncLessonTimerPresentation();
+  lessonTimerPresentationInterval = window.setInterval(syncLessonTimerPresentation, 250);
+}
+
+function restoreLessonTimerDisplay(route, state) {
+  const isAuthorizedTeacherDashboard = route === ROUTES.TEACHER_DASHBOARD
+    && state.role === PLATFORM_ROLES.TEACHER;
+  if (!isAuthorizedTeacherDashboard) {
+    if (state.role !== PLATFORM_ROLES.TEACHER) storeLessonTimerDisplayOpen(false);
+    return false;
+  }
+  if (!lessonTimerDisplayIsStoredOpen()) return false;
+  const display = document.querySelector("#platform-student-timer-display");
+  if (!display) return false;
+  display.hidden = false;
+  return true;
+}
+
 function handleSubmit(event) {
   const form = event.target.closest("form[data-form]");
   if (!form) return;
@@ -398,12 +506,31 @@ function handleSubmit(event) {
     session.signInStudent(state.pendingClassId, student.id);
     return navigate(ROUTES.STUDENT_DASHBOARD);
   }
+
+  if (form.dataset.form === "lesson-timer-duration") {
+    const result = lessonTimer.setDuration(data.get("duration"));
+    const error = form.querySelector("[data-timer-error]");
+    if (!result.ok) {
+      if (error) {
+        error.textContent = `Enter a whole number from ${MIN_LESSON_MINUTES} to ${MAX_LESSON_MINUTES} minutes.`;
+        error.hidden = false;
+      }
+      return;
+    }
+    if (error) {
+      error.textContent = "";
+      error.hidden = true;
+    }
+    syncLessonTimerPresentation();
+  }
 }
 
 function handleClick(event) {
   const action = event.target.closest("[data-action]");
   if (!action) return;
   if (action.dataset.action === "sign-out") {
+    storeLessonTimerDisplayOpen(false);
+    lessonTimer.clear();
     session.signOut();
     navigate(ROUTES.WELCOME, { replace: true });
   }
@@ -418,6 +545,25 @@ function handleClick(event) {
     session.selectStudent(student.id);
     navigate(ROUTES.STUDENT_IDENTIFIER);
   }
+  const timerActions = {
+    "timer-start": () => lessonTimer.start(),
+    "timer-pause": () => lessonTimer.pause(),
+    "timer-resume": () => lessonTimer.resume(),
+    "timer-reset": () => lessonTimer.reset(),
+    "timer-end": () => lessonTimer.end(),
+  };
+  if (timerActions[action.dataset.action]) {
+    timerActions[action.dataset.action]();
+    syncLessonTimerPresentation();
+  }
+  if (action.dataset.action === "open-timer-display") {
+    const display = document.querySelector("#platform-student-timer-display");
+    if (display) {
+      storeLessonTimerDisplayOpen(true);
+      display.hidden = false;
+      display.focus();
+    }
+  }
 }
 
 function render() {
@@ -427,10 +573,26 @@ function render() {
   const allowedRoute = guardRoute(requestedRoute, state);
   if (allowedRoute !== requestedRoute) return navigate(allowedRoute, { replace: true });
   root.innerHTML = viewForRoute(allowedRoute, state);
-  window.requestAnimationFrame(() => document.querySelector("#platform-main")?.focus({ preventScroll: true }));
+  manageLessonTimerPresentation(allowedRoute);
+  const studentDisplayRestored = restoreLessonTimerDisplay(allowedRoute, state);
+  window.requestAnimationFrame(() => {
+    if (studentDisplayRestored) {
+      document.querySelector("#platform-student-timer-display")?.focus({ preventScroll: true });
+    } else {
+      document.querySelector("#platform-main")?.focus({ preventScroll: true });
+    }
+  });
 }
 
 root.addEventListener("submit", handleSubmit);
 root.addEventListener("click", handleClick);
 window.addEventListener("hashchange", render);
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  const display = document.querySelector("#platform-student-timer-display:not([hidden])");
+  if (!display) return;
+  storeLessonTimerDisplayOpen(false);
+  display.hidden = true;
+  document.querySelector('[data-action="open-timer-display"]')?.focus();
+});
 render();
