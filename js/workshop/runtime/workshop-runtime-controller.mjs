@@ -13,7 +13,7 @@ export const WORKSHOP_UI_DRAWER_MAP = Object.freeze({
 });
 
 export const WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES = Object.freeze({
-  smartboard: "WS-025C production Measurement Assistant application, read-only display, read-only Learning Mode, and read-only Engineering Notebook lifecycle; a general application-switching menu remains deferred.",
+  smartboard: "WS-026C production Measurement Assistant application, read-only display, read-only Learning Mode, read-only Engineering Notebook lifecycle, and approved two-application launcher; an additional general application-switching menu remains deferred.",
 });
 
 const INITIAL_STATE = Object.freeze({

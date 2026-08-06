@@ -81,3 +81,43 @@ test("selection loss returns Notebook presentation to Measurements and announces
   view.setActiveApplication(SMART_BOARD_LAUNCHER_APPLICATIONS.MEASUREMENTS);
   assert.equal(elements.status.textContent, "Measurements ready.");
 });
+
+test("atomically synchronizes canonical readiness, selection, application, and switching state", () => {
+  const { elements, view } = setup();
+  const ready = view.syncState({
+    boardReady: true,
+    selectionAvailable: true,
+    application: SMART_BOARD_LAUNCHER_APPLICATIONS.MEASUREMENTS,
+    applicationSwitching: false,
+  });
+  assert.equal(ready.state, SMART_BOARD_LAUNCHER_STATES.MEASUREMENTS_ACTIVE);
+  assert.equal(elements.root.hidden, false);
+  assert.equal(elements.notebookControl.disabled, false);
+
+  const switching = view.syncState({
+    boardReady: true,
+    selectionAvailable: true,
+    application: SMART_BOARD_LAUNCHER_APPLICATIONS.MEASUREMENTS,
+    applicationSwitching: true,
+  });
+  assert.equal(switching.state, SMART_BOARD_LAUNCHER_STATES.APPLICATION_SWITCHING);
+  assert.equal(elements.measurementsControl.disabled, true);
+  assert.equal(elements.notebookControl.disabled, true);
+
+  const notebook = view.syncState({
+    boardReady: true,
+    selectionAvailable: true,
+    application: SMART_BOARD_LAUNCHER_APPLICATIONS.NOTEBOOK,
+    applicationSwitching: false,
+    announce: true,
+  });
+  assert.equal(notebook.state, SMART_BOARD_LAUNCHER_STATES.NOTEBOOK_ACTIVE);
+  assert.equal(elements.status.textContent, "Engineering Notebook ready.");
+  assert.equal(view.syncState({
+    boardReady: true,
+    selectionAvailable: true,
+    application: SMART_BOARD_LAUNCHER_APPLICATIONS.NOTEBOOK,
+    applicationSwitching: false,
+    announce: true,
+  }).code, "IDEMPOTENT");
+});

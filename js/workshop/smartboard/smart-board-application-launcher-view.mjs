@@ -99,6 +99,31 @@ export function createSmartBoardApplicationLauncherView({
   reset();
 
   return Object.freeze({
+    syncState({
+      boardReady,
+      selectionAvailable,
+      application: nextApplication,
+      applicationSwitching,
+      announce = false,
+    } = {}) {
+      if (nextApplication !== undefined &&
+          !Object.values(SMART_BOARD_LAUNCHER_APPLICATIONS).includes(nextApplication)) {
+        return freezeResult({ ok: false, code: "UNKNOWN_APPLICATION" });
+      }
+      ready = boardReady === true;
+      hasSelection = selectionAvailable === true;
+      switching = ready && applicationSwitching === true;
+      if (!ready) {
+        switching = false;
+        application = SMART_BOARD_LAUNCHER_APPLICATIONS.MEASUREMENTS;
+      } else if (nextApplication !== undefined) {
+        application = nextApplication;
+      }
+      if (!hasSelection && application === SMART_BOARD_LAUNCHER_APPLICATIONS.NOTEBOOK) {
+        application = SMART_BOARD_LAUNCHER_APPLICATIONS.MEASUREMENTS;
+      }
+      return present({ announce });
+    },
     setReady(value) {
       ready = value === true;
       if (!ready) {

@@ -30775,6 +30775,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopSmartBoardMeasurementDisplay=null;
   var workshopSmartBoardLearningModeView=null;
   var workshopSmartBoardNotebookView=null;
+  var workshopSmartBoardApplicationLauncherView=null;
+  var workshopSmartBoardApplicationLauncherBridge=null;
   var workshopClassroomWorkspaceReset=null;
   var workshopWorkstationRegistrationModule=null;
   var workshopWorkstationRegistration=null;
@@ -30902,6 +30904,12 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       workshopStartupRequested=false;
       setWorkshopStartupState("OFF","Workshop closed.");
     }
+    syncWorkshopSmartBoardApplicationLauncher();
+  }
+
+  function syncWorkshopSmartBoardApplicationLauncher(options){
+    if(!workshopSmartBoardApplicationLauncherBridge) return null;
+    return workshopSmartBoardApplicationLauncherBridge.sync(options || {});
   }
 
   function workshopStartupDependenciesReady(){
@@ -32834,6 +32842,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       action:"OPEN_NOTEBOOK",
       input:workshopNotebookInputSource(event)
     });
+    if(result.ok && result.code==="ACCEPTED" &&
+      workshopSmartBoardApplicationLauncherBridge){
+      workshopSmartBoardApplicationLauncherBridge.beginSwitch();
+    }
     return result.ok;
   }
 
@@ -32844,6 +32856,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       input:workshopNotebookInputSource(event),
       payload:{application:"MEASUREMENT_ASSISTANT"}
     });
+    if(result.ok && result.code==="ACCEPTED" &&
+      workshopSmartBoardApplicationLauncherBridge){
+      workshopSmartBoardApplicationLauncherBridge.beginSwitch();
+    }
     return result.ok;
   }
 
@@ -32883,6 +32899,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       if(workshopSmartBoardNotebookView){
         workshopSmartBoardNotebookView.syncSelection({hasSelection:false});
       }
+      syncWorkshopSmartBoardApplicationLauncher();
       return;
     }
 
@@ -32918,6 +32935,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     if(workshopSmartBoardNotebookView){
       workshopSmartBoardNotebookView.syncSelection({hasSelection:true});
     }
+    syncWorkshopSmartBoardApplicationLauncher();
   }
 
   function clearWorkshopRulerSelectionHighlight(){
@@ -34690,7 +34708,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/runtime/workshop-classroom-workspace-reset.mjs"),
     import("./js/workshop/runtime/workshop-workstation-registration.mjs"),
     import("./js/workshop/runtime/workshop-unified-workstation-view.mjs"),
-    import("./js/workshop/runtime/workshop-classroom-workspace-presentation.mjs")
+    import("./js/workshop/runtime/workshop-classroom-workspace-presentation.mjs"),
+    import("./js/workshop/smartboard/smart-board-application-launcher-view.mjs"),
+    import("./js/workshop/smartboard/smart-board-application-launcher-bridge.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -34709,6 +34729,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var workstationRegistrationModule=modules[13];
       var unifiedWorkstationModule=modules[14];
       var classroomWorkspacePresentationModule=modules[15];
+      var smartBoardApplicationLauncherModule=modules[16];
+      var smartBoardApplicationLauncherBridgeModule=modules[17];
       workshopWorkstationRegistrationModule=workstationRegistrationModule;
       configureWorkshopWorkstationCorners(workstationRegistrationModule);
       workshopClassroomWorkspaceReset=
@@ -34934,6 +34956,14 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           groupNote:document.getElementById("engineeringSmartBoardLearningGroupNote")
         }
       });
+      workshopSmartBoardApplicationLauncherView=
+        smartBoardApplicationLauncherModule.createSmartBoardApplicationLauncherView({
+          root:document.getElementById("workshopMeasurementNotebookControls"),
+          label:document.getElementById("workshopSmartBoardAppsLabel"),
+          measurementsControl:document.getElementById("workshopBackToMeasurementsFromNotebook"),
+          notebookControl:document.getElementById("workshopOpenEngineeringNotebook"),
+          status:document.getElementById("workshopSmartBoardAppsStatus")
+        });
       workshopSmartBoardNotebookView=smartBoardNotebookModule.createSmartBoardNotebookView({
         screen:document.getElementById("engineeringSmartBoardScreen"),
         measurementDisplay:document.getElementById("engineeringSmartBoardMeasurementDisplay"),
@@ -34942,6 +34972,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         openControl:document.getElementById("workshopOpenEngineeringNotebook"),
         backControl:document.getElementById("workshopBackToMeasurementsFromNotebook"),
         controlsConnected:true,
+        controlsManagedExternally:true,
         source:{
           assistant:document.getElementById("workshopMeasurementAssistant"),
           selection:document.getElementById("workshopMeasurementAssistantSelection"),
@@ -34959,17 +34990,32 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           groupNote:document.getElementById("engineeringSmartBoardNotebookGroupNote")
         }
       });
+      workshopSmartBoardApplicationLauncherBridge=
+        smartBoardApplicationLauncherBridgeModule
+          .createSmartBoardApplicationLauncherBridge({
+            view:workshopSmartBoardApplicationLauncherView,
+            getRuntimeSnapshot:function(){
+              return workshopStateController
+                ? workshopStateController.getSnapshot()
+                : null;
+            },
+            getSelectionAvailable:function(){
+              return !!workshopRulerState.selectedBounds;
+            }
+          });
       window.addEventListener("smartboard:app-changed",function(event){
-        if(!workshopSmartBoardMeasurementDisplay) return;
-        if(event.detail && event.detail.application==="MEASUREMENT_ASSISTANT"){
-          workshopSmartBoardMeasurementDisplay.sync();
-        }else{
-          workshopSmartBoardMeasurementDisplay.reset();
-          if(workshopSmartBoardLearningModeView) workshopSmartBoardLearningModeView.cancel();
+        if(workshopSmartBoardMeasurementDisplay){
+          if(event.detail && event.detail.application==="MEASUREMENT_ASSISTANT"){
+            workshopSmartBoardMeasurementDisplay.sync();
+          }else{
+            workshopSmartBoardMeasurementDisplay.reset();
+            if(workshopSmartBoardLearningModeView) workshopSmartBoardLearningModeView.cancel();
+          }
         }
         if(workshopSmartBoardNotebookView && event.detail && event.detail.application==="NONE"){
           workshopSmartBoardNotebookView.reset({syncApplication:false});
         }
+        syncWorkshopSmartBoardApplicationLauncher({announce:true});
       });
       workshopStateController=module.createWorkshopRuntimeController({
         stateChanged:syncWorkshopControllerPresentation,
@@ -35220,6 +35266,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         }
       });
       window.workshopStateController=workshopStateController;
+      syncWorkshopSmartBoardApplicationLauncher();
       if(workshopPendingProjectorFault){
         workshopStateController.reportProjectorFault(workshopPendingProjectorFault);
         workshopPendingProjectorFault=null;

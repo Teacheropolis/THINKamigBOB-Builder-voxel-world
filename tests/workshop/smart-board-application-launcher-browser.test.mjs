@@ -31,8 +31,12 @@ test("provides 44px responsive two-column touch presentation without switching a
   assert.doesNotMatch(css, /animation:|transition:/);
 });
 
-test("keeps the launcher view disconnected and dashboard placeholders untouched", () => {
-  assert.doesNotMatch(source, /import\("\.\/js\/workshop\/smartboard\/smart-board-application-launcher-view\.mjs"\)/);
+test("connects one launcher view and bridge while leaving dashboard placeholders untouched", () => {
+  assert.equal((source.match(/import\("\.\/js\/workshop\/smartboard\/smart-board-application-launcher-view\.mjs"\)/g) || []).length, 1);
+  assert.equal((source.match(/import\("\.\/js\/workshop\/smartboard\/smart-board-application-launcher-bridge\.mjs"\)/g) || []).length, 1);
+  assert.equal((source.match(/createSmartBoardApplicationLauncherView\(\{/g) || []).length, 1);
+  assert.equal((source.match(/createSmartBoardApplicationLauncherBridge\(\{/g) || []).length, 1);
+  assert.match(source, /controlsManagedExternally:true/);
   assert.match(source, /<button type="button" disabled>Engineering Notebook<\/button>/);
   assert.doesNotMatch(source, /application-launcher-menu|launcher-close/i);
 });

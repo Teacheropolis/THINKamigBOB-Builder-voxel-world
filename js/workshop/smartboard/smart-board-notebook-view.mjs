@@ -10,6 +10,7 @@ export function createSmartBoardNotebookView({
   source,
   target,
   controlsConnected = false,
+  controlsManagedExternally = false,
   requestFrame = (callback) => globalThis.requestAnimationFrame(callback),
   cancelFrame = (handle) => globalThis.cancelAnimationFrame(handle),
   activeElement = () => globalThis.document?.activeElement || null,
@@ -33,6 +34,7 @@ export function createSmartBoardNotebookView({
   let disposed = false;
 
   const setControls = () => {
+    if (controlsManagedExternally) return;
     if (!controlsConnected) {
       openControl.hidden = true;
       openControl.disabled = true;
