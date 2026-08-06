@@ -18,7 +18,7 @@ test("rapid selection is latest-request-wins and stale work is token guarded", (
 });
 
 test("reset, retraction, and non-ready lifecycle states clear queued switching", () => {
-  assert.match(source, /snapshot\.workshop!=="READY"\) clearEngineeringToolChestDrawerSwitch\(\)/);
+  assert.match(source, /snapshot\.workshop!=="READY"\)\{\s*clearEngineeringToolChestDrawerSwitch\(\);/);
   assert.match(source, /requestedState==="retracted"\)\{\s*clearEngineeringToolChestDrawerSwitch\(\);/);
   assert.match(source, /function resetEngineeringToolChest\(\)\{\s*clearEngineeringToolChestDrawerSwitch\(\);/);
 });
