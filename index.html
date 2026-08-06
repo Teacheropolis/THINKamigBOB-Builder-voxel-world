@@ -30779,6 +30779,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopWorkstationRegistrationModule=null;
   var workshopWorkstationRegistration=null;
   var workshopUnifiedWorkstationView=null;
+  var workshopClassroomWorkspacePresentation=null;
   var workshopClassroomNeutralBackground=new THREE.Color(0x07131c);
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
@@ -34389,6 +34390,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     if(requestedMode!=="workshop" && workshopClassroomWorkspaceReset){
       workshopClassroomWorkspaceReset.deactivate();
     }
+    if(requestedMode!=="workshop" && workshopClassroomWorkspacePresentation){
+      workshopClassroomWorkspacePresentation.reset();
+    }
     if(workshopPoweredOffTableCompositor){
       workshopPoweredOffTableCompositor.setWorkshopActive(
         requestedMode==="workshop"
@@ -34685,7 +34689,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/smartboard/smart-board-notebook-view.mjs"),
     import("./js/workshop/runtime/workshop-classroom-workspace-reset.mjs"),
     import("./js/workshop/runtime/workshop-workstation-registration.mjs"),
-    import("./js/workshop/runtime/workshop-unified-workstation-view.mjs")
+    import("./js/workshop/runtime/workshop-unified-workstation-view.mjs"),
+    import("./js/workshop/runtime/workshop-classroom-workspace-presentation.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -34703,6 +34708,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var classroomWorkspaceResetModule=modules[12];
       var workstationRegistrationModule=modules[13];
       var unifiedWorkstationModule=modules[14];
+      var classroomWorkspacePresentationModule=modules[15];
       workshopWorkstationRegistrationModule=workstationRegistrationModule;
       configureWorkshopWorkstationCorners(workstationRegistrationModule);
       workshopClassroomWorkspaceReset=
@@ -34757,8 +34763,40 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
               engineeringGrid.position.y===-0.498 && workshopStageFrame);
           }
         });
+      workshopClassroomWorkspacePresentation=
+        classroomWorkspacePresentationModule
+          .createWorkshopClassroomWorkspacePresentation({
+            getActive:function(){
+              return currentWorkspaceMode==="workshop" &&
+                document.body.classList.contains("workshopMode");
+            },
+            getCameraView:function(){
+              return activeWorkshopEngineeringView;
+            },
+            getFitSelection:function(){
+              return activeWorkshopFitSelection;
+            },
+            getGeometryValid:function(){
+              var parameters=ground && ground.geometry && ground.geometry.parameters;
+              return !!(parameters && parameters.width===50 && parameters.depth===50 &&
+                ground.position.y===-1 && engineeringGrid &&
+                engineeringGrid.position.y===-0.498 && workshopStageFrame);
+            },
+            getResetSnapshot:function(){
+              return workshopClassroomWorkspaceReset.getSnapshot();
+            },
+            getWorkstationSnapshot:function(){
+              return workshopWorkstationRegistration.getSnapshot();
+            },
+            getRulerSnapshot:function(){
+              return workshopUnifiedWorkstationView.getSnapshot();
+            }
+          });
       window.getWorkshopWorkstationRegistration=function(){
         return workshopWorkstationRegistration.update();
+      };
+      window.getWorkshopClassroomWorkspacePresentation=function(){
+        return workshopClassroomWorkspacePresentation.getSnapshot();
       };
       if(currentWorkspaceMode==="workshop"){
         workshopClassroomWorkspaceReset.activate();
