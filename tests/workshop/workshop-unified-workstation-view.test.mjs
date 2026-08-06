@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  WORKSHOP_RULER_FALLBACK_MINIMUM_HORIZONTAL_LENGTH,
+  WORKSHOP_RULER_FALLBACK_MINIMUM_VERTICAL_LENGTH,
   WORKSHOP_RULER_MAXIMUM_READABLE_TILT_DEGREES,
+  calculateWorkshopReadableFallbackFrame,
   createWorkshopUnifiedWorkstationView,
 } from
   "../../js/workshop/runtime/workshop-unified-workstation-view.mjs";
@@ -41,6 +44,13 @@ const edge = (id, start, end, angleDegrees) => ({
 function snapshot() {
   return {
     blocked: false,
+    stableHomeScreenBounds: {
+      left: 100, top: 80, right: 900, bottom: 520, width: 800, height: 440,
+    },
+    protectedBuildZone: {
+      left: 80, top: 60, right: 920, bottom: 540,
+      width: 840, height: 480, inset: 12, blocked: false,
+    },
     edgePresentationUsable: true,
     orderedTabletopEdges: [
       edge("top", { x: 100, y: 100 }, { x: 900, y: 120 }, 1.432),
@@ -93,10 +103,40 @@ test("uses the readable rectangular fallback when projected ruler tilt is excess
       : item);
   assert.equal(WORKSHOP_RULER_MAXIMUM_READABLE_TILT_DEGREES, 18);
   assert.deepEqual(view.update(steep), { mode: "fallback", changed: true });
-  Object.values(rulers).forEach((ruler) => {
+  Object.entries(rulers).forEach(([id, ruler]) => {
     assert.equal(ruler.dataset.workstationEdgeRegistered, undefined);
-    assert.equal(ruler.style.transform, undefined);
+    assert.equal(ruler.dataset.workstationReadableFallback, id);
+    assert.equal(ruler.style.transform, "none");
   });
+  assert.equal(rulers.top.style.width, "840px");
+  assert.equal(rulers.left.style.height, "440px");
+});
+
+test("calculates a bounded readable fallback frame and rejects undersized geometry", () => {
+  assert.equal(WORKSHOP_RULER_FALLBACK_MINIMUM_HORIZONTAL_LENGTH, 320);
+  assert.equal(WORKSHOP_RULER_FALLBACK_MINIMUM_VERTICAL_LENGTH, 240);
+  assert.deepEqual(calculateWorkshopReadableFallbackFrame(snapshot()), {
+    left: 80,
+    top: 60,
+    right: 920,
+    bottom: 540,
+    width: 840,
+    height: 480,
+    horizontalLength: 840,
+    verticalLength: 440,
+  });
+  assert.equal(calculateWorkshopReadableFallbackFrame({
+    ...snapshot(),
+    protectedBuildZone: {
+      left: 100, top: 100, width: 319, height: 280, inset: 12, blocked: false,
+    },
+  }), null);
+  assert.equal(calculateWorkshopReadableFallbackFrame({
+    ...snapshot(),
+    protectedBuildZone: {
+      left: 100, top: 100, width: 500, height: 279, inset: 12, blocked: false,
+    },
+  }), null);
 });
 
 test("normalizes reversed projected edges so labels remain upright", () => {
@@ -114,6 +154,27 @@ test("repeated geometry is idempotent", () => {
   assert.deepEqual(view.update(snapshot()), { mode: "edges", changed: false });
 });
 
+test("repeated fallback is idempotent and responsive geometry updates once", () => {
+  const { rulers, view } = harness();
+  const edgeOn = { ...snapshot(), edgePresentationUsable: false };
+  assert.deepEqual(view.update(edgeOn), { mode: "fallback", changed: true });
+  assert.deepEqual(view.update(edgeOn), { mode: "fallback", changed: false });
+  const resized = {
+    ...edgeOn,
+    stableHomeScreenBounds: {
+      left: 140, top: 100, width: 700, height: 400,
+    },
+    protectedBuildZone: {
+      left: 120, top: 80, width: 740, height: 440,
+      inset: 12, blocked: false,
+    },
+  };
+  assert.deepEqual(view.update(resized), { mode: "fallback", changed: true });
+  assert.equal(rulers.top.style.left, "120px");
+  assert.equal(rulers.top.style.width, "740px");
+  assert.deepEqual(view.update(resized), { mode: "fallback", changed: false });
+});
+
 test("edge-on, blocked, and invalid world registration restore fallback", () => {
   const first = harness();
   first.view.update(snapshot());
@@ -121,9 +182,14 @@ test("edge-on, blocked, and invalid world registration restore fallback", () => 
     { mode: "fallback", changed: true });
   Object.values(first.rulers).forEach((ruler) => {
     assert.equal(ruler.dataset.workstationEdgeRegistered, undefined);
+    assert.ok(ruler.dataset.workstationReadableFallback);
   });
   const invalid = harness(false);
   assert.equal(invalid.view.update(snapshot()).mode, "fallback");
+  Object.values(invalid.rulers).forEach((ruler) => {
+    assert.equal(ruler.dataset.workstationReadableFallback, undefined);
+    assert.equal(ruler.style.position, undefined);
+  });
 });
 
 test("reset is idempotent and restores all ruler-owned inline properties", () => {
@@ -134,5 +200,6 @@ test("reset is idempotent and restores all ruler-owned inline properties", () =>
   Object.values(rulers).forEach((ruler) => {
     assert.equal(ruler.style.position, undefined);
     assert.equal(ruler.style.transform, undefined);
+    assert.equal(ruler.dataset.workstationReadableFallback, undefined);
   });
 });
