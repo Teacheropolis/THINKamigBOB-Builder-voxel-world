@@ -10,6 +10,9 @@ export const LESSON_TIMER_STATES = Object.freeze({
 export const DEFAULT_LESSON_MINUTES = 45;
 export const MIN_LESSON_MINUTES = 1;
 export const MAX_LESSON_MINUTES = 240;
+export const LESSON_TIMER_ADJUSTMENT_SECONDS = 60;
+
+const MAX_LESSON_SECONDS = MAX_LESSON_MINUTES * 60;
 
 function createReadyState(durationSeconds = DEFAULT_LESSON_MINUTES * 60) {
   return {
@@ -22,7 +25,7 @@ function createReadyState(durationSeconds = DEFAULT_LESSON_MINUTES * 60) {
 }
 
 function validSeconds(value) {
-  return Number.isInteger(value) && value >= 0 && value <= MAX_LESSON_MINUTES * 60;
+  return Number.isInteger(value) && value >= 0 && value <= MAX_LESSON_SECONDS;
 }
 
 function sanitizeState(value) {
@@ -31,7 +34,7 @@ function sanitizeState(value) {
     ? value.durationSeconds
     : DEFAULT_LESSON_MINUTES * 60;
   const remainingSeconds = validSeconds(value.remainingSeconds)
-    ? Math.min(value.remainingSeconds, durationSeconds)
+    ? value.remainingSeconds
     : durationSeconds;
 
   if (value.status === LESSON_TIMER_STATES.RUNNING) {
@@ -107,6 +110,9 @@ export function createLessonTimer({ storage, now = () => Date.now() } = {}) {
     const current = storedState();
     if (current.status !== LESSON_TIMER_STATES.RUNNING || current.endsAt === null) return current;
     const remainingSeconds = Math.max(0, Math.ceil((current.endsAt - now()) / 1000));
+    if (remainingSeconds > MAX_LESSON_SECONDS) {
+      return persist(createReadyState(current.durationSeconds));
+    }
     if (remainingSeconds === 0) {
       return persist({
         ...current,
@@ -142,6 +148,41 @@ export function createLessonTimer({ storage, now = () => Date.now() } = {}) {
       const current = read();
       if (current.status !== LESSON_TIMER_STATES.PAUSED || current.remainingSeconds <= 0) return current;
       return persist({ ...current, status: LESSON_TIMER_STATES.RUNNING, endsAt: now() + current.remainingSeconds * 1000 });
+    },
+    addMinute() {
+      const current = read();
+      const adjustable = current.status === LESSON_TIMER_STATES.RUNNING ||
+        current.status === LESSON_TIMER_STATES.PAUSED;
+      if (!adjustable || current.remainingSeconds >
+          MAX_LESSON_SECONDS - LESSON_TIMER_ADJUSTMENT_SECONDS) return current;
+      return persist({
+        ...current,
+        remainingSeconds: current.remainingSeconds + LESSON_TIMER_ADJUSTMENT_SECONDS,
+        endsAt: current.status === LESSON_TIMER_STATES.RUNNING
+          ? current.endsAt + LESSON_TIMER_ADJUSTMENT_SECONDS * 1000
+          : null,
+      });
+    },
+    subtractMinute() {
+      const current = read();
+      const adjustable = current.status === LESSON_TIMER_STATES.RUNNING ||
+        current.status === LESSON_TIMER_STATES.PAUSED;
+      if (!adjustable) return current;
+      if (current.remainingSeconds <= LESSON_TIMER_ADJUSTMENT_SECONDS) {
+        return persist({
+          ...current,
+          status: LESSON_TIMER_STATES.COMPLETE,
+          remainingSeconds: 0,
+          endsAt: null,
+        });
+      }
+      return persist({
+        ...current,
+        remainingSeconds: current.remainingSeconds - LESSON_TIMER_ADJUSTMENT_SECONDS,
+        endsAt: current.status === LESSON_TIMER_STATES.RUNNING
+          ? current.endsAt - LESSON_TIMER_ADJUSTMENT_SECONDS * 1000
+          : null,
+      });
     },
     reset() {
       const current = read();

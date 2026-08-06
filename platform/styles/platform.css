@@ -268,12 +268,16 @@ summary:focus-visible {
 .platform-timer-duration input,
 .platform-timer-duration button,
 .platform-timer-controls button,
+.platform-timer-adjustments button,
 .platform-student-display-button { min-height: 2.75rem; border: 2px solid var(--platform-blue); border-radius: 0.5rem; font-weight: 700; }
 .platform-timer-duration input { min-width: 0; padding: 0.5rem; color: var(--platform-ink); background: #fff; }
 .platform-timer-duration button,
-.platform-timer-controls button { padding: 0.45rem 0.65rem; color: var(--platform-navy); background: #f3fafc; cursor: pointer; }
+.platform-timer-controls button,
+.platform-timer-adjustments button { padding: 0.45rem 0.65rem; color: var(--platform-navy); background: #f3fafc; cursor: pointer; }
 .platform-timer-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; }
+.platform-timer-adjustments { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; }
 .platform-timer-controls button:disabled,
+.platform-timer-adjustments button:disabled,
 .platform-timer-duration button:disabled,
 .platform-timer-duration input:disabled { border-color: #b9c7cd; color: #64757d; background: #edf2f4; cursor: not-allowed; }
 .platform-timer-error { font-size: 0.72rem; }

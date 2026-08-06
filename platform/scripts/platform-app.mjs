@@ -342,6 +342,10 @@ function teacherDashboardView(state) {
                 <button type="button" data-action="timer-reset">Reset</button>
                 <button type="button" data-action="timer-end">End</button>
               </div>
+              <div class="platform-timer-adjustments" aria-label="Teacher Timer Adjustment controls">
+                <button type="button" data-action="timer-subtract-minute">Subtract 1 minute</button>
+                <button type="button" data-action="timer-add-minute">Add 1 minute</button>
+              </div>
               <button class="platform-student-display-button" type="button" data-action="open-timer-display">Open Student Display</button>
             </div>
           </section>
@@ -438,6 +442,9 @@ function syncLessonTimerPresentation() {
     "timer-resume": state.status === LESSON_TIMER_STATES.PAUSED,
     "timer-reset": state.status !== LESSON_TIMER_STATES.READY,
     "timer-end": state.status === LESSON_TIMER_STATES.RUNNING || state.status === LESSON_TIMER_STATES.PAUSED,
+    "timer-subtract-minute": state.status === LESSON_TIMER_STATES.RUNNING || state.status === LESSON_TIMER_STATES.PAUSED,
+    "timer-add-minute": (state.status === LESSON_TIMER_STATES.RUNNING || state.status === LESSON_TIMER_STATES.PAUSED) &&
+      state.remainingSeconds <= MAX_LESSON_MINUTES * 60 - 60,
   };
   Object.entries(controlRules).forEach(([action, enabled]) => {
     const button = document.querySelector(`[data-action="${action}"]`);
@@ -551,6 +558,8 @@ function handleClick(event) {
     "timer-resume": () => lessonTimer.resume(),
     "timer-reset": () => lessonTimer.reset(),
     "timer-end": () => lessonTimer.end(),
+    "timer-subtract-minute": () => lessonTimer.subtractMinute(),
+    "timer-add-minute": () => lessonTimer.addMinute(),
   };
   if (timerActions[action.dataset.action]) {
     timerActions[action.dataset.action]();
