@@ -69,6 +69,20 @@ summary:focus-visible {
   border-bottom: 4px solid var(--platform-gold);
 }
 
+.platform-teacher-orientation {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  gap: clamp(0.8rem, 2.5vw, 2rem);
+}
+
+.platform-teacher-orientation span { min-width: 0; }
+.platform-teacher-orientation small,
+.platform-teacher-orientation strong { display: block; }
+.platform-teacher-orientation small { color: #a9cedd; font-size: 0.67rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.platform-teacher-orientation strong { max-width: 13rem; overflow: hidden; font-size: 0.82rem; text-overflow: ellipsis; white-space: nowrap; }
+.platform-header-actions { display: flex; gap: 0.55rem; }
+
 .platform-brand {
   display: inline-flex;
   align-items: center;
@@ -188,12 +202,85 @@ summary:focus-visible {
 .platform-placeholder-card p { color: var(--platform-muted); }
 .platform-placeholder-card button { width: 100%; min-height: 2.75rem; border: 1px dashed #8297a2; border-radius: 0.5rem; color: #566a74; background: #edf2f4; }
 
+.platform-command-layout { display: grid; grid-template-columns: minmax(10rem, 13rem) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+
+.platform-teacher-nav {
+  display: grid;
+  gap: 0.55rem;
+  position: sticky;
+  top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--platform-border);
+  border-radius: 1rem;
+  background: var(--platform-surface);
+  box-shadow: var(--platform-shadow);
+}
+
+.platform-teacher-nav a,
+.platform-teacher-nav button {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  color: var(--platform-ink);
+  background: transparent;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.platform-teacher-nav a[aria-current="page"] { color: #fff; background: var(--platform-blue-dark); }
+.platform-teacher-nav button:hover { border-color: var(--platform-border); background: var(--platform-soft); }
+.platform-teacher-nav small { color: var(--platform-muted); font-size: 0.58rem; font-weight: 500; }
+.platform-nav-status { margin: 0.35rem 0 0; padding-top: 0.75rem; border-top: 1px solid var(--platform-border); color: var(--platform-muted); font-size: 0.68rem; }
+
+.platform-today-board { min-width: 0; }
+.platform-today-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; padding: 1.25rem 1.4rem; border-radius: 1rem; color: #fff; background: linear-gradient(125deg, var(--platform-navy), var(--platform-blue-dark)); box-shadow: var(--platform-shadow); }
+.platform-today-heading .platform-eyebrow { color: #bde5d3; }
+.platform-today-heading h2 { margin: 0; font-size: clamp(2.2rem, 6vw, 4.5rem); line-height: 0.95; letter-spacing: 0.03em; }
+.platform-today-heading > p { max-width: 24rem; margin: 0; color: #d7e9ef; text-align: right; }
+
+.platform-today-primary-grid,
+.platform-class-rhythm { display: grid; gap: 1rem; }
+.platform-today-primary-grid { grid-template-columns: 1.4fr 1fr 1fr; }
+.platform-class-rhythm { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 1rem; }
+
+.platform-command-card,
+.platform-rhythm-card,
+.platform-teacher-feed { border: 1px solid var(--platform-border); border-radius: 0.85rem; background: var(--platform-surface); }
+.platform-command-card, .platform-rhythm-card { min-height: 10rem; padding: 1.15rem; }
+.platform-command-card-mission { border-top: 6px solid var(--platform-blue); }
+.platform-command-card h3, .platform-rhythm-card h3, .platform-teacher-feed h3 { margin: 0.15rem 0 0.55rem; font-size: 1.08rem; }
+.platform-command-card p:last-child, .platform-rhythm-card p { margin-bottom: 0; color: var(--platform-muted); }
+.platform-command-label { margin: 0; color: var(--platform-green); font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.platform-rhythm-title { margin: 1.25rem 0 0.55rem; color: var(--platform-navy); font-size: 0.82rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+.platform-rhythm-card { border-top-width: 5px; }
+.platform-rhythm-wins { border-top-color: #c28b12; }
+.platform-rhythm-blockers { border-top-color: #b85a43; }
+.platform-rhythm-next { border-top-color: var(--platform-green); }
+
+.platform-teacher-feed { display: flex; min-height: 6.5rem; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; padding: 1.15rem; border-left: 6px solid var(--platform-blue); }
+.platform-teacher-feed p:last-child { margin: 0; color: var(--platform-muted); }
+
 .platform-footer { padding: 1.25rem; color: #d1e3ea; background: #17394d; text-align: center; font-size: 0.78rem; }
 .platform-noscript { max-width: 45rem; margin: 3rem auto; padding: 2rem; }
 
 @media (max-width: 800px) {
   .platform-entry-grid, .platform-form-layout, .platform-placeholder-grid { grid-template-columns: 1fr; }
   .platform-placeholder-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .platform-header { flex-wrap: wrap; }
+  .platform-teacher-orientation { order: 3; width: 100%; justify-content: flex-start; }
+  .platform-command-layout { grid-template-columns: 1fr; }
+  .platform-teacher-nav { display: flex; position: static; overflow-x: auto; }
+  .platform-teacher-nav a, .platform-teacher-nav button { flex: 0 0 auto; }
+  .platform-nav-status { display: none; }
+  .platform-today-primary-grid { grid-template-columns: 1fr 1fr; }
+  .platform-command-card-mission { grid-column: 1 / -1; }
 }
 
 @media (max-width: 520px) {
@@ -203,6 +290,14 @@ summary:focus-visible {
   .platform-roster-grid, .platform-placeholder-grid { grid-template-columns: 1fr; }
   .platform-actions, .platform-button { width: 100%; }
   .platform-text-links { flex-direction: column; }
+  .platform-header-actions { width: 100%; }
+  .platform-header-actions .platform-button { width: auto; flex: 1; }
+  .platform-teacher-orientation { display: grid; grid-template-columns: 1fr 1fr; }
+  .platform-teacher-orientation span:first-child { grid-column: 1 / -1; }
+  .platform-today-heading, .platform-teacher-feed { align-items: flex-start; flex-direction: column; }
+  .platform-today-heading > p { text-align: left; }
+  .platform-today-primary-grid, .platform-class-rhythm { grid-template-columns: 1fr; }
+  .platform-command-card-mission { grid-column: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

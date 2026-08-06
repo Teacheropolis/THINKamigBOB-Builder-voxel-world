@@ -20,6 +20,7 @@ const classes = Object.freeze([
     id: "class-preview-1",
     code: "STEM-101",
     displayName: "Preview STEM Class",
+    periodLabel: "Period 2",
     teacherId: "teacher-preview-1",
   }),
 ]);
@@ -58,6 +59,10 @@ export function findClassByCode(code) {
 
 export function getClassById(classId) {
   return classes.find((classRecord) => classRecord.id === classId) ?? null;
+}
+
+export function getClassForTeacher(teacherId) {
+  return classes.find((classRecord) => classRecord.teacherId === teacherId) ?? null;
 }
 
 export function getTeacherById(teacherId) {

@@ -3,6 +3,7 @@ import {
   DEVELOPMENT_FIXTURE_NOTICE,
   findClassByCode,
   getClassById,
+  getClassForTeacher,
   getDevelopmentIdentifier,
   getRosterForClass,
   getStudentById,
@@ -67,7 +68,7 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function shell(content, { title, eyebrow = "Platform Foundation", signedIn = false } = {}) {
+function shell(content, { title, eyebrow = "Platform Foundation", signedIn = false, teacherContext = null } = {}) {
   document.title = `${title} | THINKamigBOB`;
   return `
     <header class="platform-header">
@@ -75,7 +76,17 @@ function shell(content, { title, eyebrow = "Platform Foundation", signedIn = fal
         <span class="platform-brand-mark" aria-hidden="true">BOB</span>
         <span><strong>THINKamigBOB</strong><small>STEM Learning Platform</small></span>
       </a>
-      ${signedIn ? '<button class="platform-button platform-button-quiet" type="button" data-action="sign-out">Sign out</button>' : ""}
+      ${teacherContext ? `
+        <div class="platform-teacher-orientation" aria-label="Current teacher and class">
+          <span><small>Teacher</small><strong>${escapeHtml(teacherContext.teacherName)}</strong></span>
+          <span><small>Current class</small><strong>${escapeHtml(teacherContext.className)}</strong></span>
+          <span><small>Current period</small><strong>${escapeHtml(teacherContext.periodLabel)}</strong></span>
+        </div>
+        <div class="platform-header-actions">
+          <button class="platform-button platform-button-quiet" type="button" data-action="reserved-nav" data-label="Settings">Settings</button>
+          <button class="platform-button platform-button-quiet" type="button" data-action="sign-out">Sign out</button>
+        </div>
+      ` : signedIn ? '<button class="platform-button platform-button-quiet" type="button" data-action="sign-out">Sign out</button>' : ""}
     </header>
     <main id="platform-main" class="platform-main" tabindex="-1">
       <div class="platform-page-heading">
@@ -235,7 +246,6 @@ function studentIdentifierView(state) {
   `, { title: "Private Identifier", eyebrow: "Step 3 of 3" });
 }
 
-const teacherAreas = ["Today’s Class", "Teacher Feed", "Wins • Blockers • Next Steps", "Classes", "Students", "Reports", "Settings"];
 const studentAreas = ["Today’s Mission", "Continue Working", "My STEM Work", "Builder", "Workshop", "Google Slides", "Google Vids", "What I Learned Today", "Engineering Credits", "Help"];
 
 function placeholderGrid(items) {
@@ -250,13 +260,78 @@ function placeholderGrid(items) {
 
 function teacherDashboardView(state) {
   const teacher = getTeacherById(state.teacherId);
+  const classRecord = getClassForTeacher(state.teacherId);
+  const teacherName = teacher?.displayName ?? "Preview Teacher";
+  const className = classRecord?.displayName ?? "Class not selected";
+  const periodLabel = classRecord?.periodLabel ?? "Period not selected";
   return shell(`
-    <section class="platform-dashboard-intro">
-      <p>Signed in for development testing as <strong>${escapeHtml(teacher?.displayName ?? "Preview Teacher")}</strong>.</p>
-      <p>This shell reserves the Teacher Command Center structure without simulating classroom activity.</p>
-    </section>
-    ${placeholderGrid(teacherAreas)}
-  `, { title: "Teacher Command Center", eyebrow: "Teacher Dashboard shell", signedIn: true });
+    <div class="platform-command-layout">
+      <nav class="platform-teacher-nav" aria-label="Teacher navigation">
+        <a href="#${ROUTES.TEACHER_DASHBOARD}" aria-current="page">Today</a>
+        ${["Classes", "Students", "Missions", "Reports", "Settings"].map((item) => `
+          <button type="button" data-action="reserved-nav" data-label="${item}">${item}<small>Future build</small></button>
+        `).join("")}
+        <p id="teacher-nav-status" class="platform-nav-status" role="status" aria-live="polite">Reserved areas are labeled for future builds.</p>
+      </nav>
+
+      <section class="platform-today-board" aria-labelledby="today-board-title">
+        <div class="platform-today-heading">
+          <div>
+            <p class="platform-eyebrow">Classroom Command Board</p>
+            <h2 id="today-board-title">TODAY</h2>
+          </div>
+          <p>Class focus, organization, and readiness at a glance.</p>
+        </div>
+
+        <div class="platform-today-primary-grid">
+          <section class="platform-command-card platform-command-card-mission">
+            <p class="platform-command-label">Class focus</p>
+            <h3>Today's Mission</h3>
+            <p>Coming in future build</p>
+          </section>
+          <section class="platform-command-card">
+            <p class="platform-command-label">Class timing</p>
+            <h3>Lesson Progress</h3>
+            <p>Timer coming in future build</p>
+          </section>
+          <section class="platform-command-card">
+            <p class="platform-command-label">Class communication</p>
+            <h3>Teacher Memo</h3>
+            <p>Class message coming in future build</p>
+          </section>
+        </div>
+
+        <p class="platform-rhythm-title">Wins • Blockers • Next Steps</p>
+        <div class="platform-class-rhythm" aria-label="Wins, Blockers, and Next Steps">
+          <section class="platform-rhythm-card platform-rhythm-wins">
+            <h3><span aria-hidden="true">🏆</span> Wins</h3>
+            <p>Future classroom accomplishments will appear here.</p>
+          </section>
+          <section class="platform-rhythm-card platform-rhythm-blockers">
+            <h3><span aria-hidden="true">🚧</span> Blockers</h3>
+            <p>Future classroom challenges will appear here.</p>
+          </section>
+          <section class="platform-rhythm-card platform-rhythm-next">
+            <h3><span aria-hidden="true">➡️</span> Next Steps</h3>
+            <p>Future class direction will appear here.</p>
+          </section>
+        </div>
+
+        <section class="platform-teacher-feed" aria-labelledby="teacher-feed-title">
+          <div>
+            <p class="platform-command-label">Reserved event area</p>
+            <h3 id="teacher-feed-title">Teacher Feed</h3>
+          </div>
+          <p>Future classroom events will appear here.</p>
+        </section>
+      </section>
+    </div>
+  `, {
+    title: "Teacher Command Center",
+    eyebrow: "TODAY view",
+    signedIn: true,
+    teacherContext: { teacherName, className, periodLabel },
+  });
 }
 
 function studentDashboardView(state) {
@@ -331,6 +406,10 @@ function handleClick(event) {
   if (action.dataset.action === "sign-out") {
     session.signOut();
     navigate(ROUTES.WELCOME, { replace: true });
+  }
+  if (action.dataset.action === "reserved-nav") {
+    const status = document.querySelector("#teacher-nav-status");
+    if (status) status.textContent = `${action.dataset.label}: Coming in future build.`;
   }
   if (action.dataset.action === "select-student") {
     const state = session.read();
