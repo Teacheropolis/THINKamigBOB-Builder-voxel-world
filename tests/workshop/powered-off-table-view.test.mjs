@@ -125,15 +125,15 @@ test("records the approved powered-off Table assets, state, registration, and em
   assert.deepEqual(POWERED_OFF_TABLE_STATE, { name: "POWERED_OFF", opacity: 1, scale: 1 });
   assert.equal(POWERED_OFF_TABLE_REGISTRATION.anchor, "VISUAL_BASE_CENTER");
   assert.equal(POWERED_OFF_TABLE_REGISTRATION.minimumWidth, 320);
-  assert.equal(POWERED_OFF_TABLE_REGISTRATION.maximumWidth, 900);
+  assert.equal(POWERED_OFF_TABLE_REGISTRATION.maximumWidth, 1150);
   assert.equal(POWERED_OFF_TABLE_REGISTRATION.essentialControlClearance, 12);
   assert.equal(POWERED_OFF_TABLE_EMITTER_PLANE.length, 4);
   assert.equal(WORKSHOP_STUDENT_COMPOSITE_LAYER, 30);
 });
 
-test("uses 88% stage width and clamps to approved endpoints", () => {
-  assert.equal(calculatePoweredOffTableRegistration({ stageBounds: { left: 0, top: 0, width: 1000, height: 700 } }).width, 880);
-  assert.equal(calculatePoweredOffTableRegistration({ stageBounds: { left: 0, top: 0, width: 2000, height: 1400 } }).width, 900);
+test("uses 96% stage width and clamps to classroom endpoints", () => {
+  assert.equal(calculatePoweredOffTableRegistration({ stageBounds: { left: 0, top: 0, width: 1000, height: 700 } }).width, 960);
+  assert.equal(calculatePoweredOffTableRegistration({ stageBounds: { left: 0, top: 0, width: 2000, height: 1400 } }).width, 1150);
   assert.equal(calculatePoweredOffTableRegistration({ stageBounds: { left: 0, top: 0, width: 300, height: 700 } }).width, 320);
 });
 
@@ -175,7 +175,7 @@ test("recalculates from the stable provider after responsive viewport resizing",
   assert.equal(resized.hidden, false);
   assert.equal(resized.anchorScreenX, 500);
   assert.equal(resized.anchorScreenY, 600);
-  assert.equal(resized.width, 704);
+  assert.equal(resized.width, 768);
   harness.compositor.dispose();
 });
 

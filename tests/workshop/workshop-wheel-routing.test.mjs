@@ -1,0 +1,26 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const source = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
+const wheelHandlers = source.match(/document\.addEventListener\(['"]wheel['"]/g) || [];
+const cameraWheel = source.match(/document\.addEventListener\('wheel',[\s\S]*?\}, \{ passive: false \}\);/)?.[0] || "";
+
+test("keeps exactly one global camera wheel handler", () => {
+  assert.equal(wheelHandlers.length, 1);
+  assert.match(cameraWheel, /readToBobBlocksBuilderEvent\(event\)/);
+  assert.match(cameraWheel, /event\.preventDefault\(\)/);
+});
+
+test("routes Assistant wheel and trackpad input to native contained scrolling", () => {
+  assert.match(cameraWheel, /event\.target\.closest\("#workshopMeasurementAssistant"\)/);
+  assert.match(source, /#workshopMeasurementAssistant\{[\s\S]*?overflow-y:auto;[\s\S]*?overscroll-behavior:contain;/);
+});
+
+test("preserves camera zoom direction, bounds, and calculations", () => {
+  assert.match(cameraWheel, /event\.deltaY < 0[\s\S]*?cameraDistance -= 0\.5/);
+  assert.match(cameraWheel, /event\.deltaY > 0[\s\S]*?cameraDistance \+= 0\.5/);
+  assert.match(cameraWheel, /cameraDistance < 6/);
+  assert.match(cameraWheel, /workshopMode[\s\S]*?\? 80 : 50/);
+  assert.match(cameraWheel, /updateCamera\(\)/);
+});

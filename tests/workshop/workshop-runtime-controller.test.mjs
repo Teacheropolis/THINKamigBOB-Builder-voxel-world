@@ -178,19 +178,20 @@ test("shutdown cancels an unsettled startup transition", () => {
   ]);
 });
 
-test("uses only approved WS-002 mappings for current drawer UI", () => {
+test("maps every current Tool Chest drawer to its approved logical drawer", () => {
   assert.deepEqual(WORKSHOP_UI_DRAWER_MAP, {
+    shapes: "D2_BUILD",
     "colors-materials": "D3_MATERIALS",
     "parts-objects": "D4_COMPONENTS",
+    favorites: "D6_UTILITY",
   });
   const { controller, pending } = harness();
   controller.request({ action: "REQUEST_POWER_ON", input: "host", context: { assetsLoaded: true } });
   completeStartup(pending);
-  assert.equal(controller.request({ action: "OPEN_DRAWER", input: "pointer", payload: { uiDrawer: "shapes" } }).code, "UNMAPPED_DRAWER");
-  const open = controller.request({ action: "OPEN_DRAWER", input: "pointer", payload: { uiDrawer: "colors-materials" } });
+  const open = controller.request({ action: "OPEN_DRAWER", input: "pointer", payload: { uiDrawer: "shapes" } });
   assert.equal(open.ok, true);
   pending.drawer();
-  assert.equal(controller.getSnapshot().drawers.D3_MATERIALS, "OPEN");
+  assert.equal(controller.getSnapshot().drawers.D2_BUILD, "OPEN");
 });
 
 test("requires close completion before opening a different drawer", () => {

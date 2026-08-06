@@ -7832,7 +7832,8 @@ if(
   event.target.closest("#stemCoach") ||
   event.target.closest("#buildBar") ||
   event.target.closest("#studentProjectBar") ||
-  event.target.closest("#viewCubeBox")
+  event.target.closest("#viewCubeBox") ||
+  event.target.closest("#workshopMeasurementAssistant")
 ){
   return;
 }
@@ -27328,6 +27329,15 @@ body.workshopMode:not(.starterScreenActive) #workshopProjectorMount{
   pointer-events:none;
 }
 
+/* WS-012A classroom reset suppresses only presentation. The Projector and
+   Smart Board remain mounted so their verified lifecycle callbacks continue. */
+body.workshopMode.workshopClassroomWorkspaceReset:not(.starterScreenActive)
+  #workshopProjectorMount,
+body.workshopMode.workshopClassroomWorkspaceReset:not(.starterScreenActive)
+  #engineeringSmartBoard{
+  visibility:hidden !important;
+}
+
 .workshop-projector-powered-off{
   display:block;
   width:100%;
@@ -28062,9 +28072,11 @@ body.workshopMode:not(.starterScreenActive) #engineeringSmartBoard{
 
 body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant{
   position:absolute;
-  top:16px;
+  top:4px;
   right:12px;
+  bottom:82px;
   left:12px;
+  max-height:calc(100% - 86px);
   z-index:8;
   display:grid;
   gap:9px;
@@ -28081,7 +28093,49 @@ body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant{
     0 8px 22px rgba(0,0,0,.28),
     0 0 12px rgba(54,216,255,.16);
   font-family:"Lexend",Arial,sans-serif;
-  pointer-events:none;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  pointer-events:auto;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant{
+  scrollbar-width:auto;
+  scrollbar-color:#65ff68 #092331;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant::-webkit-scrollbar{
+  width:14px;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant::-webkit-scrollbar-track{
+  border-radius:9px;
+  background:#092331;
+  box-shadow:inset 0 0 0 1px rgba(108,226,174,.18);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant::-webkit-scrollbar-thumb{
+  min-height:36px;
+  border:3px solid #092331;
+  border-radius:9px;
+  background:#65ff68;
+  box-shadow:0 0 8px rgba(101,255,104,.58);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant::-webkit-scrollbar-thumb:hover{
+  background:#b9f548;
+  box-shadow:0 0 11px rgba(101,255,104,.82);
+}
+
+/* The Chromebook right rail cannot contain both full-height surfaces at once.
+   Keep Measurement mounted for live synchronization, but give the deployed or
+   moving Tool Chest exclusive presentation ownership until it is fully parked. */
+body.workshopMode:not(.starterScreenActive)
+  #workshopRightPanelShell[data-tool-chest-owns-right-panel="true"]
+  #workshopMeasurementAssistant{
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
 }
 
 .workshop-measurement-assistant-header{
@@ -28432,11 +28486,14 @@ body.workshopMode:not(.starterScreenActive) #engineeringToolChest{
 
 #engineeringToolChestHandle{
   position:absolute;
-  left:-34px;
-  top:-52px;
+  left:-44px;
+  top:auto;
+  bottom:12px;
   z-index:12;
-  width:42px;
+  width:44px;
+  min-width:44px;
   height:52px;
+  min-height:44px;
   padding:0;
   border:0;
   border-radius:9px;
@@ -28461,6 +28518,25 @@ body.workshopMode:not(.starterScreenActive) #engineeringToolChest{
   pointer-events:none;
   filter:brightness(1.04) contrast(1.08) drop-shadow(0 2px 1px rgba(2,20,52,.72));
   transition:filter 140ms ease;
+}
+
+#engineeringToolChestHandle::after{
+  content:"OPEN";
+  position:absolute;
+  right:2px;
+  bottom:2px;
+  left:2px;
+  z-index:2;
+  color:#ffffff;
+  font:900 7px/1 "Lexend",Arial,sans-serif;
+  letter-spacing:.04em;
+  text-align:center;
+  text-shadow:0 1px 2px rgba(0,25,72,.95);
+  pointer-events:none;
+}
+
+#engineeringToolChestHandle[aria-expanded="true"]::after{
+  content:"CLOSE";
 }
 
 #engineeringToolChestHandle:hover{
@@ -28504,6 +28580,11 @@ body.workshopMode:not(.starterScreenActive) #engineeringToolChest{
 .engineering-tool-chest-drawer:nth-child(2){ top:32%; }
 .engineering-tool-chest-drawer:nth-child(3){ top:52%; }
 .engineering-tool-chest-drawer:nth-child(4){ top:72%; }
+
+#engineeringDrawerFavorites{
+  top:auto;
+  bottom:80px;
+}
 
 .engineering-tool-chest-drawer.is-open,
 .engineering-tool-chest-drawer.is-opening{
@@ -28609,6 +28690,12 @@ body.workshopMode:not(.starterScreenActive) #engineeringToolChest{
 
 .engineering-drawer-content[hidden]{
   display:none;
+}
+
+#engineeringDrawerFavoritesContent{
+  top:auto;
+  bottom:100%;
+  transform:none;
 }
 
 .engineering-object-tile{
@@ -30688,6 +30775,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopSmartBoardMeasurementDisplay=null;
   var workshopSmartBoardLearningModeView=null;
   var workshopSmartBoardNotebookView=null;
+  var workshopClassroomWorkspaceReset=null;
+  var workshopClassroomNeutralBackground=new THREE.Color(0x07131c);
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
   var workshopStartupState="OFF";
@@ -30794,6 +30883,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   function syncWorkshopControllerPresentation(snapshot){
     if(!snapshot || typeof snapshot.workshop!=="string") return;
     workshopCanonicalState=snapshot.workshop;
+    if(snapshot.workshop!=="READY") clearEngineeringToolChestDrawerSwitch();
     if(snapshot.workshop==="STARTING"){
       setWorkshopStartupState("STARTING","Opening Workshop.");
     }else if(snapshot.workshop==="READY"){
@@ -30879,7 +30969,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       workshopRoomBackgroundTexture=texture;
       updateWorkshopRoomBackgroundCover();
       if(currentWorkspaceMode==="workshop"){
-        scene.background=texture;
+        scene.background=workshopClassroomWorkspaceReset
+          ? workshopClassroomWorkspaceReset.selectBackground(texture)
+          : texture;
       }
       if(workshopStartupDependenciesReady()){
         setWorkshopStartupState("READY","Workshop assets are ready.");
@@ -31049,7 +31141,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           getRegistrationBounds:getWorkshopTableHomeRegistrationBounds,
           protectedElements:[
             document.getElementById("info"),
+            document.getElementById("viewCubeBox"),
+            document.getElementById("workshopEngineeringViewControls"),
             document.getElementById("workshopMeasurementAssistant"),
+            document.getElementById("engineeringToolChest"),
             document.getElementById("workshopDashboard")
           ],
           getStudentObjects:function(){ return blocks; },
@@ -31195,6 +31290,25 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       "favorites":"closed"
     }
   };
+  var engineeringToolChestDrawerSwitchToken=0;
+  var engineeringToolChestPendingDrawer=null;
+
+  function clearEngineeringToolChestDrawerSwitch(){
+    engineeringToolChestDrawerSwitchToken+=1;
+    engineeringToolChestPendingDrawer=null;
+  }
+
+  function requestQueuedEngineeringToolChestDrawer(){
+    var pending=engineeringToolChestPendingDrawer;
+    if(!pending || pending.token!==engineeringToolChestDrawerSwitchToken) return false;
+    engineeringToolChestPendingDrawer=null;
+    if(!workshopStateController || currentWorkspaceMode!=="workshop") return false;
+    return workshopStateController.request({
+      action:"OPEN_DRAWER",
+      input:"pointer",
+      payload:{uiDrawer:pending.drawerName,uncommittedOperationResolved:true}
+    }).ok;
+  }
 
   function updateWorkshopRoomBackgroundCover(){
     var texture=workshopRoomBackgroundTexture;
@@ -31835,6 +31949,29 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   function toggleEngineeringToolChestDrawer(drawerName){
     var state=engineeringToolChestState.drawers[drawerName];
     if(workshopStateController && currentWorkspaceMode==="workshop"){
+      if(engineeringToolChestPendingDrawer){
+        engineeringToolChestPendingDrawer={
+          drawerName:drawerName,
+          token:engineeringToolChestDrawerSwitchToken
+        };
+        return true;
+      }
+      if(engineeringToolChestState.activeDrawer &&
+         engineeringToolChestState.activeDrawer!==drawerName){
+        var activeDrawer=engineeringToolChestState.activeDrawer;
+        var switchToken=++engineeringToolChestDrawerSwitchToken;
+        engineeringToolChestPendingDrawer={drawerName:drawerName,token:switchToken};
+        var closeResult=workshopStateController.request({
+          action:"CLOSE_DRAWER",
+          input:"pointer",
+          payload:{uiDrawer:activeDrawer,uncommittedOperationResolved:true}
+        });
+        if(!closeResult.ok && switchToken===engineeringToolChestDrawerSwitchToken){
+          engineeringToolChestPendingDrawer=null;
+        }
+        return closeResult.ok;
+      }
+      clearEngineeringToolChestDrawerSwitch();
       return workshopStateController.request({
         action:state==="open" || state==="opening" ? "CLOSE_DRAWER" : "OPEN_DRAWER",
         input:"pointer",
@@ -31848,12 +31985,67 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     return openEngineeringToolChestDrawer(drawerName);
   }
 
+  var workshopToolChestCollisionReleaseToken=0;
+
+  function setWorkshopToolChestRightPanelOwnership(owned){
+    var shell=document.getElementById("workshopRightPanelShell");
+    var assistant=document.getElementById("workshopMeasurementAssistant");
+    var handle=document.getElementById("engineeringToolChestHandle");
+    var shouldOwn=owned===true;
+    if(shouldOwn && assistant && assistant.contains(document.activeElement) && handle){
+      handle.focus({preventScroll:true});
+    }
+    if(shell){
+      shell.dataset.toolChestOwnsRightPanel=shouldOwn ? "true" : "false";
+    }
+    if(assistant){
+      assistant.toggleAttribute("inert",shouldOwn);
+      if(shouldOwn) assistant.setAttribute("aria-hidden","true");
+      else assistant.removeAttribute("aria-hidden");
+    }
+    return shouldOwn;
+  }
+
+  function engineeringToolChestIsRenderedRetracted(){
+    var cabinet=document.getElementById("engineeringToolChestCabinet");
+    if(!cabinet) return true;
+    var transform=window.getComputedStyle(cabinet).transform || "none";
+    var match=transform.match(/^matrix\([^,]+,[^,]+,[^,]+,[^,]+,\s*(-?[\d.]+)/);
+    var translateX=transform==="none" ? 0 : Number(match && match[1]);
+    var width=cabinet.getBoundingClientRect().width;
+    return Number.isFinite(translateX) && Number.isFinite(width) &&
+      Math.abs(translateX-Math.max(0,width-10))<=1.5;
+  }
+
+  function releaseWorkshopToolChestRightPanelAtRetractedEndpoint(){
+    var toolChest=document.getElementById("engineeringToolChest");
+    if(!toolChest || toolChest.dataset.cabinetState!=="retracted" ||
+      !engineeringToolChestIsRenderedRetracted()) return false;
+    workshopToolChestCollisionReleaseToken+=1;
+    setWorkshopToolChestRightPanelOwnership(false);
+    return true;
+  }
+
+  function verifyWorkshopToolChestCollisionRelease(token){
+    window.requestAnimationFrame(function(){
+      window.requestAnimationFrame(function(){
+        if(token!==workshopToolChestCollisionReleaseToken) return;
+        releaseWorkshopToolChestRightPanelAtRetractedEndpoint();
+      });
+    });
+  }
+
   function setEngineeringToolChestCabinetState(state){
     var toolChest=document.getElementById("engineeringToolChest");
     var handle=document.getElementById("engineeringToolChestHandle");
     var requestedState=state==="expanded" ? "expanded" : "retracted";
+    var collisionToken=++workshopToolChestCollisionReleaseToken;
+    if(requestedState==="expanded"){
+      setWorkshopToolChestRightPanelOwnership(true);
+    }
     engineeringToolChestState.cabinet=requestedState;
     if(requestedState==="retracted"){
+      clearEngineeringToolChestDrawerSwitch();
       closeAllEngineeringToolChestDrawers(true);
       if(toolChest && toolChest.contains(document.activeElement) &&
          document.activeElement!==handle && handle){
@@ -31878,12 +32070,18 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           : "Open Engineering Tool Chest"
       );
     }
+    if(requestedState==="retracted"){
+      verifyWorkshopToolChestCollisionRelease(collisionToken);
+    }
     return requestedState;
   }
 
   function resetEngineeringToolChest(){
+    clearEngineeringToolChestDrawerSwitch();
     closeAllEngineeringToolChestDrawers(true);
     setEngineeringToolChestCabinetState("retracted");
+    workshopToolChestCollisionReleaseToken+=1;
+    setWorkshopToolChestRightPanelOwnership(false);
   }
 
   function installEngineeringToolChest(){
@@ -31922,6 +32120,14 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       });
     }
 
+    var cabinet=document.getElementById("engineeringToolChestCabinet");
+    if(cabinet){
+      cabinet.addEventListener("transitionend",function(event){
+        if(event.target!==cabinet || event.propertyName!=="transform") return;
+        releaseWorkshopToolChestRightPanelAtRetractedEndpoint();
+      });
+    }
+
     toolChest.querySelectorAll("[data-tool-chest-drawer]").forEach(function(drawer){
       var drawerName=drawer.dataset.toolChestDrawer;
       var control=drawer.querySelector(".engineering-tool-chest-drawer-control");
@@ -31943,7 +32149,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         var complete=workshopDrawerTransitionCompletions[drawerName];
         if(complete && (state==="opening" || state==="closing")){
           delete workshopDrawerTransitionCompletions[drawerName];
-          complete();
+          var completionAccepted=complete();
+          if(state==="closing" && completionAccepted!==false){
+            requestQueuedEngineeringToolChestDrawer();
+          }
         }
       });
     });
@@ -34041,7 +34250,11 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       }
 
       updateWorkshopRoomBackgroundCover();
-      scene.background=workshopRoomBackgroundTexture;
+      scene.background=workshopClassroomWorkspaceReset
+        ? workshopClassroomWorkspaceReset.selectBackground(
+          workshopRoomBackgroundTexture
+        )
+        : workshopRoomBackgroundTexture;
       ground.material.map=null;
       ground.material.color.setHex(0x5f8fa8);
       ground.material.transparent=true;
@@ -34148,9 +34361,15 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       restoreBuilderSession();
     }
 
+    if(requestedMode==="workshop" && workshopClassroomWorkspaceReset){
+      workshopClassroomWorkspaceReset.activate();
+    }
     currentWorkspaceMode=requestedMode;
     document.body.classList.toggle("workshopMode",requestedMode==="workshop");
     document.body.classList.toggle("missionMode",requestedMode==="mission");
+    if(requestedMode!=="workshop" && workshopClassroomWorkspaceReset){
+      workshopClassroomWorkspaceReset.deactivate();
+    }
     if(workshopPoweredOffTableCompositor){
       workshopPoweredOffTableCompositor.setWorkshopActive(
         requestedMode==="workshop"
@@ -34444,7 +34663,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/smartboard/smart-board-application-view.mjs"),
     import("./js/workshop/smartboard/smart-board-measurement-display.mjs"),
     import("./js/workshop/smartboard/smart-board-learning-mode-view.mjs"),
-    import("./js/workshop/smartboard/smart-board-notebook-view.mjs")
+    import("./js/workshop/smartboard/smart-board-notebook-view.mjs"),
+    import("./js/workshop/runtime/workshop-classroom-workspace-reset.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -34459,6 +34679,30 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var smartBoardMeasurementModule=modules[9];
       var smartBoardLearningModeModule=modules[10];
       var smartBoardNotebookModule=modules[11];
+      var classroomWorkspaceResetModule=modules[12];
+      workshopClassroomWorkspaceReset=
+        classroomWorkspaceResetModule.createWorkshopClassroomWorkspaceReset({
+          body:document.body,
+          stage:document.getElementById("workshopViewportStage"),
+          protectedElements:[
+            document.getElementById("viewCubeBox"),
+            document.getElementById("workshopEngineeringViewControls"),
+            document.getElementById("workshopMeasurementAssistant"),
+            document.getElementById("engineeringToolChest"),
+            document.getElementById("workshopDashboard")
+          ],
+          neutralBackground:workshopClassroomNeutralBackground
+        });
+      window.workshopClassroomWorkspaceReset=workshopClassroomWorkspaceReset;
+      window.getWorkshopProtectedBuildZone=function(){
+        return workshopClassroomWorkspaceReset.measureProtectedBuildZone();
+      };
+      if(currentWorkspaceMode==="workshop"){
+        workshopClassroomWorkspaceReset.activate();
+        scene.background=workshopClassroomWorkspaceReset.selectBackground(
+          workshopRoomBackgroundTexture
+        );
+      }
       workshopStartupTestDouble=startupModule.createWorkshopStartupTestDouble({
         reducedMotion:function(){
           return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);

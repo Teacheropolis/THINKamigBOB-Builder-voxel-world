@@ -6,8 +6,10 @@ import {
 } from "../contracts/workshop-state-contract.mjs";
 
 export const WORKSHOP_UI_DRAWER_MAP = Object.freeze({
+  shapes: "D2_BUILD",
   "colors-materials": "D3_MATERIALS",
   "parts-objects": "D4_COMPONENTS",
+  favorites: "D6_UTILITY",
 });
 
 export const WORKSHOP_FUTURE_SUBSYSTEM_TEST_DOUBLES = Object.freeze({
