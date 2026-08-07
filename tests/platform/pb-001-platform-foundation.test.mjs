@@ -118,14 +118,16 @@ test("dashboard areas remain honest future-build foundations", () => {
     "Yesterday's Wins",
     "Yesterday's Challenge",
     "Choose Your Path",
-    "Open My STEM Work",
+    "Continue",
+    "Available Missions",
+    "Side Paths",
     "What I Learned Today",
-    "Ask for Help",
   ]) {
     assert.ok(appSource.includes(label), `expected ${label}`);
   }
-  assert.match(appSource, /Coming in a future build/);
-  assert.match(appSource, /<button type="button" disabled>/);
+  assert.match(appSource, /No mission is ready to continue yet\./);
+  assert.match(appSource, /No new missions are available right now\./);
+  assert.match(appSource, /Optional Side Paths are not available yet\./);
   assert.doesNotMatch(appSource, /\.\.\/assets\//);
 });
 

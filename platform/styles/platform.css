@@ -227,11 +227,14 @@ summary:focus-visible {
 .platform-student-reflection { grid-column: span 4; padding: clamp(1rem, 2.5vw, 1.4rem); }
 .platform-student-status { display: inline-block; padding: 0.35rem 0.55rem; border: 1px solid #9cadb5; border-radius: 0.45rem; background: var(--platform-soft); }
 .platform-student-paths { grid-column: 1 / -1; padding: clamp(1rem, 2.5vw, 1.4rem); }
-.platform-student-path-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.75rem; }
-.platform-student-path-card { display: flex; min-width: 0; flex-direction: column; padding: 1rem; border: 1px solid var(--platform-border); border-radius: 0.75rem; background: #f7fafb; }
-.platform-student-path-card h3 { font-size: 1rem; line-height: 1.25; }
-.platform-student-path-card p { flex: 1; margin: 0.5rem 0 0.8rem; color: var(--platform-muted); font-size: 0.82rem; line-height: 1.4; }
-.platform-student-path-card button { width: 100%; min-height: 2.75rem; padding: 0.5rem; border: 1px dashed #8297a2; border-radius: 0.5rem; color: #566a74; background: #edf2f4; font-weight: 700; }
+.platform-mission-choice-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 0.75rem; }
+.platform-mission-choice-section { min-width: 0; padding: 1rem; border: 1px solid var(--platform-border); border-radius: 0.75rem; background: #f7fafb; }
+.platform-mission-choice-section > p:last-child, .platform-mission-card-container > p:last-child { margin: 0.35rem 0 0; color: var(--platform-muted); font-size: 0.85rem; line-height: 1.45; }
+.platform-mission-choice-label { margin: 0 0 0.25rem; color: var(--platform-green); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+.platform-mission-choice-continue { border-top: 5px solid var(--platform-green); }
+.platform-mission-choice-available { border-top: 5px solid var(--platform-blue); }
+.platform-mission-choice-side-paths { grid-column: 1 / -1; border-style: dashed; box-shadow: none; }
+.platform-mission-card-container { min-width: 0; }
 
 .platform-command-layout { display: grid; grid-template-columns: minmax(10rem, 13rem) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
 
@@ -398,7 +401,8 @@ summary:focus-visible {
   .platform-command-card-mission { grid-column: 1 / -1; }
   .platform-student-display-controls { grid-column: 1 / -1; }
   .platform-bob-welcome, .platform-student-goal, .platform-yesterday, .platform-student-reflection { grid-column: span 6; }
-  .platform-student-path-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .platform-mission-choice-layout { grid-template-columns: 1fr; }
+  .platform-mission-choice-side-paths { grid-column: auto; }
 }
 
 @media (max-width: 520px) {
@@ -423,7 +427,7 @@ summary:focus-visible {
   .platform-student-display-mode-controls p { grid-column: auto; }
   .platform-student-home { grid-template-columns: 1fr; }
   .platform-student-home > section { grid-column: auto; }
-  .platform-yesterday-grid, .platform-student-path-grid { grid-template-columns: 1fr; }
+  .platform-yesterday-grid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -54,21 +54,15 @@ test("unowned information uses only the approved honest states", () => {
     "Check unavailable.",
   ]) assert.ok(studentHomeSource.includes(message), `expected ${message}`);
 
-  assert.equal((studentHomeSource.match(/Coming in a future build\./g) ?? []).length, 1);
-  assert.match(studentHomeSource, /<button type="button" disabled>Coming in a future build\.<\/button>/);
+  assert.match(studentHomeSource, /No mission is ready to continue yet\./);
+  assert.match(studentHomeSource, /No new missions are available right now\./);
 });
 
-test("Choose Your Path contains exactly five disabled foundation cards", () => {
-  for (const path of [
-    "Continue Current Work",
-    "Start an Available Activity",
-    "Open My STEM Work",
-    "What I Learned Today",
-    "Ask for Help",
-  ]) assert.ok(studentHomeSource.includes(path), `expected ${path}`);
-
-  assert.equal((studentHomeSource.match(/^    \["/gm) ?? []).length, 5);
-  assert.equal((studentHomeSource.match(/<button type="button" disabled>/g) ?? []).length, 1);
+test("Choose Your Path remains an honest noninteractive foundation", () => {
+  for (const section of ["Continue", "Available Missions", "Side Paths"]) {
+    assert.ok(studentHomeSource.includes(section), `expected ${section}`);
+  }
+  assert.doesNotMatch(studentHomeSource, /platform-student-path-card/);
   assert.doesNotMatch(studentHomeSource, /href=|navigate\(|data-action=|data-form=/);
 });
 
@@ -95,12 +89,10 @@ test("Student Home CSS is namespaced, responsive, and Chromebook-friendly", () =
     ".platform-student-goal",
     ".platform-yesterday-grid",
     ".platform-student-reflection",
-    ".platform-student-path-grid",
+    ".platform-mission-choice-layout",
   ]) assert.ok(cssSource.includes(selector), `expected ${selector}`);
   assert.match(cssSource,
-    /\.platform-student-path-card button \{[^}]*min-height: 2\.75rem;/);
-  assert.match(cssSource,
-    /@media \(max-width: 800px\)[\s\S]*\.platform-student-path-grid \{ grid-template-columns: repeat\(2/);
+    /@media \(max-width: 800px\)[\s\S]*\.platform-mission-choice-layout \{ grid-template-columns: 1fr; \}/);
   assert.match(cssSource,
     /@media \(max-width: 520px\)[\s\S]*\.platform-student-home \{ grid-template-columns: 1fr; \}/);
   assert.doesNotMatch(cssSource, /\.platform-student-[^{]*\{[^}]*overflow-x:\s*(?:auto|scroll)/);

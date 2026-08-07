@@ -441,13 +441,6 @@ function studentDashboardView(state) {
   const classRecord = getClassById(state.classId);
   const studentName = escapeHtml(student?.displayName ?? "Student");
   const className = escapeHtml(classRecord?.displayName ?? "Class not selected");
-  const paths = [
-    ["Continue Current Work", "Return to approved work when a current-work source is connected."],
-    ["Start an Available Activity", "Available classroom activities will appear here when connected."],
-    ["Open My STEM Work", "Your approved STEM work and evidence will be organized here."],
-    ["What I Learned Today", "The approved reflection link will appear here when connected."],
-    ["Ask for Help", "A private help-request path will appear in a future approved build."],
-  ];
   return shell(`
     <div class="platform-student-home">
       <section class="platform-student-orientation" aria-labelledby="student-orientation-title">
@@ -500,16 +493,29 @@ function studentDashboardView(state) {
         <div class="platform-student-section-heading">
           <p class="platform-student-section-label">Next actions</p>
           <h2 id="choose-path-title">Choose Your Path</h2>
-          <p>Available choices will appear here. Ordinary continuation will not require teacher review.</p>
+          <p><strong>Continue</strong> returns to work already started. <strong>Start</strong> begins a mission made available to you. Mission availability is not connected in PB-003B.</p>
         </div>
-        <div class="platform-student-path-grid">
-          ${paths.map(([title, description]) => `
-            <article class="platform-student-path-card">
-              <h3>${escapeHtml(title)}</h3>
-              <p>${escapeHtml(description)}</p>
-              <button type="button" disabled>Coming in a future build.</button>
-            </article>
-          `).join("")}
+        <div class="platform-mission-choice-layout">
+          <section class="platform-mission-choice-section platform-mission-choice-continue" aria-labelledby="mission-continue-title">
+            <p class="platform-mission-choice-label">Continue first</p>
+            <h3 id="mission-continue-title">Continue</h3>
+            <p class="platform-student-empty-state">No mission is ready to continue yet.</p>
+            <p>Existing mission work will appear here when an approved current-work source is connected.</p>
+          </section>
+          <section class="platform-mission-choice-section platform-mission-choice-available" aria-labelledby="available-missions-title">
+            <p class="platform-mission-choice-label">Start something available</p>
+            <h3 id="available-missions-title">Available Missions</h3>
+            <div class="platform-mission-card-container" aria-labelledby="available-missions-title">
+              <p class="platform-student-empty-state">No new missions are available right now.</p>
+              <p>Teacher-authorized missions will appear when an approved assignment source is connected.</p>
+            </div>
+          </section>
+          <section class="platform-mission-choice-section platform-mission-choice-side-paths" aria-labelledby="side-paths-title">
+            <p class="platform-mission-choice-label">Coming Later</p>
+            <h3 id="side-paths-title">Side Paths</h3>
+            <p class="platform-student-empty-state">Optional Side Paths are not available yet.</p>
+            <p>Side Paths will be optional ways to explore a related idea in a future approved build.</p>
+          </section>
         </div>
       </section>
     </div>
