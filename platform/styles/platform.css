@@ -258,11 +258,12 @@ summary:focus-visible {
 .platform-command-card h3, .platform-rhythm-card h3, .platform-teacher-feed h3 { margin: 0.15rem 0 0.55rem; font-size: 1.08rem; }
 .platform-command-card p:last-child, .platform-rhythm-card p { margin-bottom: 0; color: var(--platform-muted); }
 .platform-command-label { margin: 0; color: var(--platform-green); font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
-.platform-lesson-timer { display: grid; gap: 0.8rem; }
+.platform-command-card-timer { align-self: start; }
+.platform-lesson-timer { display: grid; gap: 0.6rem; }
 .platform-timer-remaining { color: var(--platform-navy); font-size: clamp(2.4rem, 5vw, 4rem); font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: 0.03em; line-height: 1; }
 .platform-timer-state { margin: 0; color: var(--platform-muted); font-size: 0.78rem; }
 .platform-timer-state strong { color: var(--platform-ink); }
-.platform-timer-duration { display: grid; gap: 0.45rem; padding-top: 0.75rem; border-top: 1px solid var(--platform-border); }
+.platform-timer-duration { display: grid; gap: 0.4rem; padding-top: 0.55rem; border-top: 1px solid var(--platform-border); }
 .platform-timer-duration label { font-size: 0.75rem; font-weight: 700; }
 .platform-timer-duration > div { display: grid; grid-template-columns: minmax(5.5rem, 1fr) auto; gap: 0.5rem; }
 .platform-timer-duration input,
@@ -281,10 +282,10 @@ summary:focus-visible {
 .platform-timer-duration button:disabled,
 .platform-timer-duration input:disabled { border-color: #b9c7cd; color: #64757d; background: #edf2f4; cursor: not-allowed; }
 .platform-timer-error { font-size: 0.72rem; }
-.platform-command-card-memo { min-width: 0; }
-.platform-teacher-memo-form { display: grid; gap: 0.55rem; }
+.platform-command-card-memo { min-width: 0; align-self: start; }
+.platform-teacher-memo-form { display: grid; gap: 0.45rem; }
 .platform-teacher-memo-form label { font-size: 0.75rem; font-weight: 700; }
-.platform-teacher-memo-form textarea { width: 100%; min-height: 5.5rem; resize: vertical; padding: 0.6rem; border: 2px solid var(--platform-border); border-radius: 0.5rem; color: var(--platform-ink); background: #fff; font: inherit; line-height: 1.4; }
+.platform-teacher-memo-form textarea { width: 100%; min-height: 4.75rem; resize: vertical; padding: 0.6rem; border: 2px solid var(--platform-border); border-radius: 0.5rem; color: var(--platform-ink); background: #fff; font: inherit; line-height: 1.4; }
 .platform-teacher-memo-meta { display: flex; justify-content: space-between; gap: 0.75rem; color: var(--platform-muted); }
 .platform-teacher-memo-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; }
 .platform-teacher-memo-actions button { min-height: 2.75rem; padding: 0.45rem 0.65rem; border: 2px solid var(--platform-blue); border-radius: 0.5rem; color: var(--platform-navy); background: #f3fafc; font-weight: 700; cursor: pointer; }
@@ -295,7 +296,16 @@ summary:focus-visible {
 .platform-teacher-memo-status[data-state="unsaved"] { border-color: #c28b12; color: #684900; background: #fff8e4; }
 .platform-teacher-memo-saved { padding-top: 0.65rem; border-top: 1px solid var(--platform-border); }
 .platform-teacher-memo-saved p:last-child { margin: 0.35rem 0 0; color: var(--platform-ink); overflow-wrap: anywhere; white-space: pre-wrap; }
-.platform-teacher-memo-display-guidance { margin: 0.75rem 0 0.45rem; color: var(--platform-muted); font-size: 0.78rem; line-height: 1.4; }
+.platform-student-display-controls { grid-column: 2 / 4; display: grid; grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.55fr); gap: 0.55rem 1rem; align-items: end; min-height: 0; border-top: 5px solid var(--platform-green); }
+.platform-student-display-controls > .platform-command-label,
+.platform-student-display-controls > h3,
+.platform-student-display-controls > .platform-student-display-guidance { grid-column: 1 / -1; }
+.platform-student-display-guidance { margin: 0; color: var(--platform-muted); font-size: 0.78rem; line-height: 1.4; }
+.platform-student-display-mode-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; }
+.platform-student-display-mode-controls p { grid-column: 1 / -1; margin: 0; color: var(--platform-ink); font-size: 0.78rem; font-weight: 800; }
+.platform-student-display-mode-controls button { min-height: 2.75rem; padding: 0.45rem; border: 2px solid var(--platform-blue); border-radius: 0.5rem; color: var(--platform-navy); background: #f3fafc; font-weight: 700; cursor: pointer; }
+.platform-student-display-mode-controls button[aria-pressed="true"] { color: #fff; background: var(--platform-blue-dark); border-color: var(--platform-blue-dark); }
+.platform-student-display-mode-controls button:disabled { border-color: #b9c7cd; color: #64757d; background: #edf2f4; cursor: not-allowed; }
 .platform-student-display-button { width: 100%; padding: 0.55rem; color: #fff; background: var(--platform-green); border-color: var(--platform-green); cursor: pointer; }
 .platform-student-display-button:hover { background: #205f45; }
 .platform-rhythm-title { margin: 1.25rem 0 0.55rem; color: var(--platform-navy); font-size: 0.82rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
@@ -312,22 +322,34 @@ summary:focus-visible {
   position: fixed;
   z-index: 200;
   inset: 0;
-  display: grid;
-  place-content: center;
-  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.65rem, 2vh, 1.25rem);
+  padding: clamp(1rem, 3vw, 2rem);
   color: #fff;
   background:
     radial-gradient(circle at 50% 35%, rgba(33, 123, 154, 0.55), transparent 35rem),
     var(--platform-navy);
   text-align: center;
 }
-.platform-student-display-brand { margin: 0 0 2rem; color: #b9dce8; font-size: clamp(1rem, 2vw, 1.4rem); font-weight: 800; letter-spacing: 0.08em; }
-.platform-student-timer-display h2 { margin: 0; font-size: clamp(2rem, 6vw, 5rem); line-height: 1.1; }
-.platform-student-timer-display output { margin-top: 1.5rem; color: var(--platform-focus); font-size: clamp(5rem, 20vw, 15rem); font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: 0.03em; line-height: 1; }
+.platform-student-display-brand { margin: 0; color: #b9dce8; font-size: clamp(0.9rem, 1.7vw, 1.3rem); font-weight: 800; letter-spacing: 0.08em; }
+.platform-student-engineering-time { display: grid; justify-items: center; gap: clamp(0.35rem, 1.2vh, 0.75rem); min-width: 0; }
+.platform-student-timer-display h2 { margin: 0; font-size: clamp(1.75rem, 5vw, 4rem); line-height: 1.1; }
+.platform-student-timer-display output { color: var(--platform-focus); font-size: clamp(4.5rem, 18vw, 13rem); font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: 0.03em; line-height: 0.95; }
 .platform-student-memo[hidden] { display: none !important; }
-.platform-student-memo { width: min(60rem, 90vw); margin: 1.25rem auto 0; padding: 1rem 1.25rem; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 0.75rem; background: rgba(255, 255, 255, 0.08); }
-.platform-student-memo h3 { margin: 0 0 0.4rem; color: #b9dce8; font-size: clamp(1rem, 2vw, 1.35rem); }
-.platform-student-memo p { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; font-size: clamp(1rem, 2.2vw, 1.5rem); line-height: 1.35; }
+.platform-student-engineering-time[hidden] { display: none !important; }
+.platform-student-memo { width: min(64rem, 92vw); padding: clamp(1rem, 2.5vw, 1.6rem); border: 2px solid rgba(255, 255, 255, 0.55); border-radius: 0.9rem; background: rgba(255, 255, 255, 0.12); box-shadow: 0 0.75rem 2rem rgba(3, 22, 31, 0.28); }
+.platform-student-memo h3 { margin: 0 0 0.5rem; color: var(--platform-focus); font-size: clamp(1.15rem, 2.4vw, 1.8rem); letter-spacing: 0.04em; text-transform: uppercase; }
+.platform-student-memo p { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; font-size: clamp(1.5rem, 3.5vw, 2.65rem); font-weight: 700; line-height: 1.25; }
+.platform-student-display-combined { justify-content: flex-start; padding-top: clamp(0.75rem, 2vh, 1.25rem); }
+.platform-student-display-combined .platform-student-engineering-time { gap: 0.15rem; }
+.platform-student-display-combined h2 { font-size: clamp(1.5rem, 3.5vw, 2.75rem); }
+.platform-student-display-combined output { font-size: clamp(3.75rem, 14vh, 7.5rem); }
+.platform-student-display-timer-only .platform-student-engineering-time { gap: clamp(0.75rem, 2vh, 1.5rem); }
+.platform-student-display-message-only .platform-student-memo { width: min(68rem, 92vw); }
+.platform-student-display-message-only .platform-student-memo p { font-size: clamp(1.75rem, 4.2vw, 3.25rem); }
 
 .platform-footer { padding: 1.25rem; color: #d1e3ea; background: #17394d; text-align: center; font-size: 0.78rem; }
 .platform-noscript { max-width: 45rem; margin: 3rem auto; padding: 2rem; }
@@ -343,6 +365,7 @@ summary:focus-visible {
   .platform-nav-status { display: none; }
   .platform-today-primary-grid { grid-template-columns: 1fr 1fr; }
   .platform-command-card-mission { grid-column: 1 / -1; }
+  .platform-student-display-controls { grid-column: 1 / -1; }
 }
 
 @media (max-width: 520px) {
@@ -360,8 +383,11 @@ summary:focus-visible {
   .platform-today-heading > p { text-align: left; }
   .platform-today-primary-grid, .platform-class-rhythm { grid-template-columns: 1fr; }
   .platform-command-card-mission { grid-column: auto; }
+  .platform-student-display-controls { grid-column: auto; grid-template-columns: 1fr; }
   .platform-timer-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .platform-timer-duration > div { grid-template-columns: 1fr; }
+  .platform-student-display-mode-controls { grid-template-columns: 1fr; }
+  .platform-student-display-mode-controls p { grid-column: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

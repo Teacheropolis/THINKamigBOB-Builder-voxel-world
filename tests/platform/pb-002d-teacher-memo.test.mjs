@@ -89,7 +89,7 @@ test("teacher editor and Student Display follow the approved separation", () => 
   ]) assert.ok(appSource.includes(text), `expected ${text}`);
   assert.match(appSource, /maxlength="\$\{TEACHER_MEMO_MAX_CHARACTERS\}"/);
   assert.match(appSource,
-    /session\.signOut\(\);\s*teacherMemo\.clear\(\);\s*navigate\(ROUTES\.WELCOME/);
+    /session\.signOut\(\);\s*teacherMemo\.clear\(\);\s*studentDisplayMode\.clear\(\);\s*navigate\(ROUTES\.WELCOME/);
   assert.match(cssSource,
     /\.platform-teacher-memo-actions button \{ min-height: 2\.75rem/);
 
@@ -106,13 +106,14 @@ test("teacher editor and Student Display follow the approved separation", () => 
 test("memo save state and Student Display access are clear and persistent", () => {
   assert.match(appSource, /Saved for refresh and Student Display\./);
   assert.match(appSource, /Unsaved changes\. Save before refreshing or opening Student Display\./);
-  assert.match(appSource, /Student Display shows the lesson timer and the saved memo together\./);
+  assert.match(appSource, /Choose what students see without clearing the saved memo\./);
 
   const memoCardStart = appSource.indexOf(
     '<section class="platform-command-card platform-command-card-memo">');
   const memoCardEnd = appSource.indexOf("</section>", memoCardStart);
   const memoCardSource = appSource.slice(memoCardStart, memoCardEnd);
-  assert.match(memoCardSource, /data-action="open-timer-display"/);
+  assert.doesNotMatch(memoCardSource, /data-action="open-timer-display"|data-presentation-mode/);
+  assert.match(appSource, /platform-student-display-controls/);
   assert.match(cssSource,
     /\.platform-teacher-memo-status\[data-state="saved"\]/);
   assert.match(cssSource,

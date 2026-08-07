@@ -23,6 +23,10 @@ import {
   createTeacherMemoStore,
   TEACHER_MEMO_MAX_CHARACTERS,
 } from "./teacher-memo.mjs";
+import {
+  createStudentDisplayModeStore,
+  STUDENT_DISPLAY_MODES,
+} from "./student-display-mode.mjs";
 
 export const ROUTES = Object.freeze({
   WELCOME: "/welcome",
@@ -40,9 +44,11 @@ const root = document.querySelector("#platform-root");
 const session = createSessionStore(window.sessionStorage);
 const lessonTimer = createLessonTimer({ storage: window.sessionStorage });
 const teacherMemo = createTeacherMemoStore({ storage: window.sessionStorage });
+const studentDisplayMode = createStudentDisplayModeStore({ storage: window.sessionStorage });
 const LESSON_TIMER_DISPLAY_SESSION_KEY = "thinkamigbob.pb002b.lesson-timer-display.v1";
 const knownRoutes = new Set(Object.values(ROUTES));
 let lessonTimerPresentationInterval = null;
+let lessonTimerDisplayTrigger = null;
 
 function lessonTimerDisplayIsStoredOpen() {
   try {
@@ -303,6 +309,13 @@ function teacherDashboardView(state) {
   const timerMinutes = Math.max(1, Math.round(timerState.durationSeconds / 60));
   const memoState = teacherMemo.read();
   const memoText = escapeHtml(memoState.text);
+  const hasMemo = Boolean(memoState.text);
+  const selectedDisplayMode = studentDisplayMode.read({ hasMemo });
+  const showStudentTimer = selectedDisplayMode !== STUDENT_DISPLAY_MODES.MESSAGE;
+  const showStudentMemo = hasMemo && selectedDisplayMode !== STUDENT_DISPLAY_MODES.TIMER;
+  const studentDisplayClass = showStudentTimer && showStudentMemo
+    ? "platform-student-display-combined"
+    : showStudentMemo ? "platform-student-display-message-only" : "platform-student-display-timer-only";
   return shell(`
     <div class="platform-command-layout">
       <nav class="platform-teacher-nav" aria-label="Teacher navigation">
@@ -328,7 +341,7 @@ function teacherDashboardView(state) {
             <h3>Today's Mission</h3>
             <p>Coming in future build</p>
           </section>
-          <section class="platform-command-card">
+          <section class="platform-command-card platform-command-card-timer">
             <p class="platform-command-label">Class timing</p>
             <h3>Today's Engineering Time</h3>
             <div class="platform-lesson-timer" aria-label="Lesson Timer">
@@ -353,7 +366,6 @@ function teacherDashboardView(state) {
                 <button type="button" data-action="timer-subtract-minute">Subtract 1 minute</button>
                 <button type="button" data-action="timer-add-minute">Add 1 minute</button>
               </div>
-              <button class="platform-student-display-button" type="button" data-action="open-timer-display">Open Student Display</button>
             </div>
           </section>
           <section class="platform-command-card platform-command-card-memo">
@@ -377,7 +389,17 @@ function teacherDashboardView(state) {
               <p class="platform-command-label">Current class message</p>
               <p data-teacher-memo-saved>${memoText || "No class message saved."}</p>
             </div>
-            <p class="platform-teacher-memo-display-guidance">Student Display shows the lesson timer and the saved memo together.</p>
+          </section>
+          <section class="platform-command-card platform-student-display-controls" aria-labelledby="student-display-controls-title">
+            <p class="platform-command-label">Classroom presentation</p>
+            <h3 id="student-display-controls-title">Student Display</h3>
+            <p class="platform-student-display-guidance">Choose what students see without clearing the saved memo.</p>
+            <div class="platform-student-display-mode-controls" role="group" aria-label="Student Display content">
+              <p>Student Display content</p>
+              <button type="button" data-action="select-presentation-mode" data-presentation-mode="${STUDENT_DISPLAY_MODES.COMBINED}" aria-pressed="${selectedDisplayMode === STUDENT_DISPLAY_MODES.COMBINED}">Timer + Message</button>
+              <button type="button" data-action="select-presentation-mode" data-presentation-mode="${STUDENT_DISPLAY_MODES.MESSAGE}" aria-pressed="${selectedDisplayMode === STUDENT_DISPLAY_MODES.MESSAGE}"${hasMemo ? "" : " disabled"}>Message only</button>
+              <button type="button" data-action="select-presentation-mode" data-presentation-mode="${STUDENT_DISPLAY_MODES.TIMER}" aria-pressed="${selectedDisplayMode === STUDENT_DISPLAY_MODES.TIMER}">Timer only</button>
+            </div>
             <button class="platform-student-display-button" type="button" data-action="open-timer-display">Open Student Display</button>
           </section>
         </div>
@@ -407,12 +429,14 @@ function teacherDashboardView(state) {
         </section>
       </section>
     </div>
-    <section id="platform-student-timer-display" class="platform-student-timer-display" role="dialog" aria-modal="true" aria-labelledby="student-timer-title" tabindex="-1" hidden>
+    <section id="platform-student-timer-display" class="platform-student-timer-display ${studentDisplayClass}" role="dialog" aria-modal="true" aria-labelledby="${showStudentTimer ? "student-timer-title" : "student-message-title"}" tabindex="-1" hidden>
       <p class="platform-student-display-brand">THINKamigBOB</p>
-      <h2 id="student-timer-title">Today's Engineering Time</h2>
-      <output data-timer-remaining>${formatLessonTime(timerState.remainingSeconds)}</output>
-      <div class="platform-student-memo" data-student-memo${memoState.text ? "" : " hidden"}>
-        <h3>Teacher Memo</h3>
+      <div class="platform-student-engineering-time" data-student-engineering-time${showStudentTimer ? "" : " hidden"}>
+        <h2 id="student-timer-title">Today's Engineering Time</h2>
+        <output data-timer-remaining>${formatLessonTime(timerState.remainingSeconds)}</output>
+      </div>
+      <div class="platform-student-memo" data-student-memo${showStudentMemo ? "" : " hidden"}>
+        <h3 id="student-message-title">Class Message</h3>
         <p data-student-memo-text>${memoText}</p>
       </div>
     </section>
@@ -494,14 +518,37 @@ function syncTeacherMemoPresentation() {
   const count = document.querySelector("[data-teacher-memo-count]");
   const clearButton = document.querySelector('[data-action="clear-teacher-memo"]');
   const saved = document.querySelector("[data-teacher-memo-saved]");
-  const studentMemo = document.querySelector("[data-student-memo]");
   const studentMemoText = document.querySelector("[data-student-memo-text]");
   if (field) field.value = state.text;
   if (count) count.textContent = String(state.text.length);
   if (clearButton) clearButton.disabled = !state.text;
   if (saved) saved.textContent = state.text || "No class message saved.";
-  if (studentMemo) studentMemo.hidden = !state.text;
   if (studentMemoText) studentMemoText.textContent = state.text;
+  syncStudentDisplayPresentation();
+}
+
+function syncStudentDisplayPresentation() {
+  const hasMemo = Boolean(teacherMemo.read().text);
+  const selectedMode = studentDisplayMode.read({ hasMemo });
+  const showTimer = selectedMode !== STUDENT_DISPLAY_MODES.MESSAGE;
+  const showMemo = hasMemo && selectedMode !== STUDENT_DISPLAY_MODES.TIMER;
+  const display = document.querySelector("#platform-student-timer-display");
+  const timer = document.querySelector("[data-student-engineering-time]");
+  const memo = document.querySelector("[data-student-memo]");
+  if (timer) timer.hidden = !showTimer;
+  if (memo) memo.hidden = !showMemo;
+  if (display) {
+    display.classList.toggle("platform-student-display-combined", showTimer && showMemo);
+    display.classList.toggle("platform-student-display-message-only", !showTimer && showMemo);
+    display.classList.toggle("platform-student-display-timer-only", showTimer && !showMemo);
+    display.setAttribute("aria-labelledby", showTimer ? "student-timer-title" : "student-message-title");
+  }
+  document.querySelectorAll("[data-presentation-mode]").forEach((control) => {
+    control.setAttribute("aria-pressed", String(control.dataset.presentationMode === selectedMode));
+    if (control.dataset.presentationMode === STUDENT_DISPLAY_MODES.MESSAGE) {
+      control.disabled = !hasMemo;
+    }
+  });
 }
 
 function manageLessonTimerPresentation(route) {
@@ -611,6 +658,7 @@ function handleClick(event) {
     lessonTimer.clear();
     session.signOut();
     teacherMemo.clear();
+    studentDisplayMode.clear();
     navigate(ROUTES.WELCOME, { replace: true });
   }
   if (action.dataset.action === "reserved-nav") {
@@ -651,9 +699,15 @@ function handleClick(event) {
       status.textContent = "Memo cleared. No memo is currently saved.";
     }
   }
+  if (action.dataset.action === "select-presentation-mode") {
+    const hasMemo = Boolean(teacherMemo.read().text);
+    const result = studentDisplayMode.select(action.dataset.presentationMode, { hasMemo });
+    if (result.ok) syncStudentDisplayPresentation();
+  }
   if (action.dataset.action === "open-timer-display") {
     const display = document.querySelector("#platform-student-timer-display");
     if (display) {
+      lessonTimerDisplayTrigger = action;
       storeLessonTimerDisplayOpen(true);
       display.hidden = false;
       display.focus();
@@ -708,6 +762,10 @@ document.addEventListener("keydown", (event) => {
   if (!display) return;
   storeLessonTimerDisplayOpen(false);
   display.hidden = true;
-  document.querySelector('[data-action="open-timer-display"]')?.focus();
+  const focusTarget = lessonTimerDisplayTrigger?.isConnected
+    ? lessonTimerDisplayTrigger
+    : document.querySelector('[data-action="open-timer-display"]');
+  lessonTimerDisplayTrigger = null;
+  focusTarget?.focus();
 });
 render();
