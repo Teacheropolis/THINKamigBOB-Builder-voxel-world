@@ -16,7 +16,8 @@ const studentHomeEnd = appSource.indexOf("function viewForRoute", studentHomeSta
 const studentHomeSource = appSource.slice(studentHomeStart, studentHomeEnd);
 const missionChoiceStart = studentHomeSource.indexOf(
   '<section class="platform-student-paths"');
-const missionChoiceEnd = studentHomeSource.indexOf("</section>\n    </div>", missionChoiceStart);
+const missionChoiceEnd = studentHomeSource.indexOf(
+  '<section class="platform-stem-work"', missionChoiceStart);
 const missionChoiceSource = studentHomeSource.slice(missionChoiceStart, missionChoiceEnd);
 
 test("Mission Choice preserves the existing Student Home route and protected owners", () => {

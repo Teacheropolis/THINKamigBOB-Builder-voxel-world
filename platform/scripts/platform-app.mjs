@@ -518,6 +518,63 @@ function studentDashboardView(state) {
           </section>
         </div>
       </section>
+
+      <section class="platform-stem-work" aria-labelledby="stem-work-title">
+        <div class="platform-student-section-heading">
+          <p class="platform-student-section-label">Your engineering journey</p>
+          <h2 id="stem-work-title">My STEM Work</h2>
+          <p>Engineering work grows through ideas, plans, builds, tests, revisions, and explanations. Current, Recent, and Previous organize one journey without judging the work. Project and evidence information is not connected in PB-003C.</p>
+        </div>
+        <div class="platform-stem-work-layout">
+          <section class="platform-stem-work-section platform-stem-work-current" aria-labelledby="current-work-title">
+            <p class="platform-stem-work-label">Continue Current Work</p>
+            <h3 id="current-work-title">Current Work</h3>
+            <div class="platform-project-card-container" aria-labelledby="current-work-title">
+              <p class="platform-student-empty-state">You do not have current work to continue yet.</p>
+              <p>When a project is ready, you can return to it here.</p>
+            </div>
+          </section>
+          <section class="platform-stem-work-section platform-stem-work-future-path" aria-labelledby="future-path-title">
+            <p class="platform-stem-work-label">Your next choice</p>
+            <h3 id="future-path-title">Choose a Future Path</h3>
+            <p class="platform-student-empty-state">Available mission choices will appear in Mission Choice.</p>
+          </section>
+          <section class="platform-stem-work-history" aria-labelledby="work-history-title">
+            <div class="platform-stem-work-history-heading">
+              <p class="platform-stem-work-label">Your engineering journey</p>
+              <h3 id="work-history-title">Look Back at Your Work</h3>
+            </div>
+            <div class="platform-stem-work-history-layout">
+              <section class="platform-stem-work-section platform-stem-work-recent" aria-labelledby="recent-work-title">
+                <p class="platform-stem-work-label">Recently active</p>
+                <h4 id="recent-work-title">Recent Work</h4>
+                <div class="platform-project-card-container" aria-labelledby="recent-work-title">
+                  <p class="platform-student-empty-state">Your recent engineering work will appear here when it is available.</p>
+                </div>
+              </section>
+              <section class="platform-stem-work-section platform-stem-work-previous" aria-labelledby="previous-work-title">
+                <p class="platform-stem-work-label">Earlier projects</p>
+                <h4 id="previous-work-title">Previous Work</h4>
+                <div class="platform-project-card-container" aria-labelledby="previous-work-title">
+                  <p class="platform-student-empty-state">Your earlier engineering work will appear here when it is available.</p>
+                </div>
+              </section>
+            </div>
+          </section>
+          <section class="platform-stem-work-section platform-evidence-connections" aria-labelledby="evidence-connections-title">
+            <p class="platform-stem-work-label">Project evidence</p>
+            <h3 id="evidence-connections-title">Evidence Connections</h3>
+            <p class="platform-student-empty-state">Evidence cannot be checked right now.</p>
+            <p>Evidence may eventually show that engineering work exists or changed. It is not automatically reflection, proof of learning, a grade, teacher-reviewed, public, or complete.</p>
+            <ul class="platform-evidence-source-list" aria-label="Future evidence sources">
+              <li><span>Builder</span><strong>Coming Later</strong></li>
+              <li><span>Workshop</span><strong>Coming Later</strong></li>
+              <li><span>Google Slides</span><strong>Coming Later</strong></li>
+              <li><span>Google Vids</span><strong>Coming Later</strong></li>
+            </ul>
+          </section>
+        </div>
+      </section>
     </div>
   `, { title: "Student Home", eyebrow: "Student Dashboard", signedIn: true });
 }
