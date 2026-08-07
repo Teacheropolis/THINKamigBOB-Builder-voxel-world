@@ -109,23 +109,23 @@ test("platform declares all approved PB-001 routes and route guards", () => {
   assert.match(appSource, /window\.addEventListener\("hashchange", render\)/);
 });
 
-test("dashboard areas are honest future-build placeholders", () => {
+test("dashboard areas remain honest future-build foundations", () => {
   for (const label of [
     "Teacher Feed",
     "Wins • Blockers • Next Steps",
     "Reports",
-    "Today’s Mission",
-    "Builder",
-    "Workshop",
-    "Google Slides",
-    "Google Vids",
+    "Current Goal",
+    "Yesterday's Wins",
+    "Yesterday's Challenge",
+    "Choose Your Path",
+    "Open My STEM Work",
     "What I Learned Today",
-    "Engineering Credits",
+    "Ask for Help",
   ]) {
     assert.ok(appSource.includes(label), `expected ${label}`);
   }
-  assert.match(appSource, /Coming in a future build\./);
-  assert.match(appSource, /disabled aria-disabled="true"/);
+  assert.match(appSource, /Coming in a future build/);
+  assert.match(appSource, /<button type="button" disabled>/);
   assert.doesNotMatch(appSource, /\.\.\/assets\//);
 });
 

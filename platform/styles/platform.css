@@ -202,6 +202,37 @@ summary:focus-visible {
 .platform-placeholder-card p { color: var(--platform-muted); }
 .platform-placeholder-card button { width: 100%; min-height: 2.75rem; border: 1px dashed #8297a2; border-radius: 0.5rem; color: #566a74; background: #edf2f4; }
 
+.platform-student-home { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1rem; }
+.platform-student-home > section { min-width: 0; border: 1px solid var(--platform-border); border-radius: 1rem; background: var(--platform-surface); box-shadow: var(--platform-shadow); }
+.platform-student-home h2, .platform-student-home h3 { margin: 0; color: var(--platform-navy); }
+.platform-student-home p { overflow-wrap: anywhere; }
+.platform-student-section-label { margin: 0 0 0.25rem; color: var(--platform-green); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.platform-student-section-heading { margin-bottom: 0.75rem; }
+.platform-student-section-heading > p:last-child { margin: 0.35rem 0 0; color: var(--platform-muted); }
+.platform-student-orientation { grid-column: 1 / -1; padding: clamp(1rem, 2.5vw, 1.5rem); border-left: 7px solid var(--platform-green) !important; box-shadow: none !important; }
+.platform-student-orientation h2 { font-size: clamp(1.65rem, 4vw, 2.4rem); }
+.platform-student-orientation > p:last-child { margin: 0.55rem 0 0; color: var(--platform-muted); }
+.platform-student-class { margin: 0.2rem 0 0; color: var(--platform-blue-dark); font-size: 1.05rem; font-weight: 750; }
+.platform-bob-welcome { grid-column: span 5; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-blue) !important; }
+.platform-bob-welcome > p:last-child { margin: 0.5rem 0 0; color: var(--platform-muted); line-height: 1.5; }
+.platform-student-goal { grid-column: span 7; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-green) !important; }
+.platform-student-goal > p:last-child, .platform-student-reflection > p:last-child { margin: 0.35rem 0 0; color: var(--platform-muted); }
+.platform-student-empty-state, .platform-student-status { margin: 0.55rem 0 0; color: var(--platform-ink); font-weight: 800; }
+.platform-yesterday { grid-column: span 8; padding: clamp(1rem, 2.5vw, 1.4rem); }
+.platform-yesterday-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.platform-student-home-card { min-width: 0; padding: 1rem; border: 1px solid var(--platform-border); border-radius: 0.75rem; background: var(--platform-soft); }
+.platform-student-home-card > p:last-child { margin: 0.35rem 0 0; color: var(--platform-muted); font-size: 0.85rem; line-height: 1.45; }
+.platform-student-win { border-top: 4px solid #c28b12; }
+.platform-student-challenge { border-top: 4px solid var(--platform-blue); }
+.platform-student-reflection { grid-column: span 4; padding: clamp(1rem, 2.5vw, 1.4rem); }
+.platform-student-status { display: inline-block; padding: 0.35rem 0.55rem; border: 1px solid #9cadb5; border-radius: 0.45rem; background: var(--platform-soft); }
+.platform-student-paths { grid-column: 1 / -1; padding: clamp(1rem, 2.5vw, 1.4rem); }
+.platform-student-path-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.75rem; }
+.platform-student-path-card { display: flex; min-width: 0; flex-direction: column; padding: 1rem; border: 1px solid var(--platform-border); border-radius: 0.75rem; background: #f7fafb; }
+.platform-student-path-card h3 { font-size: 1rem; line-height: 1.25; }
+.platform-student-path-card p { flex: 1; margin: 0.5rem 0 0.8rem; color: var(--platform-muted); font-size: 0.82rem; line-height: 1.4; }
+.platform-student-path-card button { width: 100%; min-height: 2.75rem; padding: 0.5rem; border: 1px dashed #8297a2; border-radius: 0.5rem; color: #566a74; background: #edf2f4; font-weight: 700; }
+
 .platform-command-layout { display: grid; grid-template-columns: minmax(10rem, 13rem) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
 
 .platform-teacher-nav {
@@ -366,6 +397,8 @@ summary:focus-visible {
   .platform-today-primary-grid { grid-template-columns: 1fr 1fr; }
   .platform-command-card-mission { grid-column: 1 / -1; }
   .platform-student-display-controls { grid-column: 1 / -1; }
+  .platform-bob-welcome, .platform-student-goal, .platform-yesterday, .platform-student-reflection { grid-column: span 6; }
+  .platform-student-path-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 520px) {
@@ -388,6 +421,9 @@ summary:focus-visible {
   .platform-timer-duration > div { grid-template-columns: 1fr; }
   .platform-student-display-mode-controls { grid-template-columns: 1fr; }
   .platform-student-display-mode-controls p { grid-column: auto; }
+  .platform-student-home { grid-template-columns: 1fr; }
+  .platform-student-home > section { grid-column: auto; }
+  .platform-yesterday-grid, .platform-student-path-grid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

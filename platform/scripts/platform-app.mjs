@@ -287,18 +287,6 @@ function studentIdentifierView(state) {
   `, { title: "Private Identifier", eyebrow: "Step 3 of 3" });
 }
 
-const studentAreas = ["Today’s Mission", "Continue Working", "My STEM Work", "Builder", "Workshop", "Google Slides", "Google Vids", "What I Learned Today", "Engineering Credits", "Help"];
-
-function placeholderGrid(items) {
-  return `<div class="platform-placeholder-grid">${items.map((item) => `
-    <section class="platform-placeholder-card" aria-labelledby="area-${item.toLowerCase().replace(/[^a-z0-9]+/g, "-")}">
-      <h2 id="area-${item.toLowerCase().replace(/[^a-z0-9]+/g, "-")}">${escapeHtml(item)}</h2>
-      <p>Coming in a future build.</p>
-      <button type="button" disabled aria-disabled="true">Not available in PB-001</button>
-    </section>
-  `).join("")}</div>`;
-}
-
 function teacherDashboardView(state) {
   const teacher = getTeacherById(state.teacherId);
   const classRecord = getClassForTeacher(state.teacherId);
@@ -450,13 +438,82 @@ function teacherDashboardView(state) {
 
 function studentDashboardView(state) {
   const student = getStudentById(state.studentId);
+  const classRecord = getClassById(state.classId);
+  const studentName = escapeHtml(student?.displayName ?? "Student");
+  const className = escapeHtml(classRecord?.displayName ?? "Class not selected");
+  const paths = [
+    ["Continue Current Work", "Return to approved work when a current-work source is connected."],
+    ["Start an Available Activity", "Available classroom activities will appear here when connected."],
+    ["Open My STEM Work", "Your approved STEM work and evidence will be organized here."],
+    ["What I Learned Today", "The approved reflection link will appear here when connected."],
+    ["Ask for Help", "A private help-request path will appear in a future approved build."],
+  ];
   return shell(`
-    <section class="platform-dashboard-intro">
-      <p>Welcome, <strong>${escapeHtml(student?.displayName ?? "Student")}</strong>.</p>
-      <p>Your Student Dashboard is ready. Learning tools will appear here in future approved builds.</p>
-    </section>
-    ${placeholderGrid(studentAreas)}
-  `, { title: "Student Dashboard", eyebrow: "Student Dashboard shell", signedIn: true });
+    <div class="platform-student-home">
+      <section class="platform-student-orientation" aria-labelledby="student-orientation-title">
+        <p class="platform-eyebrow">Private student dashboard</p>
+        <h2 id="student-orientation-title">${studentName}</h2>
+        <p class="platform-student-class">${className}</p>
+        <p>Your private place to see what matters and choose what comes next.</p>
+      </section>
+
+      <section class="platform-bob-welcome" aria-labelledby="bob-welcome-title">
+        <p class="platform-student-section-label">Getting started</p>
+        <h2 id="bob-welcome-title">BOB Welcome</h2>
+        <p>Welcome, ${studentName}. Your goals and paths will appear here when they are ready. Start by checking Current Goal, then review Choose Your Path.</p>
+      </section>
+
+      <section class="platform-student-goal" aria-labelledby="current-goal-title">
+        <p class="platform-student-section-label">Today</p>
+        <h2 id="current-goal-title">Current Goal</h2>
+        <p class="platform-student-empty-state">No current goal is available yet.</p>
+        <p>A classroom goal will appear when an approved goal source is connected.</p>
+      </section>
+
+      <section class="platform-yesterday" aria-labelledby="yesterday-title">
+        <div class="platform-student-section-heading">
+          <p class="platform-student-section-label">Looking back</p>
+          <h2 id="yesterday-title">Yesterday</h2>
+        </div>
+        <div class="platform-yesterday-grid">
+          <article class="platform-student-home-card platform-student-win" aria-labelledby="yesterday-wins-title">
+            <h3 id="yesterday-wins-title">Yesterday's Wins</h3>
+            <p class="platform-student-empty-state">No verified Win is available yet.</p>
+            <p>Only verified activity will appear here in a future approved build.</p>
+          </article>
+          <article class="platform-student-home-card platform-student-challenge" aria-labelledby="yesterday-challenge-title">
+            <h3 id="yesterday-challenge-title">Yesterday's Challenge</h3>
+            <p class="platform-student-empty-state">No Challenge is available yet.</p>
+            <p>Private, approved work reminders may appear here in a future build.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="platform-student-reflection" aria-labelledby="reflection-check-title">
+        <p class="platform-student-section-label">Reflection</p>
+        <h2 id="reflection-check-title">What I Learned Today</h2>
+        <p class="platform-student-status">Check unavailable.</p>
+        <p>Submission status is not connected in PB-003A.</p>
+      </section>
+
+      <section class="platform-student-paths" aria-labelledby="choose-path-title">
+        <div class="platform-student-section-heading">
+          <p class="platform-student-section-label">Next actions</p>
+          <h2 id="choose-path-title">Choose Your Path</h2>
+          <p>Available choices will appear here. Ordinary continuation will not require teacher review.</p>
+        </div>
+        <div class="platform-student-path-grid">
+          ${paths.map(([title, description]) => `
+            <article class="platform-student-path-card">
+              <h3>${escapeHtml(title)}</h3>
+              <p>${escapeHtml(description)}</p>
+              <button type="button" disabled>Coming in a future build.</button>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    </div>
+  `, { title: "Student Home", eyebrow: "Student Dashboard", signedIn: true });
 }
 
 function viewForRoute(route, state) {
