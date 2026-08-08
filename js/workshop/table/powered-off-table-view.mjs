@@ -185,6 +185,7 @@ export function createPoweredOffTableCompositor({
   chassisAssetPath = FRONT_CHASSIS_ASSET,
   rearEmitterAssetPath = POWERING_ON_REAR_EMITTER_ASSET,
   frontEmitterAssetPath = POWERING_ON_FRONT_EMITTER_ASSET,
+  presentationEnabled = true,
   ResizeObserver: ResizeObserverConstructor = globalThis.ResizeObserver,
 } = {}) {
   if (!THREE || typeof THREE.TextureLoader !== "function" ||
@@ -251,6 +252,7 @@ export function createPoweredOffTableCompositor({
   let disposed = false;
   let active = false;
   let tableVisible = false;
+  const classroomPresentationEnabled = presentationEnabled !== false;
   let lastRegistration = null;
   const textureLoader = new THREE.TextureLoader();
   const onLoaded = () => { loaded += 1; if (loaded === 4) { updateRegistration(); resolveReady(); } };
@@ -341,9 +343,10 @@ export function createPoweredOffTableCompositor({
       mesh.scale.set(transform.width, transform.height, 1);
     });
     tableVisible = active && loaded === 4 && !registration.hidden;
-    rearMesh.visible = chassisMesh.visible = tableVisible;
-    rearEmitterMesh.visible = tableVisible && rearEmitterMaterial.opacity > 0;
-    frontEmitterMesh.visible = tableVisible && frontEmitterMaterial.opacity > 0;
+    const presentationVisible = tableVisible && classroomPresentationEnabled;
+    rearMesh.visible = chassisMesh.visible = presentationVisible;
+    rearEmitterMesh.visible = presentationVisible && rearEmitterMaterial.opacity > 0;
+    frontEmitterMesh.visible = presentationVisible && frontEmitterMaterial.opacity > 0;
     if (!tableVisible) restoreLayerMembership();
     lastRegistration = Object.freeze({ ...registration, transform });
     return lastRegistration;
@@ -353,6 +356,10 @@ export function createPoweredOffTableCompositor({
     if (!active || disposed) return false;
     updateRegistration();
     if (!tableVisible) return false;
+    if (!classroomPresentationEnabled) {
+      restoreLayerMembership();
+      return false;
+    }
     const permitted = syncStudentLayerMembership();
     const savedCameraMask = camera.layers.mask;
     const savedBackground = scene.background;
@@ -418,6 +425,7 @@ export function createPoweredOffTableCompositor({
       frontEmitter: frontEmitterTexture,
     }),
     get registration() { return lastRegistration; },
+    get presentationEnabled() { return classroomPresentationEnabled; },
     get visible() { return tableVisible; },
     setWorkshopActive,
     syncStudentLayerMembership,

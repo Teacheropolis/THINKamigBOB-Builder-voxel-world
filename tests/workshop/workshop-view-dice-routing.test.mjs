@@ -52,7 +52,10 @@ test("Workshop View Dice drag starts from the responsive safe orbit contract", (
       up: { set(x, y, z) { this.value = [x, y, z]; } },
     },
     getWorkshopHomeCameraConfig: () => ({ distance: 52.6, height: 44.6, fov: 59.5 }),
+    cancelWorkshopHomeFrameSettlement: () => { context.homeCancelled = true; },
+    clearWorkshopVisibleRulerRange: () => { context.rulerRangeCleared = true; },
     updateCamera: () => { context.cameraUpdated = true; },
+    restoreWorkshopFullCadGrid: () => { context.gridRestored = true; },
     hideWorkshopPrecisionCursor: () => { context.cursorHidden = true; },
     syncWorkshopEngineeringViewButtons: () => { context.buttonsSynced = true; },
   };
@@ -66,6 +69,9 @@ test("Workshop View Dice drag starts from the responsive safe orbit contract", (
   assert.equal(context.cameraHeight, 44.6);
   assert.equal(context.camera.fov, 59.5);
   assert.equal(context.camera.updated, true);
+  assert.equal(context.homeCancelled, true);
+  assert.equal(context.rulerRangeCleared, true);
+  assert.equal(context.gridRestored, true);
   assert.deepEqual(context.camera.up.value, [0, 1, 0]);
   assert.equal(context.cameraUpdated, true);
   assert.equal(context.cursorHidden, true);

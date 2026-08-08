@@ -5242,30 +5242,63 @@ workshopGridPerimeterAccent.userData.workshopDecoration=true;
 workshopStageFrame.add(workshopGridPerimeterAccent);
 scene.add(workshopStageFrame);
 
+// Presentation-only perimeter for the currently active CAD workspace. The
+// physical 50 x 50 ground remains unchanged and owns all raycasting.
+const workshopActiveWorkspaceFrame = new THREE.LineSegments(
+  new THREE.BufferGeometry().setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute([],3)
+  ),
+  new THREE.LineBasicMaterial({
+    color:0x63e9ff,
+    transparent:true,
+    opacity:0.92,
+    depthTest:true,
+    depthWrite:false
+  })
+);
+workshopActiveWorkspaceFrame.name="workshopActiveWorkspaceFrame";
+workshopActiveWorkspaceFrame.position.y=-0.476;
+workshopActiveWorkspaceFrame.renderOrder=-7;
+workshopActiveWorkspaceFrame.visible=false;
+workshopActiveWorkspaceFrame.raycast=function(){};
+workshopActiveWorkspaceFrame.userData.workshopDecoration=true;
+scene.add(workshopActiveWorkspaceFrame);
+
 // UPDATE #101B: Persistent, non-interactive engineering build grid.
 let engineeringGrid = null;
 
 // UPDATE #101.2B: Persistent material references for mission-aware grid styling.
 let engineeringGridMinorMaterial = null;
 let engineeringGridMajorMaterial = null;
+let engineeringGridOriginMaterial = null;
+let engineeringGridMinorLines = null;
+let engineeringGridMajorLines = null;
+let engineeringGridOriginLines = null;
 
 function syncEngineeringGridStyle(grassIsActive){
-  if(!engineeringGridMinorMaterial || !engineeringGridMajorMaterial) return;
+  if(!engineeringGridMinorMaterial || !engineeringGridMajorMaterial ||
+    !engineeringGridOriginMaterial) return;
 
   if(grassIsActive){
     engineeringGridMinorMaterial.color.setHex(0xF2FCFF);
     engineeringGridMinorMaterial.opacity = 0.62;
     engineeringGridMajorMaterial.color.setHex(0x7BEFFF);
     engineeringGridMajorMaterial.opacity = 0.82;
+    engineeringGridOriginMaterial.color.setHex(0xFFFFFF);
+    engineeringGridOriginMaterial.opacity = 1;
   } else {
     engineeringGridMinorMaterial.color.setHex(0x8DDEFF);
     engineeringGridMinorMaterial.opacity = 0.48;
     engineeringGridMajorMaterial.color.setHex(0x39CFFF);
     engineeringGridMajorMaterial.opacity = 0.72;
+    engineeringGridOriginMaterial.color.setHex(0xE8FCFF);
+    engineeringGridOriginMaterial.opacity = 1;
   }
 
   engineeringGridMinorMaterial.needsUpdate = true;
   engineeringGridMajorMaterial.needsUpdate = true;
+  engineeringGridOriginMaterial.needsUpdate = true;
 }
 
 const blocks = [];
@@ -6983,20 +7016,22 @@ function buildStarterGrid(){
   const majorSpacing = 5;
   const minorPositions = [];
   const majorPositions = [];
+  const originPositions = [];
 
-  // Integer-centered one-centimeter blocks are bounded by half-unit lines.
-  // Mirror those boundaries around zero so the full grid is not shifted to
-  // one side of the platform. Five-centimeter accents are centered as well.
+  // Fifty one canonical boundaries produce fifty complete one-centimeter
+  // cells. The centered -10 through +10 Home region therefore has exactly
+  // twenty rows and twenty columns, with five-centimeter major accents.
   for(
-    let gridBoundary = -gridHalfSize + 0.5;
-    gridBoundary <= gridHalfSize - 0.5;
+    let gridBoundary = -gridHalfSize;
+    gridBoundary <= gridHalfSize;
     gridBoundary += minorSpacing
   ){
-    const target = Math.abs((gridBoundary + majorSpacing / 2) % majorSpacing) < 1e-8
+    const target = gridBoundary === 0
+      ? originPositions
+      : Math.abs(gridBoundary % majorSpacing) < 1e-8
       ? majorPositions
       : minorPositions;
 
-    // UPDATE #101.2B: Half-unit boundaries surround integer-centered cubes.
     // Line parallel to the Z axis.
     target.push(
       gridBoundary, 0, -gridHalfSize,
@@ -7022,13 +7057,19 @@ function buildStarterGrid(){
     new THREE.Float32BufferAttribute(majorPositions, 3)
   );
 
+  const originGeometry = new THREE.BufferGeometry();
+  originGeometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(originPositions, 3)
+  );
+
   engineeringGridMinorMaterial = new THREE.LineBasicMaterial({
     color: 0x8DDEFF,
     transparent: true,
     opacity: 0.18,
     depthTest: true,
     depthWrite: false,
-    depthFunc: THREE.LessDepth
+    depthFunc: THREE.LessEqualDepth
   });
 
   engineeringGridMajorMaterial = new THREE.LineBasicMaterial({
@@ -7037,16 +7078,27 @@ function buildStarterGrid(){
     opacity: 0.34,
     depthTest: true,
     depthWrite: false,
-    depthFunc: THREE.LessDepth
+    depthFunc: THREE.LessEqualDepth
   });
 
-  const minorLines = new THREE.LineSegments(minorGeometry, engineeringGridMinorMaterial);
-  const majorLines = new THREE.LineSegments(majorGeometry, engineeringGridMajorMaterial);
+  engineeringGridOriginMaterial = new THREE.LineBasicMaterial({
+    color: 0xE8FCFF,
+    transparent: true,
+    opacity: 1,
+    depthTest: true,
+    depthWrite: false,
+    depthFunc: THREE.LessEqualDepth
+  });
+
+  engineeringGridMinorLines = new THREE.LineSegments(minorGeometry, engineeringGridMinorMaterial);
+  engineeringGridMajorLines = new THREE.LineSegments(majorGeometry, engineeringGridMajorMaterial);
+  engineeringGridOriginLines = new THREE.LineSegments(originGeometry, engineeringGridOriginMaterial);
   // The holographic grid is a reference layer beneath student geometry.
   // Depth testing remains enabled; the negative order prevents transparent
   // grid lines from visually washing over opaque or selected objects.
-  minorLines.renderOrder = -10;
-  majorLines.renderOrder = -10;
+  engineeringGridMinorLines.renderOrder = -10;
+  engineeringGridMajorLines.renderOrder = -9;
+  engineeringGridOriginLines.renderOrder = -8;
 
   engineeringGrid = new THREE.Group();
   engineeringGrid.name = "engineeringBuildGrid";
@@ -7057,11 +7109,13 @@ function buildStarterGrid(){
 
   // Extra safeguard: the grid can never become a raycast target.
   engineeringGrid.raycast = function(){};
-  minorLines.raycast = function(){};
-  majorLines.raycast = function(){};
+  engineeringGridMinorLines.raycast = function(){};
+  engineeringGridMajorLines.raycast = function(){};
+  engineeringGridOriginLines.raycast = function(){};
 
-  engineeringGrid.add(minorLines);
-  engineeringGrid.add(majorLines);
+  engineeringGrid.add(engineeringGridMinorLines);
+  engineeringGrid.add(engineeringGridMajorLines);
+  engineeringGrid.add(engineeringGridOriginLines);
   scene.add(engineeringGrid);
 
   // The Builder starts on grass, so initialize the stronger grass contrast.
@@ -7114,9 +7168,49 @@ camera.lookAt(0, 0, 0);
 let isDragging = false;
 let previousMouseX = 0;
 let mouseMoved = false;
+let workshopCanvasOrbitStartX = 0;
+let workshopCanvasOrbitStartY = 0;
+let workshopCanvasOrbitPrepared = false;
+const WORKSHOP_CANVAS_ORBIT_DRAG_THRESHOLD = 4;
 let cameraAngle = 0;
 let cameraDistance = 24;
 let cameraHeight = 5;
+let workshopBuildViewportWheelIntentArmed = false;
+
+function workshopWheelEventTargetsBuildViewport(event){
+  if(!document.body.classList.contains("workshopMode") ||
+    !event || event.target !== renderer.domElement){
+    return false;
+  }
+  const workshopDashboard = document.getElementById("workshopDashboard");
+  if(workshopDashboard){
+    const dashboardBounds = workshopDashboard.getBoundingClientRect();
+    if(event.clientY >= dashboardBounds.top) return false;
+  }
+  return true;
+}
+
+function resetWorkshopBuildViewportWheelIntent(){
+  workshopBuildViewportWheelIntentArmed = false;
+}
+
+function armWorkshopBuildViewportWheelIntent(event){
+  if(!workshopWheelEventTargetsBuildViewport(event)) return false;
+  workshopBuildViewportWheelIntentArmed = true;
+  return true;
+}
+
+function workshopBuildViewportOwnsWheel(event){
+  if(!document.body.classList.contains("workshopMode")) return true;
+  return workshopBuildViewportWheelIntentArmed &&
+    workshopWheelEventTargetsBuildViewport(event);
+}
+
+window.resetWorkshopBuildViewportWheelIntent =
+  resetWorkshopBuildViewportWheelIntent;
+window.armWorkshopBuildViewportWheelIntent =
+  armWorkshopBuildViewportWheelIntent;
+window.workshopBuildViewportOwnsWheel = workshopBuildViewportOwnsWheel;
 
 const viewCubeCanvas =
   document.getElementById("viewCubeCanvas");
@@ -7752,16 +7846,23 @@ document.addEventListener('mousedown', (event)=>{
     return;
   }
   if(document.body.classList.contains("workshopMode") &&
-    typeof window.clearWorkshopEngineeringView === "function"){
-    window.clearWorkshopEngineeringView();
+    event.target !== renderer.domElement){
+    isDragging = false;
+    mouseMoved = false;
+    workshopCanvasOrbitPrepared = false;
+    return;
   }
   isDragging = true;
   mouseMoved = false;
+  workshopCanvasOrbitStartX = event.clientX;
+  workshopCanvasOrbitStartY = event.clientY;
+  workshopCanvasOrbitPrepared = false;
   previousMouseX = event.clientX;
 });
 
 document.addEventListener('mouseup', ()=>{
   isDragging = false;
+  workshopCanvasOrbitPrepared = false;
 
   setTimeout(()=>{
     mouseMoved = false;
@@ -7789,6 +7890,21 @@ document.addEventListener('mousemove', (event)=>{
   }
 
   if(isDragging){
+
+    if(document.body.classList.contains("workshopMode") &&
+      !workshopCanvasOrbitPrepared){
+      const orbitDistance = Math.hypot(
+        event.clientX - workshopCanvasOrbitStartX,
+        event.clientY - workshopCanvasOrbitStartY
+      );
+      if(orbitDistance < WORKSHOP_CANVAS_ORBIT_DRAG_THRESHOLD){
+        return;
+      }
+      workshopCanvasOrbitPrepared = true;
+      if(typeof window.clearWorkshopEngineeringView === "function"){
+        window.clearWorkshopEngineeringView();
+      }
+    }
 
     const changeX =
       event.clientX - previousMouseX;
@@ -7840,7 +7956,19 @@ if(
   return;
 }
 
+  if(document.body.classList.contains("workshopMode") &&
+    typeof window.workshopBuildViewportOwnsWheel === "function" &&
+    !window.workshopBuildViewportOwnsWheel(event)){
+    event.preventDefault();
+    return;
+  }
+
   event.preventDefault();
+
+  if(document.body.classList.contains("workshopMode") &&
+    typeof window.markWorkshopManualCameraOverride==="function"){
+    window.markWorkshopManualCameraOverride();
+  }
 
   if(event.deltaY < 0){
     cameraDistance -= 0.5;
@@ -7861,6 +7989,10 @@ if(
   }
 
   updateCamera();
+  if(document.body.classList.contains("workshopMode") &&
+    typeof window.refreshWorkshopManualVisibleRulerPresentation==="function"){
+    window.refreshWorkshopManualVisibleRulerPresentation();
+  }
 
 }, { passive: false });
 
@@ -7963,6 +8095,85 @@ function createWorkshopCandidateBounds(mesh, position){
   );
 }
 
+function workshopBoundsFitActiveWorkspace(bounds){
+  if(!document.body.classList.contains("workshopMode")) return true;
+  return typeof window.workshopBoundsFitActiveWorkspace==="function" &&
+    window.workshopBoundsFitActiveWorkspace(bounds);
+}
+
+function createWorkshopTranslatedSelectionBounds(selectedObjects,changeX,changeZ){
+  const translatedBounds=new THREE.Box3();
+  selectedObjects.forEach(function(block){
+    const bounds=new THREE.Box3().setFromObject(block);
+    bounds.translate(new THREE.Vector3(changeX,0,changeZ));
+    translatedBounds.union(bounds);
+  });
+  return translatedBounds;
+}
+
+function isStandardWorkshopBlock(block){
+  return !!block && (
+    block.userData.builderShape === "cube" ||
+    block.userData.builderShape === "sphere" ||
+    block.userData.builderShape === "trianglePrism"
+  );
+}
+
+function getWorkshopCoordinateLatticePhase(value){
+  return Number((value-Math.floor(value)).toFixed(4));
+}
+
+function snapWorkshopValueToLatticePhase(value,phase){
+  return Number((
+    Math.round(value-phase)+phase
+  ).toFixed(4));
+}
+
+function snapStandardWorkshopBlockGroundCenter(value){
+  const cellCenter=Math.floor(value)+0.5;
+  return Number(Math.max(-24.5,Math.min(24.5,cellCenter)).toFixed(4));
+}
+
+function calculateWorkshopMoveTranslation(selectedObjects, groundPoint){
+  const standardObjects = selectedObjects.filter(isStandardWorkshopBlock);
+  const containsStandardObjects = standardObjects.length > 0;
+  const anchorObjects = containsStandardObjects ? standardObjects : selectedObjects;
+  const rawAnchorX = Math.min(...anchorObjects.map(function(block){
+    return block.position.x;
+  }));
+  const rawAnchorZ = Math.min(...anchorObjects.map(function(block){
+    return block.position.z;
+  }));
+  const anchorX = containsStandardObjects
+    ? rawAnchorX
+    : workshopPrecisionSnappingActive()
+      ? window.snapWorkshopValue(rawAnchorX)
+      : Math.round(rawAnchorX);
+  const anchorZ = containsStandardObjects
+    ? rawAnchorZ
+    : workshopPrecisionSnappingActive()
+      ? window.snapWorkshopValue(rawAnchorZ)
+      : Math.round(rawAnchorZ);
+  const targetX = containsStandardObjects
+    ? snapWorkshopValueToLatticePhase(
+        groundPoint.x,
+        getWorkshopCoordinateLatticePhase(rawAnchorX)
+      )
+    : snapGroundBuildCoordinate(groundPoint.x);
+  const targetZ = containsStandardObjects
+    ? snapWorkshopValueToLatticePhase(
+        groundPoint.z,
+        getWorkshopCoordinateLatticePhase(rawAnchorZ)
+      )
+    : snapGroundBuildCoordinate(groundPoint.z);
+
+  return {
+    changeX:Number((targetX-anchorX).toFixed(4)),
+    changeZ:Number((targetZ-anchorZ).toFixed(4)),
+    containsStandardObjects
+  };
+}
+
 const WORKSHOP_PLACEMENT_EPSILON = 1e-5;
 
 function workshopBoundsOverlap(
@@ -7984,17 +8195,17 @@ function workshopBoundsOverlap(
 }
 
 function calculateWorkshopPlacementCandidate(intersection, newBlock){
-  const isStandardWorkshopBlock =
-    newBlock.userData.builderShape === "cube" ||
-    newBlock.userData.builderShape === "sphere" ||
-    newBlock.userData.builderShape === "trianglePrism";
+  const standardWorkshopBlock = isStandardWorkshopBlock(newBlock);
   // All current standard blocks occupy one-centimeter grid cells and therefore
   // share the approved one-unit lattice in every precision mode. The active
   // cm/mm precision remains available for future non-block engineering tools.
-  const increment = isStandardWorkshopBlock ? 1 : window.getWorkshopSnapIncrement();
+  const increment = standardWorkshopBlock ? 1 : window.getWorkshopSnapIncrement();
   const snapCandidateValue = function(value, offset){
-    if(isStandardWorkshopBlock){
-      return Number(Math.round(value).toFixed(4));
+    if(standardWorkshopBlock){
+      return snapWorkshopValueToLatticePhase(
+        value,
+        getWorkshopCoordinateLatticePhase(offset)
+      );
     }
     return window.snapWorkshopValue(value, offset);
   };
@@ -8007,13 +8218,19 @@ function calculateWorkshopPlacementCandidate(intersection, newBlock){
   if(hit === ground){
     const groundBounds = new THREE.Box3().setFromObject(ground);
     position.set(
-      intersection.point.x,
+      standardWorkshopBlock
+        ? snapStandardWorkshopBlockGroundCenter(intersection.point.x)
+        : intersection.point.x,
       groundBounds.max.y + halfSize.y,
-      intersection.point.z
+      standardWorkshopBlock
+        ? snapStandardWorkshopBlockGroundCenter(intersection.point.z)
+        : intersection.point.z
     );
-    ["x","y","z"].forEach(function(axis){
-      position[axis] = snapCandidateValue(position[axis], 0);
-    });
+    if(!standardWorkshopBlock){
+      ["x","y","z"].forEach(function(axis){
+        position[axis] = snapCandidateValue(position[axis], 0);
+      });
+    }
   }else{
     const hitBounds = new THREE.Box3().setFromObject(hit);
     const contactedCenter = hitBounds.getCenter(new THREE.Vector3());
@@ -8051,6 +8268,7 @@ function calculateWorkshopPlacementCandidate(intersection, newBlock){
   }
 
   const candidateBounds = createWorkshopCandidateBounds(newBlock, position);
+  const insideActiveWorkspace=workshopBoundsFitActiveWorkspace(candidateBounds);
   const collidingBlock = blocks.find(function(existingBlock){
     const existingBounds = new THREE.Box3().setFromObject(existingBlock);
     return workshopBoundsOverlap(candidateBounds, existingBounds);
@@ -8070,7 +8288,8 @@ function calculateWorkshopPlacementCandidate(intersection, newBlock){
 
   return {
     position,
-    isValid:!collidingBlock,
+    isValid:!collidingBlock && insideActiveWorkspace,
+    insideActiveWorkspace,
     snapIncrement:increment,
     collidingBlock:collidingBlock || null,
     contactedBlock
@@ -8168,25 +8387,32 @@ if(intersects.length > 0){
       return;
     }
 
-    const targetX = snapGroundBuildCoordinate(intersects[0].point.x);
-    const targetZ = snapGroundBuildCoordinate(intersects[0].point.z);
+    const movement = calculateWorkshopMoveTranslation(
+      selectedBlocks,
+      intersects[0].point
+    );
+    const changeX = movement.changeX;
+    const changeZ = movement.changeZ;
 
-    let minX = Math.min(...selectedBlocks.map(block =>
-      workshopPrecisionSnappingActive()
-        ? window.snapWorkshopValue(block.position.x)
-        : Math.round(block.position.x)
-    ));
-    let minZ = Math.min(...selectedBlocks.map(block =>
-      workshopPrecisionSnappingActive()
-        ? window.snapWorkshopValue(block.position.z)
-        : Math.round(block.position.z)
-    ));
-
-    const changeX = targetX - minX;
-    const changeZ = targetZ - minZ;
+    const translatedSelectionBounds=createWorkshopTranslatedSelectionBounds(
+      selectedBlocks,
+      changeX,
+      changeZ
+    );
+    if(!workshopBoundsFitActiveWorkspace(translatedSelectionBounds)){
+      document.getElementById("toolMessage").textContent =
+        "⚠️ Move blocked: keep the complete structure inside the visible workspace.";
+      return;
+    }
 
     selectedBlocks.forEach(block => {
-      if(workshopPrecisionSnappingActive()){
+      if(movement.containsStandardObjects){
+        // Translate the entire selection by one shared whole-centimeter delta.
+        // This keeps standard blocks on their placement lattice without
+        // independently rounding or distorting connected/mixed geometry.
+        block.position.x = Number((block.position.x + changeX).toFixed(4));
+        block.position.z = Number((block.position.z + changeZ).toFixed(4));
+      }else if(workshopPrecisionSnappingActive()){
         block.position.x = window.snapWorkshopValue(block.position.x + changeX);
         block.position.z = window.snapWorkshopValue(block.position.z + changeZ);
       }else{
@@ -30749,6 +30975,60 @@ body.workshopMode:not(.starterScreenActive)
 }
 
 body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler[data-workshop-ruler-presentation="centimeter"]
+  .workshop-ruler-tick-centimeter{
+  opacity:.56;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-horizontal[data-workshop-ruler-presentation="centimeter"]
+  .workshop-ruler-tick-centimeter{
+  height:7px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-vertical[data-workshop-ruler-presentation="centimeter"]
+  .workshop-ruler-tick-centimeter{
+  width:7px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler[data-workshop-ruler-presentation="centimeter"]
+  .workshop-ruler-tick-landmark{
+  opacity:.94;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-horizontal[data-workshop-ruler-presentation="centimeter"]
+  .workshop-ruler-tick-landmark{
+  height:11px;
+  border-left-width:2px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler-vertical[data-workshop-ruler-presentation="centimeter"]
+  .workshop-ruler-tick-landmark{
+  width:11px;
+  border-top-width:2px;
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler[data-workshop-ruler-presentation="centimeter"]
+  .workshop-ruler-tick-origin{
+  border-color:#ffffff;
+  opacity:1;
+  filter:drop-shadow(0 0 2px rgba(99,233,255,.86));
+}
+
+body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler[data-workshop-ruler-presentation="centimeter"]
+  .workshop-ruler-label.is-origin{
+  color:#ffffff;
+  font-weight:900;
+  text-shadow:0 0 3px rgba(99,233,255,.9);
+}
+
+body.workshopMode:not(.starterScreenActive)
   .workshop-ruler-horizontal .workshop-ruler-dimension-line{
   top:13px;
 }
@@ -30848,6 +31128,19 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopUnifiedWorkstationView=null;
   var workshopClassroomWorkspacePresentation=null;
   var workshopEngineeringSurfaceFitModule=null;
+  var workshopHomeWorkspaceFraming=null;
+  var workshopBuildBoundsFramingModule=null;
+  var workshopCadWorkspacePresentationModule=null;
+  var workshopCadWorkspacePresentation=null;
+  var workshopVisibleRulerPresentationModule=null;
+  var workshopVisibleRulerPresentation=null;
+  var workshopVisibleRulerRange=null;
+  var workshopActiveWorkspaceBoundaryModule=null;
+  var workshopActiveWorkspaceBoundary=null;
+  var workshopHomeGridWorkspace=null;
+  var workshopBottomPlatformPresentationSnapshot=null;
+  var workshopManualCameraOverride=false;
+  var workshopClassroomTablePresentationEnabled=false;
   var workshopClassroomNeutralBackground=new THREE.Color(0x07131c);
   // Host-only asset/presentation state. WS-016 canonical lifecycle state is
   // owned exclusively by workshopStateController.
@@ -30956,6 +31249,18 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   function syncWorkshopControllerPresentation(snapshot){
     if(!snapshot || typeof snapshot.workshop!=="string") return;
     workshopCanonicalState=snapshot.workshop;
+    if(snapshot.workshop==="SHUTTING_DOWN" ||
+      snapshot.workshop==="FAULT_SAFE" || snapshot.workshop==="OFF"){
+      if(typeof resetWorkshopBuildViewportWheelIntent==="function"){
+        resetWorkshopBuildViewportWheelIntent();
+      }
+      cancelWorkshopHomeFrameSettlement();
+      clearWorkshopVisibleRulerRange();
+      resetWorkshopActiveWorkspaceBoundary();
+    }
+    if(snapshot.workshop!=="READY"){
+      restoreWorkshopBottomPlatformPresentation();
+    }
     if(snapshot.workshop!=="READY"){
       clearEngineeringToolChestDrawerSwitch();
       clearEngineeringToolChestPendingRetraction();
@@ -31234,7 +31539,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
           ],
           getStudentObjects:function(){ return blocks; },
           getCadDimensionGroup:function(){ return workshopCadDimensionGroup; },
-          lights:[light,ambient]
+          lights:[light,ambient],
+          presentationEnabled:workshopClassroomTablePresentationEnabled
         });
         workshopTablePowerOnView=modules[1].createTablePowerOnView({
           materials:{
@@ -31258,7 +31564,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
               return workshopPoweredOffTableCompositor.registration;
             },
             getTableVisible:function(){
-              return workshopPoweredOffTableCompositor.visible;
+              return workshopClassroomTablePresentationEnabled &&
+                workshopPoweredOffTableCompositor.visible;
             },
             adoptEmitterOpacity:function(value){
               return workshopTablePowerOnView.adoptProjectionOpacity(value);
@@ -31274,10 +31581,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         workshopTableProjectionActiveView=
           modules[3].createTableProjectionActiveView({
             document:document,
-            getTableVisible:function(){
-              return !!workshopPoweredOffTableCompositor &&
-                workshopPoweredOffTableCompositor.visible;
-            },
+            getTableVisible:getWorkshopGridPresentationHostVisible,
             applyFieldOpacity:function(value){
               return workshopTableProjectionStartView
                 .adoptActiveFieldOpacity(value);
@@ -31339,11 +31643,26 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         );
       });
   }
+
+  function getWorkshopGridPresentationHostVisible(){
+    if(currentWorkspaceMode!=="workshop" ||
+      !document.body.classList.contains("workshopMode")){
+      return false;
+    }
+    if(!workshopClassroomTablePresentationEnabled){
+      return true;
+    }
+    return !!workshopPoweredOffTableCompositor &&
+      workshopPoweredOffTableCompositor.visible;
+  }
   loadWorkshopPoweredOffTable();
   var builderCameraSnapshot=null;
   var activeWorkshopEngineeringView=null;
   var activeWorkshopEngineeringTarget=null;
   var activeWorkshopFitSelection=false;
+  var workshopHomeFrameSettlementToken=0;
+  var workshopHomeCameraConfigCache=null;
+  var workshopLastValidHomeCameraConfig=null;
   var platformColorModeActive=false;
   var workshopPlatformTint=0x5f8fa8;
   var platformColorDialogReturnFocus=null;
@@ -31521,12 +31840,47 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     return tabletop ? tabletop.bounds : null;
   }
 
+  function projectWorkshopVisibleRulerTabletop(projectionCamera){
+    if(!projectionCamera || !workshopVisibleRulerRange ||
+      !workshopVisibleRulerPresentationModule ||
+      !workshopWorkstationRegistrationModule) return null;
+    var canvasBounds=renderer.domElement.getBoundingClientRect();
+    if(!canvasBounds.width || !canvasBounds.height) return null;
+    var corners=workshopVisibleRulerPresentationModule
+      .createWorkshopVisibleRulerCorners(workshopVisibleRulerRange);
+    if(!corners) return null;
+    var projectedCorners=corners.map(function(corner){
+      var projected=new THREE.Vector3(corner.x,corner.y,corner.z)
+        .project(projectionCamera);
+      return {
+        x:canvasBounds.left+(projected.x+1)*canvasBounds.width/2,
+        y:canvasBounds.top+(1-projected.y)*canvasBounds.height/2,
+        depth:projected.z
+      };
+    });
+    return workshopWorkstationRegistrationModule
+      .createProjectedTabletopRegistration(projectedCorners);
+  }
+
+  function getWorkshopRulerPresentationSnapshot(){
+    if(!workshopWorkstationRegistration) return null;
+    var snapshot=workshopWorkstationRegistration.update();
+    var visibleTabletop=projectWorkshopVisibleRulerTabletop(camera);
+    if(!snapshot || !visibleTabletop) return snapshot;
+    return Object.freeze(Object.assign({},snapshot,{
+      liveProjectedScreenBounds:visibleTabletop.bounds,
+      liveProjectedCorners:visibleTabletop.corners,
+      orderedTabletopEdges:visibleTabletop.edges,
+      edgePresentationUsable:visibleTabletop.usable===true
+    }));
+  }
+
   function syncWorkshopUnifiedWorkstationView(){
     if(!workshopUnifiedWorkstationView || !workshopWorkstationRegistration){
       return false;
     }
     return workshopUnifiedWorkstationView.update(
-      workshopWorkstationRegistration.update()
+      getWorkshopRulerPresentationSnapshot()
     ).mode==="edges";
   }
 
@@ -31544,7 +31898,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
 
     camera.updateMatrixWorld();
     syncWorkshopCadHeightLabelPresentation();
-    var projectedBounds=projectWorkshopWorkstationBounds(camera);
+    var visibleTabletop=projectWorkshopVisibleRulerTabletop(camera);
+    var projectedBounds=visibleTabletop
+      ? visibleTabletop.bounds
+      : projectWorkshopWorkstationBounds(camera);
     if(!projectedBounds) return false;
 
     var horizontalThickness=
@@ -31922,7 +32279,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   }
 
   function syncWorkshopEngineeringGridContrast(tint){
-    if(!engineeringGridMinorMaterial || !engineeringGridMajorMaterial) return;
+    if(!engineeringGridMinorMaterial || !engineeringGridMajorMaterial ||
+      !engineeringGridOriginMaterial) return;
     var color=new THREE.Color(tint);
     var platformOpacity=ground.material.transparent
       ? ground.material.opacity
@@ -31953,8 +32311,13 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       useDarkLines ? 0x004d66 : 0x63e9ff
     );
     engineeringGridMajorMaterial.opacity=useDarkLines ? 0.85 : 0.90;
+    engineeringGridOriginMaterial.color.setHex(
+      useDarkLines ? 0x001722 : 0xffffff
+    );
+    engineeringGridOriginMaterial.opacity=1;
     engineeringGridMinorMaterial.needsUpdate=true;
     engineeringGridMajorMaterial.needsUpdate=true;
+    engineeringGridOriginMaterial.needsUpdate=true;
   }
 
   function focusPlatformColorTile(){
@@ -32385,9 +32748,78 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     requestEngineeringToolChestCabinetRetraction();
   }
 
+  function setWorkshopVisibleRulerRange(range){
+    if(!workshopVisibleRulerPresentation) return false;
+    var next=workshopVisibleRulerPresentation.update(range);
+    if(!next) return false;
+    if(next===workshopVisibleRulerRange) return true;
+    workshopVisibleRulerRange=next;
+    workshopProjectedRulerBoundsSignature="";
+    renderWorkshopRulers();
+    return true;
+  }
+
+  function clearWorkshopVisibleRulerRange(){
+    var hadRange=!!workshopVisibleRulerRange;
+    workshopVisibleRulerRange=null;
+    if(workshopVisibleRulerPresentation){
+      workshopVisibleRulerPresentation.reset();
+    }
+    workshopProjectedRulerBoundsSignature="";
+    renderWorkshopRulers();
+    return hadRange;
+  }
+
+  function updateWorkshopActiveWorkspaceFrame(range){
+    if(!workshopActiveWorkspaceFrame) return false;
+    if(!range || range.valid!==true){
+      workshopActiveWorkspaceFrame.visible=false;
+      return false;
+    }
+    var y=0;
+    var positions=[
+      range.xMin,y,range.zMin, range.xMax,y,range.zMin,
+      range.xMax,y,range.zMin, range.xMax,y,range.zMax,
+      range.xMax,y,range.zMax, range.xMin,y,range.zMax,
+      range.xMin,y,range.zMax, range.xMin,y,range.zMin
+    ];
+    workshopActiveWorkspaceFrame.geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions,3)
+    );
+    workshopActiveWorkspaceFrame.geometry.computeBoundingSphere();
+    workshopActiveWorkspaceFrame.visible=
+      currentWorkspaceMode==="workshop" &&
+      document.body.classList.contains("workshopMode");
+    return true;
+  }
+
+  function resetWorkshopActiveWorkspaceBoundary(){
+    if(workshopActiveWorkspaceBoundary){
+      workshopActiveWorkspaceBoundary.reset();
+    }
+    workshopActiveWorkspaceFrame.visible=false;
+  }
+
+  function commitWorkshopActiveWorkspaceBoundary(range,source){
+    if(!workshopActiveWorkspaceBoundary ||
+      !workshopActiveWorkspaceBoundaryModule) return false;
+    var normalized=workshopActiveWorkspaceBoundaryModule
+      .normalizeWorkshopActiveWorkspaceRange(range,source);
+    if(!normalized) return false;
+    var snapshot=workshopActiveWorkspaceBoundary.update(normalized,source);
+    if(!snapshot || !updateWorkshopActiveWorkspaceFrame(snapshot)) return false;
+    return snapshot;
+  }
+
   function getWorkshopRulerAxisRange(axis){
     if(axis==="y"){
       return {min:workshopRulerConfig.yMin,max:workshopRulerConfig.yMax};
+    }
+    if(workshopVisibleRulerRange){
+      return axis==="z"
+        ? {min:workshopVisibleRulerRange.zMin,max:workshopVisibleRulerRange.zMax}
+        : {min:workshopVisibleRulerRange.xMin,max:workshopVisibleRulerRange.xMax};
     }
     if(axis==="z"){
       return {min:workshopRulerConfig.zMin,max:workshopRulerConfig.zMax};
@@ -32433,7 +32865,13 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       ? "z"
       : "x";
     var range=getWorkshopRulerAxisRange(axis);
-    var subdivisions=workshopRulerConfig.millimetersPerCentimeter;
+    var centimeterOnly=!!workshopVisibleRulerRange;
+    var subdivisions=centimeterOnly
+      ? 1
+      : workshopRulerConfig.millimetersPerCentimeter;
+    rulerElement.dataset.workshopRulerPresentation=centimeterOnly
+      ? "centimeter"
+      : "precision";
     var minimumStep=Math.round(range.min*subdivisions);
     var maximumStep=Math.round(range.max*subdivisions);
     var fragment=document.createDocumentFragment();
@@ -32442,6 +32880,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var value=step/subdivisions;
       var isMajor=step%subdivisions===0;
       var isMedium=!isMajor && Math.abs(step)%subdivisions===subdivisions/2;
+      var isLandmark=isMajor && Math.abs(value%5)<1e-8;
+      var isOrigin=isMajor && Math.abs(value)<1e-8;
       var ratio=rulerElement.classList.contains("workshop-ruler-vertical")
         ? (range.max-value)/(range.max-range.min)
         : (value-range.min)/(range.max-range.min);
@@ -32449,21 +32889,29 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var tick=document.createElement("span");
 
       tick.className="workshop-ruler-tick "+
-        (isMajor
+        (centimeterOnly
+          ? "workshop-ruler-tick-centimeter"
+          : isMajor
           ? "workshop-ruler-tick-major"
           : isMedium
             ? "workshop-ruler-tick-medium"
             : "workshop-ruler-tick-minor");
+      if(isLandmark) tick.classList.add("workshop-ruler-tick-landmark");
+      if(isOrigin) tick.classList.add("workshop-ruler-tick-origin");
       tick.style.setProperty("--workshop-ruler-position",position);
       fragment.appendChild(tick);
 
-      if(isMajor){
+      if(isMajor && (!centimeterOnly || isLandmark)){
         var label=document.createElement("span");
         label.className="workshop-ruler-label";
+        if(isOrigin) label.classList.add("is-origin");
         if(step===minimumStep) label.classList.add(axis==="z" ? "is-range-end" : "is-range-start");
         if(step===maximumStep) label.classList.add(axis==="z" ? "is-range-start" : "is-range-end");
         label.style.setProperty("--workshop-ruler-position",position);
-        label.textContent=String(normalizeWorkshopRulerValue(value));
+        var normalizedValue=normalizeWorkshopRulerValue(value);
+        label.textContent=normalizedValue>0
+          ? "+"+normalizedValue
+          : String(normalizedValue);
         fragment.appendChild(label);
       }
     }
@@ -32472,27 +32920,26 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   }
 
   function renderWorkshopRulers(){
-    var leftRuler=document.getElementById("workshopRulerLeft");
-    var rightRuler=document.getElementById("workshopRulerRight");
-    if(leftRuler){
-      leftRuler.setAttribute(
-        "aria-label",
-        "Left model Z-axis ruler. Model Scale, centimeters with millimeter subdivisions."
-      );
-    }
-    if(rightRuler){
-      rightRuler.setAttribute(
-        "aria-label",
-        "Right model Z-axis ruler. Model Scale, centimeters with millimeter subdivisions."
-      );
-    }
     [
       "workshopRulerTop",
       "workshopRulerBottom",
       "workshopRulerLeft",
       "workshopRulerRight"
     ].forEach(function(id){
-      renderWorkshopRulerTicks(document.getElementById(id));
+      var rulerElement=document.getElementById(id);
+      if(!rulerElement) return;
+      var side=id.replace("workshopRuler","");
+      var axis=rulerElement.classList.contains("workshop-ruler-vertical")
+        ? "Z"
+        : "X";
+      rulerElement.setAttribute(
+        "aria-label",
+        side+" model "+axis+"-axis ruler. Model Scale, "+
+          (workshopVisibleRulerRange
+            ? "centimeter boundaries."
+            : "centimeters with millimeter subdivisions.")
+      );
+      renderWorkshopRulerTicks(rulerElement);
     });
   }
 
@@ -33445,6 +33892,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   }
 
   function moveWorkshopPrecisionCursor(event){
+    if(typeof armWorkshopBuildViewportWheelIntent==="function"){
+      armWorkshopBuildViewportWheelIntent(event);
+    }
     var cursor=document.getElementById("workshopPrecisionCursor");
     if(!cursor || !workshopPointerIsOverBuildViewport(event)){
       hideWorkshopPrecisionCursor();
@@ -33605,6 +34055,35 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     bottom:{position:[0,-1,0],up:[0,0,1]}
   };
 
+  function restoreWorkshopBottomPlatformPresentation(){
+    if(!workshopBottomPlatformPresentationSnapshot || !ground || !ground.material){
+      workshopBottomPlatformPresentationSnapshot=null;
+      return false;
+    }
+    ground.material.transparent=workshopBottomPlatformPresentationSnapshot.transparent;
+    ground.material.opacity=workshopBottomPlatformPresentationSnapshot.opacity;
+    ground.material.depthWrite=workshopBottomPlatformPresentationSnapshot.depthWrite;
+    ground.material.needsUpdate=true;
+    workshopBottomPlatformPresentationSnapshot=null;
+    return true;
+  }
+
+  function activateWorkshopBottomPlatformPresentation(){
+    if(!ground || !ground.material) return false;
+    if(!workshopBottomPlatformPresentationSnapshot){
+      workshopBottomPlatformPresentationSnapshot={
+        transparent:ground.material.transparent,
+        opacity:ground.material.opacity,
+        depthWrite:ground.material.depthWrite
+      };
+    }
+    ground.material.transparent=true;
+    ground.material.opacity=0.1;
+    ground.material.depthWrite=false;
+    ground.material.needsUpdate=true;
+    return true;
+  }
+
   function syncWorkshopEngineeringViewButtons(){
     if(workshopViewButtonSyncDeferred) return;
     document.querySelectorAll("#workshopEngineeringViewControls [data-workshop-view]").forEach(function(button){
@@ -33659,7 +34138,6 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       syncWorkshopFitSelectionAvailability();
       return false;
     }
-
     var center=bounds.getCenter(new THREE.Vector3());
     var direction=new THREE.Vector3();
     var up=camera.up.clone().normalize();
@@ -33671,14 +34149,12 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         definition.position[2]
       ).normalize();
       up.set(definition.up[0],definition.up[1],definition.up[2]).normalize();
-      activeWorkshopEngineeringView=requestedView;
     }else{
       direction.copy(camera.position).sub(
         activeWorkshopEngineeringTarget || center
       );
       if(direction.lengthSq()<0.0001) direction.set(0,.7,1);
       direction.normalize();
-      activeWorkshopEngineeringView="fit";
     }
 
     var forward=direction.clone().multiplyScalar(-1);
@@ -33719,6 +34195,16 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         safeFrame:safeFrame
       });
     if(!Number.isFinite(fitDistance)) return false;
+
+    if(typeof resetWorkshopBuildViewportWheelIntent==="function"){
+      resetWorkshopBuildViewportWheelIntent();
+    }
+    cancelWorkshopHomeFrameSettlement();
+    clearWorkshopVisibleRulerRange();
+    restoreWorkshopFullCadGrid();
+    workshopManualCameraOverride=false;
+    restoreWorkshopBottomPlatformPresentation();
+    activeWorkshopEngineeringView=definition ? requestedView : "fit";
 
     activeWorkshopEngineeringTarget=center;
     activeWorkshopFitSelection=true;
@@ -33811,10 +34297,20 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   }
 
   function clearWorkshopEngineeringView(){
+    if(typeof resetWorkshopBuildViewportWheelIntent==="function"){
+      resetWorkshopBuildViewportWheelIntent();
+    }
+    restoreWorkshopBottomPlatformPresentation();
+    clearWorkshopVisibleRulerRange();
+    restoreWorkshopFullCadGrid();
     if(activeWorkshopFitSelection && activeWorkshopEngineeringTarget){
       activeWorkshopFitSelection=false;
       activeWorkshopEngineeringView="home";
       syncWorkshopEngineeringViewButtons();
+      if(currentWorkspaceMode==="workshop" &&
+        document.body.classList.contains("workshopMode")){
+        prepareWorkshopHomeFrameSettlement();
+      }
       return;
     }
     activeWorkshopEngineeringView=null;
@@ -33836,13 +34332,78 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       return narrowValue+(wideValue-narrowValue)*blend;
     }
 
-    return {
+    var baseline={
       targetX:interpolate(-0.6,-0.2),
       targetY:interpolate(-2.6,-2.3),
+      targetZ:0,
       distance:interpolate(39.6,52.6),
       height:interpolate(82,44.6),
       fov:interpolate(48,59.5)
     };
+    if(!workshopHomeWorkspaceFraming) return baseline;
+    var canvasBounds=renderer.domElement.getBoundingClientRect();
+    var modelBounds=getWorkshopEngineeringModelBounds();
+    var buildBounds=modelBounds ? {
+      min:{x:modelBounds.min.x,y:modelBounds.min.y,z:modelBounds.min.z},
+      max:{x:modelBounds.max.x,y:modelBounds.max.y,z:modelBounds.max.z}
+    } : null;
+    var buildSignature=buildBounds
+      ? [buildBounds.min.x,buildBounds.min.y,buildBounds.min.z,
+        buildBounds.max.x,buildBounds.max.y,buildBounds.max.z].join(":")
+      : "empty";
+    var protectedBuildZone=getWorkshopStableHomeProtectedGeometry(canvasBounds);
+    var protectedSignature=protectedBuildZone
+      ? [protectedBuildZone.left,protectedBuildZone.top,
+        protectedBuildZone.width,protectedBuildZone.height].join(":")
+      : "invalid";
+    var viewportSignature=[
+      canvasBounds.left,canvasBounds.top,canvasBounds.width,canvasBounds.height,
+      window.innerWidth,window.innerHeight,buildSignature,protectedSignature
+    ].join(":");
+    if(workshopHomeCameraConfigCache &&
+      workshopHomeCameraConfigCache.signature===viewportSignature){
+      return workshopHomeCameraConfigCache.config;
+    }
+    var frameInput={
+      canvasBounds:{
+        left:canvasBounds.left,
+        top:canvasBounds.top,
+        width:canvasBounds.width,
+        height:canvasBounds.height
+      },
+      protectedBuildZone:protectedBuildZone,
+      buildBounds:buildBounds
+    };
+    var frame=workshopHomeWorkspaceFraming.update(frameInput);
+    if(!frame){
+      if(workshopLastValidHomeCameraConfig){
+        return workshopLastValidHomeCameraConfig;
+      }
+      frame=workshopHomeWorkspaceFraming.fallback(frameInput);
+    }
+    if(!frame){
+      return Object.assign({},baseline,{
+        gridWorkspace:{
+          size:20,
+          xMin:-10,xMax:10,
+          yMin:-0.5,yMax:-0.5,
+          zMin:-10,zMax:10
+        }
+      });
+    }
+    var config={
+      targetX:frame.target.x,
+      targetY:frame.target.y,
+      targetZ:frame.target.z,
+      distance:frame.horizontalDistance,
+      height:frame.height,
+      fov:frame.fov,
+      perpendicular:frame.perpendicular===true,
+      gridWorkspace:frame.workspace
+    };
+    workshopHomeCameraConfigCache={signature:viewportSignature,config:config};
+    workshopLastValidHomeCameraConfig=config;
+    return config;
   }
 
   var workshopTableHomeRegistrationCamera=null;
@@ -33873,9 +34434,13 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     referenceCamera.far=camera.far;
     referenceCamera.fov=config.fov;
     referenceCamera.aspect=canvasBounds.width/canvasBounds.height;
-    referenceCamera.position.set(config.targetX,config.height,config.distance);
+    referenceCamera.position.set(
+      config.targetX,
+      config.height,
+      config.targetZ+config.distance
+    );
     referenceCamera.up.set(0,1,0);
-    referenceCamera.lookAt(config.targetX,config.targetY,0);
+    referenceCamera.lookAt(config.targetX,config.targetY,config.targetZ);
     referenceCamera.updateProjectionMatrix();
     referenceCamera.updateMatrixWorld();
 
@@ -33890,13 +34455,28 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   }
 
   function applyResponsiveWorkshopHomeView(){
+    restoreWorkshopBottomPlatformPresentation();
+    workshopManualCameraOverride=false;
     var config=getWorkshopHomeCameraConfig();
+    if(!config.gridWorkspace) return false;
+    workshopHomeGridWorkspace=config.gridWorkspace;
+    workshopHomeGridWorkspace=workshopActiveWorkspaceBoundaryModule &&
+      workshopActiveWorkspaceBoundaryModule.normalizeWorkshopActiveWorkspaceRange(
+        workshopHomeGridWorkspace,
+        "HOME"
+      );
+    if(!workshopHomeGridWorkspace ||
+      !applyWorkshopCadGridPresentation(workshopHomeGridWorkspace,false) ||
+      !setWorkshopVisibleRulerRange(workshopHomeGridWorkspace) ||
+      !commitWorkshopActiveWorkspaceBoundary(workshopHomeGridWorkspace,"HOME")){
+      return false;
+    }
     activeWorkshopFitSelection=false;
     activeWorkshopEngineeringView="home";
     activeWorkshopEngineeringTarget=new THREE.Vector3(
       config.targetX,
       config.targetY,
-      0
+      config.targetZ
     );
     cameraAngle=0;
     cameraDistance=config.distance;
@@ -33905,14 +34485,212 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     camera.updateProjectionMatrix();
     camera.up.set(0,1,0);
     updateCamera();
+    if(workshopHomeGridWorkspace && workshopVisibleRulerPresentation){
+      workshopVisibleRulerPresentation.captureZoomBaseline(
+        workshopHomeGridWorkspace,
+        cameraDistance,
+        80
+      );
+    }
     syncWorkshopEngineeringViewButtons();
     return true;
   }
 
+  function cancelWorkshopHomeFrameSettlement(){
+    workshopHomeFrameSettlementToken+=1;
+  }
+
+  function getWorkshopStableHomeProtectedGeometry(canvasBounds){
+    if(workshopCadWorkspacePresentation){
+      var protectedElements=[
+        document.getElementById("viewCubeBox"),
+        document.getElementById("workshopEngineeringViewControls"),
+        document.getElementById("workshopMeasurementAssistant"),
+        document.getElementById("engineeringToolChest"),
+        document.getElementById("workshopDashboard")
+      ];
+      var protectedBounds=protectedElements.filter(function(element){
+        if(!element) return false;
+        var style=window.getComputedStyle(element);
+        var bounds=element.getBoundingClientRect();
+        return style.display!=="none" && style.visibility!=="hidden" &&
+          bounds.width>0 && bounds.height>0;
+      }).map(function(element){
+        var bounds=element.getBoundingClientRect();
+        return {left:bounds.left,top:bounds.top,width:bounds.width,height:bounds.height};
+      });
+      var presentation=workshopCadWorkspacePresentation.update({
+        canvasBounds:{
+          left:canvasBounds.left,
+          top:canvasBounds.top,
+          width:canvasBounds.width,
+          height:canvasBounds.height
+        },
+        protectedBounds:protectedBounds
+      });
+      if(presentation && presentation.safeFrame) return presentation.safeFrame;
+    }
+    function clippedBounds(bounds){
+      if(!bounds || bounds.blocked ||
+        !Number.isFinite(bounds.left) || !Number.isFinite(bounds.top) ||
+        !Number.isFinite(bounds.width) || !Number.isFinite(bounds.height) ||
+        bounds.width<=0 || bounds.height<=0){
+        return null;
+      }
+      var left=Math.max(canvasBounds.left,bounds.left);
+      var top=Math.max(canvasBounds.top,bounds.top);
+      var right=Math.min(canvasBounds.right,bounds.left+bounds.width);
+      var bottom=Math.min(canvasBounds.bottom,bounds.top+bounds.height);
+      if(right-left<=44 || bottom-top<=44) return null;
+      return {left:left,top:top,right:right,bottom:bottom,width:right-left,height:bottom-top};
+    }
+    var canonical=window.getWorkshopProtectedBuildZone
+      ? clippedBounds(window.getWorkshopProtectedBuildZone())
+      : null;
+    if(canonical) return canonical;
+    var stableViewport=document.getElementById("workshopViewportContainer");
+    return stableViewport
+      ? clippedBounds(stableViewport.getBoundingClientRect())
+      : null;
+  }
+
+  function applyWorkshopCadGridPresentation(workspace,fullGrid){
+    if(!workshopCadWorkspacePresentationModule || !engineeringGrid ||
+      !engineeringGridMinorLines || !engineeringGridMajorLines ||
+      !engineeringGridOriginLines) return false;
+    var presentation=workshopCadWorkspacePresentationModule
+      .calculateWorkshopCadGridPresentation({
+        workspace:workspace,
+        fullGrid:fullGrid===true
+      });
+    if(!presentation) return false;
+    [
+      [engineeringGridMinorLines,presentation.positions.minor],
+      [engineeringGridMajorLines,presentation.positions.major],
+      [engineeringGridOriginLines,presentation.positions.origin]
+    ].forEach(function(entry){
+      var geometry=entry[0].geometry;
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(entry[1],3)
+      );
+      geometry.computeBoundingSphere();
+    });
+    engineeringGrid.userData.workshopCadPresentation=presentation;
+    return true;
+  }
+
+  function restoreWorkshopFullCadGrid(){
+    workshopHomeGridWorkspace=null;
+    var active=workshopActiveWorkspaceBoundary &&
+      workshopActiveWorkspaceBoundary.read();
+    if(document.body.classList.contains("workshopMode") && active){
+      return applyWorkshopCadGridPresentation(active,false);
+    }
+    return applyWorkshopCadGridPresentation(null,true);
+  }
+
+  function calculateWorkshopManualVisibleRulerRange(){
+    if(!workshopVisibleRulerPresentation ||
+      activeWorkshopEngineeringView!=="home" || !workshopManualCameraOverride){
+      return null;
+    }
+    return workshopVisibleRulerPresentation.calculateZoomRange(cameraDistance);
+  }
+
+  function refreshWorkshopManualVisibleRulerPresentation(){
+    var range=calculateWorkshopManualVisibleRulerRange();
+    if(!range) return false;
+    range=workshopActiveWorkspaceBoundaryModule &&
+      workshopActiveWorkspaceBoundaryModule.normalizeWorkshopActiveWorkspaceRange(
+        range,
+        "MANUAL_ZOOM"
+      );
+    if(!range || !applyWorkshopCadGridPresentation(range,false) ||
+      !setWorkshopVisibleRulerRange(range) ||
+      !commitWorkshopActiveWorkspaceBoundary(range,"MANUAL_ZOOM")) return false;
+    updateWorkshopProjectedRulerBounds();
+    return true;
+  }
+
+  function getWorkshopHomeFrameGeometrySignature(){
+    var canvasBounds=renderer.domElement.getBoundingClientRect();
+    if(!canvasBounds.width || !canvasBounds.height) return "";
+    var protectedBuildZone=getWorkshopStableHomeProtectedGeometry(canvasBounds);
+    if(!protectedBuildZone){
+      return "";
+    }
+    return [
+      canvasBounds.left,canvasBounds.top,canvasBounds.width,canvasBounds.height,
+      protectedBuildZone.left,protectedBuildZone.top,
+      protectedBuildZone.width,protectedBuildZone.height
+    ].join(":");
+  }
+
+  function scheduleWorkshopHomeFrameSettlement(onSettled){
+    var settlementToken=++workshopHomeFrameSettlementToken;
+    var settle=typeof onSettled==="function"
+      ? onSettled
+      : applyResponsiveWorkshopHomeView;
+    var previousGeometrySignature="";
+    var attempts=0;
+    function settleHomeFrame(){
+      if(settlementToken!==workshopHomeFrameSettlementToken ||
+        currentWorkspaceMode!=="workshop" ||
+        !document.body.classList.contains("workshopMode") ||
+        activeWorkshopEngineeringView!=="home" ||
+        activeWorkshopFitSelection ||
+        !workshopHomeWorkspaceFraming){
+        return;
+      }
+      attempts+=1;
+      var geometrySignature=getWorkshopHomeFrameGeometrySignature();
+      if(geometrySignature && geometrySignature===previousGeometrySignature){
+        settle();
+        return;
+      }
+      previousGeometrySignature=geometrySignature;
+      if(attempts<8){
+        window.requestAnimationFrame(settleHomeFrame);
+        return;
+      }
+      settle();
+    }
+    window.requestAnimationFrame(settleHomeFrame);
+    return settlementToken;
+  }
+
+  function prepareWorkshopHomeFrameSettlement(onSettled){
+    if(typeof resetWorkshopBuildViewportWheelIntent==="function"){
+      resetWorkshopBuildViewportWheelIntent();
+    }
+    cancelWorkshopHomeFrameSettlement();
+    restoreWorkshopBottomPlatformPresentation();
+    workshopManualCameraOverride=false;
+    workshopHomeCameraConfigCache=null;
+    activeWorkshopFitSelection=false;
+    activeWorkshopEngineeringView="home";
+    activeWorkshopEngineeringTarget=null;
+    syncWorkshopEngineeringViewButtons();
+    return scheduleWorkshopHomeFrameSettlement(function(){
+      var applied=applyResponsiveWorkshopHomeView();
+      if(applied) updateWorkshopProjectedRulerBounds();
+      if(typeof onSettled==="function") onSettled(applied);
+      return applied;
+    });
+  }
+
   function beginWorkshopViewDiceDrag(){
     if(!document.body.classList.contains("workshopMode")) return false;
+    if(typeof resetWorkshopBuildViewportWheelIntent==="function"){
+      resetWorkshopBuildViewportWheelIntent();
+    }
+    cancelWorkshopHomeFrameSettlement();
+    clearWorkshopVisibleRulerRange();
     var config=getWorkshopHomeCameraConfig();
     activeWorkshopFitSelection=false;
+    workshopManualCameraOverride=true;
+    restoreWorkshopFullCadGrid();
     activeWorkshopEngineeringView=null;
     activeWorkshopEngineeringTarget=null;
     cameraAngle=0;
@@ -33936,7 +34714,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     return activeWorkshopEngineeringTarget;
   }
 
-  function getWorkshopEngineeringModelCenter(){
+  function getWorkshopEngineeringModelBounds(){
     if(!blocks.length) return null;
     var modelBounds=new THREE.Box3();
     var hasVisibleBlock=false;
@@ -33946,9 +34724,12 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       modelBounds.expandByObject(block);
       hasVisibleBlock=true;
     });
-    return hasVisibleBlock
-      ? modelBounds.getCenter(new THREE.Vector3())
-      : null;
+    return hasVisibleBlock && !modelBounds.isEmpty() ? modelBounds : null;
+  }
+
+  function getWorkshopEngineeringModelCenter(){
+    var modelBounds=getWorkshopEngineeringModelBounds();
+    return modelBounds ? modelBounds.getCenter(new THREE.Vector3()) : null;
   }
 
   function getWorkshopEngineeringModelDepth(modelCenter){
@@ -33960,6 +34741,20 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   }
 
   function applyWorkshopEngineeringView(){
+    if(activeWorkshopEngineeringView==="home" &&
+      activeWorkshopEngineeringTarget){
+      var homeDistance=Math.max(6,cameraDistance);
+      cameraDistance=homeDistance;
+      cameraHeight=activeWorkshopEngineeringTarget.y+homeDistance;
+      camera.position.set(
+        activeWorkshopEngineeringTarget.x,
+        cameraHeight,
+        activeWorkshopEngineeringTarget.z
+      );
+      camera.up.set(0,0,-1);
+      camera.lookAt(activeWorkshopEngineeringTarget);
+      return true;
+    }
     var definition=workshopEngineeringViewDirections[activeWorkshopEngineeringView];
     if(!definition) return false;
 
@@ -33979,7 +34774,83 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   function fitWorkshopDirectionalMeasurementFrame(view){
     var definition=workshopEngineeringViewDirections[view];
     var selectedBounds=getWorkshopSelectedObjectBounds();
-    if(!definition || !selectedBounds) return false;
+    if(!definition) return false;
+
+    if(workshopBuildBoundsFramingModule){
+      var modelBounds=getWorkshopEngineeringModelBounds();
+      var canvasRect=renderer.domElement.getBoundingClientRect();
+      var stableProtectedZone=getWorkshopStableHomeProtectedGeometry(canvasRect);
+      var directionalSafeFrame=workshopEngineeringSurfaceFitModule &&
+        workshopEngineeringSurfaceFitModule.calculateWorkshopFitSafeFrame({
+          canvasBounds:canvasRect,
+          protectedBuildZone:stableProtectedZone
+        });
+      var directionalFrame=directionalSafeFrame &&
+        workshopBuildBoundsFramingModule.calculateWorkshopDirectionalBuildFrame({
+          view:view,
+          buildBounds:modelBounds ? {
+            min:{x:modelBounds.min.x,y:modelBounds.min.y,z:modelBounds.min.z},
+            max:{x:modelBounds.max.x,y:modelBounds.max.y,z:modelBounds.max.z}
+          } : null,
+          canvasBounds:{
+            left:canvasRect.left,
+            top:canvasRect.top,
+            width:canvasRect.width,
+            height:canvasRect.height
+          },
+          safeFrame:directionalSafeFrame
+        });
+      if(!directionalFrame && workshopCadWorkspacePresentationModule){
+        var deterministicSafeFrame=workshopCadWorkspacePresentationModule
+          .calculateWorkshopCadSafeFrame({
+            canvasBounds:{
+              left:canvasRect.left,
+              top:canvasRect.top,
+              width:canvasRect.width,
+              height:canvasRect.height
+            },
+            protectedBounds:[]
+          });
+        directionalFrame=deterministicSafeFrame &&
+          workshopBuildBoundsFramingModule.calculateWorkshopDirectionalBuildFrame({
+            view:view,
+            buildBounds:modelBounds ? {
+              min:{x:modelBounds.min.x,y:modelBounds.min.y,z:modelBounds.min.z},
+              max:{x:modelBounds.max.x,y:modelBounds.max.y,z:modelBounds.max.z}
+            } : null,
+            canvasBounds:{
+              left:canvasRect.left,
+              top:canvasRect.top,
+              width:canvasRect.width,
+              height:canvasRect.height
+            },
+            safeFrame:deterministicSafeFrame
+          });
+      }
+      if(!directionalFrame) return false;
+      activeWorkshopEngineeringTarget=new THREE.Vector3(
+        directionalFrame.target.x,
+        directionalFrame.target.y,
+        directionalFrame.target.z
+      );
+      activeWorkshopFitSelection=false;
+      activeWorkshopEngineeringView=view;
+      cameraDistance=directionalFrame.distance;
+      camera.fov=directionalFrame.fov;
+      camera.updateProjectionMatrix();
+      camera.up.set(
+        directionalFrame.up[0],
+        directionalFrame.up[1],
+        directionalFrame.up[2]
+      );
+      applyWorkshopEngineeringView();
+      if(view==="bottom") activateWorkshopBottomPlatformPresentation();
+      if(selectedBounds) renderWorkshopSelectedBounds();
+      updateWorkshopProjectedRulerBounds();
+      return true;
+    }
+
+    if(!selectedBounds) return false;
 
     // Directional engineering views must frame the fixed 50 cm Engineering
     // Frame as well as the selected object's vertical measurement envelope.
@@ -34190,29 +35061,42 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
 
   function setWorkshopEngineeringView(view,options){
     if(!document.body.classList.contains("workshopMode")) return false;
+    if(typeof resetWorkshopBuildViewportWheelIntent==="function"){
+      resetWorkshopBuildViewportWheelIntent();
+    }
+    cancelWorkshopHomeFrameSettlement();
 
     // Camera navigation must not mutate the active editing tool. Ignore an
     // already-active request and serialize the synchronous preset update so
     // duplicate click/keyboard dispatch cannot flash competing buttons.
     if(workshopViewTransitionInProgress) return false;
-    if(view===activeWorkshopEngineeringView && !activeWorkshopFitSelection &&
+    if(view===activeWorkshopEngineeringView && view!=="home" &&
+      !activeWorkshopFitSelection &&
       !(options && options.force===true)){
       syncWorkshopEngineeringViewButtons();
       return true;
     }
     var preservedSelectMode=selectMode;
     var preservedMoveSelectedMode=moveSelectedMode;
+    workshopManualCameraOverride=false;
+    if(view!=="home"){
+      clearWorkshopVisibleRulerRange();
+      restoreWorkshopFullCadGrid();
+    }
     workshopViewTransitionInProgress=true;
     workshopViewButtonSyncDeferred=true;
 
     try{
       if(view==="home"){
-        return applyResponsiveWorkshopHomeView();
+        prepareWorkshopHomeFrameSettlement();
+        return true;
       }
 
       if(!workshopEngineeringViewDirections[view]) return false;
 
-      if(getWorkshopSelectedObjectBounds()){
+      if(view!=="bottom") restoreWorkshopBottomPlatformPresentation();
+
+      if(workshopBuildBoundsFramingModule || getWorkshopSelectedObjectBounds()){
         return fitWorkshopDirectionalMeasurementFrame(view);
       }
 
@@ -34345,6 +35229,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         : 0,
       major:engineeringGridMajorMaterial
         ? engineeringGridMajorMaterial.opacity
+        : 0,
+      origin:engineeringGridOriginMaterial
+        ? engineeringGridOriginMaterial.opacity
         : 0
     };
     return workshopProjectionGridTargets;
@@ -34352,16 +35239,23 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
 
   function applyWorkshopProjectionGridScalar(value){
     var scalar=Math.max(0,Math.min(0.78,Number(value) || 0));
+    var presentationScalar=workshopClassroomTablePresentationEnabled
+      ? scalar
+      : scalar/0.78;
     var gridTargets=workshopProjectionGridTargets ||
       captureWorkshopProjectionGridTargets();
     workshopProjectionGridScalar=scalar;
     if(engineeringGridMinorMaterial){
-      engineeringGridMinorMaterial.opacity=gridTargets.minor*scalar;
+      engineeringGridMinorMaterial.opacity=gridTargets.minor*presentationScalar;
       engineeringGridMinorMaterial.needsUpdate=true;
     }
     if(engineeringGridMajorMaterial){
-      engineeringGridMajorMaterial.opacity=gridTargets.major*scalar;
+      engineeringGridMajorMaterial.opacity=gridTargets.major*presentationScalar;
       engineeringGridMajorMaterial.needsUpdate=true;
+    }
+    if(engineeringGridOriginMaterial){
+      engineeringGridOriginMaterial.opacity=gridTargets.origin*presentationScalar;
+      engineeringGridOriginMaterial.needsUpdate=true;
     }
     return scalar;
   }
@@ -34586,6 +35480,20 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   }
 
   function applyWorkspaceModeVisuals(requestedMode,onComplete,options){
+    if(typeof resetWorkshopBuildViewportWheelIntent==="function"){
+      resetWorkshopBuildViewportWheelIntent();
+    }
+    if(requestedMode!=="workshop"){
+      workshopManualCameraOverride=false;
+      clearWorkshopVisibleRulerRange();
+      resetWorkshopActiveWorkspaceBoundary();
+      restoreWorkshopFullCadGrid();
+      restoreWorkshopBottomPlatformPresentation();
+      cancelWorkshopHomeFrameSettlement();
+      workshopHomeCameraConfigCache=null;
+      workshopLastValidHomeCameraConfig=null;
+      if(workshopHomeWorkspaceFraming) workshopHomeWorkspaceFraming.reset();
+    }
     if(requestedMode==="workshop"){
       workshopPlatformTint=0x5f8fa8;
       captureBuilderCameraState();
@@ -34637,12 +35545,12 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         }
       });
     }
-    if(requestedMode==="workshop"){
-      applyResponsiveWorkshopHomeView();
-      window.requestAnimationFrame(updateWorkshopProjectedRulerBounds);
-    }
     placeUtilityRail(requestedMode);
     updateModeControls();
+    if(requestedMode==="workshop"){
+      prepareWorkshopHomeFrameSettlement();
+      window.requestAnimationFrame(updateWorkshopProjectedRulerBounds);
+    }
 
     window.dispatchEvent(new CustomEvent("workspace-mode-change",{
       detail:{mode:requestedMode}
@@ -34794,10 +35702,12 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     window.addEventListener("resize",function(){
       window.requestAnimationFrame(function(){
         if(document.body.classList.contains("workshopMode")){
+          workshopHomeCameraConfigCache=null;
           if(activeWorkshopFitSelection){
             fitWorkshopSelection();
-          }else if(activeWorkshopEngineeringView==="home"){
-            applyResponsiveWorkshopHomeView();
+          }else if(activeWorkshopEngineeringView==="home" &&
+            !workshopManualCameraOverride){
+            prepareWorkshopHomeFrameSettlement();
           }else if(workshopEngineeringViewDirections[activeWorkshopEngineeringView]){
             setWorkshopEngineeringView(activeWorkshopEngineeringView,{force:true});
           }
@@ -34845,6 +35755,25 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   window.beginWorkshopViewDiceDrag=beginWorkshopViewDiceDrag;
   window.fitWorkshopSelection=fitWorkshopSelection;
   window.clearWorkshopFitSelectionState=clearWorkshopFitSelectionState;
+  window.markWorkshopManualCameraOverride=function(){
+    cancelWorkshopHomeFrameSettlement();
+    workshopManualCameraOverride=true;
+    if(activeWorkshopEngineeringView!=="home"){
+      restoreWorkshopFullCadGrid();
+    }
+    return true;
+  };
+  window.refreshWorkshopManualVisibleRulerPresentation=
+    refreshWorkshopManualVisibleRulerPresentation;
+  window.workshopBoundsFitActiveWorkspace=function(bounds){
+    return !!workshopActiveWorkspaceBoundary &&
+      workshopActiveWorkspaceBoundary.contains(bounds);
+  };
+  window.getWorkshopActiveWorkspaceBoundary=function(){
+    return workshopActiveWorkspaceBoundary
+      ? workshopActiveWorkspaceBoundary.read()
+      : null;
+  };
   window.syncWorkshopFitSelectionAvailability=syncWorkshopFitSelectionAvailability;
   window.clearWorkshopEngineeringView=clearWorkshopEngineeringView;
   window.applyWorkshopEngineeringView=applyWorkshopEngineeringView;
@@ -34918,7 +35847,12 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/runtime/workshop-classroom-workspace-presentation.mjs"),
     import("./js/workshop/smartboard/smart-board-application-launcher-view.mjs"),
     import("./js/workshop/smartboard/smart-board-application-launcher-bridge.mjs"),
-    import("./js/workshop/runtime/workshop-engineering-surface-fit.mjs")
+    import("./js/workshop/runtime/workshop-engineering-surface-fit.mjs"),
+    import("./js/workshop/runtime/workshop-home-workspace-framing.mjs"),
+    import("./js/workshop/runtime/workshop-build-bounds-framing.mjs"),
+    import("./js/workshop/runtime/workshop-cad-workspace-presentation.mjs"),
+    import("./js/workshop/runtime/workshop-visible-ruler-presentation.mjs"),
+    import("./js/workshop/runtime/workshop-active-workspace-boundary.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -34945,6 +35879,24 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       var smartBoardApplicationLauncherModule=modules[18];
       var smartBoardApplicationLauncherBridgeModule=modules[19];
       workshopEngineeringSurfaceFitModule=modules[20];
+      workshopHomeWorkspaceFraming=modules[21]
+        .createWorkshopHomeWorkspaceFraming();
+      workshopBuildBoundsFramingModule=modules[22];
+      workshopCadWorkspacePresentationModule=modules[23];
+      workshopCadWorkspacePresentation=modules[23]
+        .createWorkshopCadWorkspacePresentation();
+      workshopVisibleRulerPresentationModule=modules[24];
+      workshopVisibleRulerPresentation=modules[24]
+        .createWorkshopVisibleRulerPresentation();
+      workshopActiveWorkspaceBoundaryModule=modules[25];
+      workshopActiveWorkspaceBoundary=modules[25]
+        .createWorkshopActiveWorkspaceBoundary();
+      if(currentWorkspaceMode==="workshop" &&
+        document.body.classList.contains("workshopMode") &&
+        activeWorkshopEngineeringView==="home" &&
+        !activeWorkshopFitSelection){
+        prepareWorkshopHomeFrameSettlement();
+      }
       workshopToolChestPartsObjectsAdapter=
         partsObjectsAdapterModule.createToolChestPartsObjectsAdapter({
           sourceRoot:document.getElementById("toolbox"),

@@ -39,7 +39,7 @@ test("Fit correction moves only camera framing and never student geometry", () =
 });
 
 test("resize reapplies Home, Fit, and directional Workshop views", () => {
-  assert.match(source, /window\.addEventListener\("resize",function\(\)\{[\s\S]*?activeWorkshopFitSelection[\s\S]*?fitWorkshopSelection\(\)[\s\S]*?activeWorkshopEngineeringView==="home"[\s\S]*?applyResponsiveWorkshopHomeView\(\)[\s\S]*?setWorkshopEngineeringView\(activeWorkshopEngineeringView,\{force:true\}\)/);
+  assert.match(source, /window\.addEventListener\("resize",function\(\)\{[\s\S]*?activeWorkshopFitSelection[\s\S]*?fitWorkshopSelection\(\)[\s\S]*?activeWorkshopEngineeringView==="home"[\s\S]*?prepareWorkshopHomeFrameSettlement\(\)[\s\S]*?setWorkshopEngineeringView\(activeWorkshopEngineeringView,\{force:true\}\)/);
   assert.match(source, /function setWorkshopEngineeringView\(view,options\)/);
 });
 

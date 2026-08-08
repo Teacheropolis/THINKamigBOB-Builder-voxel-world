@@ -43,7 +43,12 @@ class Material {
   dispose() { this.disposed = true; }
 }
 
-function createHarness({ stageBounds, registrationBounds, protectedBounds = [] } = {}) {
+function createHarness({
+  stageBounds,
+  registrationBounds,
+  protectedBounds = [],
+  presentationEnabled = true,
+} = {}) {
   let currentStage = stageBounds || { left: 0, top: 0, width: 1000, height: 700 };
   let currentRegistrationBounds = registrationBounds || currentStage;
   let loadCallbacks = [];
@@ -108,6 +113,7 @@ function createHarness({ stageBounds, registrationBounds, protectedBounds = [] }
     getStudentObjects: () => [student],
     getCadDimensionGroup: () => cad,
     lights: [light],
+    presentationEnabled,
     ResizeObserver: FakeResizeObserver,
   });
   return {
@@ -307,6 +313,26 @@ test("renders exactly one bounded final student pass only while the Table is vis
   assert.equal(harness.raycaster.layers.mask, raycasterMask);
   assert.equal(harness.compositor.render(), false);
   assert.equal(harness.renderCalls.length, 2);
+});
+
+test("can disable classroom presentation without disabling lifecycle visibility", async () => {
+  const harness = createHarness({ presentationEnabled: false });
+  harness.completeLoads();
+  await harness.compositor.ready;
+  harness.compositor.setWorkshopActive(true);
+  harness.compositor.materials.rearEmitter.opacity = 0.75;
+  harness.compositor.materials.frontEmitter.opacity = 0.75;
+  harness.compositor.updateRegistration();
+  assert.equal(harness.compositor.visible, true);
+  assert.equal(harness.compositor.presentationEnabled, false);
+  assert.equal(harness.compositor.meshes.rear.visible, false);
+  assert.equal(harness.compositor.meshes.rearEmitter.visible, false);
+  assert.equal(harness.compositor.meshes.chassis.visible, false);
+  assert.equal(harness.compositor.meshes.frontEmitter.visible, false);
+  assert.equal(harness.compositor.render(), false);
+  assert.equal(harness.renderCalls.length, 0);
+  assert.equal(harness.student.layers.mask, 1);
+  assert.equal(harness.raycaster.layers.mask, 1);
 });
 
 test("falls back to the original single-pass caller when protected geometry hides the Table", async () => {
