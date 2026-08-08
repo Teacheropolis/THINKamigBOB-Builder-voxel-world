@@ -4546,7 +4546,7 @@ This control is available only after a mission has started.
         <button id="workshopRedoButton" type="button" onclick="redoLast()" disabled><span class="workshop-control-icon" aria-hidden="true">↷</span><span>Redo</span></button>
         <button id="workshopMoveButton" type="button" aria-pressed="false" onclick="startMoveSelected()" disabled><span class="workshop-control-icon" aria-hidden="true">↔</span><span>Move</span></button>
         <button id="workshopCancelMoveButton" type="button" onclick="cancelWorkshopMove({announce:true,restoreFocus:true})" hidden disabled><span class="workshop-control-icon" aria-hidden="true">×</span><span>Cancel Move</span></button>
-        <button type="button" disabled>Rotate</button>
+        <button id="workshopRotateRightButton" type="button" aria-label="Rotate selection right 90 degrees" onclick="rotateWorkshopSelectionRight()" disabled><span class="workshop-control-icon" aria-hidden="true">↻</span><span>Rotate Right</span></button>
         <button type="button" disabled>Resize</button>
         <button type="button" disabled>Duplicate</button>
       </div>
@@ -5320,6 +5320,7 @@ const workshopDeletedSelectionUndo = [];
 const workshopDeletedSelectionRedo = [];
 let workshopEditHistory = null;
 let workshopSelectionMoveController = null;
+let workshopSelectionRotateTransformModule = null;
 let workshopEditHistorySuspended = false;
 
 function updateUndoRedoButtons(){
@@ -5367,6 +5368,17 @@ function workshopEditCoordinates(object){
     : null;
 }
 
+function workshopEditRotationY(object){
+  return object && object.rotation && Number.isFinite(object.rotation.y)
+    ? object.rotation.y
+    : null;
+}
+
+function workshopEditTransformMatches(object,coordinates,rotationY){
+  return workshopEditCoordinatesMatch(object,coordinates) &&
+    workshopEditRotationY(object)===rotationY;
+}
+
 function workshopEditObjectPresent(object){
   return !!object && blocks.includes(object) && object.parent===scene;
 }
@@ -5381,17 +5393,29 @@ function validateWorkshopEditTransaction(transaction,direction){
   if(!transaction || !Array.isArray(transaction.entries)) return false;
   return transaction.entries.every(function(entry){
     const present=workshopEditObjectPresent(entry.object);
+    if(transaction.type==="ROTATE" && direction==="PREPARE"){
+      return present && workshopEditTransformMatches(
+        entry.object,entry.before,entry.beforeRotationY
+      );
+    }
     if(direction==="COMMIT"){
       if(transaction.type==="PLACEMENT") return present;
       if(transaction.type==="DELETION") return !present;
-      return present && workshopEditCoordinatesMatch(entry.object,entry.after);
+      return present && (transaction.type==="ROTATE"
+        ? workshopEditTransformMatches(entry.object,entry.after,entry.afterRotationY)
+        : workshopEditCoordinatesMatch(entry.object,entry.after));
     }
     if(transaction.type==="PLACEMENT") return direction==="UNDO" ? present : !present;
     if(transaction.type==="DELETION") return direction==="UNDO" ? !present : present;
-    return present && workshopEditCoordinatesMatch(
-      entry.object,
-      direction==="UNDO" ? entry.after : entry.before
-    );
+    const expectedCoordinates=direction==="UNDO" ? entry.after : entry.before;
+    if(transaction.type==="ROTATE"){
+      return present && workshopEditTransformMatches(
+        entry.object,
+        expectedCoordinates,
+        direction==="UNDO" ? entry.afterRotationY : entry.beforeRotationY
+      );
+    }
+    return present && workshopEditCoordinatesMatch(entry.object,expectedCoordinates);
   });
 }
 
@@ -5402,7 +5426,8 @@ function applyWorkshopEditTransaction(transaction,direction){
     return {
       object:entry.object,
       present:workshopEditObjectPresent(entry.object),
-      coordinates:workshopEditCoordinates(entry.object)
+      coordinates:workshopEditCoordinates(entry.object),
+      rotationY:workshopEditRotationY(entry.object)
     };
   });
   try{
@@ -5422,9 +5447,14 @@ function applyWorkshopEditTransaction(transaction,direction){
       if(coordinates && entry.object.position){
         entry.object.position.set(coordinates.x,coordinates.y,coordinates.z);
       }
+      if(transaction.type==="ROTATE" && entry.object.rotation){
+        entry.object.rotation.y=useBefore
+          ? entry.beforeRotationY
+          : entry.afterRotationY;
+      }
     });
     sanitizeWorkshopSelectedBlocks();
-    if(transaction.type==="MOVE"){
+    if(transaction.type==="MOVE" || transaction.type==="ROTATE"){
       setWorkshopSelectedObjectsExact(transaction.selection);
     }
     return true;
@@ -5442,6 +5472,9 @@ function applyWorkshopEditTransaction(transaction,direction){
         state.object.position.set(
           state.coordinates.x,state.coordinates.y,state.coordinates.z
         );
+      }
+      if(state.rotationY!==null && state.object.rotation){
+        state.object.rotation.y=state.rotationY;
       }
     });
     selectedBlocks=originalSelection;
@@ -5719,6 +5752,7 @@ function workshopMoveIsPending(){
 function syncWorkshopMoveControls(){
   const moveButton=document.getElementById("workshopMoveButton");
   const cancelButton=document.getElementById("workshopCancelMoveButton");
+  const rotateButton=document.getElementById("workshopRotateRightButton");
   const selectButton=document.getElementById("workshopSelectButton");
   const pending=workshopMoveIsPending();
   const hasSelection=activeWorkshopBlocks(selectedBlocks).length>0;
@@ -5735,6 +5769,12 @@ function syncWorkshopMoveControls(){
     cancelButton.hidden=!pending;
     cancelButton.disabled=!pending;
   }
+  if(rotateButton){
+    rotateButton.disabled=!hasSelection || !workshopEditHistory ||
+      !workshopSelectionRotateTransformModule ||
+      typeof window.getWorkshopCanonicalState!=="function" ||
+      window.getWorkshopCanonicalState()!=="READY";
+  }
 }
 
 function announceWorkshopMove(message){
@@ -5742,6 +5782,10 @@ function announceWorkshopMove(message){
   const status=document.getElementById("workshopMoveStatus");
   if(toolMessage) toolMessage.textContent=message;
   if(status) status.textContent=message;
+}
+
+function announceWorkshopRotate(message){
+  announceWorkshopMove(message);
 }
 
 function setWorkshopSelectedObjectsExact(objects){
@@ -8430,6 +8474,141 @@ function workshopTranslatedSelectionCollides(selectedObjects,changeX,changeZ){
   });
 }
 
+function createWorkshopRotatedObjectBounds(entry){
+  const object=entry.object;
+  if(!object || !object.geometry || !object.position || !object.rotation ||
+    !object.scale) return null;
+  if(!object.geometry.boundingBox) object.geometry.computeBoundingBox();
+  if(!object.geometry.boundingBox) return null;
+  const quaternion=new THREE.Quaternion().setFromEuler(new THREE.Euler(
+    object.rotation.x,
+    entry.afterRotationY,
+    object.rotation.z,
+    object.rotation.order
+  ));
+  const matrix=new THREE.Matrix4().compose(
+    new THREE.Vector3(entry.after.x,entry.after.y,entry.after.z),
+    quaternion,
+    object.scale.clone()
+  );
+  return object.geometry.boundingBox.clone().applyMatrix4(matrix);
+}
+
+function workshopRotatedSelectionCollides(entries,candidateBounds){
+  const selectedSet=new Set(entries.map(function(entry){return entry.object;}));
+  return candidateBounds.some(function(bounds){
+    return blocks.some(function(existingBlock){
+      if(selectedSet.has(existingBlock)) return false;
+      return workshopBoundsOverlap(
+        bounds,
+        new THREE.Box3().setFromObject(existingBlock)
+      );
+    });
+  });
+}
+
+function rotateWorkshopSelectionRight(){
+  if(!document.body.classList.contains("workshopMode")) return false;
+  if(typeof window.getWorkshopCanonicalState!=="function" ||
+    window.getWorkshopCanonicalState()!=="READY") return false;
+  if(workshopMoveIsPending()){
+    cancelWorkshopMove({announce:false,restoreFocus:false});
+  }
+  sanitizeWorkshopSelectedBlocks();
+  const selection=activeWorkshopBlocks(selectedBlocks);
+  if(selection.length===0){
+    announceWorkshopRotate("Select an object before rotating it.");
+    return false;
+  }
+  if(!workshopEditHistory || !workshopSelectionRotateTransformModule){
+    announceWorkshopRotate("Rotate is not ready yet.");
+    return false;
+  }
+
+  const selectionBounds=new THREE.Box3();
+  selection.forEach(function(object){
+    selectionBounds.union(new THREE.Box3().setFromObject(object));
+  });
+  const candidate=workshopSelectionRotateTransformModule
+    .createWorkshopSelectionRotateCandidate({
+      bounds:{min:selectionBounds.min,max:selectionBounds.max},
+      objects:selection.map(function(object){
+        return {
+          object:object,
+          position:workshopEditCoordinates(object),
+          rotationY:workshopEditRotationY(object)
+        };
+      })
+    });
+  if(!candidate || candidate.noOp){
+    announceWorkshopRotate("Rotation did not change the selection.");
+    return false;
+  }
+
+  const candidateBounds=candidate.entries.map(createWorkshopRotatedObjectBounds);
+  if(candidateBounds.some(function(bounds){return !bounds;})){
+    announceWorkshopRotate("Rotate could not validate this selection safely.");
+    return false;
+  }
+  const aggregateCandidateBounds=new THREE.Box3();
+  candidateBounds.forEach(function(bounds){aggregateCandidateBounds.union(bounds);});
+  if(!workshopBoundsFitActiveWorkspace(aggregateCandidateBounds)){
+    announceWorkshopRotate(
+      "Rotate blocked. Keep the complete selection inside the visible workspace."
+    );
+    return false;
+  }
+  if(workshopRotatedSelectionCollides(candidate.entries,candidateBounds)){
+    announceWorkshopRotate(
+      "Rotate blocked. The selection would overlap another object."
+    );
+    return false;
+  }
+
+  const prepared=workshopEditHistory.prepare({
+    type:"ROTATE",
+    entries:candidate.entries,
+    pivot:candidate.pivot,
+    angle:candidate.angle,
+    selection:selection.slice()
+  });
+  if(!prepared.ok){
+    announceWorkshopRotate("Rotate could not begin safely.");
+    return false;
+  }
+  const rotateButton=document.getElementById("workshopRotateRightButton");
+  if(rotateButton) rotateButton.setAttribute("aria-busy","true");
+  try{
+    candidate.entries.forEach(function(entry){
+      entry.object.position.set(entry.after.x,entry.after.y,entry.after.z);
+      entry.object.rotation.y=entry.afterRotationY;
+      entry.object.updateMatrixWorld(true);
+    });
+    const committed=workshopEditHistory.commitPrepared(prepared.token);
+    if(!committed.ok) throw new Error("ROTATE_COMMIT_FAILED");
+  }catch(error){
+    candidate.entries.forEach(function(entry){
+      entry.object.position.set(entry.before.x,entry.before.y,entry.before.z);
+      entry.object.rotation.y=entry.beforeRotationY;
+      entry.object.updateMatrixWorld(true);
+    });
+    workshopEditHistory.cancelPrepared(prepared.token);
+    if(rotateButton) rotateButton.setAttribute("aria-busy","false");
+    syncWorkshopSelectionMeasurements();
+    updateUndoRedoButtons();
+    announceWorkshopRotate("Rotate cancelled. Object transforms unchanged.");
+    return false;
+  }
+
+  if(rotateButton) rotateButton.setAttribute("aria-busy","false");
+  setWorkshopSelectedObjectsExact(selection);
+  updateUndoRedoButtons();
+  announceWorkshopRotate("Selection rotated right 90 degrees.");
+  if(rotateButton && !rotateButton.disabled) rotateButton.focus({preventScroll:true});
+  checkBadge();
+  return true;
+}
+
 function previewWorkshopMoveAtPointer(event){
   if(!document.body.classList.contains("workshopMode") ||
     !moveSelectedMode || isDragging || mouseMoved ||
@@ -9098,6 +9277,8 @@ function undoLast(){
       document.getElementById("toolMessage").innerHTML =
         result.transaction.type==="MOVE"
           ? "↩️ Move undone."
+          : result.transaction.type==="ROTATE"
+            ? "↩️ Rotation undone."
           : "↩️ Last block removed.";
     }
     checkBadge();
@@ -9168,6 +9349,7 @@ function redoLast(){
     document.getElementById("toolMessage").innerHTML =
       result.transaction.type==="DELETION" ? "↪️ Selection deleted again." :
       result.transaction.type==="MOVE" ? "↪️ Move restored." :
+      result.transaction.type==="ROTATE" ? "↪️ Rotation restored." :
       "↪️ Last block restored.";
     checkBadge();
     updateUndoRedoButtons();
@@ -31872,6 +32054,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     }
     syncWorkshopSmartBoardApplicationLauncher();
     syncWorkshopCadEngineeringFeedback({announce:snapshot.workshop==="READY"});
+    syncWorkshopMoveControls();
   }
 
   function syncWorkshopSmartBoardApplicationLauncher(options){
@@ -36443,6 +36626,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       description:"Workshop model units; not physical screen calibration"
     };
   };
+  window.getWorkshopCanonicalState=function(){
+    return workshopCanonicalState;
+  };
 
   workshopControllerReady=Promise.all([
     import("./js/workshop/runtime/workshop-runtime-controller.mjs"),
@@ -36473,7 +36659,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/runtime/workshop-active-workspace-boundary.mjs"),
     import("./js/workshop/runtime/workshop-cad-engineering-feedback-view.mjs"),
     import("./js/workshop/editing/workshop-edit-history.mjs"),
-    import("./js/workshop/editing/workshop-selection-move-controller.mjs")
+    import("./js/workshop/editing/workshop-selection-move-controller.mjs"),
+    import("./js/workshop/editing/workshop-selection-rotate-transform.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -36549,6 +36736,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       });
       workshopSelectionMoveController=
         modules[28].createWorkshopSelectionMoveController();
+      workshopSelectionRotateTransformModule=modules[29];
       window.getWorkshopEditHistorySnapshot=function(){
         return workshopEditHistory.getSnapshot();
       };

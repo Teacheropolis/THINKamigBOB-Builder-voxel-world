@@ -2,6 +2,7 @@ export const WORKSHOP_EDIT_OPERATION_TYPES = Object.freeze({
   PLACEMENT: "PLACEMENT",
   DELETION: "DELETION",
   MOVE: "MOVE",
+  ROTATE: "ROTATE",
 });
 
 const validNumber = (value) => Number.isFinite(value);
@@ -16,7 +17,13 @@ function createEntry(entry) {
   const before = entry.before == null ? null : freezeCoordinates(entry.before);
   const after = entry.after == null ? null : freezeCoordinates(entry.after);
   if ((entry.before != null && !before) || (entry.after != null && !after)) return null;
-  return Object.freeze({ object: entry.object, before, after });
+  const beforeRotationY = entry.beforeRotationY == null ? null : entry.beforeRotationY;
+  const afterRotationY = entry.afterRotationY == null ? null : entry.afterRotationY;
+  if ((beforeRotationY !== null && !validNumber(beforeRotationY)) ||
+      (afterRotationY !== null && !validNumber(afterRotationY))) return null;
+  return Object.freeze({
+    object:entry.object, before, after, beforeRotationY, afterRotationY,
+  });
 }
 
 function validOperationShape(type, entries) {
@@ -26,6 +33,10 @@ function validOperationShape(type, entries) {
   }
   if (type === WORKSHOP_EDIT_OPERATION_TYPES.DELETION) {
     return entries.every((entry) => entry.before !== null && entry.after === null);
+  }
+  if (type === WORKSHOP_EDIT_OPERATION_TYPES.ROTATE) {
+    return entries.every((entry) => entry.before !== null && entry.after !== null &&
+      entry.beforeRotationY !== null && entry.afterRotationY !== null);
   }
   return entries.every((entry) => entry.before !== null && entry.after !== null);
 }
@@ -37,11 +48,14 @@ function sameCoordinates(left, right) {
 
 function sameOperation(left, right) {
   return !!left && left.type === right.type && left.entries.length === right.entries.length &&
+    left.angle === right.angle && sameCoordinates(left.pivot, right.pivot) &&
     left.entries.every((entry, index) => {
       const candidate = right.entries[index];
       return entry.object === candidate.object &&
         sameCoordinates(entry.before, candidate.before) &&
-        sameCoordinates(entry.after, candidate.after);
+        sameCoordinates(entry.after, candidate.after) &&
+        entry.beforeRotationY === candidate.beforeRotationY &&
+        entry.afterRotationY === candidate.afterRotationY;
     });
 }
 
@@ -51,6 +65,8 @@ export function createWorkshopEditTransaction({
   entries,
   translation = null,
   selection = [],
+  pivot = null,
+  angle = null,
 } = {}) {
   if (!Number.isInteger(id) || id < 1 ||
       !Object.values(WORKSHOP_EDIT_OPERATION_TYPES).includes(type) ||
@@ -63,6 +79,15 @@ export function createWorkshopEditTransaction({
     return Object.freeze({ x: translation.x, z: translation.z });
   })();
   if (translation != null && !frozenTranslation) return null;
+  const frozenPivot = pivot == null ? null : (() => {
+    if (!validNumber(pivot.x) || !validNumber(pivot.z)) return null;
+    return Object.freeze({ x:pivot.x, z:pivot.z });
+  })();
+  if (pivot != null && !frozenPivot) return null;
+  const frozenAngle = angle == null ? null : angle;
+  if (frozenAngle !== null && !validNumber(frozenAngle)) return null;
+  if (type === WORKSHOP_EDIT_OPERATION_TYPES.ROTATE &&
+      (!frozenPivot || frozenAngle === null)) return null;
   const frozenSelection = Object.freeze(Array.isArray(selection) ? [...selection] : []);
   return Object.freeze({
     id,
@@ -70,6 +95,8 @@ export function createWorkshopEditTransaction({
     entries: Object.freeze(frozenEntries),
     translation: frozenTranslation,
     selection: frozenSelection,
+    pivot:frozenPivot,
+    angle:frozenAngle,
   });
 }
 
@@ -81,6 +108,8 @@ export function createWorkshopEditHistory({ validate, apply } = {}) {
   const redoStack = [];
   let nextId = 1;
   let applying = false;
+  let reservation = null;
+  let reservationToken = 0;
 
   const snapshot = () => Object.freeze({
     undoCount: undoStack.length,
@@ -92,7 +121,7 @@ export function createWorkshopEditHistory({ validate, apply } = {}) {
   });
 
   const commit = (operation) => {
-    if (applying) return Object.freeze({ ok: false, code: "BUSY" });
+    if (applying || reservation) return Object.freeze({ ok: false, code: "BUSY" });
     const transaction = createWorkshopEditTransaction({ ...operation, id: nextId });
     if (!transaction) return Object.freeze({ ok: false, code: "INVALID_TRANSACTION" });
     if (sameOperation(undoStack.at(-1), transaction)) {
@@ -108,7 +137,7 @@ export function createWorkshopEditHistory({ validate, apply } = {}) {
   };
 
   const transfer = (direction) => {
-    if (applying) return Object.freeze({ ok: false, code: "BUSY" });
+    if (applying || reservation) return Object.freeze({ ok: false, code: "BUSY" });
     const source = direction === "UNDO" ? undoStack : redoStack;
     const destination = direction === "UNDO" ? redoStack : undoStack;
     const transaction = source.at(-1);
@@ -126,11 +155,59 @@ export function createWorkshopEditHistory({ validate, apply } = {}) {
     return Object.freeze({ ok: true, code: direction === "UNDO" ? "UNDONE" : "REDONE", transaction });
   };
 
+  const prepare = (operation) => {
+    if (applying || reservation) return Object.freeze({ ok:false, code:"BUSY" });
+    const transaction = createWorkshopEditTransaction({ ...operation, id:nextId });
+    if (!transaction) return Object.freeze({ ok:false, code:"INVALID_TRANSACTION" });
+    if (sameOperation(undoStack.at(-1), transaction)) {
+      return Object.freeze({ ok:false, code:"REPEATED" });
+    }
+    let valid = false;
+    try { valid = validate(transaction, "PREPARE") === true; } catch (_) { valid = false; }
+    if (!valid) return Object.freeze({ ok:false, code:"INVALID_OBJECTS" });
+    reservationToken += 1;
+    reservation = Object.freeze({ token:reservationToken, transaction });
+    return Object.freeze({
+      ok:true, code:"PREPARED", token:reservation.token, transaction,
+    });
+  };
+
+  const commitPrepared = (token) => {
+    if (applying) return Object.freeze({ ok:false, code:"BUSY" });
+    if (!reservation || token !== reservation.token) {
+      return Object.freeze({ ok:false, code:"STALE" });
+    }
+    let valid = false;
+    try { valid = validate(reservation.transaction, "COMMIT") === true; }
+    catch (_) { valid = false; }
+    if (!valid) return Object.freeze({ ok:false, code:"INVALID_OBJECTS" });
+    const transaction = reservation.transaction;
+    undoStack.push(transaction);
+    redoStack.length = 0;
+    nextId += 1;
+    reservation = null;
+    return Object.freeze({ ok:true, code:"COMMITTED", transaction });
+  };
+
+  const cancelPrepared = (token) => {
+    if (applying) return Object.freeze({ ok:false, code:"BUSY" });
+    if (!reservation || token !== reservation.token) {
+      return Object.freeze({ ok:false, code:"STALE" });
+    }
+    reservation = null;
+    return Object.freeze({ ok:true, code:"CANCELLED" });
+  };
+
   return Object.freeze({
     commit,
+    prepare,
+    commitPrepared,
+    cancelPrepared,
     undo: () => transfer("UNDO"),
     redo: () => transfer("REDO"),
     reset() {
+      reservationToken += 1;
+      reservation = null;
       undoStack.length = 0;
       redoStack.length = 0;
       return Object.freeze({ ok: true, code: "RESET" });

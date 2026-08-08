@@ -137,3 +137,86 @@ test("reset clears the session-only ledger", () => {
     latestUndo:null, latestRedo:null,
   });
 });
+
+test("prepared Rotate reserves one ID without changing history stacks", () => {
+  const object={};
+  const present=new Set([object]);
+  let transform="before";
+  const history=createWorkshopEditHistory({
+    validate(transaction,direction){
+      if(!present.has(transaction.entries[0].object)) return false;
+      if(direction==="PREPARE") return transform==="before";
+      if(direction==="COMMIT") return transform==="after";
+      return true;
+    },
+    apply(){return true;},
+  });
+  const operation={
+    type:WORKSHOP_EDIT_OPERATION_TYPES.ROTATE,
+    entries:[{
+      object,before:coordinates(0),after:coordinates(1),
+      beforeRotationY:0,afterRotationY:Math.PI/2,
+    }],
+    pivot:{x:0,z:0},angle:Math.PI/2,selection:[object],
+  };
+  const before=history.getSnapshot();
+  const prepared=history.prepare(operation);
+  assert.equal(prepared.ok,true);
+  assert.deepEqual(history.getSnapshot(),before);
+  assert.equal(history.commit(operation).code,"BUSY");
+  assert.equal(history.undo().code,"BUSY");
+  assert.equal(history.redo().code,"BUSY");
+  assert.equal(history.prepare(operation).code,"BUSY");
+  transform="after";
+  const committed=history.commitPrepared(prepared.token);
+  assert.equal(committed.ok,true);
+  assert.equal(committed.transaction.id,1);
+  assert.equal(history.getSnapshot().undoCount,1);
+  assert.equal(Object.isFrozen(committed.transaction.pivot),true);
+});
+
+test("prepared Rotate cancellation and reset reject stale tokens without ID gaps", () => {
+  const object={};
+  const history=createWorkshopEditHistory({validate(){return true;},apply(){return true;}});
+  const operation={
+    type:"ROTATE",
+    entries:[{
+      object,before:coordinates(0),after:coordinates(1),
+      beforeRotationY:0,afterRotationY:Math.PI/2,
+    }],
+    pivot:{x:0,z:0},angle:Math.PI/2,
+  };
+  const first=history.prepare(operation);
+  assert.equal(history.cancelPrepared(first.token).ok,true);
+  assert.equal(history.commitPrepared(first.token).code,"STALE");
+  const second=history.prepare(operation);
+  assert.equal(second.transaction.id,1);
+  history.reset();
+  assert.equal(history.commitPrepared(second.token).code,"STALE");
+  const third=history.prepare(operation);
+  assert.equal(third.transaction.id,1);
+});
+
+test("failed prepared settlement retains reservation for browser rollback", () => {
+  const object={};
+  let validAfter=false;
+  const history=createWorkshopEditHistory({
+    validate(transaction,direction){return direction!=="COMMIT" || validAfter;},
+    apply(){return true;},
+  });
+  const prepared=history.prepare({
+    type:"ROTATE",
+    entries:[{
+      object,before:coordinates(0),after:coordinates(1),
+      beforeRotationY:0,afterRotationY:Math.PI/2,
+    }],
+    pivot:{x:0,z:0},angle:Math.PI/2,
+  });
+  assert.equal(history.commitPrepared(prepared.token).code,"INVALID_OBJECTS");
+  assert.equal(history.getSnapshot().undoCount,0);
+  assert.equal(history.commit({
+    type:"PLACEMENT",entries:[{object,before:null,after:coordinates(0)}],
+  }).code,"BUSY");
+  assert.equal(history.cancelPrepared(prepared.token).ok,true);
+  assert.equal(history.getSnapshot().undoCount,0);
+});

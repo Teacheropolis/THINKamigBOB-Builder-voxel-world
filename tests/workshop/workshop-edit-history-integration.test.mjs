@@ -71,3 +71,37 @@ test("save and autosave schema remain unchanged", () => {
   assert.match(saveBlock, /version:1/);
   assert.match(saveBlock, /blocks:blocks\.map\(blockRecord\)/);
 });
+
+test("Rotate uses one native immediate control and the prepared history owner", () => {
+  assert.match(source,/id="workshopRotateRightButton"[^>]*aria-label="Rotate selection right 90 degrees"[^>]*onclick="rotateWorkshopSelectionRight\(\)"[^>]*disabled/);
+  assert.match(source,/\.workshop-dashboard-controls button\{[\s\S]*?min-height:44px/);
+  const start=source.indexOf("function rotateWorkshopSelectionRight()");
+  const end=source.indexOf("function previewWorkshopMoveAtPointer",start);
+  const rotate=source.slice(start,end);
+  assert.match(rotate,/cancelWorkshopMove\(\{announce:false,restoreFocus:false\}\)/);
+  assert.match(rotate,/createWorkshopSelectionRotateCandidate/);
+  assert.match(rotate,/createWorkshopRotatedObjectBounds/);
+  assert.match(rotate,/workshopBoundsFitActiveWorkspace/);
+  assert.match(rotate,/workshopRotatedSelectionCollides/);
+  assert.ok(rotate.indexOf("workshopEditHistory.prepare") < rotate.indexOf("entry.object.position.set"));
+  assert.ok(rotate.indexOf("entry.object.position.set") < rotate.indexOf("commitPrepared"));
+  assert.match(rotate,/type:"ROTATE"/);
+  assert.match(rotate,/setWorkshopSelectedObjectsExact\(selection\)/);
+  assert.doesNotMatch(rotate,/raycaster|addEventListener|snapWorkshop/);
+});
+
+test("Rotate history restores exact positions, Y rotations, and selection", () => {
+  assert.match(source,/transaction\.type==="ROTATE" && direction==="PREPARE"/);
+  assert.match(source,/workshopEditTransformMatches\([\s\S]*?entry\.beforeRotationY/);
+  assert.match(source,/entry\.object\.rotation\.y=useBefore[\s\S]*?entry\.beforeRotationY[\s\S]*?entry\.afterRotationY/);
+  assert.match(source,/transaction\.type==="MOVE" \|\| transaction\.type==="ROTATE"/);
+  assert.match(source,/result\.transaction\.type==="ROTATE"[\s\S]*?Rotation undone/);
+  assert.match(source,/result\.transaction\.type==="ROTATE" \? "↪️ Rotation restored\."/);
+});
+
+test("Rotate leaves persistence and camera rotation owners unchanged", () => {
+  assert.match(source,/rotationY: block\.rotation\.y \|\| 0/);
+  assert.match(source,/version: 3/);
+  assert.match(source,/if\(event\.key === "ArrowLeft"\)[\s\S]*?cameraAngle -= 0\.2/);
+  assert.match(source,/if\(event\.key === "ArrowRight"\)[\s\S]*?cameraAngle \+= 0\.2/);
+});
