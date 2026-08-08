@@ -220,3 +220,56 @@ test("failed prepared settlement retains reservation for browser rollback", () =
   assert.equal(history.cancelPrepared(prepared.token).ok,true);
   assert.equal(history.getSnapshot().undoCount,0);
 });
+
+test("prepared Resize stores one immutable exact dimension transaction", () => {
+  const object={};
+  let state="before";
+  const history=createWorkshopEditHistory({
+    validate(transaction,direction){
+      return direction==="PREPARE" ? state==="before" :
+        direction==="COMMIT" ? state==="after" : true;
+    },
+    apply(){return true;},
+  });
+  const operation={
+    type:WORKSHOP_EDIT_OPERATION_TYPES.RESIZE,
+    entries:[{
+      object,
+      before:coordinates(0,1,0),after:coordinates(0,1.5,0),
+      beforeDimensions:{width:2,height:2,depth:2},
+      afterDimensions:{width:3,height:3,depth:3},
+    }],
+    selection:[object],
+  };
+  const prepared=history.prepare(operation);
+  assert.equal(prepared.ok,true);
+  assert.equal(history.getSnapshot().undoCount,0);
+  state="after";
+  const committed=history.commitPrepared(prepared.token);
+  assert.equal(committed.ok,true);
+  assert.equal(committed.transaction.type,"RESIZE");
+  assert.equal(committed.transaction.id,1);
+  assert.equal(Object.isFrozen(committed.transaction.entries[0].beforeDimensions),true);
+  assert.equal(Object.isFrozen(committed.transaction.entries[0].afterDimensions),true);
+  assert.deepEqual(committed.transaction.entries[0].afterDimensions,
+    {width:3,height:3,depth:3});
+});
+
+test("Resize requires one positive before/after dimension snapshot", () => {
+  const {present,history}=harness();
+  const first={},second={};
+  present.add(first);
+  present.add(second);
+  const entry=(object)=>({
+    object,before:coordinates(0),after:coordinates(0,0.5,0),
+    beforeDimensions:{width:2,height:2,depth:2},
+    afterDimensions:{width:3,height:3,depth:3},
+  });
+  assert.equal(history.prepare({type:"RESIZE",entries:[entry(first)]}).ok,true);
+  history.reset();
+  assert.equal(history.prepare({type:"RESIZE",entries:[entry(first),entry(second)]}).code,
+    "INVALID_TRANSACTION");
+  assert.equal(history.prepare({
+    type:"RESIZE",entries:[{...entry(first),afterDimensions:{width:0,height:1,depth:1}}],
+  }).code,"INVALID_TRANSACTION");
+});

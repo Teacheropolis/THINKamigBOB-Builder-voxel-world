@@ -3,6 +3,7 @@ export const WORKSHOP_EDIT_OPERATION_TYPES = Object.freeze({
   DELETION: "DELETION",
   MOVE: "MOVE",
   ROTATE: "ROTATE",
+  RESIZE: "RESIZE",
 });
 
 const validNumber = (value) => Number.isFinite(value);
@@ -10,6 +11,14 @@ const freezeCoordinates = (position) => {
   if (!position || !validNumber(position.x) || !validNumber(position.y) ||
       !validNumber(position.z)) return null;
   return Object.freeze({ x: position.x, y: position.y, z: position.z });
+};
+const freezeDimensions = (dimensions) => {
+  if (!dimensions || !validNumber(dimensions.width) ||
+      !validNumber(dimensions.height) || !validNumber(dimensions.depth) ||
+      dimensions.width <= 0 || dimensions.height <= 0 || dimensions.depth <= 0) return null;
+  return Object.freeze({
+    width:dimensions.width, height:dimensions.height, depth:dimensions.depth,
+  });
 };
 
 function createEntry(entry) {
@@ -21,8 +30,15 @@ function createEntry(entry) {
   const afterRotationY = entry.afterRotationY == null ? null : entry.afterRotationY;
   if ((beforeRotationY !== null && !validNumber(beforeRotationY)) ||
       (afterRotationY !== null && !validNumber(afterRotationY))) return null;
+  const beforeDimensions = entry.beforeDimensions == null
+    ? null : freezeDimensions(entry.beforeDimensions);
+  const afterDimensions = entry.afterDimensions == null
+    ? null : freezeDimensions(entry.afterDimensions);
+  if ((entry.beforeDimensions != null && !beforeDimensions) ||
+      (entry.afterDimensions != null && !afterDimensions)) return null;
   return Object.freeze({
     object:entry.object, before, after, beforeRotationY, afterRotationY,
+    beforeDimensions, afterDimensions,
   });
 }
 
@@ -38,12 +54,23 @@ function validOperationShape(type, entries) {
     return entries.every((entry) => entry.before !== null && entry.after !== null &&
       entry.beforeRotationY !== null && entry.afterRotationY !== null);
   }
+  if (type === WORKSHOP_EDIT_OPERATION_TYPES.RESIZE) {
+    return entries.length === 1 && entries.every((entry) =>
+      entry.before !== null && entry.after !== null &&
+      entry.beforeDimensions !== null && entry.afterDimensions !== null);
+  }
   return entries.every((entry) => entry.before !== null && entry.after !== null);
 }
 
 function sameCoordinates(left, right) {
   if (left === null || right === null) return left === right;
   return left.x === right.x && left.y === right.y && left.z === right.z;
+}
+
+function sameDimensions(left, right) {
+  if (left === null || right === null) return left === right;
+  return left.width === right.width && left.height === right.height &&
+    left.depth === right.depth;
 }
 
 function sameOperation(left, right) {
@@ -55,7 +82,9 @@ function sameOperation(left, right) {
         sameCoordinates(entry.before, candidate.before) &&
         sameCoordinates(entry.after, candidate.after) &&
         entry.beforeRotationY === candidate.beforeRotationY &&
-        entry.afterRotationY === candidate.afterRotationY;
+        entry.afterRotationY === candidate.afterRotationY &&
+        sameDimensions(entry.beforeDimensions, candidate.beforeDimensions) &&
+        sameDimensions(entry.afterDimensions, candidate.afterDimensions);
     });
 }
 

@@ -55,3 +55,11 @@ test("Measurement remains bounds-derived rather than lattice-derived", () => {
   assert.match(measurement, /bounds\.expandByObject\(object\)/);
   assert.doesNotMatch(measurement, /snapStandardWorkshopBlockGroundCenter|snapWorkshopValueToLatticePhase/);
 });
+
+test("Resize reuses exact BoxGeometry dimensions without save schema changes", () => {
+  assert.match(source,/sx: block\.geometry\.parameters\.width \|\| 1/);
+  assert.match(source,/sy: block\.geometry\.parameters\.height \|\| 1/);
+  assert.match(source,/sz: block\.geometry\.parameters\.depth \|\| 1/);
+  assert.match(source,/sx:parameters\.width \|\| 1, sy:parameters\.height \|\| 1, sz:parameters\.depth \|\| 1/);
+  assert.doesNotMatch(source,/resizeWidth|resizeHeight|resizeDepth|saveVersion:4/);
+});

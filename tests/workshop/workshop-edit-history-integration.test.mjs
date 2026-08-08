@@ -105,3 +105,43 @@ test("Rotate leaves persistence and camera rotation owners unchanged", () => {
   assert.match(source,/if\(event\.key === "ArrowLeft"\)[\s\S]*?cameraAngle -= 0\.2/);
   assert.match(source,/if\(event\.key === "ArrowRight"\)[\s\S]*?cameraAngle \+= 0\.2/);
 });
+
+test("Resize uses two native immediate controls and one prepared transaction", () => {
+  assert.match(source,/id="workshopGrowButton"[^>]*aria-label="Grow selected box by 1 centimeter"[^>]*onclick="resizeWorkshopSelection\(1\)"[^>]*disabled/);
+  assert.match(source,/id="workshopShrinkButton"[^>]*aria-label="Shrink selected box by 1 centimeter"[^>]*onclick="resizeWorkshopSelection\(-1\)"[^>]*disabled/);
+  assert.match(source,/\.workshop-dashboard-controls button\{[\s\S]*?min-height:44px/);
+  const start=source.indexOf("function resizeWorkshopSelection(delta)");
+  const end=source.indexOf("function rotateWorkshopSelectionRight()",start);
+  const resize=source.slice(start,end);
+  assert.match(resize,/cancelWorkshopMove\(\{announce:false,restoreFocus:false\}\)/);
+  assert.match(resize,/createWorkshopSelectionResizeCandidate/);
+  assert.match(resize,/new THREE\.BoxGeometry/);
+  assert.match(resize,/createWorkshopResizedObjectBounds/);
+  assert.match(resize,/workshopBoundsFitActiveWorkspace/);
+  assert.match(resize,/workshopBoundsOverlap/);
+  assert.ok(resize.indexOf("workshopEditHistory.prepare") <
+    resize.indexOf("object.geometry=candidateGeometry"));
+  assert.ok(resize.indexOf("object.geometry=candidateGeometry") <
+    resize.indexOf("commitPrepared"));
+  assert.match(resize,/type:"RESIZE"/);
+  assert.match(resize,/setWorkshopSelectedObjectsExact\(selection\)/);
+  assert.doesNotMatch(resize,/raycaster|addEventListener|snapWorkshop/);
+});
+
+test("Resize history compares and restores exact dimensions atomically", () => {
+  assert.match(source,/transaction\.type==="RESIZE" && direction==="PREPARE"/);
+  assert.match(source,/workshopEditDimensionsMatch\(entry\.object,entry\.beforeDimensions\)/);
+  assert.match(source,/transaction\.type==="RESIZE"[\s\S]*?new THREE\.BoxGeometry/);
+  assert.match(source,/state\.geometry\) state\.object\.geometry=state\.geometry/);
+  assert.match(source,/transaction\.type==="MOVE" \|\| transaction\.type==="ROTATE" \|\|[\s\S]*?transaction\.type==="RESIZE"/);
+  assert.match(source,/result\.transaction\.type==="RESIZE"[\s\S]*?Resize undone/);
+  assert.match(source,/result\.transaction\.type==="RESIZE" \? "↪️ Resize restored\."/);
+});
+
+test("Resize loads one pure transform owner without changing save versions", () => {
+  assert.equal((source.match(/import\("\.\/js\/workshop\/editing\/workshop-selection-resize-transform\.mjs"\)/g) || []).length,1);
+  assert.match(source,/workshopSelectionResizeTransformModule=modules\[30\]/);
+  assert.match(source,/sx: block\.geometry\.parameters\.width \|\| 1/);
+  assert.match(source,/version: 3/);
+  assert.match(source,/version:1/);
+});
