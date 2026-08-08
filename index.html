@@ -4505,7 +4505,7 @@ Future extraction target: view controls.
 HTML SECTION 03A — MISSION / WORKSHOP MODE SWITCH
 This control is available only after a mission has started.
 ===================================================== -->
-<div id="workshopDashboard" role="region" aria-label="Engineering Control Console, Grand Master Mode" data-workshop-console-name="Engineering Control Console" data-workshop-console-mode="grand-master">
+<div id="workshopDashboard" role="region" aria-label="Workshop design tools, Advanced mode" data-workshop-console-name="Workshop design tools" data-workshop-console-mode="grand-master">
   <div id="workshopEngineeringDashboard">
     <div id="workshopQuickAccessToolbar" role="toolbar" aria-label="Workshop quick access">
       <button id="workshopQuickCube" type="button" aria-pressed="true" onclick="chooseWorkshopBuildShape('cube')"><span class="workshop-control-icon" aria-hidden="true">🧊</span><span>Cube</span></button>
@@ -4515,43 +4515,59 @@ This control is available only after a mission has started.
       <button id="workshopQuickScreenshot" type="button" onclick="saveImage()"><span class="workshop-control-icon" aria-hidden="true">▣</span><span>Screenshot</span></button>
       <button id="workshopQuickHelp" type="button" onclick="document.getElementById('helpButton').click()"><span class="workshop-control-icon" aria-hidden="true">?</span><span>Help</span></button>
     </div>
-    <div id="workshopConsoleTabs" role="tablist" aria-label="Engineering console categories">
-      <button id="workshopTabBuild" type="button" role="tab" aria-selected="true" aria-controls="workshopPanelBuild" onclick="setWorkshopConsoleTab('build')">Build</button>
-      <button id="workshopTabEdit" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelEdit" tabindex="-1" onclick="setWorkshopConsoleTab('edit')">Edit</button>
-      <button id="workshopTabPrecision" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelPrecision" tabindex="-1" onclick="setWorkshopConsoleTab('precision')">Precision</button>
-      <button id="workshopTabPlanTrace" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelPlanTrace" tabindex="-1" onclick="setWorkshopConsoleTab('plan-trace')">Plan &amp; Trace</button>
+    <div id="workshopConsoleTabs" role="tablist" aria-label="Workshop tool areas">
+      <button id="workshopTabBuild" type="button" role="tab" aria-selected="true" aria-controls="workshopPanelBuild" onclick="setWorkshopConsoleTab('build')">Design</button>
+      <button id="workshopTabEdit" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelEdit" tabindex="-1" onclick="setWorkshopConsoleTab('edit')">More Tools</button>
+      <button id="workshopTabPrecision" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelPrecision" tabindex="-1" onclick="setWorkshopConsoleTab('precision')">Measure</button>
+      <button id="workshopTabPlanTrace" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelPlanTrace" tabindex="-1" onclick="setWorkshopConsoleTab('plan-trace')">Plan</button>
       <button id="workshopTabArrange" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelArrange" tabindex="-1" onclick="setWorkshopConsoleTab('arrange')">Arrange</button>
       <button id="workshopTabProject" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelProject" tabindex="-1" onclick="setWorkshopConsoleTab('project')">Project</button>
       <button id="workshopTabThinkerBob" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelThinkerBob" tabindex="-1" onclick="setWorkshopConsoleTab('thinker-bob')">THINKer BOB</button>
     </div>
     <section id="workshopPanelBuild" class="workshop-dashboard-section isActive" role="tabpanel" aria-labelledby="workshopTabBuild" data-workshop-console-panel="build">
-      <h2 id="workshopBuildShapesLabel">Build</h2>
-      <div class="workshop-dashboard-controls workshop-shape-controls">
-        <button id="workshopShapeCube" type="button" data-workshop-shape="cube" aria-pressed="true" onclick="chooseWorkshopBuildShape('cube')"><span class="workshop-control-icon" aria-hidden="true">🧊</span><span>Cube</span></button>
-        <button id="workshopShapeSphere" type="button" data-workshop-shape="sphere" aria-pressed="false" onclick="chooseWorkshopBuildShape('sphere')"><span class="workshop-control-icon" aria-hidden="true">●</span><span>Sphere</span></button>
-        <button id="workshopShapeWedge" type="button" data-workshop-shape="trianglePrism" aria-pressed="false" onclick="chooseWorkshopBuildShape('trianglePrism')"><span class="workshop-control-icon" aria-hidden="true">◢</span><span>Wedge</span></button>
+      <h2 id="workshopBuildShapesLabel">Design tools</h2>
+      <div class="workshop-design-groups">
+        <section class="workshop-design-group is-make" aria-labelledby="workshopDesignMakeLabel">
+          <h3 id="workshopDesignMakeLabel" class="workshop-design-group-title">Make</h3>
+          <div class="workshop-design-group-controls workshop-shape-controls">
+            <button id="workshopShapeCube" type="button" data-workshop-shape="cube" aria-pressed="true" onclick="chooseWorkshopBuildShape('cube')"><span class="workshop-control-icon" aria-hidden="true">🧊</span><span>Cube</span></button>
+            <button id="workshopShapeSphere" type="button" data-workshop-shape="sphere" aria-pressed="false" onclick="chooseWorkshopBuildShape('sphere')"><span class="workshop-control-icon" aria-hidden="true">●</span><span>Sphere</span></button>
+            <button id="workshopShapeWedge" type="button" data-workshop-shape="trianglePrism" aria-pressed="false" onclick="chooseWorkshopBuildShape('trianglePrism')"><span class="workshop-control-icon" aria-hidden="true">◢</span><span>Wedge</span></button>
+            <button id="workshopPartsObjectsButton" type="button" onclick="toggleEngineeringToolChestDrawer('parts-objects')"><span class="workshop-control-icon" aria-hidden="true">🧰</span><span>Parts &amp; Objects</span></button>
+          </div>
+        </section>
+        <section class="workshop-design-group is-change" aria-labelledby="workshopDesignChangeLabel">
+          <h3 id="workshopDesignChangeLabel" class="workshop-design-group-title">Change</h3>
+          <span id="workshopSelectionToolsLabel" class="workshop-console-semantic-label">Selection tools</span>
+          <div class="workshop-design-group-controls">
+            <button id="workshopSelectButton" type="button" aria-pressed="false" onclick="startSelectMode()"><span class="workshop-control-icon" aria-hidden="true">⌖</span><span>Select</span></button>
+            <button id="workshopMoveButton" type="button" aria-pressed="false" onclick="startMoveSelected()" disabled><span class="workshop-control-icon" aria-hidden="true">↔</span><span>Move</span></button>
+            <button id="workshopCancelMoveButton" type="button" onclick="cancelWorkshopMove({announce:true,restoreFocus:true})" hidden disabled><span class="workshop-control-icon" aria-hidden="true">×</span><span>Cancel Move</span></button>
+            <button id="workshopRotateRightButton" type="button" aria-label="Rotate selection right 90 degrees" onclick="rotateWorkshopSelectionRight()" disabled><span class="workshop-control-icon" aria-hidden="true">↻</span><span>Rotate Right</span></button>
+            <button id="workshopGrowButton" type="button" aria-label="Grow selected box by 1 centimeter" onclick="resizeWorkshopSelection(1)" disabled><span class="workshop-control-icon" aria-hidden="true">＋</span><span>Grow +1cm</span></button>
+            <button id="workshopShrinkButton" type="button" aria-label="Shrink selected box by 1 centimeter" onclick="resizeWorkshopSelection(-1)" disabled><span class="workshop-control-icon" aria-hidden="true">−</span><span>Shrink -1cm</span></button>
+          </div>
+          <span id="workshopMoveStatus" class="workshop-console-semantic-label" role="status" aria-live="polite" aria-atomic="true"></span>
+        </section>
+        <section class="workshop-design-group is-fix" aria-labelledby="workshopDesignFixLabel">
+          <h3 id="workshopDesignFixLabel" class="workshop-design-group-title">Fix</h3>
+          <div class="workshop-design-group-controls">
+            <button id="workshopUndoButton" type="button" onclick="undoLast()" disabled><span class="workshop-control-icon" aria-hidden="true">↶</span><span>Undo</span></button>
+            <button id="workshopRedoButton" type="button" onclick="redoLast()" disabled><span class="workshop-control-icon" aria-hidden="true">↷</span><span>Redo</span></button>
+            <button id="workshopDeleteButton" type="button" onclick="deleteWorkshopSelectedStructure()"><span class="workshop-control-icon" aria-hidden="true">✕</span><span>Delete</span></button>
+          </div>
+        </section>
+      </div>
+    </section>
+    <section id="workshopPanelEdit" class="workshop-dashboard-section" role="tabpanel" aria-labelledby="workshopTabEdit" data-workshop-console-panel="edit" hidden>
+      <h2 id="workshopEditToolsLabel">More tools</h2>
+      <div class="workshop-dashboard-controls workshop-more-tools-controls">
         <button type="button" disabled>Cylinder</button>
         <button type="button" disabled>Cone</button>
         <button type="button" disabled>Pyramid</button>
         <button type="button" disabled>Custom Shape</button>
-      </div>
-    </section>
-    <section id="workshopPanelEdit" class="workshop-dashboard-section" role="tabpanel" aria-labelledby="workshopTabEdit" data-workshop-console-panel="edit" hidden>
-      <h2 id="workshopEditToolsLabel">Edit</h2>
-      <span id="workshopSelectionToolsLabel" class="workshop-console-semantic-label">Selection tools</span>
-      <div class="workshop-dashboard-controls">
-        <button id="workshopSelectButton" type="button" aria-pressed="false" onclick="startSelectMode()"><span class="workshop-control-icon" aria-hidden="true">⌖</span><span>Select</span></button>
-        <button id="workshopDeleteButton" type="button" onclick="deleteWorkshopSelectedStructure()"><span class="workshop-control-icon" aria-hidden="true">✕</span><span>Delete</span></button>
-        <button id="workshopUndoButton" type="button" onclick="undoLast()" disabled><span class="workshop-control-icon" aria-hidden="true">↶</span><span>Undo</span></button>
-        <button id="workshopRedoButton" type="button" onclick="redoLast()" disabled><span class="workshop-control-icon" aria-hidden="true">↷</span><span>Redo</span></button>
-        <button id="workshopMoveButton" type="button" aria-pressed="false" onclick="startMoveSelected()" disabled><span class="workshop-control-icon" aria-hidden="true">↔</span><span>Move</span></button>
-        <button id="workshopCancelMoveButton" type="button" onclick="cancelWorkshopMove({announce:true,restoreFocus:true})" hidden disabled><span class="workshop-control-icon" aria-hidden="true">×</span><span>Cancel Move</span></button>
-        <button id="workshopRotateRightButton" type="button" aria-label="Rotate selection right 90 degrees" onclick="rotateWorkshopSelectionRight()" disabled><span class="workshop-control-icon" aria-hidden="true">↻</span><span>Rotate Right</span></button>
-        <button id="workshopGrowButton" type="button" aria-label="Grow selected box by 1 centimeter" onclick="resizeWorkshopSelection(1)" disabled><span class="workshop-control-icon" aria-hidden="true">＋</span><span>Grow +1cm</span></button>
-        <button id="workshopShrinkButton" type="button" aria-label="Shrink selected box by 1 centimeter" onclick="resizeWorkshopSelection(-1)" disabled><span class="workshop-control-icon" aria-hidden="true">−</span><span>Shrink -1cm</span></button>
         <button type="button" disabled>Duplicate</button>
       </div>
-      <span id="workshopMoveStatus" class="workshop-console-semantic-label" role="status" aria-live="polite" aria-atomic="true"></span>
     </section>
     <section id="workshopPanelPrecision" class="workshop-dashboard-section workshop-engineering-controls" role="tabpanel" aria-labelledby="workshopTabPrecision" data-workshop-console-panel="precision" hidden>
       <h2 id="workshopEngineeringControlsLabel">Precision</h2>
@@ -32100,6 +32116,222 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     inset -1px 0 rgba(0,0,0,.38),
     inset 0 0 8px rgba(59,218,240,.08);
 }
+
+/* Workshop unified Design dashboard: a bright, friendly Builder-style tool
+   shelf that preserves the established dashboard geometry and tool owners. */
+body.workshopMode:not(.starterScreenActive) #workshopDashboard{
+  --workshop-dash-navy:#09263a;
+  --workshop-dash-blue:#174b69;
+  --workshop-dash-brass:#e3b83f;
+  --workshop-dash-brass-light:#ffe89a;
+  --workshop-dash-cyan:#7fefff;
+  --workshop-dash-lime:#b9f548;
+  --workshop-dash-coral:#ff806d;
+  border-top-color:var(--workshop-dash-brass-light);
+  background:linear-gradient(180deg,#24536d 0,#123b56 24%,var(--workshop-dash-navy) 100%);
+  box-shadow:0 -7px 18px rgba(0,0,0,.28),inset 0 2px rgba(255,255,255,.2);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar,
+body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs{
+  padding:2px;
+  border:2px solid var(--workshop-dash-brass);
+  border-radius:10px;
+  background:#071d2d;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.5);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button,
+body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button,
+body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button,
+body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button{
+  border:2px solid #5e91aa;
+  border-radius:9px;
+  color:#fff;
+  background:linear-gradient(180deg,#286887,#16445e);
+  box-shadow:inset 0 2px rgba(255,255,255,.18),0 2px 0 rgba(0,0,0,.3);
+  font-family:"Lexend",Arial,sans-serif;
+  font-weight:900;
+  text-shadow:0 1px 1px rgba(0,0,0,.7);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button{
+  color:#e7f8ff;
+  border-color:#497b93;
+  font-size:10px;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button:hover:not(:disabled),
+body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button:hover:not(:disabled),
+body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button:hover:not(:disabled),
+body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:hover:not(:disabled){
+  transform:translateY(-1px);
+  border-color:var(--workshop-dash-brass-light);
+  background:linear-gradient(180deg,#3584a6,#1d5874);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button:active:not(:disabled),
+body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button:active:not(:disabled),
+body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button:active:not(:disabled),
+body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:active:not(:disabled){
+  transform:translateY(1px);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.4);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button[aria-selected="true"],
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button[aria-pressed="true"],
+body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button[aria-pressed="true"]:not(:disabled){
+  color:#06202c;
+  border-color:#dfffff;
+  background:linear-gradient(180deg,#c9fcff,var(--workshop-dash-cyan));
+  box-shadow:inset 0 2px rgba(255,255,255,.65),0 0 8px rgba(127,239,255,.5);
+  text-shadow:none;
+}
+
+body.workshopMode:not(.starterScreenActive) .workshop-dashboard-section{
+  padding:4px 5px;
+  border:2px solid var(--workshop-dash-brass);
+  border-radius:10px;
+  background:#0a2940;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.42);
+}
+
+.workshop-design-groups{
+  display:grid;
+  grid-template-columns:minmax(285px,4fr) minmax(420px,6fr) minmax(220px,3fr);
+  gap:6px;
+  width:100%;
+  height:100%;
+  min-width:0;
+  overflow:hidden;
+}
+
+.workshop-design-group{
+  display:grid;
+  grid-template-rows:14px 44px;
+  gap:2px;
+  min-width:0;
+  padding:2px 4px 3px;
+  border-radius:8px;
+  box-sizing:border-box;
+  background:rgba(255,255,255,.06);
+}
+
+.workshop-design-group-title{
+  margin:0;
+  color:var(--workshop-dash-brass-light);
+  font:900 10px/14px "Lexend",Arial,sans-serif;
+  letter-spacing:.035em;
+  text-align:left;
+}
+
+.workshop-design-group-controls{
+  display:grid;
+  gap:4px;
+  min-width:0;
+}
+
+.workshop-design-group.is-make .workshop-design-group-controls{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+
+.workshop-design-group.is-change .workshop-design-group-controls{
+  grid-template-columns:repeat(6,minmax(0,1fr));
+}
+
+.workshop-design-group.is-fix .workshop-design-group-controls{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+.workshop-design-group-controls button{
+  display:flex;
+  min-width:0;
+  min-height:44px;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  padding:3px 5px;
+  box-sizing:border-box;
+  font-size:10px;
+  line-height:1.05;
+  overflow-wrap:anywhere;
+  cursor:pointer;
+}
+
+.workshop-design-group-controls .workshop-control-icon,
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar .workshop-control-icon{
+  color:var(--workshop-dash-lime);
+  font-size:15px;
+  text-shadow:0 0 4px rgba(185,245,72,.35);
+}
+
+.workshop-design-group.is-make{
+  border-left:4px solid var(--workshop-dash-lime);
+}
+
+.workshop-design-group.is-change{
+  border-left:4px solid var(--workshop-dash-cyan);
+}
+
+.workshop-design-group.is-fix{
+  border-left:4px solid var(--workshop-dash-brass-light);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopDeleteButton,
+body.workshopMode:not(.starterScreenActive) #workshopQuickDelete{
+  border-color:var(--workshop-dash-coral);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopDeleteButton .workshop-control-icon,
+body.workshopMode:not(.starterScreenActive) #workshopQuickDelete .workshop-control-icon{
+  color:var(--workshop-dash-coral);
+}
+
+body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button:disabled,
+body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:disabled{
+  color:rgba(222,235,241,.55);
+  border-color:rgba(121,151,164,.45);
+  background:#203b4b;
+  box-shadow:none;
+  opacity:.7;
+}
+
+.workshop-more-tools-controls{
+  grid-template-columns:repeat(5,minmax(0,1fr));
+}
+
+@media(max-width:1100px){
+  .workshop-design-groups{
+    grid-template-columns:minmax(260px,4fr) minmax(385px,6fr) minmax(205px,3fr);
+    gap:4px;
+  }
+
+  .workshop-design-group-controls button{
+    padding-right:3px;
+    padding-left:3px;
+    font-size:9px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button,
+  body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button,
+  body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button,
+  body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button{
+    transition:none;
+  }
+
+  body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button:hover:not(:disabled),
+  body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button:hover:not(:disabled),
+  body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button:hover:not(:disabled),
+  body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:hover:not(:disabled),
+  body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button:active:not(:disabled),
+  body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button:active:not(:disabled),
+  body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button:active:not(:disabled),
+  body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:active:not(:disabled){
+    transform:none;
+  }
+}
 </style>
 
 <script id="workshopModeShellScript">
@@ -33032,10 +33264,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       );
       dashboard.setAttribute(
         "aria-label",
-        "Engineering Control Console, "+
+        "Workshop design tools, "+
           (workshopConsoleMode===workshopConsoleModes.grandMaster
-            ? "Grand Master Mode"
-            : "Student Mode")
+            ? "Advanced mode"
+            : "Student mode")
       );
     }
     return workshopConsoleMode;
