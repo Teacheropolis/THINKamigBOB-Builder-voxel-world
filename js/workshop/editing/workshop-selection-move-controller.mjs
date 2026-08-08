@@ -15,21 +15,35 @@ export function createWorkshopSelectionMoveController() {
   let token = 0;
   let selection = Object.freeze([]);
   let candidate = null;
+  let anchorOffset = Object.freeze({ x: 0, z: 0 });
 
-  const getSnapshot = () => Object.freeze({ state, token, selection, candidate });
+  const getSnapshot = () => Object.freeze({
+    state, token, selection, candidate, anchorOffset,
+  });
   const invalidate = () => { token += 1; return token; };
 
   return Object.freeze({
-    arm(objects) {
+    arm(objects, requestedAnchorOffset = { x: 0, z: 0 }) {
       if (!Array.isArray(objects) || objects.length === 0 || objects.some((object) => !object)) {
         return result(false, "SELECTION_REQUIRED", getSnapshot());
       }
+      if (!requestedAnchorOffset || !Number.isFinite(requestedAnchorOffset.x) ||
+          !Number.isFinite(requestedAnchorOffset.z)) {
+        return result(false, "INVALID_ANCHOR", getSnapshot());
+      }
       if (state === WORKSHOP_SELECTION_MOVE_STATES.ARMED &&
-          selection.length === objects.length && selection.every((object, index) => object === objects[index])) {
+          selection.length === objects.length &&
+          selection.every((object, index) => object === objects[index]) &&
+          anchorOffset.x === requestedAnchorOffset.x &&
+          anchorOffset.z === requestedAnchorOffset.z) {
         return result(true, "IDEMPOTENT", getSnapshot());
       }
       invalidate();
       selection = Object.freeze([...objects]);
+      anchorOffset = Object.freeze({
+        x: requestedAnchorOffset.x,
+        z: requestedAnchorOffset.z,
+      });
       candidate = null;
       state = WORKSHOP_SELECTION_MOVE_STATES.ARMED;
       return result(true, "ARMED", getSnapshot());
@@ -80,6 +94,7 @@ export function createWorkshopSelectionMoveController() {
       state = WORKSHOP_SELECTION_MOVE_STATES.INACTIVE;
       selection = Object.freeze([]);
       candidate = null;
+      anchorOffset = Object.freeze({ x: 0, z: 0 });
       return result(true, "RESET", getSnapshot());
     },
     getSnapshot,

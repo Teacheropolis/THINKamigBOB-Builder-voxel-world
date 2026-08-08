@@ -119,6 +119,20 @@ test("movement preserves half-integer and historical fractional lattice phases",
   }
 });
 
+test("movement preserves the selected grab point offset", () => {
+  const harness=createHarness("cm");
+  const selected=[block("cube",1,2),block("cube",2,2)];
+  const movement=harness.calculateWorkshopMoveTranslation(
+    selected,
+    {x:8.25,z:6.5},
+    {x:0.25,z:0.5}
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(movement)),
+    {changeX:7,changeZ:4,containsStandardObjects:true}
+  );
+});
+
 test("nonstandard-only selections retain active CM/MM precision", () => {
   const mm = createHarness("mm");
   const cm = createHarness("cm");

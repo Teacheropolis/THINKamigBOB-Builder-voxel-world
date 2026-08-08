@@ -12,11 +12,12 @@ test("movement validates one translated aggregate before mutating objects", () =
   const mutation = movement.indexOf("selectedBlocks.forEach(block =>");
   assert.ok(validation >= 0);
   assert.ok(mutation > validation);
-  assert.match(movement, /if\(!workshopBoundsFitActiveWorkspace\(translatedSelectionBounds\)\)\{[\s\S]*?return;/);
+  assert.match(movement, /const insideWorkspace=workshopBoundsFitActiveWorkspace\(translatedSelectionBounds\)/);
+  assert.match(movement, /if\(!insideWorkspace \|\| colliding\)\{[\s\S]*?return;/);
 });
 
 test("movement keeps the shared lattice-preserving translation", () => {
-  assert.match(source, /calculateWorkshopMoveTranslation\(\s*selectedBlocks,\s*intersects\[0\]\.point\s*\)/);
+  assert.match(source, /calculateWorkshopMoveTranslation\(\s*selectedBlocks,\s*intersects\[0\]\.point,\s*workshopMoveSnapshot \? workshopMoveSnapshot\.anchorOffset : undefined\s*\)/);
   assert.match(source, /block\.position\.x = Number\(\(block\.position\.x \+ changeX\)\.toFixed\(4\)\)/);
   assert.match(source, /block\.position\.z = Number\(\(block\.position\.z \+ changeZ\)\.toFixed\(4\)\)/);
 });

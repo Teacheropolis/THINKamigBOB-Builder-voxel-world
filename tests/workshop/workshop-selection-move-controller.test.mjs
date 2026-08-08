@@ -23,6 +23,7 @@ test("Move controller follows the locked nonvisual state order", () => {
 test("invalid selection, invalid preview, and stale ownership fail atomically", () => {
   const controller = createWorkshopSelectionMoveController();
   assert.equal(controller.arm([]).code, "SELECTION_REQUIRED");
+  assert.equal(controller.arm([{}], { x:NaN, z:0 }).code, "INVALID_ANCHOR");
   const armed = controller.arm([{}]);
   assert.equal(controller.beginCommit(armed.snapshot.token).code, "VALID_PREVIEW_REQUIRED");
   const preview = controller.preview({ x:1, z:1 }, true);
@@ -31,6 +32,16 @@ test("invalid selection, invalid preview, and stale ownership fail atomically", 
   assert.equal(controller.beginCommit(preview.snapshot.token).code, "STALE");
   assert.strictEqual(controller.getSnapshot().selection, before.selection);
   assert.equal(controller.getSnapshot().state, "CANCELLED");
+});
+
+test("Move controller freezes and preserves the grabbed anchor offset", () => {
+  const controller = createWorkshopSelectionMoveController();
+  const armed = controller.arm([{}], { x:0.25, z:-0.4 });
+  assert.deepEqual(armed.snapshot.anchorOffset, { x:0.25, z:-0.4 });
+  assert.equal(Object.isFrozen(armed.snapshot.anchorOffset), true);
+  assert.equal(controller.arm(armed.snapshot.selection, { x:0.25, z:-0.4 }).code, "IDEMPOTENT");
+  controller.reset();
+  assert.deepEqual(controller.getSnapshot().anchorOffset, { x:0, z:0 });
 });
 
 test("repeated commands are idempotent and cleanup invalidates tokens", () => {

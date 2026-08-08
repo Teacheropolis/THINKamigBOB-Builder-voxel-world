@@ -4540,15 +4540,17 @@ This control is available only after a mission has started.
       <h2 id="workshopEditToolsLabel">Edit</h2>
       <span id="workshopSelectionToolsLabel" class="workshop-console-semantic-label">Selection tools</span>
       <div class="workshop-dashboard-controls">
-        <button id="workshopSelectButton" type="button" onclick="startSelectMode()"><span class="workshop-control-icon" aria-hidden="true">⌖</span><span>Select</span></button>
+        <button id="workshopSelectButton" type="button" aria-pressed="false" onclick="startSelectMode()"><span class="workshop-control-icon" aria-hidden="true">⌖</span><span>Select</span></button>
         <button id="workshopDeleteButton" type="button" onclick="deleteWorkshopSelectedStructure()"><span class="workshop-control-icon" aria-hidden="true">✕</span><span>Delete</span></button>
         <button id="workshopUndoButton" type="button" onclick="undoLast()" disabled><span class="workshop-control-icon" aria-hidden="true">↶</span><span>Undo</span></button>
         <button id="workshopRedoButton" type="button" onclick="redoLast()" disabled><span class="workshop-control-icon" aria-hidden="true">↷</span><span>Redo</span></button>
-        <button type="button" disabled>Move</button>
+        <button id="workshopMoveButton" type="button" aria-pressed="false" onclick="startMoveSelected()" disabled><span class="workshop-control-icon" aria-hidden="true">↔</span><span>Move</span></button>
+        <button id="workshopCancelMoveButton" type="button" onclick="cancelWorkshopMove({announce:true,restoreFocus:true})" hidden disabled><span class="workshop-control-icon" aria-hidden="true">×</span><span>Cancel Move</span></button>
         <button type="button" disabled>Rotate</button>
         <button type="button" disabled>Resize</button>
         <button type="button" disabled>Duplicate</button>
       </div>
+      <span id="workshopMoveStatus" class="workshop-console-semantic-label" role="status" aria-live="polite" aria-atomic="true"></span>
     </section>
     <section id="workshopPanelPrecision" class="workshop-dashboard-section workshop-engineering-controls" role="tabpanel" aria-labelledby="workshopTabPrecision" data-workshop-console-panel="precision" hidden>
       <h2 id="workshopEngineeringControlsLabel">Precision</h2>
@@ -5422,6 +5424,9 @@ function applyWorkshopEditTransaction(transaction,direction){
       }
     });
     sanitizeWorkshopSelectedBlocks();
+    if(transaction.type==="MOVE"){
+      setWorkshopSelectedObjectsExact(transaction.selection);
+    }
     return true;
   }catch(error){
     originalState.forEach(function(state){
@@ -5477,11 +5482,14 @@ function recordWorkshopDeletionHistory(objects){
 
 function resetWorkshopEditFoundation(options){
   if(workshopSelectionMoveController) workshopSelectionMoveController.reset();
+  moveSelectedMode=false;
+  workshopLastSelectionPoint=null;
   if(workshopEditHistory) workshopEditHistory.reset();
   workshopDeletedSelectionUndo.length=0;
   workshopDeletedSelectionRedo.length=0;
   redoBlocks.length=0;
   updateUndoRedoButtons();
+  syncWorkshopMoveControls();
 }
 
 updateUndoRedoButtons();
@@ -5518,6 +5526,9 @@ if(blockShapeSelect){
 }
 
 function chooseWorkshopBuildShape(shape){
+  if(document.body.classList.contains("workshopMode") && workshopMoveIsPending()){
+    cancelWorkshopMove({announce:false,restoreFocus:false});
+  }
   const requestedShape =
     shape === "sphere" || shape === "trianglePrism" ? shape : "cube";
   const shapeSelect = document.getElementById("blockShape");
@@ -5601,6 +5612,7 @@ const spinningTurbines = [];
 let selectedBlocks = [];
 let selectMode = false;
 let moveSelectedMode = false;
+let workshopLastSelectionPoint = null;
 const WORKSHOP_CONTACT_TOLERANCE = 0.0001;
 const workshopContactGraph = new Map();
 let previousWorkshopSelection = [];
@@ -5694,6 +5706,51 @@ function syncWorkshopSelectionMeasurements(){
     window.syncWorkshopFitSelectionAvailability();
   }
   updateWorkshopRestoreSelectionAvailability();
+  syncWorkshopMoveControls();
+}
+
+function workshopMoveIsPending(){
+  if(!workshopSelectionMoveController) return false;
+  const state=workshopSelectionMoveController.getSnapshot().state;
+  return state==="ARMED" || state==="PREVIEW_VALID" ||
+    state==="PREVIEW_INVALID" || state==="COMMITTING";
+}
+
+function syncWorkshopMoveControls(){
+  const moveButton=document.getElementById("workshopMoveButton");
+  const cancelButton=document.getElementById("workshopCancelMoveButton");
+  const selectButton=document.getElementById("workshopSelectButton");
+  const pending=workshopMoveIsPending();
+  const hasSelection=activeWorkshopBlocks(selectedBlocks).length>0;
+  if(selectButton) selectButton.setAttribute("aria-pressed",selectMode ? "true" : "false");
+  if(moveButton){
+    moveButton.disabled=!hasSelection || !workshopSelectionMoveController;
+    moveButton.setAttribute("aria-pressed",pending ? "true" : "false");
+    moveButton.setAttribute("aria-busy",
+      workshopSelectionMoveController &&
+      workshopSelectionMoveController.getSnapshot().state==="COMMITTING"
+        ? "true" : "false");
+  }
+  if(cancelButton){
+    cancelButton.hidden=!pending;
+    cancelButton.disabled=!pending;
+  }
+}
+
+function announceWorkshopMove(message){
+  const toolMessage=document.getElementById("toolMessage");
+  const status=document.getElementById("workshopMoveStatus");
+  if(toolMessage) toolMessage.textContent=message;
+  if(status) status.textContent=message;
+}
+
+function setWorkshopSelectedObjectsExact(objects){
+  clearWorkshopSelectedBlocks({preserveRestore:true});
+  activeWorkshopBlocks(Array.isArray(objects) ? objects : []).forEach(function(block){
+    selectedBlocks.push(block);
+    setWorkshopBlockSelectionHighlight(block,true);
+  });
+  syncWorkshopSelectionMeasurements();
 }
 
 function sanitizeWorkshopSelectedBlocks(){
@@ -5721,6 +5778,7 @@ function clearWorkshopSelectedBlocks(options = {}){
     setWorkshopBlockSelectionHighlight(block, false);
   });
   selectedBlocks = [];
+  workshopLastSelectionPoint=null;
   syncWorkshopSelectionMeasurements();
 }
 
@@ -8023,6 +8081,13 @@ document.addEventListener('mouseup', ()=>{
 document.addEventListener("keydown", (event) => {
   if(readToBobBlocksBuilderEvent(event)) return;
 
+  if(event.key==="Escape" && document.body.classList.contains("workshopMode") &&
+    workshopMoveIsPending()){
+    event.preventDefault();
+    cancelWorkshopMove({announce:true,restoreFocus:true});
+    return;
+  }
+
   // Undo
   if ((event.ctrlKey || event.metaKey) &&
       event.key.toLowerCase() === "z") {
@@ -8285,7 +8350,12 @@ function snapStandardWorkshopBlockGroundCenter(value){
   return Number(Math.max(-24.5,Math.min(24.5,cellCenter)).toFixed(4));
 }
 
-function calculateWorkshopMoveTranslation(selectedObjects, groundPoint){
+function calculateWorkshopMoveTranslation(
+  selectedObjects,
+  groundPoint,
+  anchorOffset
+){
+  const moveAnchorOffset=anchorOffset || {x:0,z:0};
   const standardObjects = selectedObjects.filter(isStandardWorkshopBlock);
   const containsStandardObjects = standardObjects.length > 0;
   const anchorObjects = containsStandardObjects ? standardObjects : selectedObjects;
@@ -8307,16 +8377,16 @@ function calculateWorkshopMoveTranslation(selectedObjects, groundPoint){
       : Math.round(rawAnchorZ);
   const targetX = containsStandardObjects
     ? snapWorkshopValueToLatticePhase(
-        groundPoint.x,
+        groundPoint.x-moveAnchorOffset.x,
         getWorkshopCoordinateLatticePhase(rawAnchorX)
       )
-    : snapGroundBuildCoordinate(groundPoint.x);
+    : snapGroundBuildCoordinate(groundPoint.x-moveAnchorOffset.x);
   const targetZ = containsStandardObjects
     ? snapWorkshopValueToLatticePhase(
-        groundPoint.z,
+        groundPoint.z-moveAnchorOffset.z,
         getWorkshopCoordinateLatticePhase(rawAnchorZ)
       )
-    : snapGroundBuildCoordinate(groundPoint.z);
+    : snapGroundBuildCoordinate(groundPoint.z-moveAnchorOffset.z);
 
   return {
     changeX:Number((targetX-anchorX).toFixed(4)),
@@ -8343,6 +8413,66 @@ function workshopBoundsOverlap(
     Math.max(candidateBounds.min.z, existingBounds.min.z);
 
   return overlapX > epsilon && overlapY > epsilon && overlapZ > epsilon;
+}
+
+function workshopTranslatedSelectionCollides(selectedObjects,changeX,changeZ){
+  const selectedSet=new Set(selectedObjects);
+  return selectedObjects.some(function(block){
+    const candidateBounds=new THREE.Box3().setFromObject(block);
+    candidateBounds.translate(new THREE.Vector3(changeX,0,changeZ));
+    return blocks.some(function(existingBlock){
+      if(selectedSet.has(existingBlock)) return false;
+      return workshopBoundsOverlap(
+        candidateBounds,
+        new THREE.Box3().setFromObject(existingBlock)
+      );
+    });
+  });
+}
+
+function previewWorkshopMoveAtPointer(event){
+  if(!document.body.classList.contains("workshopMode") ||
+    !moveSelectedMode || isDragging || mouseMoved ||
+    !workshopSelectionMoveController || event.target!==renderer.domElement){
+    return false;
+  }
+  sanitizeWorkshopSelectedBlocks();
+  const snapshot=workshopSelectionMoveController.getSnapshot();
+  if(selectedBlocks.length===0 || ![
+    "ARMED","PREVIEW_VALID","PREVIEW_INVALID"
+  ].includes(snapshot.state)) return false;
+  mouse.x=(event.clientX/window.innerWidth)*2-1;
+  mouse.y=-(event.clientY/window.innerHeight)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+  const intersections=raycaster.intersectObject(ground);
+  if(intersections.length===0) return false;
+  const movement=calculateWorkshopMoveTranslation(
+    selectedBlocks,
+    intersections[0].point,
+    snapshot.anchorOffset
+  );
+  const bounds=createWorkshopTranslatedSelectionBounds(
+    selectedBlocks,movement.changeX,movement.changeZ
+  );
+  const insideWorkspace=workshopBoundsFitActiveWorkspace(bounds);
+  const colliding=workshopTranslatedSelectionCollides(
+    selectedBlocks,movement.changeX,movement.changeZ
+  );
+  workshopSelectionMoveController.preview({
+    changeX:movement.changeX,
+    changeZ:movement.changeZ,
+    insideWorkspace:insideWorkspace,
+    colliding:colliding
+  },insideWorkspace && !colliding);
+  const moveButton=document.getElementById("workshopMoveButton");
+  if(moveButton){
+    moveButton.dataset.movePreview=insideWorkspace && !colliding ? "valid" : "invalid";
+    moveButton.title=insideWorkspace && !colliding
+      ? "Move destination valid"
+      : "Move destination blocked";
+  }
+  syncWorkshopMoveControls();
+  return true;
 }
 
 function calculateWorkshopPlacementCandidate(intersection, newBlock){
@@ -8516,7 +8646,7 @@ if(intersects.length > 0){
 
   if(selectMode){
     if(hit !== ground){
-      selectConnectedBlocks(hit);
+      selectConnectedBlocks(hit,intersects[0].point);
       return;
     }
 
@@ -8538,9 +8668,22 @@ if(intersects.length > 0){
       return;
     }
 
+    const workshopMoveSnapshot=document.body.classList.contains("workshopMode") &&
+      workshopSelectionMoveController
+      ? workshopSelectionMoveController.getSnapshot()
+      : null;
+    if(document.body.classList.contains("workshopMode") &&
+      (!workshopMoveSnapshot || !workshopMoveIsPending(workshopMoveSnapshot) ||
+       !workshopEditHistory)){
+      moveSelectedMode=false;
+      syncWorkshopMoveControls();
+      announceWorkshopMove("Move is no longer active. Choose Move to try again.");
+      return;
+    }
     const movement = calculateWorkshopMoveTranslation(
       selectedBlocks,
-      intersects[0].point
+      intersects[0].point,
+      workshopMoveSnapshot ? workshopMoveSnapshot.anchorOffset : undefined
     );
     const changeX = movement.changeX;
     const changeZ = movement.changeZ;
@@ -8550,10 +8693,40 @@ if(intersects.length > 0){
       changeX,
       changeZ
     );
-    if(!workshopBoundsFitActiveWorkspace(translatedSelectionBounds)){
-      document.getElementById("toolMessage").textContent =
-        "⚠️ Move blocked: keep the complete structure inside the visible workspace.";
+    const insideWorkspace=workshopBoundsFitActiveWorkspace(translatedSelectionBounds);
+    const colliding=document.body.classList.contains("workshopMode") &&
+      workshopTranslatedSelectionCollides(selectedBlocks,changeX,changeZ);
+
+    if(workshopMoveSnapshot){
+      workshopSelectionMoveController.preview({
+        changeX:changeX,
+        changeZ:changeZ,
+        insideWorkspace:insideWorkspace,
+        colliding:colliding
+      },insideWorkspace && !colliding);
+      syncWorkshopMoveControls();
+    }
+
+    if(!insideWorkspace || colliding){
+      announceWorkshopMove(
+        colliding
+          ? "Move blocked. The selection would overlap another object."
+          : "Move blocked. Keep the complete selection inside the visible workspace."
+      );
       return;
+    }
+
+    let moveToken=null;
+    let moveBefore=null;
+    if(workshopMoveSnapshot){
+      const previewSnapshot=workshopSelectionMoveController.getSnapshot();
+      const committing=workshopSelectionMoveController.beginCommit(previewSnapshot.token);
+      if(!committing.ok) return;
+      moveToken=committing.snapshot.token;
+      moveBefore=selectedBlocks.map(function(block){
+        return {object:block,before:workshopEditCoordinates(block)};
+      });
+      syncWorkshopMoveControls();
     }
 
     selectedBlocks.forEach(block => {
@@ -8573,7 +8746,36 @@ if(intersects.length > 0){
     });
 
     if(document.body.classList.contains("workshopMode")){
-      clearWorkshopSelectedBlocks();
+      const moveEntries=moveBefore.map(function(entry){
+        return {
+          object:entry.object,
+          before:entry.before,
+          after:workshopEditCoordinates(entry.object)
+        };
+      });
+      const historyResult=workshopEditHistory.commit({
+        type:"MOVE",
+        entries:moveEntries,
+        translation:{x:changeX,z:changeZ},
+        selection:selectedBlocks.slice()
+      });
+      if(!historyResult.ok){
+        moveBefore.forEach(function(entry){
+          entry.object.position.set(entry.before.x,entry.before.y,entry.before.z);
+        });
+        workshopSelectionMoveController.cancel();
+        moveSelectedMode=false;
+        syncWorkshopSelectionMeasurements();
+        announceWorkshopMove("Move cancelled. Object positions unchanged.");
+        return;
+      }
+      workshopSelectionMoveController.complete(moveToken);
+      if(workshopLastSelectionPoint){
+        workshopLastSelectionPoint.x+=changeX;
+        workshopLastSelectionPoint.z+=changeZ;
+      }
+      syncWorkshopSelectionMeasurements();
+      updateUndoRedoButtons();
     }else{
       selectedBlocks.forEach(block => {
         block.material.emissive = new THREE.Color(0x000000);
@@ -8585,8 +8787,13 @@ if(intersects.length > 0){
     }
     moveSelectedMode = false;
 
-    document.getElementById("toolMessage").innerHTML =
-      "✅ Structure moved!";
+    if(document.body.classList.contains("workshopMode")){
+      announceWorkshopMove("Selection moved.");
+      syncWorkshopMoveControls();
+    }else{
+      document.getElementById("toolMessage").innerHTML =
+        "✅ Structure moved!";
+    }
 
     checkBadge();
     return;
@@ -8870,6 +9077,10 @@ function saveImage(){
 function undoLast(){
 
   if(workshopEditHistory && document.body.classList.contains("workshopMode")){
+    if(workshopMoveIsPending(workshopSelectionMoveController &&
+      workshopSelectionMoveController.getSnapshot())){
+      cancelWorkshopMove({announce:false,restoreFocus:false});
+    }
     const result=workshopEditHistory.undo();
     if(!result.ok){
       document.getElementById("toolMessage").innerHTML =
@@ -8939,6 +9150,10 @@ function undoLast(){
 function redoLast(){
 
   if(workshopEditHistory && document.body.classList.contains("workshopMode")){
+    if(workshopMoveIsPending(workshopSelectionMoveController &&
+      workshopSelectionMoveController.getSnapshot())){
+      cancelWorkshopMove({announce:false,restoreFocus:false});
+    }
     const result=workshopEditHistory.redo();
     if(!result.ok){
       document.getElementById("toolMessage").innerHTML =
@@ -9068,6 +9283,9 @@ updateUndoRedoButtons();
 // ===== UPDATE #59 JS SECTION: BUILDER GAMEPLAY / SELECTION MODE =====
 function startSelectMode(){
 
+  if(document.body.classList.contains("workshopMode") && workshopMoveIsPending()){
+    cancelWorkshopMove({announce:false,restoreFocus:false});
+  }
   selectMode = true;
   moveSelectedMode = false;
 
@@ -9089,10 +9307,14 @@ document.getElementById("toolMessage").innerHTML =
   "🖱️ Click one block in the structure you want to select.";
 }
 
-function selectConnectedBlocks(startBlock){
+function selectConnectedBlocks(startBlock,selectionPoint){
 
   if(document.body.classList.contains("workshopMode")){
     toggleWorkshopSelectedBlock(startBlock);
+    workshopLastSelectionPoint=selectedBlocks.length>0 && selectionPoint
+      ? {x:selectionPoint.x,z:selectionPoint.z}
+      : null;
+    syncWorkshopMoveControls();
     document.getElementById("toolMessage").innerHTML =
       selectedBlocks.length === 0
         ? "Selection empty. Click another object or the ground to finish."
@@ -9128,6 +9350,10 @@ function startMoveSelected(){
 
  if(document.body.classList.contains("workshopMode")){
    sanitizeWorkshopSelectedBlocks();
+   if(!workshopSelectionMoveController){
+     announceWorkshopMove("Move is not ready yet.");
+     return;
+   }
  }
 
  if(selectedBlocks.length === 0){
@@ -9138,11 +9364,55 @@ function startMoveSelected(){
   return;
 }
 
+  if(document.body.classList.contains("workshopMode")){
+    const anchorX=Math.min(...selectedBlocks.map(function(block){
+      return block.position.x;
+    }));
+    const anchorZ=Math.min(...selectedBlocks.map(function(block){
+      return block.position.z;
+    }));
+    const anchorOffset=workshopLastSelectionPoint
+      ? {
+          x:Number((workshopLastSelectionPoint.x-anchorX).toFixed(4)),
+          z:Number((workshopLastSelectionPoint.z-anchorZ).toFixed(4))
+        }
+      : {x:0,z:0};
+    const armed=workshopSelectionMoveController.arm(
+      selectedBlocks.slice(),
+      anchorOffset
+    );
+    if(!armed.ok){
+      announceWorkshopMove("Select an object before moving it.");
+      return;
+    }
+  }
+
   moveSelectedMode = true;
   selectMode = false;
 
-document.getElementById("toolMessage").innerHTML =
-  "↔️ Click the ground where you want to move the selected structure.";
+  if(document.body.classList.contains("workshopMode")){
+    syncWorkshopMoveControls();
+    announceWorkshopMove("Move ready. Choose a new position.");
+  }else{
+    document.getElementById("toolMessage").innerHTML =
+      "↔️ Click the ground where you want to move the selected structure.";
+  }
+}
+
+function cancelWorkshopMove(options = {}){
+  const settings=options || {};
+  const wasPending=moveSelectedMode || workshopMoveIsPending();
+  if(workshopSelectionMoveController) workshopSelectionMoveController.cancel();
+  moveSelectedMode=false;
+  syncWorkshopMoveControls();
+  if(settings.announce!==false && wasPending){
+    announceWorkshopMove("Move cancelled. Object positions unchanged.");
+  }
+  if(settings.restoreFocus){
+    const moveButton=document.getElementById("workshopMoveButton");
+    if(moveButton && !moveButton.disabled) moveButton.focus({preventScroll:true});
+  }
+  return wasPending;
 }
   
 function addTree(){
@@ -10035,6 +10305,9 @@ function deleteSelectedStructure(){
 }
 
 function deleteWorkshopSelectedStructure(){
+  if(document.body.classList.contains("workshopMode") && workshopMoveIsPending()){
+    cancelWorkshopMove({announce:false,restoreFocus:false});
+  }
   sanitizeWorkshopSelectedBlocks();
   const deletedSelection = selectedBlocks.slice();
   deleteSelectedStructure();
@@ -30234,6 +30507,18 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
   background:linear-gradient(180deg,#9ff7ff,#45cbe8);
 }
 
+#workshopCancelMoveButton[hidden]{
+  display:none !important;
+}
+
+#workshopMoveButton[data-move-preview="valid"]{
+  border-color:#8ff6ff;
+}
+
+#workshopMoveButton[data-move-preview="invalid"]{
+  border-color:#ff8f8f;
+}
+
 .workshop-dashboard-controls button:disabled{
   color:rgba(190,205,214,.46);
   border-color:rgba(122,145,157,.25);
@@ -31555,6 +31840,8 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     if(snapshot.workshop==="SHUTTING_DOWN" ||
       snapshot.workshop==="FAULT_SAFE" || snapshot.workshop==="OFF"){
       if(workshopSelectionMoveController) workshopSelectionMoveController.reset();
+      moveSelectedMode=false;
+      syncWorkshopMoveControls();
       if(typeof resetWorkshopBuildViewportWheelIntent==="function"){
         resetWorkshopBuildViewportWheelIntent();
       }
@@ -36025,6 +36312,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     }
 
     document.addEventListener("pointermove",moveWorkshopPrecisionCursor);
+    document.addEventListener("pointermove",previewWorkshopMoveAtPointer);
     document.addEventListener("pointerout",function(event){
       if(!event.relatedTarget) hideWorkshopPrecisionCursor();
     });
@@ -36268,6 +36556,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         return workshopSelectionMoveController.getSnapshot();
       };
       updateUndoRedoButtons();
+      syncWorkshopMoveControls();
       if(currentWorkspaceMode==="workshop" &&
         document.body.classList.contains("workshopMode") &&
         activeWorkshopEngineeringView==="home" &&
