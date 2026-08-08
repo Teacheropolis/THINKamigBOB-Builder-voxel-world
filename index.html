@@ -81,7 +81,7 @@ CSS SECTION 01: STEM COACH / PANEL CSS
 Preserved from working file. Future edits should target by section.
 ===================================================== -->
 <style>
-    html, body {
+html, body {
       margin: 0;
       width: 100%;
       height: 100%;
@@ -110,6 +110,11 @@ Preserved from working file. Future edits should target by section.
 
     border-radius:10px;
 
+}
+
+:root{
+  --workshop-visible-viewport-right-inset:0px;
+  --workshop-visible-viewport-width:100vw;
 }
 
 .toolCategory{
@@ -4182,15 +4187,16 @@ Nature ▶
 <section id="workshopRoot">
   <aside id="workshopLeftRailShell" class="workshop-layout-region" data-workshop-region="left"></aside>
   <section id="workshopViewportContainer" class="workshop-layout-region" data-workshop-region="viewport">
-    <!-- Horizontal rulers temporarily represent model X; vertical rulers
-         represent model Y. Model Z remains reserved for a later phase. -->
-    <div id="workshopRulerTop" class="workshop-ruler workshop-ruler-horizontal workshop-ruler-top" data-workshop-axis="x" aria-label="Top model X-axis ruler. Model Scale, centimeters with millimeter subdivisions.">
+    <!-- Horizontal rulers represent model X; vertical rulers represent model Z. -->
+    <div id="workshopRulerTop" class="workshop-ruler workshop-ruler-horizontal workshop-ruler-top" data-workshop-axis="x" aria-label="Top model X-axis ruler. Model scale, centimeter boundaries.">
+      <span class="workshop-ruler-axis-label" aria-hidden="true">X</span>
       <div class="workshop-ruler-ticks" aria-hidden="true"></div>
       <div id="workshopRulerTopSelection" class="workshop-ruler-layer workshop-ruler-selection" hidden aria-hidden="true"></div>
       <div id="workshopRulerTopDesignRange" class="workshop-ruler-layer workshop-ruler-design-range" hidden aria-hidden="true"></div>
       <div id="workshopRulerTopHandles" class="workshop-ruler-layer workshop-ruler-handles" aria-hidden="true"></div>
     </div>
-    <div id="workshopRulerLeft" class="workshop-ruler workshop-ruler-vertical workshop-ruler-left" data-workshop-axis="y" aria-label="Left model Y-axis ruler. Model Scale, centimeters with millimeter subdivisions.">
+    <div id="workshopRulerLeft" class="workshop-ruler workshop-ruler-vertical workshop-ruler-left" data-workshop-axis="z" aria-label="Left model Z-axis ruler. Model scale, centimeter boundaries.">
+      <span class="workshop-ruler-axis-label" aria-hidden="true">Z</span>
       <div class="workshop-ruler-ticks" aria-hidden="true"></div>
       <div id="workshopRulerLeftSelection" class="workshop-ruler-layer workshop-ruler-selection" hidden aria-hidden="true"></div>
       <div id="workshopRulerLeftDesignRange" class="workshop-ruler-layer workshop-ruler-design-range" hidden aria-hidden="true"></div>
@@ -4248,13 +4254,15 @@ Nature ▶
         </div>
       </div>
     </div>
-    <div id="workshopRulerRight" class="workshop-ruler workshop-ruler-vertical workshop-ruler-right" data-workshop-axis="y" aria-label="Right model Y-axis ruler. Model Scale, centimeters with millimeter subdivisions.">
+    <div id="workshopRulerRight" class="workshop-ruler workshop-ruler-vertical workshop-ruler-right" data-workshop-axis="z" aria-label="Right model Z-axis ruler. Model scale, centimeter boundaries.">
+      <span class="workshop-ruler-axis-label" aria-hidden="true">Z</span>
       <div class="workshop-ruler-ticks" aria-hidden="true"></div>
       <div id="workshopRulerRightSelection" class="workshop-ruler-layer workshop-ruler-selection" hidden aria-hidden="true"></div>
       <div id="workshopRulerRightDesignRange" class="workshop-ruler-layer workshop-ruler-design-range" hidden aria-hidden="true"></div>
       <div id="workshopRulerRightHandles" class="workshop-ruler-layer workshop-ruler-handles" aria-hidden="true"></div>
     </div>
-    <div id="workshopRulerBottom" class="workshop-ruler workshop-ruler-horizontal workshop-ruler-bottom" data-workshop-axis="x" aria-label="Bottom model X-axis ruler. Model Scale, centimeters with millimeter subdivisions.">
+    <div id="workshopRulerBottom" class="workshop-ruler workshop-ruler-horizontal workshop-ruler-bottom" data-workshop-axis="x" aria-label="Bottom model X-axis ruler. Model scale, centimeter boundaries.">
+      <span class="workshop-ruler-axis-label" aria-hidden="true">X</span>
       <div class="workshop-ruler-ticks" aria-hidden="true"></div>
       <div id="workshopRulerBottomSelection" class="workshop-ruler-layer workshop-ruler-selection" hidden aria-hidden="true"></div>
       <div id="workshopRulerBottomDesignRange" class="workshop-ruler-layer workshop-ruler-design-range" hidden aria-hidden="true"></div>
@@ -4549,6 +4557,8 @@ This control is available only after a mission has started.
         <button id="workshopSnapStatus" type="button" aria-pressed="true" title="Voxel snapping is always enabled in Workshop." disabled><span class="workshop-control-icon" aria-hidden="true">⊞</span><span>Snap: On</span></button>
         <span id="workshopDashboardPrecision" role="status" aria-live="polite">Precision: 1 cm</span>
       </div>
+      <p id="workshopEngineeringFeedbackStatus"></p>
+      <span id="workshopEngineeringFeedbackAnnouncement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></span>
       <div id="workshopMeasurementControls" aria-label="Workshop model measurement scale">
         <div id="workshopMeasurementKey" role="status" aria-live="polite" aria-atomic="true" aria-label="Grid Precision. One square equals one centimeter." data-workshop-unit="cm">
           <span class="workshopGridSample" aria-hidden="true"><span class="workshopPrecisionGrid"><span id="workshopMeasurementPreviewLabel">1 cm</span></span></span>
@@ -5275,6 +5285,7 @@ let engineeringGridOriginMaterial = null;
 let engineeringGridMinorLines = null;
 let engineeringGridMajorLines = null;
 let engineeringGridOriginLines = null;
+let workshopCadOriginMarker = null;
 
 function syncEngineeringGridStyle(grassIsActive){
   if(!engineeringGridMinorMaterial || !engineeringGridMajorMaterial ||
@@ -5305,6 +5316,9 @@ const blocks = [];
 const redoBlocks = [];
 const workshopDeletedSelectionUndo = [];
 const workshopDeletedSelectionRedo = [];
+let workshopEditHistory = null;
+let workshopSelectionMoveController = null;
+let workshopEditHistorySuspended = false;
 
 function updateUndoRedoButtons(){
   const undoButton = document.getElementById("undoButton");
@@ -5313,28 +5327,161 @@ function updateUndoRedoButtons(){
   const workshopRedoButton = document.getElementById("workshopRedoButton");
   const workshopQuickUndo = document.getElementById("workshopQuickUndo");
 
+  const editHistorySnapshot = workshopEditHistory &&
+    document.body.classList.contains("workshopMode")
+    ? workshopEditHistory.getSnapshot()
+    : null;
+  const canUndo = editHistorySnapshot
+    ? editHistorySnapshot.canUndo
+    : blocks.length > 0 || workshopDeletedSelectionUndo.length > 0;
+  const canRedo = editHistorySnapshot
+    ? editHistorySnapshot.canRedo
+    : redoBlocks.length > 0 || workshopDeletedSelectionRedo.length > 0;
+
   if(undoButton){
-    undoButton.disabled = blocks.length === 0;
+    undoButton.disabled = !canUndo;
   }
 
   if(redoButton){
-    redoButton.disabled = redoBlocks.length === 0;
+    redoButton.disabled = !canRedo;
   }
 
   if(workshopUndoButton){
-    workshopUndoButton.disabled =
-      blocks.length === 0 && workshopDeletedSelectionUndo.length === 0;
+    workshopUndoButton.disabled = !canUndo;
   }
 
   if(workshopQuickUndo){
-    workshopQuickUndo.disabled =
-      blocks.length === 0 && workshopDeletedSelectionUndo.length === 0;
+    workshopQuickUndo.disabled = !canUndo;
   }
 
   if(workshopRedoButton){
-    workshopRedoButton.disabled =
-      redoBlocks.length === 0 && workshopDeletedSelectionRedo.length === 0;
+    workshopRedoButton.disabled = !canRedo;
   }
+}
+
+function workshopEditCoordinates(object){
+  return object && object.position
+    ? {x:object.position.x,y:object.position.y,z:object.position.z}
+    : null;
+}
+
+function workshopEditObjectPresent(object){
+  return !!object && blocks.includes(object) && object.parent===scene;
+}
+
+function workshopEditCoordinatesMatch(object,coordinates){
+  return !!coordinates && !!object && !!object.position &&
+    object.position.x===coordinates.x && object.position.y===coordinates.y &&
+    object.position.z===coordinates.z;
+}
+
+function validateWorkshopEditTransaction(transaction,direction){
+  if(!transaction || !Array.isArray(transaction.entries)) return false;
+  return transaction.entries.every(function(entry){
+    const present=workshopEditObjectPresent(entry.object);
+    if(direction==="COMMIT"){
+      if(transaction.type==="PLACEMENT") return present;
+      if(transaction.type==="DELETION") return !present;
+      return present && workshopEditCoordinatesMatch(entry.object,entry.after);
+    }
+    if(transaction.type==="PLACEMENT") return direction==="UNDO" ? present : !present;
+    if(transaction.type==="DELETION") return direction==="UNDO" ? !present : present;
+    return present && workshopEditCoordinatesMatch(
+      entry.object,
+      direction==="UNDO" ? entry.after : entry.before
+    );
+  });
+}
+
+function applyWorkshopEditTransaction(transaction,direction){
+  const useBefore=direction==="UNDO";
+  const originalSelection=selectedBlocks.slice();
+  const originalState=transaction.entries.map(function(entry){
+    return {
+      object:entry.object,
+      present:workshopEditObjectPresent(entry.object),
+      coordinates:workshopEditCoordinates(entry.object)
+    };
+  });
+  try{
+    transaction.entries.forEach(function(entry){
+      const shouldExist=transaction.type==="PLACEMENT" ? !useBefore :
+        transaction.type==="DELETION" ? useBefore : true;
+      if(shouldExist){
+        if(!blocks.includes(entry.object)) blocks.push(entry.object);
+        scene.add(entry.object);
+      }else{
+        removeWorkshopSelectedBlock(entry.object);
+        scene.remove(entry.object);
+        const index=blocks.indexOf(entry.object);
+        if(index>-1) blocks.splice(index,1);
+      }
+      const coordinates=useBefore ? entry.before : entry.after;
+      if(coordinates && entry.object.position){
+        entry.object.position.set(coordinates.x,coordinates.y,coordinates.z);
+      }
+    });
+    sanitizeWorkshopSelectedBlocks();
+    return true;
+  }catch(error){
+    originalState.forEach(function(state){
+      const index=blocks.indexOf(state.object);
+      if(state.present){
+        if(index===-1) blocks.push(state.object);
+        scene.add(state.object);
+      }else{
+        if(index>-1) blocks.splice(index,1);
+        scene.remove(state.object);
+      }
+      if(state.coordinates && state.object.position){
+        state.object.position.set(
+          state.coordinates.x,state.coordinates.y,state.coordinates.z
+        );
+      }
+    });
+    selectedBlocks=originalSelection;
+    syncWorkshopSelectionMeasurements();
+    return false;
+  }
+}
+
+function recordWorkshopPlacementHistory(objects){
+  if(!workshopEditHistory || workshopEditHistorySuspended ||
+    !document.body.classList.contains("workshopMode")) return null;
+  const entries=(Array.isArray(objects) ? objects : [objects]).map(function(object){
+    return {object:object,before:null,after:workshopEditCoordinates(object)};
+  });
+  const result=workshopEditHistory.commit({type:"PLACEMENT",entries:entries});
+  if(result.ok){
+    redoBlocks.length=0;
+    workshopDeletedSelectionRedo.length=0;
+    updateUndoRedoButtons();
+  }
+  return result;
+}
+
+function recordWorkshopDeletionHistory(objects){
+  if(!workshopEditHistory || workshopEditHistorySuspended ||
+    !document.body.classList.contains("workshopMode")) return null;
+  const entries=objects.map(function(object){
+    return {object:object,before:workshopEditCoordinates(object),after:null};
+  });
+  const result=workshopEditHistory.commit({type:"DELETION",entries:entries});
+  if(result.ok){
+    redoBlocks.length=0;
+    workshopDeletedSelectionRedo.length=0;
+    updateUndoRedoButtons();
+  }
+  return result;
+}
+
+function resetWorkshopEditFoundation(options){
+  if(workshopSelectionMoveController) workshopSelectionMoveController.reset();
+  if(workshopEditHistory) workshopEditHistory.reset();
+  workshopDeletedSelectionUndo.length=0;
+  workshopDeletedSelectionRedo.length=0;
+  redoBlocks.length=0;
+  updateUndoRedoButtons();
 }
 
 updateUndoRedoButtons();
@@ -5524,7 +5671,7 @@ function setWorkshopBlockSelectionHighlight(block, selected){
     if(block.userData.workshopSelectionEmissive === undefined){
       block.userData.workshopSelectionEmissive = block.material.emissive.getHex();
     }
-    block.material.emissive.setHex(0x5511ff);
+    block.material.emissive.setHex(0x00b7e8);
     return;
   }
 
@@ -5658,6 +5805,7 @@ function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
   block.position.set(x, y, z);
   scene.add(block);
   blocks.push(block);
+  recordWorkshopPlacementHistory(block);
 
   return block;
 }
@@ -7138,6 +7286,9 @@ function toggleEngineeringGrid(){
       workshopDashboardGridButton.textContent = "Grid: On";
       workshopDashboardGridButton.setAttribute("aria-pressed", "true");
     }
+    if(typeof syncWorkshopCadEngineeringFeedback === "function"){
+      syncWorkshopCadEngineeringFeedback({announce:false});
+    }
     return;
   }
 
@@ -8477,6 +8628,7 @@ if(intersects.length > 0){
 
     scene.add(newBlock);
     blocks.push(newBlock);
+    recordWorkshopPlacementHistory(newBlock);
     if(document.body.classList.contains("workshopMode")){
       if(workshopPlacementContact){
         connectWorkshopBlocks(newBlock,workshopPlacementContact);
@@ -8717,6 +8869,31 @@ function saveImage(){
   
 function undoLast(){
 
+  if(workshopEditHistory && document.body.classList.contains("workshopMode")){
+    const result=workshopEditHistory.undo();
+    if(!result.ok){
+      document.getElementById("toolMessage").innerHTML =
+        result.code==="EMPTY" ? "Nothing to undo." : "⚠️ Undo could not be completed safely.";
+      updateUndoRedoButtons();
+      return;
+    }
+    if(result.transaction.type==="DELETION"){
+      selectWorkshopConnectedBuilds(result.transaction.entries.map(function(entry){
+        return entry.object;
+      }));
+      document.getElementById("toolMessage").innerHTML =
+        "↩️ Deleted selection restored.";
+    }else{
+      document.getElementById("toolMessage").innerHTML =
+        result.transaction.type==="MOVE"
+          ? "↩️ Move undone."
+          : "↩️ Last block removed.";
+    }
+    checkBadge();
+    updateUndoRedoButtons();
+    return;
+  }
+
   if(document.body.classList.contains("workshopMode") &&
      workshopDeletedSelectionUndo.length > 0){
     const restoredSelection = workshopDeletedSelectionUndo.pop();
@@ -8760,6 +8937,27 @@ function undoLast(){
 }
 
 function redoLast(){
+
+  if(workshopEditHistory && document.body.classList.contains("workshopMode")){
+    const result=workshopEditHistory.redo();
+    if(!result.ok){
+      document.getElementById("toolMessage").innerHTML =
+        result.code==="EMPTY" ? "Nothing to redo." : "⚠️ Redo could not be completed safely.";
+      updateUndoRedoButtons();
+      return;
+    }
+    if(result.transaction.type==="PLACEMENT" &&
+      document.body.classList.contains("workshopMode")){
+      selectWorkshopConnectedBuild(result.transaction.entries[0].object);
+    }
+    document.getElementById("toolMessage").innerHTML =
+      result.transaction.type==="DELETION" ? "↪️ Selection deleted again." :
+      result.transaction.type==="MOVE" ? "↪️ Move restored." :
+      "↪️ Last block restored.";
+    checkBadge();
+    updateUndoRedoButtons();
+    return;
+  }
 
   if(document.body.classList.contains("workshopMode") &&
      workshopDeletedSelectionRedo.length > 0){
@@ -8846,6 +9044,7 @@ if (document.body) document.body.classList.remove("builderMissionChosen");
 
 blocks.length = 0;
 redoBlocks.length = 0;
+resetWorkshopEditFoundation();
 selectedBlocks = [];
 workshopContactGraph.clear();
 clearWorkshopSelectionRestore();
@@ -9841,8 +10040,12 @@ function deleteWorkshopSelectedStructure(){
   deleteSelectedStructure();
   if(deletedSelection.length === 0) return;
 
-  workshopDeletedSelectionUndo.push(deletedSelection);
-  workshopDeletedSelectionRedo.length = 0;
+  if(workshopEditHistory){
+    recordWorkshopDeletionHistory(deletedSelection);
+  }else{
+    workshopDeletedSelectionUndo.push(deletedSelection);
+    workshopDeletedSelectionRedo.length = 0;
+  }
   updateUndoRedoButtons();
 }
   
@@ -19181,11 +19384,11 @@ and THINKer BOB elements. No duplicate mission element is created.
 body:not(.starterScreenActive) #rightHudColumn{
   position:fixed !important;
   top:18px !important;
-  right:18px !important;
+  right:calc(18px + var(--workshop-visible-viewport-right-inset)) !important;
   left:auto !important;
   bottom:auto !important;
   width:315px !important;
-  max-width:315px !important;
+  max-width:min(315px,calc(var(--workshop-visible-viewport-width) - 28px)) !important;
   display:flex !important;
   flex-direction:column !important;
   align-items:stretch !important;
@@ -19333,9 +19536,9 @@ body.starterScreenActive #rightHudColumn{
 @media(max-width:1150px){
   body:not(.starterScreenActive) #rightHudColumn{
     top:14px !important;
-    right:14px !important;
+    right:calc(14px + var(--workshop-visible-viewport-right-inset)) !important;
     width:295px !important;
-    max-width:295px !important;
+    max-width:min(295px,calc(var(--workshop-visible-viewport-width) - 28px)) !important;
     gap:10px !important;
   }
 }
@@ -23028,6 +23231,44 @@ body:not(.starterScreenActive) #toolbox::-webkit-scrollbar-thumb:hover{
 }
 </style>
 
+<script id="responsiveVisibleViewportRightLayoutScript">
+(function(){
+  var pendingFrame=0;
+
+  function applyVisibleViewportRightLayout(){
+    pendingFrame=0;
+    var viewport=window.visualViewport;
+    var width=viewport && Number.isFinite(viewport.width)
+      ? viewport.width
+      : window.innerWidth;
+    var offsetLeft=viewport && Number.isFinite(viewport.offsetLeft)
+      ? viewport.offsetLeft
+      : 0;
+    var visibleRight=offsetLeft+width;
+    var rightInset=Math.max(0,window.innerWidth-visibleRight);
+    var root=document.documentElement;
+    root.style.setProperty("--workshop-visible-viewport-width",Math.max(0,width)+"px");
+    root.style.setProperty("--workshop-visible-viewport-right-inset",rightInset+"px");
+  }
+
+  function scheduleVisibleViewportRightLayout(){
+    if(pendingFrame) return;
+    pendingFrame=window.requestAnimationFrame(applyVisibleViewportRightLayout);
+  }
+
+  window.addEventListener("resize",scheduleVisibleViewportRightLayout);
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize",scheduleVisibleViewportRightLayout);
+    window.visualViewport.addEventListener("scroll",scheduleVisibleViewportRightLayout);
+  }
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",applyVisibleViewportRightLayout,{once:true});
+  }else{
+    applyVisibleViewportRightLayout();
+  }
+})();
+</script>
+
 <style id="stemCoachViewportHeight205B3CSS">
 /* Keep the Coach inside a top-and-bottom bounded column. On Chromebook-sized
    viewports, apply the existing safe-area offset to the column instead of
@@ -23988,6 +24229,7 @@ body.calmMode #reopenLibraryFromCoach{
     if(!state || !Array.isArray(state.blocks) || !blocks || !scene) return;
     while(blocks.length){ scene.remove(blocks.pop()); }
     redoBlocks.length=0;
+    resetWorkshopEditFoundation();
     state.blocks.forEach(function(data){
       var shape=data.shape || "cube";
       var block=addBlock(data.x, data.y, data.z, data.color, createBuilderGeometry(shape, {sx:data.sx,sy:data.sy,sz:data.sz}));
@@ -27486,7 +27728,7 @@ existing Three.js workplane, camera, engineering grid, and View Dice.
    body; these pointer-transparent regions only reserve future module areas. */
 body.workshopMode:not(.starterScreenActive) #workshopRoot{
   position:fixed;
-  inset:42px 0 0;
+  inset:42px var(--workshop-visible-viewport-right-inset) 0 0;
   z-index:20;
   display:grid;
   grid-template-columns:clamp(52px,4vw,72px) minmax(0,1fr) clamp(220px,18vw,320px);
@@ -27494,7 +27736,8 @@ body.workshopMode:not(.starterScreenActive) #workshopRoot{
   grid-template-areas:
     "left viewport right"
     "bottom bottom bottom";
-  width:100%;
+  width:auto;
+  max-width:var(--workshop-visible-viewport-width);
   height:calc(100% - 42px);
   min-width:0;
   overflow:hidden;
@@ -28036,6 +28279,31 @@ body.workshopMode:not(.starterScreenActive) #engineeringSmartBoard{
   pointer-events:none;
 }
 
+.workshop-ruler-axis-label{
+  position:absolute;
+  z-index:6;
+  display:flex;
+  min-width:14px;
+  height:14px;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  border:1px solid rgba(143,246,255,.7);
+  border-radius:3px;
+  color:#eaffff;
+  background:rgba(5,18,27,.9);
+  box-shadow:0 0 4px rgba(54,216,255,.42);
+  font:900 9px/1 "Lexend",Arial,sans-serif;
+  pointer-events:none;
+}
+
+.workshop-ruler-top .workshop-ruler-axis-label,
+.workshop-ruler-bottom .workshop-ruler-axis-label{left:3px;}
+.workshop-ruler-top .workshop-ruler-axis-label{bottom:2px;}
+.workshop-ruler-bottom .workshop-ruler-axis-label{top:2px;}
+.workshop-ruler-left .workshop-ruler-axis-label{top:3px;left:2px;}
+.workshop-ruler-right .workshop-ruler-axis-label{top:3px;right:2px;}
+
 .workshop-ruler-layer[hidden]{
   display:none;
 }
@@ -28306,9 +28574,9 @@ body.workshopMode:not(.starterScreenActive) #workshopMeasurementAssistant{
   position:absolute;
   top:4px;
   right:12px;
-  bottom:82px;
+  bottom:89px;
   left:12px;
-  max-height:calc(100% - 86px);
+  max-height:calc(100% - 93px);
   z-index:8;
   display:grid;
   gap:9px;
@@ -28699,6 +28967,7 @@ body.workshopMode:not(.starterScreenActive) #engineeringToolChest{
   transform:translateX(calc(100% - 10px));
   transition:transform 280ms cubic-bezier(.2,.72,.2,1);
   will-change:transform;
+  z-index:9;
   pointer-events:auto;
 }
 
@@ -31029,6 +31298,29 @@ body.workshopMode:not(.starterScreenActive)
 }
 
 body.workshopMode:not(.starterScreenActive)
+  .workshop-ruler[data-workshop-ruler-presentation="centimeter"]
+  .workshop-ruler-label:is(.is-origin,.is-range-start,.is-range-end){
+  padding:2px 3px;
+  border:1px solid rgba(143,246,255,.58);
+  border-radius:3px;
+  color:#ffffff;
+  background:rgba(5,18,27,.94);
+  box-shadow:0 0 4px rgba(54,216,255,.44);
+}
+
+#workshopEngineeringFeedbackStatus{
+  margin:4px 0 0;
+  padding:5px 8px;
+  border:1px solid rgba(99,233,255,.36);
+  border-radius:6px;
+  color:#eaffff;
+  background:rgba(5,18,27,.78);
+  font:700 10px/1.3 "Lexend",Arial,sans-serif;
+}
+
+#workshopEngineeringFeedbackStatus:empty{display:none;}
+
+body.workshopMode:not(.starterScreenActive)
   .workshop-ruler-horizontal .workshop-ruler-dimension-line{
   top:13px;
 }
@@ -31137,6 +31429,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
   var workshopVisibleRulerRange=null;
   var workshopActiveWorkspaceBoundaryModule=null;
   var workshopActiveWorkspaceBoundary=null;
+  var workshopCadEngineeringFeedbackView=null;
   var workshopHomeGridWorkspace=null;
   var workshopBottomPlatformPresentationSnapshot=null;
   var workshopManualCameraOverride=false;
@@ -31251,6 +31544,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     workshopCanonicalState=snapshot.workshop;
     if(snapshot.workshop==="SHUTTING_DOWN" ||
       snapshot.workshop==="FAULT_SAFE" || snapshot.workshop==="OFF"){
+      if(workshopSelectionMoveController) workshopSelectionMoveController.reset();
       if(typeof resetWorkshopBuildViewportWheelIntent==="function"){
         resetWorkshopBuildViewportWheelIntent();
       }
@@ -31280,6 +31574,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       setWorkshopStartupState("OFF","Workshop closed.");
     }
     syncWorkshopSmartBoardApplicationLauncher();
+    syncWorkshopCadEngineeringFeedback({announce:snapshot.workshop==="READY"});
   }
 
   function syncWorkshopSmartBoardApplicationLauncher(options){
@@ -32799,6 +33094,24 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       workshopActiveWorkspaceBoundary.reset();
     }
     workshopActiveWorkspaceFrame.visible=false;
+    if(workshopCadEngineeringFeedbackView){
+      workshopCadEngineeringFeedbackView.reset();
+    }
+  }
+
+  function syncWorkshopCadEngineeringFeedback(options){
+    if(!workshopCadEngineeringFeedbackView) return null;
+    var boundary=workshopActiveWorkspaceBoundary &&
+      workshopActiveWorkspaceBoundary.read();
+    return workshopCadEngineeringFeedbackView.update({
+      active:currentWorkspaceMode==="workshop" &&
+        document.body.classList.contains("workshopMode") &&
+        workshopCanonicalState==="READY",
+      boundary:boundary,
+      unit:workshopMeasurementUnit,
+      gridVisible:!!(engineeringGrid && engineeringGrid.visible),
+      announce:!!(options && options.announce)
+    });
   }
 
   function commitWorkshopActiveWorkspaceBoundary(range,source){
@@ -32809,6 +33122,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     if(!normalized) return false;
     var snapshot=workshopActiveWorkspaceBoundary.update(normalized,source);
     if(!snapshot || !updateWorkshopActiveWorkspaceFrame(snapshot)) return false;
+    syncWorkshopCadEngineeringFeedback({announce:source==="HOME"});
     return snapshot;
   }
 
@@ -33955,6 +34269,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     }
     blocks.length=0;
     redoBlocks.length=0;
+    resetWorkshopEditFoundation();
     selectedBlocks=[];
     workshopContactGraph.clear();
     clearWorkshopSelectionRestore();
@@ -33979,6 +34294,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       });
       blocks.length=0;
       redoBlocks.length=0;
+      resetWorkshopEditFoundation();
       selectedBlocks=[];
       workshopContactGraph.clear();
       clearWorkshopSelectionRestore();
@@ -34037,6 +34353,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
         : "1 grid cell = 1 cm • Blocks snap: 1 cm";
     }
     updateWorkshopPrecisionCursorText();
+    // The existing dashboard Precision status announces deliberate unit
+    // changes. Refresh the compact summary without creating a duplicate live
+    // announcement; settled workspace-size changes use the dedicated owner.
+    syncWorkshopCadEngineeringFeedback({announce:false});
     if(workshopRulerState.selectedBounds) renderWorkshopSelectedBounds();
 
     if(engineeringGrid){
@@ -35852,7 +36172,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
     import("./js/workshop/runtime/workshop-build-bounds-framing.mjs"),
     import("./js/workshop/runtime/workshop-cad-workspace-presentation.mjs"),
     import("./js/workshop/runtime/workshop-visible-ruler-presentation.mjs"),
-    import("./js/workshop/runtime/workshop-active-workspace-boundary.mjs")
+    import("./js/workshop/runtime/workshop-active-workspace-boundary.mjs"),
+    import("./js/workshop/runtime/workshop-cad-engineering-feedback-view.mjs"),
+    import("./js/workshop/editing/workshop-edit-history.mjs"),
+    import("./js/workshop/editing/workshop-selection-move-controller.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -35891,6 +36214,50 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
       workshopActiveWorkspaceBoundaryModule=modules[25];
       workshopActiveWorkspaceBoundary=modules[25]
         .createWorkshopActiveWorkspaceBoundary();
+      var cadEngineeringFeedbackModule=modules[26];
+      var markerSettings=cadEngineeringFeedbackModule.WORKSHOP_CAD_ORIGIN_MARKER;
+      var markerGeometry=new THREE.RingGeometry(
+        markerSettings.innerRadius,
+        markerSettings.outerRadius,
+        markerSettings.segments
+      );
+      var markerMaterial=new THREE.MeshBasicMaterial({
+        color:markerSettings.color,
+        transparent:true,
+        opacity:markerSettings.opacity,
+        depthTest:true,
+        depthWrite:false,
+        side:THREE.DoubleSide
+      });
+      workshopCadOriginMarker=new THREE.Mesh(markerGeometry,markerMaterial);
+      workshopCadOriginMarker.name="workshopCadOriginMarker";
+      workshopCadOriginMarker.rotation.x=-Math.PI/2;
+      workshopCadOriginMarker.position.set(0,markerSettings.elevation,0);
+      workshopCadOriginMarker.renderOrder=-7;
+      workshopCadOriginMarker.visible=false;
+      workshopCadOriginMarker.raycast=function(){};
+      workshopCadOriginMarker.userData.workshopDecoration=true;
+      workshopCadOriginMarker.userData.workshopNonInteractive=true;
+      scene.add(workshopCadOriginMarker);
+      workshopCadEngineeringFeedbackView=
+        cadEngineeringFeedbackModule.createWorkshopCadEngineeringFeedbackView({
+          statusElement:document.getElementById("workshopEngineeringFeedbackStatus"),
+          announcementElement:document.getElementById("workshopEngineeringFeedbackAnnouncement"),
+          originMarker:workshopCadOriginMarker
+        });
+      workshopEditHistory=modules[27].createWorkshopEditHistory({
+        validate:validateWorkshopEditTransaction,
+        apply:applyWorkshopEditTransaction
+      });
+      workshopSelectionMoveController=
+        modules[28].createWorkshopSelectionMoveController();
+      window.getWorkshopEditHistorySnapshot=function(){
+        return workshopEditHistory.getSnapshot();
+      };
+      window.getWorkshopSelectionMoveSnapshot=function(){
+        return workshopSelectionMoveController.getSnapshot();
+      };
+      updateUndoRedoButtons();
       if(currentWorkspaceMode==="workshop" &&
         document.body.classList.contains("workshopMode") &&
         activeWorkshopEngineeringView==="home" &&

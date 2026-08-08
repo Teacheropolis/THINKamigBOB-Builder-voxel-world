@@ -13,10 +13,17 @@ test("Tool Chest owns the right rail without unmounting Measurement Assistant", 
 test("Measurement Assistant stays above the dashboard and reserves the handle rail", () => {
   const rule=source.match(/body\.workshopMode:not\(\.starterScreenActive\) #workshopMeasurementAssistant\{[\s\S]*?\n\}/)?.[0] || "";
   assert.match(rule,/top:4px;/);
-  assert.match(rule,/bottom:82px;/);
-  assert.match(rule,/max-height:calc\(100% - 86px\);/);
+  assert.match(rule,/bottom:89px;/);
+  assert.match(rule,/max-height:calc\(100% - 93px\);/);
   assert.match(rule,/overflow-y:auto;/);
   assert.match(rule,/overscroll-behavior:contain;/);
+});
+
+test("transformed cabinet stacks above the restored Assistant", () => {
+  const cabinetRule=source.match(/#engineeringToolChestCabinet\{[\s\S]*?\n\}/)?.[0] || "";
+  assert.match(cabinetRule,/transform:translateX\(calc\(100% - 10px\)\);/);
+  assert.match(cabinetRule,/z-index:9;/);
+  assert.match(source, /#workshopMeasurementAssistant\{[\s\S]*?z-index:8;/);
 });
 
 test("Measurement Assistant exposes an engineering-green cross-browser scrollbar", () => {

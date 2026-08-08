@@ -25,7 +25,7 @@ test("keeps the complete focus footprint inside Mac and Chromebook geometry", ()
   const outlineExtent = outlineWidth + outlineOffset;
   const handleWidth = 44;
   const handleHeight = 52;
-  const retractedViewportInset = 6;
+  const retractedViewportInset = 10;
   const dashboardClearance = 24;
   const viewports = [
     { width: 1280, height: 720 },
@@ -50,7 +50,7 @@ test("keeps the complete focus footprint inside Mac and Chromebook geometry", ()
   }
 
   assert.equal(-44 + handleWidth, 0, "handle remains attached to the cabinet edge");
-  assert.match(source, /#engineeringToolChestCabinet\{[\s\S]*?bottom:8px;[\s\S]*?transform:translateX\(calc\(100% - 10px\)\);[\s\S]*?transition:transform 280ms cubic-bezier\(\.2,\.72,\.2,1\);/);
+  assert.match(source, /#engineeringToolChestCabinet\{[\s\S]*?bottom:8px;[\s\S]*?transform:translateX\(calc\(100% - 10px\)\);[\s\S]*?transition:transform 280ms cubic-bezier\(\.2,\.72,\.2,1\);[\s\S]*?z-index:9;/);
   assert.match(source, /@media\(max-width:650px\)\{[\s\S]*?#engineeringToolChestCabinet\{[\s\S]*?bottom:6px;/);
 });
 
