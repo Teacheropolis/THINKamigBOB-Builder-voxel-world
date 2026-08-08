@@ -30825,6 +30825,16 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
   bottom:160px;
 }
 
+#missionPopup{
+  z-index:1270;
+}
+
+@media(min-width:901px) and (max-width:1280px){
+  body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
+    grid-template-columns:minmax(360px,390px) minmax(0,1fr);
+  }
+}
+
 @media(max-width:900px){
   body.workshopMode:not(.starterScreenActive) #workshopRoot{
     grid-template-rows:minmax(0,1fr) 148px;
