@@ -21,6 +21,7 @@ function makeGroup(documentRef, label, items, activate) {
     collection.setAttribute("aria-label", `${label}: ${category}`);
     categoryItems.forEach((item) => {
       const button = documentRef.createElement("button");
+      const thumbnail = documentRef.createElement("span");
       const name = documentRef.createElement("span");
       const detail = documentRef.createElement("small");
       button.type = "button";
@@ -29,11 +30,14 @@ function makeGroup(documentRef, label, items, activate) {
       button.setAttribute("aria-label", item.supported
         ? `Place ${item.name}`
         : `${item.name}. Unavailable in Workshop.`);
+      thumbnail.className = "engineering-parts-object-thumbnail";
+      thumbnail.setAttribute("aria-hidden", "true");
+      thumbnail.textContent = item.symbol;
       name.className = "engineering-object-tile-name";
       name.textContent = item.name;
       detail.className = "engineering-parts-object-detail";
       detail.textContent = item.supported ? "Ready to place" : item.disabledReason;
-      button.append(name, detail);
+      button.append(thumbnail, name, detail);
       if (!item.supported) {
         button.disabled = true;
         button.setAttribute("aria-disabled", "true");

@@ -4516,13 +4516,13 @@ This control is available only after a mission has started.
       <button id="workshopQuickHelp" type="button" onclick="document.getElementById('helpButton').click()"><span class="workshop-control-icon" aria-hidden="true">?</span><span>Help</span></button>
     </div>
     <div id="workshopConsoleTabs" role="tablist" aria-label="Workshop tool areas">
-      <button id="workshopTabBuild" type="button" role="tab" aria-selected="true" aria-controls="workshopPanelBuild" onclick="setWorkshopConsoleTab('build')">Design</button>
-      <button id="workshopTabEdit" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelEdit" tabindex="-1" onclick="setWorkshopConsoleTab('edit')">More Tools</button>
-      <button id="workshopTabPrecision" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelPrecision" tabindex="-1" onclick="setWorkshopConsoleTab('precision')">Measure</button>
-      <button id="workshopTabPlanTrace" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelPlanTrace" tabindex="-1" onclick="setWorkshopConsoleTab('plan-trace')">Plan</button>
-      <button id="workshopTabArrange" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelArrange" tabindex="-1" onclick="setWorkshopConsoleTab('arrange')">Arrange</button>
-      <button id="workshopTabProject" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelProject" tabindex="-1" onclick="setWorkshopConsoleTab('project')">Project</button>
-      <button id="workshopTabThinkerBob" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelThinkerBob" tabindex="-1" onclick="setWorkshopConsoleTab('thinker-bob')">THINKer BOB</button>
+      <button id="workshopTabBuild" type="button" role="tab" aria-selected="true" aria-controls="workshopPanelBuild" onclick="setWorkshopConsoleTab('build')"><span class="workshop-tab-icon" aria-hidden="true">🛠</span><span>Design</span></button>
+      <button id="workshopTabEdit" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelEdit" tabindex="-1" onclick="setWorkshopConsoleTab('edit')"><span class="workshop-tab-icon" aria-hidden="true">🧰</span><span>More Tools</span></button>
+      <button id="workshopTabPrecision" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelPrecision" tabindex="-1" onclick="setWorkshopConsoleTab('precision')"><span class="workshop-tab-icon" aria-hidden="true">📏</span><span>Measure</span></button>
+      <button id="workshopTabPlanTrace" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelPlanTrace" tabindex="-1" onclick="setWorkshopConsoleTab('plan-trace')"><span class="workshop-tab-icon" aria-hidden="true">📐</span><span>Plan</span></button>
+      <button id="workshopTabArrange" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelArrange" tabindex="-1" onclick="setWorkshopConsoleTab('arrange')"><span class="workshop-tab-icon" aria-hidden="true">🧩</span><span>Arrange</span></button>
+      <button id="workshopTabProject" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelProject" tabindex="-1" onclick="setWorkshopConsoleTab('project')"><span class="workshop-tab-icon" aria-hidden="true">📁</span><span>Project</span></button>
+      <button id="workshopTabThinkerBob" type="button" role="tab" aria-selected="false" aria-controls="workshopPanelThinkerBob" tabindex="-1" onclick="setWorkshopConsoleTab('thinker-bob')"><span class="workshop-tab-icon" aria-hidden="true">🤖</span><span>THINKer BOB</span></button>
     </div>
     <section id="workshopPanelBuild" class="workshop-dashboard-section isActive" role="tabpanel" aria-labelledby="workshopTabBuild" data-workshop-console-panel="build">
       <h2 id="workshopBuildShapesLabel">Design tools</h2>
@@ -4533,7 +4533,7 @@ This control is available only after a mission has started.
             <button id="workshopShapeCube" type="button" data-workshop-shape="cube" aria-pressed="true" onclick="chooseWorkshopBuildShape('cube')"><span class="workshop-control-icon" aria-hidden="true">🧊</span><span>Cube</span></button>
             <button id="workshopShapeSphere" type="button" data-workshop-shape="sphere" aria-pressed="false" onclick="chooseWorkshopBuildShape('sphere')"><span class="workshop-control-icon" aria-hidden="true">●</span><span>Sphere</span></button>
             <button id="workshopShapeWedge" type="button" data-workshop-shape="trianglePrism" aria-pressed="false" onclick="chooseWorkshopBuildShape('trianglePrism')"><span class="workshop-control-icon" aria-hidden="true">◢</span><span>Wedge</span></button>
-            <button id="workshopPartsObjectsButton" type="button" onclick="toggleEngineeringToolChestDrawer('parts-objects')"><span class="workshop-control-icon" aria-hidden="true">🧰</span><span>Parts &amp; Objects</span></button>
+            <button id="workshopPartsObjectsButton" type="button" onclick="toggleEngineeringToolChestDrawer('parts-objects')"><span class="workshop-control-icon workshop-parts-symbols" aria-hidden="true"><span>🏢</span><span>🚀</span></span><span>Parts &amp; Objects</span></button>
           </div>
         </section>
         <section class="workshop-design-group is-change" aria-labelledby="workshopDesignChangeLabel">
@@ -29943,11 +29943,29 @@ body.workshopMode:not(.starterScreenActive) #engineeringToolChest{
 }
 .engineering-parts-object-tile{
   min-width:0;
-  min-height:52px;
-  grid-template-rows:auto auto;
+  min-height:84px;
+  grid-template-rows:42px auto auto;
+  gap:3px;
+  color:#ffffff;
+}
+.engineering-parts-object-thumbnail{
+  display:flex;
+  width:42px;
+  height:42px;
+  align-items:center;
+  justify-content:center;
+  justify-self:center;
+  font-size:32px;
+  line-height:1;
+  filter:drop-shadow(0 3px 2px rgba(0,0,0,.58));
+}
+.engineering-parts-object-tile .engineering-object-tile-name{
+  color:#f4feff;
+  font:900 10px/1.1 "Lexend",Arial,sans-serif;
+  text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 5px rgba(117,228,255,.42);
 }
 .engineering-parts-object-detail{
-  color:#b9d3dc;
+  color:#d8f3fa;
   font:700 7px/1.25 "Lexend",Arial,sans-serif;
 }
 .engineering-parts-object-tile:disabled{cursor:not-allowed;opacity:.62;}
@@ -31337,7 +31355,7 @@ body.workshopMode:not(.starterScreenActive) #workshopDashboard{
 
 body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
   grid-template-columns:minmax(390px,.9fr) minmax(0,1.1fr);
-  grid-template-rows:44px minmax(0,1fr);
+  grid-template-rows:52px minmax(0,1fr);
   gap:5px 9px;
   padding:6px 9px;
 }
@@ -31348,6 +31366,13 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
 
 #workshopConsoleTabs{
   gap:4px;
+}
+
+#workshopQuickAccessToolbar,
+#workshopConsoleTabs{
+  height:52px;
+  box-sizing:border-box;
+  align-items:center;
 }
 
 #workshopQuickAccessToolbar button,
@@ -31556,7 +31581,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
 
   body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
     grid-template-columns:minmax(360px,.9fr) minmax(0,1.1fr);
-    grid-template-rows:44px minmax(0,1fr);
+    grid-template-rows:52px minmax(0,1fr);
     gap:4px;
     padding:5px;
   }
@@ -31579,7 +31604,7 @@ body.workshopMode:not(.starterScreenActive) #workspaceUtilityRail{
   }
 
   body.workshopMode:not(.starterScreenActive) #workshopEngineeringDashboard{
-    grid-template-rows:44px minmax(0,1fr);
+    grid-template-rows:52px minmax(0,1fr);
   }
 
   #workshopQuickAccessToolbar button,
@@ -32119,6 +32144,10 @@ body.workshopMode:not(.starterScreenActive) .workshop-ruler-right{
 
 /* Workshop unified Design dashboard: a bright, friendly Builder-style tool
    shelf that preserves the established dashboard geometry and tool owners. */
+body.workshopMode:not(.starterScreenActive){
+  --workshop-builder-face:url("assets/images/dashboard/button-faces/builder-shortcut-grid-frame-glow.png");
+}
+
 body.workshopMode:not(.starterScreenActive) #workshopDashboard{
   --workshop-dash-navy:#09263a;
   --workshop-dash-blue:#174b69;
@@ -32142,23 +32171,49 @@ body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs{
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button,
-body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button,
 body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button,
 body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button{
-  border:2px solid #5e91aa;
-  border-radius:9px;
-  color:#fff;
-  background:linear-gradient(180deg,#286887,#16445e);
-  box-shadow:inset 0 2px rgba(255,255,255,.18),0 2px 0 rgba(0,0,0,.3);
+  position:relative;
+  border:0;
+  border-radius:0;
+  color:#fff7d6;
+  background-color:transparent;
+  background-image:var(--workshop-builder-face);
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:100% 100%;
+  box-shadow:none;
   font-family:"Lexend",Arial,sans-serif;
   font-weight:900;
-  text-shadow:0 1px 1px rgba(0,0,0,.7);
+  text-shadow:0 1px 2px rgba(0,0,0,.85);
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button{
-  color:#e7f8ff;
-  border-color:#497b93;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  border:2px solid var(--workshop-dash-brass);
+  border-color:var(--workshop-dash-brass-light) #a96e11 #704307 #d49a27;
+  border-radius:7px;
+  color:#9ff4ff;
+  background:linear-gradient(180deg,#123e59,#071f31);
+  box-shadow:inset 0 0 0 1px rgba(127,239,255,.55),inset 0 1px rgba(255,255,255,.12),0 2px 0 #4f3106;
   font-size:10px;
+  font-weight:900;
+  text-shadow:0 1px 2px rgba(0,0,0,.85);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs .workshop-tab-icon{
+  flex:0 0 auto;
+  font-size:16px;
+  line-height:1;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.72));
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button > span:last-child{
+  min-width:0;
+  line-height:1.05;
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button:hover:not(:disabled),
@@ -32166,8 +32221,7 @@ body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button:hover:no
 body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button:hover:not(:disabled),
 body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:hover:not(:disabled){
   transform:translateY(-1px);
-  border-color:var(--workshop-dash-brass-light);
-  background:linear-gradient(180deg,#3584a6,#1d5874);
+  filter:brightness(1.28) saturate(1.18) drop-shadow(0 0 7px rgba(127,239,255,.78)) drop-shadow(0 0 3px rgba(255,213,92,.58));
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button:active:not(:disabled),
@@ -32175,17 +32229,43 @@ body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button:active:n
 body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button:active:not(:disabled),
 body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:active:not(:disabled){
   transform:translateY(1px);
-  box-shadow:inset 0 2px 4px rgba(0,0,0,.4);
+  filter:brightness(.88);
+  box-shadow:none;
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button[aria-selected="true"],
 body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button[aria-pressed="true"],
 body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button[aria-pressed="true"]:not(:disabled){
-  color:#06202c;
-  border-color:#dfffff;
-  background:linear-gradient(180deg,#c9fcff,var(--workshop-dash-cyan));
-  box-shadow:inset 0 2px rgba(255,255,255,.65),0 0 8px rgba(127,239,255,.5);
-  text-shadow:none;
+  color:#fff;
+  box-shadow:inset 0 0 0 3px #bdf9ff,0 0 0 2px #e3b83f,0 0 10px rgba(127,239,255,.82);
+  filter:brightness(1.12) saturate(1.12);
+  text-shadow:0 1px 2px rgba(0,0,0,.8);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopSelectButton[aria-pressed="true"]::after,
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls button[aria-pressed="true"]::after{
+  content:"";
+  position:absolute;
+  z-index:2;
+  top:5px;
+  right:7px;
+  width:9px;
+  height:9px;
+  border:1px solid #fff7d6;
+  border-radius:50%;
+  background:#7fefff;
+  box-shadow:0 0 0 2px rgba(7,29,45,.9),0 0 7px #7fefff;
+  pointer-events:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopSelectButton[aria-pressed="true"]{
+  color:#dfffff;
+  box-shadow:inset 0 0 0 3px #bdf9ff,0 0 0 2px #e3b83f,0 0 12px rgba(127,239,255,.95);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopSelectButton[aria-pressed="true"] .workshop-control-icon{
+  color:#dfffff;
+  text-shadow:0 0 7px #7fefff;
 }
 
 body.workshopMode:not(.starterScreenActive) .workshop-dashboard-section{
@@ -32252,10 +32332,15 @@ body.workshopMode:not(.starterScreenActive) .workshop-dashboard-section{
   gap:4px;
   padding:3px 5px;
   box-sizing:border-box;
-  font-size:10px;
+  font-size:11px;
   line-height:1.05;
   overflow-wrap:anywhere;
   cursor:pointer;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button{
+  font-size:10px;
+  line-height:1.05;
 }
 
 .workshop-design-group-controls .workshop-control-icon,
@@ -32263,6 +32348,26 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar .worksho
   color:var(--workshop-dash-lime);
   font-size:15px;
   text-shadow:0 0 4px rgba(185,245,72,.35);
+}
+
+.workshop-parts-symbols{
+  display:grid;
+  grid-template-columns:repeat(2,16px);
+  width:32px;
+  flex:0 0 32px;
+  gap:1px;
+  font-size:16px !important;
+  line-height:1;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopPartsObjectsButton{
+  flex-direction:column;
+  gap:0;
+  padding-top:2px;
+  padding-bottom:2px;
+  color:#efffff;
+  font-size:9px;
+  line-height:1;
 }
 
 .workshop-design-group.is-make{
@@ -32288,12 +32393,105 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickDelete .workshop-contr
 }
 
 body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button:disabled,
-body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:disabled{
+body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:disabled,
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button:disabled{
   color:rgba(222,235,241,.55);
-  border-color:rgba(121,151,164,.45);
-  background:#203b4b;
   box-shadow:none;
-  opacity:.7;
+  filter:grayscale(.55) brightness(.72);
+  opacity:.68;
+}
+
+/* View Remote mirrors the real View Dice faces; Home remains the neutral
+   camera reset rather than claiming a face color that the dice does not own. */
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls button[data-workshop-view]{
+  --workshop-view-highlight:#236b9b;
+  --workshop-view-base:#082d50;
+  --workshop-view-shadow:#031323;
+  position:relative;
+  border:7px solid transparent;
+  border-image-source:var(--workshop-builder-face);
+  border-image-slice:30;
+  border-image-width:7px;
+  border-image-repeat:stretch;
+  color:#fff7d6;
+  background:linear-gradient(180deg,var(--workshop-view-highlight),var(--workshop-view-base) 42%,var(--workshop-view-shadow));
+  box-shadow:inset 0 0 0 1px #7fefff,inset 0 1px rgba(255,255,255,.18);
+  font:900 10px/1 "Lexend",Arial,sans-serif;
+  text-shadow:0 1px 2px rgba(0,0,0,.9);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls button[data-workshop-view]:hover:not(:disabled){
+  filter:brightness(1.28) saturate(1.18) drop-shadow(0 0 7px rgba(127,239,255,.78));
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls button[data-workshop-view][aria-pressed="true"]{
+  box-shadow:inset 0 0 0 3px #bdf9ff,0 0 0 2px #e3b83f,0 0 10px rgba(127,239,255,.9);
+  filter:brightness(1.12) saturate(1.12);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopViewHome{
+  --workshop-view-highlight:#24708d;
+  --workshop-view-base:#0b3a55;
+  --workshop-view-shadow:#041d2c;
+  display:flex;
+  flex-flow:row nowrap;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  white-space:nowrap;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopViewHome > span,
+body.workshopMode:not(.starterScreenActive) #workshopViewHome .workshop-control-icon{
+  color:#83ff72;
+  text-shadow:0 0 7px rgba(87,255,104,.95),0 1px 2px rgba(0,0,0,.9);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopViewHome .workshop-control-icon{
+  font-size:18px !important;
+  line-height:1;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopViewHome small{
+  display:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch{
+  border:0;
+  border-radius:0;
+  color:#ffad32;
+  background-color:transparent;
+  background-image:var(--workshop-builder-face);
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:100% 100%;
+  box-shadow:none;
+  font:900 13px/1.05 "Lexend",Arial,sans-serif;
+  text-shadow:0 1px 2px rgba(0,0,0,.98),0 0 2px #ff8a00,0 0 5px rgba(255,159,28,.9);
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch .workspaceModeIcon{
+  display:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[aria-pressed="true"] .workspaceModeLabel{
+  color:#ffad32;
+  text-transform:uppercase;
+  white-space:nowrap;
+  text-shadow:0 1px 2px rgba(0,0,0,.98),0 0 2px #ff8a00,0 0 5px rgba(255,159,28,.9);
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:hover{
+  color:#ffffff;
+  background-image:var(--workshop-builder-face);
+  filter:brightness(1.28) saturate(1.18) drop-shadow(0 0 7px rgba(127,239,255,.78)) drop-shadow(0 0 3px rgba(255,213,92,.58));
+  transform:translateY(-1px);
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:active{
+  transform:translateY(1px);
+  filter:brightness(.88);
+  box-shadow:none;
 }
 
 .workshop-more-tools-controls{
@@ -32317,7 +32515,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls butt
   body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button,
   body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button,
   body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button,
-  body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button{
+  body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button,
+  body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls button[data-workshop-view],
+  body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch{
     transition:none;
   }
 
@@ -32328,7 +32528,9 @@ body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls butt
   body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar button:active:not(:disabled),
   body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button:active:not(:disabled),
   body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button:active:not(:disabled),
-  body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:active:not(:disabled){
+  body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:active:not(:disabled),
+  body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:hover,
+  body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:active{
     transform:none;
   }
 }
@@ -35188,7 +35390,7 @@ body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls butt
     var icon=modeSwitch.querySelector(".workspaceModeIcon");
     var label=modeSwitch.querySelector(".workspaceModeLabel");
     if(icon) icon.textContent=workshopIsActive ? "🧱" : "🛠";
-    if(label) label.textContent=workshopIsActive ? "Return to Mission" : "Open Workshop";
+    if(label) label.textContent=workshopIsActive ? "RETURN TO MISSION" : "Open Workshop";
     if(!workshopIsActive && workshopStartupState!=="OFF" && workshopStartupState!=="READY"){
       setWorkshopStartupState(workshopStartupState);
     }

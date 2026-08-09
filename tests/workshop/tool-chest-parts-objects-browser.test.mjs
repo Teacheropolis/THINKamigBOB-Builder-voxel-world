@@ -40,7 +40,9 @@ test("provides one contained Chromebook-friendly native scroll owner", () => {
   assert.match(source, /\.engineering-parts-objects-drawer\{[\s\S]*?overflow-y:auto;[\s\S]*?overscroll-behavior:contain;[\s\S]*?touch-action:pan-y;/);
   assert.match(source, /scrollbar-color:#65ff68 #102631/);
   assert.match(source, /engineering-parts-objects-drawer::-webkit-scrollbar-thumb/);
-  assert.match(source, /\.engineering-parts-object-tile\{[\s\S]*?min-height:52px/);
+  assert.match(source, /\.engineering-parts-object-tile\{[\s\S]*?min-height:84px[\s\S]*?grid-template-rows:42px auto auto/);
+  assert.match(source, /\.engineering-parts-object-thumbnail\{[\s\S]*?font-size:32px/);
+  assert.match(source, /\.engineering-parts-object-tile \.engineering-object-tile-name\{[\s\S]*?color:#f4feff/);
   assert.match(source, /event\.target\.closest\("#engineeringDrawerPartsObjectsContent"\)/);
 });
 

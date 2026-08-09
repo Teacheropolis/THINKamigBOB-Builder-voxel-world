@@ -54,9 +54,9 @@ test("renders grouped native controls, disables unsupported objects, and stays i
   const placements = [];
   const adapter = {
     list: () => [
-      { key: "tree", name: "Tree", category: "Nature", missionRelevant: true, supported: true, disabledReason: "" },
-      { key: "building", name: "Building", category: "Magic", missionRelevant: false, supported: true, disabledReason: "" },
-      { key: "plantCell", name: "Plant Cell", category: "Cells", missionRelevant: false, supported: false, disabledReason: "Needs mission setup." },
+      { key: "tree", name: "Tree", symbol: "🌲", category: "Nature", missionRelevant: true, supported: true, disabledReason: "" },
+      { key: "building", name: "Building", symbol: "🏢", category: "Magic", missionRelevant: false, supported: true, disabledReason: "" },
+      { key: "plantCell", name: "Plant Cell", symbol: "🌱", category: "Cells", missionRelevant: false, supported: false, disabledReason: "Needs mission setup." },
     ],
     place: (key) => { placements.push(key); return { ok: true, code: "PLACED", key }; },
     reset: () => true,
@@ -67,6 +67,8 @@ test("renders grouped native controls, disables unsupported objects, and stays i
   const buttons = root.querySelectorAll("button[data-parts-object-key]");
   assert.equal(buttons.length, 3);
   assert.equal(buttons[0].tagName, "BUTTON");
+  assert.equal(buttons[0].children[0].className, "engineering-parts-object-thumbnail");
+  assert.equal(buttons[0].children[0].textContent, "🌲");
   assert.equal(buttons[2].disabled, true);
   assert.match(buttons[2].attributes["aria-label"], /Unavailable/);
   buttons[0].listeners.click({ currentTarget: buttons[0] });

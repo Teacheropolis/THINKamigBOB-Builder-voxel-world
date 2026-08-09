@@ -16,22 +16,22 @@ const themeEnd=source.indexOf("</style>",themeStart);
 const theme=source.slice(themeStart,themeEnd);
 
 const routes=[
-  ["workshopTabBuild","workshopPanelBuild","build","Design"],
-  ["workshopTabEdit","workshopPanelEdit","edit","More Tools"],
-  ["workshopTabPrecision","workshopPanelPrecision","precision","Measure"],
-  ["workshopTabPlanTrace","workshopPanelPlanTrace","plan-trace","Plan"],
-  ["workshopTabArrange","workshopPanelArrange","arrange","Arrange"],
-  ["workshopTabProject","workshopPanelProject","project","Project"],
-  ["workshopTabThinkerBob","workshopPanelThinkerBob","thinker-bob","THINKer BOB"]
+  ["workshopTabBuild","workshopPanelBuild","build","Design","🛠"],
+  ["workshopTabEdit","workshopPanelEdit","edit","More Tools","🧰"],
+  ["workshopTabPrecision","workshopPanelPrecision","precision","Measure","📏"],
+  ["workshopTabPlanTrace","workshopPanelPlanTrace","plan-trace","Plan","📐"],
+  ["workshopTabArrange","workshopPanelArrange","arrange","Arrange","🧩"],
+  ["workshopTabProject","workshopPanelProject","project","Project","📁"],
+  ["workshopTabThinkerBob","workshopPanelThinkerBob","thinker-bob","THINKer BOB","🤖"]
 ];
 
 test("seven routes keep their IDs and behavior with student-facing labels", () => {
   assert.equal((source.match(/id="workshopTab[^" ]+"[^>]*role="tab"/g)||[]).length,7);
   assert.equal((source.match(/data-workshop-console-panel="[^"]+"/g)||[]).length,7);
-  for(const [tabId,panelId,route,label] of routes){
+  for(const [tabId,panelId,route,label,icon] of routes){
     assert.match(
       source,
-      new RegExp(`id="${tabId}"[^>]*aria-controls="${panelId}"[^>]*onclick="setWorkshopConsoleTab\\('${route}'\\)"[^>]*>${label.replace(" ","(?: |&amp;)")}</button>`)
+      new RegExp(`id="${tabId}"[^>]*aria-controls="${panelId}"[^>]*onclick="setWorkshopConsoleTab\\('${route}'\\)"[^>]*><span class="workshop-tab-icon" aria-hidden="true">${icon}</span><span>${label}</span></button>`)
     );
     assert.match(source,new RegExp(`id="${panelId}"[\\s\\S]*?data-workshop-console-panel="${route}"`));
   }
@@ -73,6 +73,7 @@ test("Parts and Objects delegates to the Tool Chest owner", () => {
     designPanel,
     /id="workshopPartsObjectsButton"[^>]*onclick="toggleEngineeringToolChestDrawer\('parts-objects'\)"/
   );
+  assert.match(designPanel,/id="workshopPartsObjectsButton"[\s\S]*?class="workshop-control-icon workshop-parts-symbols"[^>]*>[\s\S]*?<span>🏢<\/span><span>🚀<\/span>/);
   assert.match(source,/window\.toggleEngineeringToolChestDrawer=toggleEngineeringToolChestDrawer/);
 });
 
@@ -98,19 +99,45 @@ test("Builder-style theme preserves state and Chromebook geometry contracts", ()
   assert.match(theme,/--workshop-dash-cyan:#7fefff/);
   assert.match(theme,/--workshop-dash-lime:#b9f548/);
   assert.match(theme,/--workshop-dash-coral:#ff806d/);
+  assert.equal((theme.match(/url\("assets\/images\/dashboard\/button-faces\/builder-shortcut-grid-frame-glow\.png"\)/g)||[]).length,1);
+  assert.match(theme,/#workshopQuickAccessToolbar button,[\s\S]*?background-image:var\(--workshop-builder-face\)[\s\S]*?background-size:100% 100%/);
+  assert.match(theme,/#workshopConsoleTabs button\{[\s\S]*?border:2px solid var\(--workshop-dash-brass\)[\s\S]*?background:linear-gradient\(180deg,#123e59,#071f31\)/);
+  assert.match(theme,/#workshopConsoleTabs \.workshop-tab-icon\{[\s\S]*?font-size:16px/);
   assert.match(theme,/\.workshop-design-groups\{[\s\S]*?grid-template-columns:minmax\(285px,4fr\) minmax\(420px,6fr\) minmax\(220px,3fr\)/);
   assert.match(theme,/\.workshop-design-group-controls button\{[\s\S]*?min-height:44px/);
   assert.match(theme,/button\[aria-selected="true"\]/);
   assert.match(theme,/button\[aria-pressed="true"\]/);
+  assert.match(theme,/#workshopSelectButton\[aria-pressed="true"\]::after/);
+  assert.match(theme,/#workshopEngineeringViewControls button\[aria-pressed="true"\]::after/);
   assert.match(theme,/button:disabled/);
   assert.match(theme,/#workshopDeleteButton[\s\S]*?#workshopQuickDelete/);
   assert.match(theme,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(theme,/transition:none/);
-  assert.doesNotMatch(theme,/url\(|#buildBar|dashboard-ticker|dashboard-hood/);
+  assert.doesNotMatch(theme,/#buildBar|dashboard-ticker|dashboard-hood|button-face-master|return-to-missions\.png/);
+
+  assert.match(theme,/#workshopEngineeringViewControls button\[data-workshop-view\]\{[\s\S]*?--workshop-view-highlight:#236b9b;[\s\S]*?--workshop-view-base:#082d50;[\s\S]*?--workshop-view-shadow:#031323/);
+  assert.doesNotMatch(theme,/#workshopView(?:Top|Front|Back|Left|Right|Bottom)\{/);
+  assert.match(theme,/#workshopViewHome\{[\s\S]*?--workshop-view-highlight:#24708d;[\s\S]*?--workshop-view-base:#0b3a55;[\s\S]*?--workshop-view-shadow:#041d2c;[\s\S]*?display:flex;[\s\S]*?flex-flow:row nowrap;[\s\S]*?align-items:center;[\s\S]*?white-space:nowrap/);
+  assert.match(theme,/#workshopEngineeringViewControls button\[data-workshop-view\]\{[\s\S]*?border-image-source:var\(--workshop-builder-face\)[\s\S]*?border-image-slice:30/);
+  assert.match(theme,/#viewCubeBox #workspaceModeSwitch\{[\s\S]*?background-image:var\(--workshop-builder-face\)[\s\S]*?font:900 13px\/1\.05 "Lexend"/);
+  assert.match(theme,/#viewCubeBox #workspaceModeSwitch \.workspaceModeIcon\{[\s\S]*?display:none/);
+  assert.match(source,/label\.textContent=workshopIsActive \? "RETURN TO MISSION" : "Open Workshop"/);
+  assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeLabel\{[\s\S]*?color:#ffad32;[\s\S]*?text-transform:uppercase;[\s\S]*?white-space:nowrap;[\s\S]*?text-shadow:[^;]*#ff8a00/);
+  assert.match(theme,/#workshopViewHome \.workshop-control-icon\{[\s\S]*?font-size:18px/);
+  assert.match(theme,/#workshopViewHome > span,[\s\S]*?color:#83ff72/);
+  assert.match(theme,/#workshopViewHome small\{[\s\S]*?display:none/);
+  assert.match(theme,/\.workshop-design-group-controls button\{[\s\S]*?font-size:11px/);
+  assert.match(theme,/#workshopQuickAccessToolbar button\{[\s\S]*?font-size:10px/);
+  assert.match(theme,/\.workshop-parts-symbols\{[\s\S]*?grid-template-columns:repeat\(2,16px\)/);
+  assert.match(theme,/#workshopSelectButton\[aria-pressed="true"\]\{[\s\S]*?inset 0 0 0 3px #bdf9ff/);
+  assert.match(theme,/filter:brightness\(1\.28\) saturate\(1\.18\)/);
 
   assert.match(source,/body\.workshopMode:not\(\.starterScreenActive\) #workshopDashboard\{\s*height:148px/);
   assert.match(source,/@media\(min-width:901px\) and \(max-width:1280px\)\{\s*body\.workshopMode:not\(\.starterScreenActive\) #workshopEngineeringDashboard\{\s*grid-template-columns:minmax\(360px,390px\) minmax\(0,1fr\)/);
   assert.match(source,/#workshopQuickAccessToolbar\{[\s\S]*?grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
   assert.match(source,/#workshopConsoleTabs\{[\s\S]*?grid-template-columns:repeat\(7,minmax\(0,1fr\)\)/);
+  assert.match(source,/body\.workshopMode:not\(\.starterScreenActive\) #workshopEngineeringDashboard\{[\s\S]*?grid-template-rows:52px minmax\(0,1fr\)/);
+  assert.match(source,/#workshopQuickAccessToolbar,[\s\S]*?#workshopConsoleTabs\{[\s\S]*?height:52px;[\s\S]*?box-sizing:border-box;[\s\S]*?align-items:center/);
+  assert.match(source,/#workshopQuickAccessToolbar button,[\s\S]*?#workshopConsoleTabs button\{[\s\S]*?height:44px;[\s\S]*?min-height:44px/);
   assert.match(theme,/\.workshop-design-groups\{[\s\S]*?overflow:hidden/);
 });

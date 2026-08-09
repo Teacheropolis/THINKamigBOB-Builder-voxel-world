@@ -34,6 +34,7 @@ test("uses the approved allowlist and keeps mission objects first deterministica
   const items = adapter.list();
   assert.deepEqual(items.map(({ key }) => key), ["tree", "building", "plantCell"]);
   assert.equal(items[0].missionRelevant, true);
+  assert.deepEqual(items.map(({ symbol }) => symbol), ["🌲", "🏢", "🌱"]);
   assert.equal(items[2].supported, false);
   assert.match(items[2].disabledReason, /mission-specific setup/i);
   assert.ok(Object.isFrozen(items));

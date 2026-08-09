@@ -16,6 +16,11 @@ function itemName(button) {
     .trim() || "Object";
 }
 
+function itemSymbol(button) {
+  const source = (button.textContent || "").trim();
+  return source.match(/^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/u)?.[1] || "";
+}
+
 export function createToolChestPartsObjectsAdapter({
   sourceRoot,
   actions,
@@ -57,6 +62,7 @@ export function createToolChestPartsObjectsAdapter({
       records.push(freezeResult({
         key,
         name: itemName(button),
+        symbol: itemSymbol(button),
         category: categoryName(button),
         missionRelevant: missionKeys.has(key),
         supported,
