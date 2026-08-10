@@ -41,6 +41,20 @@ test("selection reuses emissive ownership and restores the exact original color"
   assert.doesNotMatch(selection, /OutlinePass|new THREE\.(Line|Mesh|Group)/);
 });
 
+test("each selected item receives one brass non-interactive presentation frame", () => {
+  const start=source.indexOf("function disposeWorkshopSelectionFrame");
+  const end=source.indexOf("function syncWorkshopSelectionMeasurements",start);
+  const presentation=source.slice(start,end);
+  assert.match(presentation,/new THREE\.Box3Helper\(bounds\.clone\(\),0xe3b83f\)/);
+  assert.match(presentation,/frame\.raycast=function\(\)\{\}/);
+  assert.match(presentation,/frame\.userData\.workshopDecoration=true/);
+  assert.match(presentation,/frame\.userData\.workshopNonInteractive=true/);
+  assert.match(presentation,/workshopSelectionFrames\.set\(object,frame\)/);
+  assert.match(presentation,/frame\.geometry\.dispose\(\)/);
+  assert.match(presentation,/frame\.material\.dispose\(\)/);
+  assert.doesNotMatch(presentation,/blocks\.push|raycaster\.intersect/);
+});
+
 test("compact status and separate polite announcement reuse canonical owners", () => {
   assert.equal((source.match(/id="workshopEngineeringFeedbackStatus"/g) || []).length, 1);
   assert.equal((source.match(/id="workshopEngineeringFeedbackAnnouncement"/g) || []).length, 1);

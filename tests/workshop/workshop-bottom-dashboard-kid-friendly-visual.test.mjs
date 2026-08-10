@@ -65,6 +65,12 @@ test("Design combines Make Change and Fix without duplicating core controls", ()
     assert.match(designPanel,new RegExp(`id="${id}"[^>]*onclick="[^"]*${handler}`));
   }
   assert.match(designPanel,/id="workshopCancelMoveButton"[^>]*hidden disabled/);
+  assert.match(designPanel,/id="workshopSelectButton"[^>]*aria-pressed="false"[^>]*onclick="startSelectMode\(\)"[\s\S]*?<span>Select One<\/span>/);
+  assert.match(designPanel,/id="workshopSelectMultipleButton"[^>]*aria-pressed="false"[^>]*onclick="startWorkshopSelectMultiple\(\)"[^>]*><span class="workshop-selection-label"><span>SELECT<\/span><span>MULTIPLE<\/span><\/span><span class="workshop-control-icon" aria-hidden="true">⊞<\/span>/);
+  assert.match(designPanel,/id="workshopSelectConnectedButton"[^>]*aria-label="Select Stack"[^>]*aria-pressed="false"[^>]*onclick="startWorkshopSelectStack\(\)"[^>]*><span class="workshop-selection-label"><span>SELECT<\/span><span>STACK<\/span><\/span><span class="workshop-control-icon" aria-hidden="true">▤<\/span>/);
+  assert.match(designPanel,/id="workshopClearSelectionButton"[^>]*onclick="clearWorkshopSelectionCommand\(\)"[^>]*disabled/);
+  assert.match(designPanel,/id="workshopDoneSelectionButton"[^>]*onclick="finishWorkshopSelectMultiple\(\)"[^>]*hidden disabled/);
+  assert.match(designPanel,/id="workshopCancelSelectionButton"[^>]*onclick="cancelWorkshopSelectMultiple\(\)"[^>]*hidden disabled/);
 });
 
 test("Parts and Objects delegates to the Tool Chest owner", () => {
@@ -104,6 +110,14 @@ test("Builder-style theme preserves state and Chromebook geometry contracts", ()
   assert.match(theme,/#workshopConsoleTabs button\{[\s\S]*?border:2px solid var\(--workshop-dash-brass\)[\s\S]*?background:linear-gradient\(180deg,#123e59,#071f31\)/);
   assert.match(theme,/#workshopConsoleTabs \.workshop-tab-icon\{[\s\S]*?font-size:16px/);
   assert.match(theme,/\.workshop-design-groups\{[\s\S]*?grid-template-columns:minmax\(285px,4fr\) minmax\(420px,6fr\) minmax\(220px,3fr\)/);
+  assert.match(theme,/\.workshop-design-group\.is-change \.workshop-design-group-controls\{[\s\S]*?grid-template-columns:repeat\(8,minmax\(44px,1fr\)\);[\s\S]*?gap:2px/);
+  assert.doesNotMatch(theme,/\.workshop-design-group\.is-change \.workshop-design-group-controls\{[\s\S]*?1\.7fr/);
+  assert.match(theme,/\.workshop-design-group-controls button\[hidden\]\{[\s\S]*?display:none !important/);
+  assert.match(theme,/#workshopSelectMultipleButton,[\s\S]*?#workshopSelectConnectedButton\{[\s\S]*?flex-flow:column nowrap;[\s\S]*?gap:0/);
+  assert.match(theme,/#workshopSelectMultipleButton \.workshop-selection-label,[\s\S]*?#workshopSelectConnectedButton \.workshop-selection-label\{[\s\S]*?display:grid;[\s\S]*?grid-template-rows:repeat\(2,minmax\(0,1fr\)\);[\s\S]*?place-items:center;[\s\S]*?font-size:8px;[\s\S]*?white-space:nowrap/);
+  assert.match(theme,/#workshopSelectMultipleButton \.workshop-selection-label > span,[\s\S]*?#workshopSelectConnectedButton \.workshop-selection-label > span\{[\s\S]*?display:block;[\s\S]*?white-space:nowrap/);
+  assert.match(theme,/#workshopSelectMultipleButton \.workshop-control-icon,[\s\S]*?#workshopSelectConnectedButton \.workshop-control-icon\{[\s\S]*?font-size:15px/);
+  assert.match(theme,/#workshopSelectConnectedButton \.workshop-selection-label\{[\s\S]*?place-items:center/);
   assert.match(theme,/\.workshop-design-group-controls button\{[\s\S]*?min-height:44px/);
   assert.match(theme,/button\[aria-selected="true"\]/);
   assert.match(theme,/button\[aria-pressed="true"\]/);
@@ -129,7 +143,7 @@ test("Builder-style theme preserves state and Chromebook geometry contracts", ()
   assert.match(theme,/\.workshop-design-group-controls button\{[\s\S]*?font-size:11px/);
   assert.match(theme,/#workshopQuickAccessToolbar button\{[\s\S]*?font-size:10px/);
   assert.match(theme,/\.workshop-parts-symbols\{[\s\S]*?grid-template-columns:repeat\(2,16px\)/);
-  assert.match(theme,/#workshopSelectButton\[aria-pressed="true"\]\{[\s\S]*?inset 0 0 0 3px #bdf9ff/);
+  assert.match(theme,/#workshopSelectButton\[aria-pressed="true"\],[\s\S]*?#workshopSelectMultipleButton\[aria-pressed="true"\],[\s\S]*?#workshopSelectConnectedButton\[aria-pressed="true"\]\{[\s\S]*?inset 0 0 0 3px #bdf9ff/);
   assert.match(theme,/filter:brightness\(1\.28\) saturate\(1\.18\)/);
 
   assert.match(source,/body\.workshopMode:not\(\.starterScreenActive\) #workshopDashboard\{\s*height:148px/);

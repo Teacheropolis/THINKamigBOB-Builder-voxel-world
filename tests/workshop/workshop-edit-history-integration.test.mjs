@@ -145,3 +145,40 @@ test("Resize loads one pure transform owner without changing save versions", () 
   assert.match(source,/version: 3/);
   assert.match(source,/version:1/);
 });
+
+test("WS-013D1 keeps one canonical selection and existing transform consumers", () => {
+  assert.equal((source.match(/import\("\.\/js\/workshop\/editing\/workshop-selection-foundation\.mjs"\)/g)||[]).length,1);
+  assert.match(source,/workshopSelectionFoundationController=\s*modules\[31\]\.createWorkshopSelectionFoundationController/);
+  assert.match(source,/function setWorkshopSelectedObjectsExact\(objects\)/);
+  assert.match(source,/workshopSelectionMoveController\.arm\(\s*selectedBlocks\.slice\(\)/);
+  assert.match(source,/createWorkshopSelectionRotateCandidate\([\s\S]*?selection\.map/);
+  assert.match(source,/recordWorkshopDeletionHistory\(deletedSelection\)/);
+  assert.match(source,/window\.setWorkshopRulerSelectedObjects\(selectedBlocks\)/);
+  assert.match(source,/const resizeObject=activeWorkshopBlocks\(selectedBlocks\)\.length===1/);
+});
+
+test("selection commands preserve placement ownership and make ground non-mutating", () => {
+  assert.match(source,/id="workshopSelectButton"[\s\S]*?<span>Select One<\/span>/);
+  assert.match(source,/id="workshopSelectMultipleButton"[^>]*onclick="startWorkshopSelectMultiple\(\)"/);
+  assert.match(source,/id="workshopSelectConnectedButton"[^>]*onclick="startWorkshopSelectStack\(\)"/);
+  assert.match(source,/id="workshopClearSelectionButton"[^>]*onclick="clearWorkshopSelectionCommand\(\)"/);
+  const selectionClick=source.slice(source.indexOf("if(selectionInteractionOwned){"),
+    source.indexOf("if(moveSelectedMode && hit === ground)"));
+  assert.match(selectionClick,/Selection unchanged\. Choose an object or use Clear\./);
+  assert.doesNotMatch(selectionClick,/clearWorkshopSelectedBlocks/);
+  assert.match(source,/const newBlock = createStudentShape/);
+  assert.match(source,/selectWorkshopConnectedBuild\(newBlock\)/);
+});
+
+test("Select Multiple expands only its first seed then refines individual items", () => {
+  const start=source.indexOf("function selectConnectedBlocks(startBlock,selectionPoint)");
+  const end=source.indexOf("function startMoveSelected()",start);
+  const selection=source.slice(start,end);
+  assert.match(selection,/snapshot\.firstSeedPending/);
+  assert.match(selection,/getWorkshopCanonicalFaceConnectedSelection\(startBlock\)/);
+  assert.match(selection,/setWorkshopSelectedObjectsExact\(firstSelection\)/);
+  assert.match(selection,/acceptFirstSeed\(selectedBlocks\)/);
+  assert.match(selection,/if\(selectedBlocks\.includes\(startBlock\)\)[\s\S]*?removeWorkshopSelectedBlock\(startBlock\)/);
+  assert.match(selection,/selectedBlocks\.push\(startBlock\)/);
+  assert.match(selection,/workshopSelectionFoundationController\.update\(selectedBlocks\)/);
+});
