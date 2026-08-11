@@ -236,9 +236,11 @@ test("prepared Resize stores one immutable exact dimension transaction", () => {
     entries:[{
       object,
       before:coordinates(0,1,0),after:coordinates(0,1.5,0),
+      beforeRotationY:0,afterRotationY:0,
       beforeDimensions:{width:2,height:2,depth:2},
       afterDimensions:{width:3,height:3,depth:3},
     }],
+    pivot:{x:0,y:0,z:0},
     selection:[object],
   };
   const prepared=history.prepare(operation);
@@ -255,21 +257,33 @@ test("prepared Resize stores one immutable exact dimension transaction", () => {
     {width:3,height:3,depth:3});
 });
 
-test("Resize requires one positive before/after dimension snapshot", () => {
+test("Resize accepts atomic multi-entry positive dimension snapshots", () => {
   const {present,history}=harness();
   const first={},second={};
   present.add(first);
   present.add(second);
   const entry=(object)=>({
     object,before:coordinates(0),after:coordinates(0,0.5,0),
+    beforeRotationY:0,afterRotationY:0,
     beforeDimensions:{width:2,height:2,depth:2},
     afterDimensions:{width:3,height:3,depth:3},
   });
-  assert.equal(history.prepare({type:"RESIZE",entries:[entry(first)]}).ok,true);
+  const pivot={x:0,y:0,z:0};
+  assert.equal(history.prepare({type:"RESIZE",entries:[entry(first)],pivot}).ok,true);
   history.reset();
-  assert.equal(history.prepare({type:"RESIZE",entries:[entry(first),entry(second)]}).code,
-    "INVALID_TRANSACTION");
+  const prepared=history.prepare({
+    type:"RESIZE",entries:[entry(first),entry(second)],pivot,selection:[first,second],
+  });
+  assert.equal(prepared.ok,true);
+  assert.equal(prepared.transaction.entries.length,2);
+  assert.equal(Object.isFrozen(prepared.transaction.pivot),true);
+  assert.deepEqual(prepared.transaction.pivot,pivot);
+  history.reset();
   assert.equal(history.prepare({
-    type:"RESIZE",entries:[{...entry(first),afterDimensions:{width:0,height:1,depth:1}}],
+    type:"RESIZE",pivot,
+    entries:[{...entry(first),afterDimensions:{width:0,height:1,depth:1}}],
+  }).code,"INVALID_TRANSACTION");
+  assert.equal(history.prepare({
+    type:"RESIZE",entries:[entry(first)],pivot:{x:0,z:0},
   }).code,"INVALID_TRANSACTION");
 });

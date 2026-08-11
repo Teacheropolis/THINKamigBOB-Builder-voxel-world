@@ -107,24 +107,24 @@ test("Rotate leaves persistence and camera rotation owners unchanged", () => {
 });
 
 test("Resize uses two native immediate controls and one prepared transaction", () => {
-  assert.match(source,/id="workshopGrowButton"[^>]*aria-label="Grow selected box by 1 centimeter"[^>]*onclick="resizeWorkshopSelection\(1\)"[^>]*disabled/);
-  assert.match(source,/id="workshopShrinkButton"[^>]*aria-label="Shrink selected box by 1 centimeter"[^>]*onclick="resizeWorkshopSelection\(-1\)"[^>]*disabled/);
+  assert.match(source,/id="workshopGrowButton"[^>]*aria-label="Grow selected boxes by 1 centimeter"[^>]*onclick="resizeWorkshopSelection\(1\)"[^>]*disabled/);
+  assert.match(source,/id="workshopShrinkButton"[^>]*aria-label="Shrink selected boxes by 1 centimeter"[^>]*onclick="resizeWorkshopSelection\(-1\)"[^>]*disabled/);
   assert.match(source,/\.workshop-dashboard-controls button\{[\s\S]*?min-height:44px/);
   const start=source.indexOf("function resizeWorkshopSelection(delta)");
   const end=source.indexOf("function rotateWorkshopSelectionRight()",start);
   const resize=source.slice(start,end);
   assert.match(resize,/cancelWorkshopMove\(\{announce:false,restoreFocus:false\}\)/);
-  assert.match(resize,/createWorkshopSelectionResizeCandidate/);
+  assert.match(resize,/createWorkshopAggregateResizeCandidate/);
   assert.match(resize,/new THREE\.BoxGeometry/);
   assert.match(resize,/createWorkshopResizedObjectBounds/);
   assert.match(resize,/workshopBoundsFitActiveWorkspace/);
   assert.match(resize,/workshopBoundsOverlap/);
   assert.ok(resize.indexOf("workshopEditHistory.prepare") <
-    resize.indexOf("object.geometry=candidateGeometry"));
-  assert.ok(resize.indexOf("object.geometry=candidateGeometry") <
+    resize.indexOf("entry.object.geometry=candidateGeometry.geometry"));
+  assert.ok(resize.indexOf("entry.object.geometry=candidateGeometry.geometry") <
     resize.indexOf("commitPrepared"));
   assert.match(resize,/type:"RESIZE"/);
-  assert.match(resize,/setWorkshopSelectedObjectsExact\(selection\)/);
+  assert.equal((resize.match(/syncWorkshopSelectionMeasurements\(\)/g)||[]).length,2);
   assert.doesNotMatch(resize,/raycaster|addEventListener|snapWorkshop/);
 });
 
@@ -154,7 +154,8 @@ test("WS-013D1 keeps one canonical selection and existing transform consumers", 
   assert.match(source,/createWorkshopSelectionRotateCandidate\([\s\S]*?selection\.map/);
   assert.match(source,/recordWorkshopDeletionHistory\(deletedSelection\)/);
   assert.match(source,/window\.setWorkshopRulerSelectedObjects\(selectedBlocks\)/);
-  assert.match(source,/const resizeObject=activeWorkshopBlocks\(selectedBlocks\)\.length===1/);
+  assert.match(source,/const resizeSelection=activeWorkshopBlocks\(selectedBlocks\)/);
+  assert.match(source,/createWorkshopAggregateResizeCandidate\(resizeSelection,1\)/);
 });
 
 test("selection commands preserve placement ownership and make ground non-mutating", () => {

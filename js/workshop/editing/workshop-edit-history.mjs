@@ -55,8 +55,9 @@ function validOperationShape(type, entries) {
       entry.beforeRotationY !== null && entry.afterRotationY !== null);
   }
   if (type === WORKSHOP_EDIT_OPERATION_TYPES.RESIZE) {
-    return entries.length === 1 && entries.every((entry) =>
+    return entries.every((entry) =>
       entry.before !== null && entry.after !== null &&
+      entry.beforeRotationY !== null && entry.afterRotationY !== null &&
       entry.beforeDimensions !== null && entry.afterDimensions !== null);
   }
   return entries.every((entry) => entry.before !== null && entry.after !== null);
@@ -110,13 +111,18 @@ export function createWorkshopEditTransaction({
   if (translation != null && !frozenTranslation) return null;
   const frozenPivot = pivot == null ? null : (() => {
     if (!validNumber(pivot.x) || !validNumber(pivot.z)) return null;
-    return Object.freeze({ x:pivot.x, z:pivot.z });
+    if (pivot.y != null && !validNumber(pivot.y)) return null;
+    return Object.freeze(pivot.y == null
+      ? { x:pivot.x, z:pivot.z }
+      : { x:pivot.x, y:pivot.y, z:pivot.z });
   })();
   if (pivot != null && !frozenPivot) return null;
   const frozenAngle = angle == null ? null : angle;
   if (frozenAngle !== null && !validNumber(frozenAngle)) return null;
   if (type === WORKSHOP_EDIT_OPERATION_TYPES.ROTATE &&
       (!frozenPivot || frozenAngle === null)) return null;
+  if (type === WORKSHOP_EDIT_OPERATION_TYPES.RESIZE &&
+      (!frozenPivot || !validNumber(frozenPivot.y))) return null;
   const frozenSelection = Object.freeze(Array.isArray(selection) ? [...selection] : []);
   return Object.freeze({
     id,
