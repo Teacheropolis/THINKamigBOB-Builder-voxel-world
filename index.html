@@ -4890,8 +4890,10 @@ HTML SECTION: LEFT CURRENT MISSION PANEL
 </div>
 <p><b>Want More Challenge?</b></p>
 <p id="moreChallenge">Add details, decorations, and a magical feature.</p>
-<p id="badgeMessage"><b>OPEN BADGES</b></p>
-<button id="openPassportFromBadge" type="button">OPEN PASSPORT</button>
+<div id="builderMissionActions" aria-label="Builder shortcuts">
+  <button id="badgeMessage" type="button" aria-label="Open Badges"><b>OPEN<br/>BADGES</b></button>
+  <button id="openPassportFromBadge" type="button" aria-label="Open Passport"><span>OPEN</span><strong>PASSPORT</strong></button>
+</div>
 </div>
 <!-- =====================================================
 JS SECTION 01: THREE.JS / MAIN BUILDER SCRIPT
@@ -12528,7 +12530,7 @@ function checkBadge(){
   }
 
   document.getElementById("badgeMessage").innerHTML =
-    "<b>OPEN BADGES</b>";
+    "<b>OPEN<br>BADGES</b>";
 
   if(window.updateDashboardBadgeTicker){
     window.updateDashboardBadgeTicker(earnedBadgeTier, earnedBadgeName);
@@ -13304,7 +13306,9 @@ function byId(id){ return document.getElementById(id); }
         el.setAttribute('role','button');
         el.setAttribute('tabindex','0');
         el.onclick = showBadgePopup;
-        el.onkeydown = function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); showBadgePopup(); } };
+        if(el.tagName !== 'BUTTON'){
+          el.onkeydown = function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); showBadgePopup(); } };
+        }
       }
     });
   }
@@ -36264,8 +36268,10 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     var utilityRail=document.getElementById("workspaceUtilityRail");
     if(!utilityRail) return;
     var controlStation=document.getElementById("viewCubeBox");
-    if(controlStation && utilityRail.parentElement!==controlStation){
-      controlStation.appendChild(utilityRail);
+    var missionPanel=document.getElementById("info");
+    var target=mode==="workshop" ? controlStation : missionPanel;
+    if(target && utilityRail.parentElement!==target){
+      target.appendChild(utilityRail);
     }
   }
 
@@ -38654,6 +38660,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
       }
     }).observe(document.body,{attributes:true,attributeFilter:["class"]});
 
+    placeUtilityRail(currentWorkspaceMode);
     updateModeControls();
   }
 
@@ -39537,6 +39544,146 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
   }
 })();
 </script>
+
+<style id="builderMissionShortcutButtonsCSS">
+/* Builder-only shortcut presentation. Workshop retains its verified utility rail. */
+body:not(.starterScreenActive) #builderMissionActions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:4px;
+  width:94%;
+  margin:7px auto 0;
+}
+
+body:not(.starterScreenActive) #builderMissionActions > button{
+  display:flex !important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  width:100% !important;
+  min-width:0 !important;
+  height:46px !important;
+  min-height:44px !important;
+  margin:0 !important;
+  padding:4px 2px !important;
+  box-sizing:border-box !important;
+  border:0 !important;
+  border-radius:0 !important;
+  color:#8ff6ff !important;
+  -webkit-text-fill-color:#8ff6ff !important;
+  background-color:transparent !important;
+  background-image:url("assets/images/dashboard/button-faces/builder-shortcut-grid-frame-glow.png") !important;
+  background-repeat:no-repeat !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  box-shadow:none !important;
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.32)) !important;
+  font:800 8px/1.05 "Eurostile","Orbitron",Arial,sans-serif !important;
+  letter-spacing:.035em !important;
+  text-align:center !important;
+  text-shadow:0 1px 2px #001018,0 0 4px rgba(92,235,255,.88) !important;
+  cursor:pointer;
+  overflow:visible !important;
+}
+
+body:not(.starterScreenActive) #builderMissionActions > button strong,
+body:not(.starterScreenActive) #builderMissionActions > button b{
+  color:inherit !important;
+  -webkit-text-fill-color:inherit !important;
+  font:inherit !important;
+  letter-spacing:inherit !important;
+  text-shadow:inherit !important;
+}
+
+body:not(.starterScreenActive) #builderMissionActions > button:hover{
+  filter:brightness(1.16) saturate(1.08) drop-shadow(0 5px 5px rgba(0,0,0,.34)) !important;
+  transform:translateY(-1px) !important;
+}
+
+body:not(.starterScreenActive) #builderMissionActions > button:active{
+  filter:brightness(.88) drop-shadow(0 2px 3px rgba(0,0,0,.28)) !important;
+  transform:translateY(1px) !important;
+}
+
+body:not(.starterScreenActive) #builderMissionActions > button:focus-visible{
+  outline:3px solid #8ff6ff !important;
+  outline-offset:2px !important;
+}
+
+body:not(.starterScreenActive):not(.workshopMode) #viewCubeBox #workspaceUtilityRail{
+  display:none;
+}
+
+body:not(.starterScreenActive):not(.workshopMode) #info #workspaceUtilityRail{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,2fr);
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  width:94%;
+  margin:4px auto 0;
+}
+
+body:not(.starterScreenActive):not(.workshopMode) #info #workspaceUtilityRail #helpButton{
+  display:flex !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  height:46px !important;
+  min-height:44px !important;
+  margin:0 !important;
+  padding:4px 2px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  color:#8ff6ff !important;
+  -webkit-text-fill-color:#8ff6ff !important;
+  background-color:transparent !important;
+  background-image:url("assets/images/dashboard/button-faces/builder-shortcut-grid-frame-glow.png") !important;
+  background-repeat:no-repeat !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  box-shadow:none !important;
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.32)) !important;
+  font:800 8px/1.05 "Eurostile","Orbitron",Arial,sans-serif !important;
+  letter-spacing:.035em !important;
+  text-shadow:0 1px 2px #001018,0 0 4px rgba(92,235,255,.88) !important;
+}
+
+body:not(.starterScreenActive):not(.workshopMode) #info #workspaceModeSwitch{
+  width:100%;
+  height:46px;
+  min-height:44px;
+  padding:4px 8px;
+  border:0;
+  border-radius:0;
+  color:#8ff6ff;
+  -webkit-text-fill-color:#8ff6ff;
+  background-color:transparent;
+  background-image:url("assets/images/dashboard/button-faces/builder-shortcut-grid-frame-glow.png");
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:100% 100%;
+  box-shadow:none;
+  filter:drop-shadow(0 5px 5px rgba(0,0,0,.34));
+  font:900 13px/1.05 "Eurostile","Orbitron",Arial,sans-serif !important;
+  letter-spacing:.08em;
+  text-shadow:0 1px 2px #001018,0 0 4px rgba(92,235,255,.95),0 0 9px rgba(41,181,255,.65);
+}
+
+body:not(.starterScreenActive):not(.workshopMode) #info #workspaceModeSwitch:hover{
+  color:#dffcff;
+  -webkit-text-fill-color:#dffcff;
+  background-image:url("assets/images/dashboard/button-faces/builder-shortcut-grid-frame-glow.png");
+  filter:brightness(1.18) saturate(1.08) drop-shadow(0 6px 6px rgba(0,0,0,.34));
+  transform:translateY(-1px);
+}
+
+body:not(.starterScreenActive):not(.workshopMode) #info #workspaceModeSwitch:active{
+  transform:translateY(1px);
+  filter:brightness(.88);
+}
+</style>
 
 </body>
 </html>
