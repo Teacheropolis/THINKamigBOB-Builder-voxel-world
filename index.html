@@ -5347,6 +5347,7 @@ let workshopSelectionResizeTransformModule = null;
 let workshopSelectionResizeAdaptersModule = null;
 let workshopSelectionFoundationController = null;
 let workshopSelectionFoundationModule = null;
+let workshopDraftController = null;
 let workshopEditHistorySuspended = false;
 
 function updateUndoRedoButtons(){
@@ -5619,16 +5620,19 @@ function recordWorkshopDeletionHistory(objects,selection){
 }
 
 function resetWorkshopEditFoundation(options){
+  const preserveHistory=!!(options && options.preserveHistory);
   if(workshopSelectionMoveController) workshopSelectionMoveController.reset();
   if(workshopSelectionFoundationController) workshopSelectionFoundationController.reset();
   clearWorkshopSelectionFrames();
   moveSelectedMode=false;
   selectMode=false;
   workshopLastSelectionPoint=null;
-  if(workshopEditHistory) workshopEditHistory.reset();
-  workshopDeletedSelectionUndo.length=0;
-  workshopDeletedSelectionRedo.length=0;
-  redoBlocks.length=0;
+  if(!preserveHistory){
+    if(workshopEditHistory) workshopEditHistory.reset();
+    workshopDeletedSelectionUndo.length=0;
+    workshopDeletedSelectionRedo.length=0;
+    redoBlocks.length=0;
+  }
   updateUndoRedoButtons();
   syncWorkshopMoveControls();
 }
@@ -33218,6 +33222,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     workshopCanonicalState=snapshot.workshop;
     if(snapshot.workshop==="SHUTTING_DOWN" ||
       snapshot.workshop==="FAULT_SAFE" || snapshot.workshop==="OFF"){
+      if(workshopDraftController) workshopDraftController.cancelPending();
       if(workshopSelectionMoveController) workshopSelectionMoveController.reset();
       if(workshopSelectionFoundationController){
         workshopSelectionFoundationController.reset();
@@ -35976,23 +35981,45 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
       });
       blocks.length=0;
       redoBlocks.length=0;
-      resetWorkshopEditFoundation();
-      selectedBlocks=[];
-      workshopContactGraph.clear();
-      clearWorkshopSelectionRestore();
+      if(workshopDraftController){
+        var restoreClaim=workshopDraftController.begin("RESTORE");
+        var draftObjects=workshopDraftController.restore(restoreClaim);
+        draftObjects.forEach(function(block){
+          scene.add(block);
+          blocks.push(block);
+        });
+        resetWorkshopEditFoundation({preserveHistory:true});
+        clearWorkshopSelectedBlocks();
+        clearWorkshopSelectionRestore();
+      }else{
+        resetWorkshopEditFoundation();
+        selectedBlocks=[];
+        workshopContactGraph.clear();
+        clearWorkshopSelectionRestore();
+      }
       selectMode=false;
       moveSelectedMode=false;
       updateUndoRedoButtons();
       return;
     }
 
-    clearActiveWorkshopObjects();
+    if(workshopDraftController) workshopDraftController.cancelPending();
   }
 
   function restoreBuilderSession(){
     if(!builderSessionSnapshot) return;
 
-    clearActiveWorkshopObjects();
+    clearWorkshopRulerSelectionHighlight();
+    clearWorkshopSelectedBlocks();
+    resetWorkshopEditFoundation({preserveHistory:true});
+    clearWorkshopSelectionRestore();
+    if(workshopDraftController){
+      var captureClaim=workshopDraftController.begin("CAPTURE");
+      workshopDraftController.capture(blocks,captureClaim);
+    }
+    blocks.forEach(function(block){ scene.remove(block); });
+    blocks.length=0;
+    redoBlocks.length=0;
     builderSessionSnapshot.blocks.forEach(function(block){
       scene.add(block);
       blocks.push(block);
@@ -37868,7 +37895,8 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     import("./js/workshop/editing/workshop-selection-rotate-transform.mjs"),
     import("./js/workshop/editing/workshop-selection-resize-transform.mjs"),
     import("./js/workshop/editing/workshop-selection-foundation.mjs"),
-    import("./js/workshop/editing/workshop-selection-resize-adapters.mjs")
+    import("./js/workshop/editing/workshop-selection-resize-adapters.mjs"),
+    import("./js/workshop/persistence/workshop-draft-controller.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -37948,8 +37976,13 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
       workshopSelectionResizeTransformModule=modules[30];
       workshopSelectionFoundationModule=modules[31];
       workshopSelectionResizeAdaptersModule=modules[32];
+      var workshopDraftModule=modules[33];
       workshopSelectionFoundationController=
         modules[31].createWorkshopSelectionFoundationController();
+      workshopDraftController=workshopDraftModule.createWorkshopDraftController({
+        history:workshopEditHistory
+      });
+      workshopDraftController.createBlank();
       window.getWorkshopEditHistorySnapshot=function(){
         return workshopEditHistory.getSnapshot();
       };
@@ -37958,6 +37991,9 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
       };
       window.getWorkshopSelectionFoundationSnapshot=function(){
         return workshopSelectionFoundationController.getSnapshot();
+      };
+      window.getWorkshopDraftSnapshot=function(){
+        return workshopDraftController.getSnapshot();
       };
       updateUndoRedoButtons();
       syncWorkshopMoveControls();

@@ -145,6 +145,13 @@ export function createWorkshopEditHistory({ validate, apply } = {}) {
   let applying = false;
   let reservation = null;
   let reservationToken = 0;
+  let revision = 0;
+  const observers = new Set();
+
+  const cursorSnapshot = () => Object.freeze({
+    revision,
+    cursor: Object.freeze(undoStack.map((transaction) => transaction.id)),
+  });
 
   const snapshot = () => Object.freeze({
     undoCount: undoStack.length,
@@ -154,6 +161,14 @@ export function createWorkshopEditHistory({ validate, apply } = {}) {
     latestUndo: undoStack.at(-1) || null,
     latestRedo: redoStack.at(-1) || null,
   });
+
+  const notify = () => {
+    revision += 1;
+    const current = cursorSnapshot();
+    observers.forEach((observer) => {
+      try { observer(current); } catch (_) {}
+    });
+  };
 
   const commit = (operation) => {
     if (applying || reservation) return Object.freeze({ ok: false, code: "BUSY" });
@@ -168,6 +183,7 @@ export function createWorkshopEditHistory({ validate, apply } = {}) {
     undoStack.push(transaction);
     redoStack.length = 0;
     nextId += 1;
+    notify();
     return Object.freeze({ ok: true, code: "COMMITTED", transaction });
   };
 
@@ -187,6 +203,7 @@ export function createWorkshopEditHistory({ validate, apply } = {}) {
     if (!applied) return Object.freeze({ ok: false, code: "APPLY_FAILED" });
     source.pop();
     destination.push(transaction);
+    notify();
     return Object.freeze({ ok: true, code: direction === "UNDO" ? "UNDONE" : "REDONE", transaction });
   };
 
@@ -221,6 +238,7 @@ export function createWorkshopEditHistory({ validate, apply } = {}) {
     redoStack.length = 0;
     nextId += 1;
     reservation = null;
+    notify();
     return Object.freeze({ ok:true, code:"COMMITTED", transaction });
   };
 
@@ -245,8 +263,15 @@ export function createWorkshopEditHistory({ validate, apply } = {}) {
       reservation = null;
       undoStack.length = 0;
       redoStack.length = 0;
+      notify();
       return Object.freeze({ ok: true, code: "RESET" });
     },
+    observe(observer) {
+      if (typeof observer !== "function") return () => {};
+      observers.add(observer);
+      return () => observers.delete(observer);
+    },
+    getCursorSnapshot: cursorSnapshot,
     getSnapshot: snapshot,
   });
 }
