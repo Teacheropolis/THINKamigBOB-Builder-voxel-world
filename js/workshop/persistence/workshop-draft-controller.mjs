@@ -101,6 +101,19 @@ export function createWorkshopDraftController({ history } = {}) {
       historyCursor = freezeCursor(history.getCursorSnapshot().cursor);
       return snapshot();
     },
+    replaceActive(activeObjects) {
+      if (!Array.isArray(activeObjects)) return snapshot();
+      ownership += 1;
+      pending = null;
+      objects = activeObjects.filter((object,index,list) =>
+        object && list.indexOf(object) === index
+      );
+      parked = false;
+      generation += 1;
+      checkpoint = freezeCursor(history.getCursorSnapshot().cursor);
+      historyCursor = freezeCursor(history.getCursorSnapshot().cursor);
+      return snapshot();
+    },
     getSnapshot: snapshot,
     dispose() { stopObserving(); },
   });
