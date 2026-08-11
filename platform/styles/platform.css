@@ -218,6 +218,12 @@ summary:focus-visible {
 .platform-student-goal { grid-column: span 7; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-green) !important; }
 .platform-student-goal > p:last-child, .platform-student-reflection > p:last-child { margin: 0.35rem 0 0; color: var(--platform-muted); }
 .platform-student-empty-state, .platform-student-status { margin: 0.55rem 0 0; color: var(--platform-ink); font-weight: 800; }
+.platform-school-start-launcher { grid-column: 1 / -1; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-blue) !important; }
+.platform-school-start-launch-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin-top: 0.85rem; min-width: 0; }
+.platform-school-start-launch-link { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 2.75rem; padding: 0.75rem 1rem; border: 2px solid var(--platform-blue); border-radius: 0.7rem; color: #fff; background: var(--platform-blue-dark); font-weight: 800; line-height: 1.25; text-align: center; text-decoration: none; overflow-wrap: anywhere; }
+.platform-school-start-launch-link:hover { color: #fff; background: var(--platform-navy); }
+.platform-school-start-launch-link-builder { border-color: var(--platform-green); background: var(--platform-green); }
+.platform-school-start-launch-link-workshop { border-color: #a56e00; background: #765100; }
 .platform-yesterday { grid-column: span 8; padding: clamp(1rem, 2.5vw, 1.4rem); }
 .platform-yesterday-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
 .platform-student-home-card { min-width: 0; padding: 1rem; border: 1px solid var(--platform-border); border-radius: 0.75rem; background: var(--platform-soft); }
@@ -450,6 +456,7 @@ summary:focus-visible {
   .platform-student-display-mode-controls p { grid-column: auto; }
   .platform-student-home { grid-template-columns: 1fr; }
   .platform-student-home > section { grid-column: auto; }
+  .platform-school-start-launch-grid { grid-template-columns: 1fr; }
   .platform-yesterday-grid { grid-template-columns: 1fr; }
   .platform-stem-work-layout, .platform-stem-work-history-layout, .platform-evidence-source-list { grid-template-columns: 1fr; }
   .platform-stem-work-current, .platform-evidence-connections { grid-column: auto; }

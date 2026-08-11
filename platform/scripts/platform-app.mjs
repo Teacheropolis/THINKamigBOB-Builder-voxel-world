@@ -463,6 +463,16 @@ function studentDashboardView(state) {
         <p>A classroom goal will appear when an approved goal source is connected.</p>
       </section>
 
+      <section class="platform-school-start-launcher" aria-labelledby="school-start-launcher-title">
+        <p class="platform-student-section-label">Start here</p>
+        <h2 id="school-start-launcher-title">Classroom Launches</h2>
+        <div class="platform-school-start-launch-grid">
+          <a class="platform-school-start-launch-link platform-school-start-launch-link-missions" href="https://sites.google.com/ravennaschools.us/steminbobwarts/home-start" target="_blank" rel="noopener noreferrer">GO TO MY STEM MISSIONS</a>
+          <a class="platform-school-start-launch-link platform-school-start-launch-link-builder" href="../index.html" target="_blank" rel="noopener noreferrer">STEM BUILDER</a>
+          <a class="platform-school-start-launch-link platform-school-start-launch-link-workshop" href="http://192.168.1.252:8000" target="_blank" rel="noopener noreferrer">STEM WORKSHOP</a>
+        </div>
+      </section>
+
       <section class="platform-yesterday" aria-labelledby="yesterday-title">
         <div class="platform-student-section-heading">
           <p class="platform-student-section-label">Looking back</p>

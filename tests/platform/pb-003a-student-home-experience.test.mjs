@@ -62,8 +62,13 @@ test("Choose Your Path remains an honest noninteractive foundation", () => {
   for (const section of ["Continue", "Available Missions", "Side Paths"]) {
     assert.ok(studentHomeSource.includes(section), `expected ${section}`);
   }
+  const missionChoiceStart = studentHomeSource.indexOf(
+    '<section class="platform-student-paths"');
+  const missionChoiceEnd = studentHomeSource.indexOf(
+    '<section class="platform-stem-work"', missionChoiceStart);
+  const missionChoiceSource = studentHomeSource.slice(missionChoiceStart, missionChoiceEnd);
   assert.doesNotMatch(studentHomeSource, /platform-student-path-card/);
-  assert.doesNotMatch(studentHomeSource, /href=|navigate\(|data-action=|data-form=/);
+  assert.doesNotMatch(missionChoiceSource, /href=|navigate\(|data-action=|data-form=/);
 });
 
 test("BOB is visible guidance only and adds no speech or conversational behavior", () => {
