@@ -27,6 +27,13 @@ const freezeDimensions = (dimensions) => {
   });
 };
 
+const itemMinimumDimensions = (item, fallback) => {
+  const minimum = item && item.minimumDimensions
+    ? freezeDimensions(item.minimumDimensions)
+    : Object.freeze({ width:fallback, height:fallback, depth:fallback });
+  return minimum;
+};
+
 const normalizeQuarterTurn = (rotationY, tolerance) => {
   if (!validNumber(rotationY)) return null;
   const quarter = Math.PI / 2;
@@ -67,9 +74,7 @@ export function createWorkshopSelectionResizeCandidate({
     height:cleanNumber(beforeAggregateDimensions.height + delta),
     depth:cleanNumber(beforeAggregateDimensions.depth + delta),
   });
-  if (!afterAggregateDimensions || afterAggregateDimensions.width < minimumDimension ||
-      afterAggregateDimensions.height < minimumDimension ||
-      afterAggregateDimensions.depth < minimumDimension) return null;
+  if (!afterAggregateDimensions) return null;
 
   const factors = Object.freeze({
     x:afterAggregateDimensions.width / beforeAggregateDimensions.width,
@@ -95,6 +100,8 @@ export function createWorkshopSelectionResizeCandidate({
         Math.abs(item.rotation.z) > rotationTolerance) return null;
     const quarterTurn = normalizeQuarterTurn(item.rotation.y, rotationTolerance);
     if (quarterTurn === null) return null;
+    const minimumDimensions = itemMinimumDimensions(item, minimumDimension);
+    if (!minimumDimensions) return null;
     const swapsHorizontalAxes = quarterTurn % 2 === 1;
     const afterDimensions = freezeDimensions({
       width:cleanNumber(beforeDimensions.width *
@@ -103,9 +110,9 @@ export function createWorkshopSelectionResizeCandidate({
       depth:cleanNumber(beforeDimensions.depth *
         (swapsHorizontalAxes ? factors.x : factors.z)),
     });
-    if (!afterDimensions || afterDimensions.width < minimumDimension ||
-        afterDimensions.height < minimumDimension ||
-        afterDimensions.depth < minimumDimension) return null;
+    if (!afterDimensions || afterDimensions.width < minimumDimensions.width ||
+        afterDimensions.height < minimumDimensions.height ||
+        afterDimensions.depth < minimumDimensions.depth) return null;
     const after = freezePoint({
       x:cleanNumber(pivot.x + (before.x - pivot.x) * factors.x),
       y:cleanNumber(pivot.y + (before.y - pivot.y) * factors.y),

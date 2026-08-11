@@ -5344,6 +5344,7 @@ let workshopEditHistory = null;
 let workshopSelectionMoveController = null;
 let workshopSelectionRotateTransformModule = null;
 let workshopSelectionResizeTransformModule = null;
+let workshopSelectionResizeAdaptersModule = null;
 let workshopSelectionFoundationController = null;
 let workshopSelectionFoundationModule = null;
 let workshopEditHistorySuspended = false;
@@ -8744,7 +8745,8 @@ function createWorkshopResizedObjectBounds(object,geometry,position){
 }
 
 function createWorkshopAggregateResizeItems(selection){
-  if(!Array.isArray(selection) || selection.length===0) return null;
+  if(!Array.isArray(selection) || selection.length===0 ||
+    !workshopSelectionResizeAdaptersModule) return null;
   const items=[];
   for(const object of selection){
     const dimensions=workshopEditDimensions(object);
@@ -8754,6 +8756,11 @@ function createWorkshopAggregateResizeItems(selection){
       object.children.length>0){
       return null;
     }
+    const resizeAdapter=workshopSelectionResizeAdaptersModule
+      .getWorkshopSelectionResizeAdapter(object,{
+        standardBlock:isStandardWorkshopBlock(object)
+      });
+    if(!resizeAdapter) return null;
     items.push({
       object:object,
       geometryType:object.geometry.type,
@@ -8764,7 +8771,8 @@ function createWorkshopAggregateResizeItems(selection){
         y:object.rotation.y,
         z:object.rotation.z
       },
-      scale:{x:object.scale.x,y:object.scale.y,z:object.scale.z}
+      scale:{x:object.scale.x,y:object.scale.y,z:object.scale.z},
+      minimumDimensions:resizeAdapter.minimumDimensions
     });
   }
   return items;
@@ -8810,7 +8818,7 @@ function resizeWorkshopSelection(delta){
   }
   if(!workshopEditHistory || !workshopSelectionResizeTransformModule ||
     !createWorkshopAggregateResizeItems(selection)){
-    announceWorkshopResize("This selection cannot be resized with these controls.");
+    announceWorkshopResize("One part of this selection can't be resized yet.");
     return false;
   }
   const candidate=createWorkshopAggregateResizeCandidate(selection,delta);
@@ -10734,9 +10742,16 @@ function addBridgeBeam(){
 
   const spot = randomSpot();
 
-  addBlock(spot.x, 2, spot.z,
+  const bridgeBeam=addBlock(spot.x, 2, spot.z,
     0x8B4513,
     new THREE.BoxGeometry(6, 0.5, 1));
+  if(workshopSelectionResizeAdaptersModule){
+    workshopSelectionResizeAdaptersModule.registerWorkshopSelectionResizeFamily(
+      bridgeBeam,
+      workshopSelectionResizeAdaptersModule
+        .WORKSHOP_SELECTION_RESIZE_FAMILIES.BRIDGE_BEAM
+    );
+  }
 
   checkBadge();
 }
@@ -10745,9 +10760,16 @@ function addSupportColumn(){
 
   const spot = randomSpot();
 
-  addBlock(spot.x, 2, spot.z,
+  const supportColumn=addBlock(spot.x, 2, spot.z,
     0xCCCCCC,
     new THREE.BoxGeometry(1, 4, 1));
+  if(workshopSelectionResizeAdaptersModule){
+    workshopSelectionResizeAdaptersModule.registerWorkshopSelectionResizeFamily(
+      supportColumn,
+      workshopSelectionResizeAdaptersModule
+        .WORKSHOP_SELECTION_RESIZE_FAMILIES.SUPPORT_COLUMN
+    );
+  }
 
   checkBadge();
 }
@@ -37845,7 +37867,8 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     import("./js/workshop/editing/workshop-selection-move-controller.mjs"),
     import("./js/workshop/editing/workshop-selection-rotate-transform.mjs"),
     import("./js/workshop/editing/workshop-selection-resize-transform.mjs"),
-    import("./js/workshop/editing/workshop-selection-foundation.mjs")
+    import("./js/workshop/editing/workshop-selection-foundation.mjs"),
+    import("./js/workshop/editing/workshop-selection-resize-adapters.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -37924,6 +37947,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
       workshopSelectionRotateTransformModule=modules[29];
       workshopSelectionResizeTransformModule=modules[30];
       workshopSelectionFoundationModule=modules[31];
+      workshopSelectionResizeAdaptersModule=modules[32];
       workshopSelectionFoundationController=
         modules[31].createWorkshopSelectionFoundationController();
       window.getWorkshopEditHistorySnapshot=function(){
