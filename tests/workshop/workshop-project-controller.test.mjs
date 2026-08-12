@@ -51,6 +51,32 @@ test("New atomically installs a clean blank project",()=>{
   assert.equal(h.controller.getSnapshot().currentProjectId,null);
 });
 
+test("portable export checkpoints only after explicit confirmation",()=>{
+  const h=harness();
+  const prepared=h.controller.prepareExport("Portable");
+  assert.equal(prepared.ok,true);
+  assert.equal(h.checkpoint,0);
+  assert.equal(h.controller.confirmExport(prepared.project).ok,true);
+  assert.equal(h.checkpoint,1);
+});
+
+test("portable import validates and replaces atomically",()=>{
+  const h=harness();
+  const imported=h.controller.importProject({
+    id:"file",name:"File",createdAt:1,updatedAt:2,objects:[{id:"from-file"}],
+  });
+  assert.equal(imported.ok,true);
+  assert.equal(h.objects[0].record.id,"from-file");
+  assert.equal(h.resets,1);
+
+  const failed=harness({validateCandidates:()=>false});
+  assert.equal(failed.controller.importProject({
+    id:"file",name:"File",createdAt:1,updatedAt:2,objects:[{id:"bad"}],
+  }).ok,false);
+  assert.deepEqual(failed.objects,[{id:"old"}]);
+  assert.equal(failed.resets,0);
+});
+
 test("successful updates preserve creation time and advance only saved update time",()=>{
   const h=harness();
   assert.equal(h.controller.open("saved").ok,true);

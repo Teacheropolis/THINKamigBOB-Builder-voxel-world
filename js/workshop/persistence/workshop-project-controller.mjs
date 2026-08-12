@@ -37,9 +37,52 @@ export function createWorkshopProjectController({
     dirty:draft.getSnapshot().dirty,
   });
 
+  const installProject = (project) => {
+    const validated = serializer.validate(project);
+    if (!validated) return Object.freeze({ok:false,code:"INVALID_PROJECT"});
+    const candidates = [];
+    try {
+      for (const record of validated.objects) {
+        const candidate = createCandidate(record);
+        if (!candidate) throw new Error("UNSUPPORTED_OBJECT");
+        candidates.push(candidate);
+      }
+      if (validateCandidates(candidates,validated.objects) !== true) {
+        throw new Error("INVALID_GEOMETRY");
+      }
+    } catch (error) {
+      disposeCandidates(candidates);
+      return Object.freeze({ok:false,code:error.message || "OPEN_FAILED"});
+    }
+    if (replaceObjects(candidates) !== true) {
+      disposeCandidates(candidates);
+      return Object.freeze({ok:false,code:"REPLACE_FAILED"});
+    }
+    history.reset();
+    draft.replaceActive(candidates);
+    currentProject = validated;
+    return Object.freeze({ok:true,code:"OPENED",project:validated,snapshot:snapshot()});
+  };
+
   return Object.freeze({
     getSnapshot:snapshot,
     list() { return storage.list(); },
+    prepareExport(name) {
+      const timestamp = now();
+      const id = currentProject ? currentProject.id : generateProjectId();
+      const createdAt = currentProject ? currentProject.createdAt : timestamp;
+      return serializer.serialize({
+        id,name,createdAt,updatedAt:timestamp,objects:getObjects(),
+      });
+    },
+    confirmExport(project) {
+      const validated = serializer.validate(project);
+      if (!validated) return Object.freeze({ok:false,code:"INVALID_PROJECT"});
+      currentProject = validated;
+      draft.markCheckpoint();
+      return Object.freeze({ok:true,code:"SAVED",project:validated,snapshot:snapshot()});
+    },
+    importProject(project) { return installProject(project); },
     save(name,{replaceDuplicate=false}={}) {
       const timestamp = now();
       const id = currentProject ? currentProject.id : generateProjectId();
@@ -57,30 +100,7 @@ export function createWorkshopProjectController({
     open(id) {
       const stored = storage.get(id);
       if (!stored.ok) return stored;
-      const project = serializer.validate(stored.project);
-      if (!project) return Object.freeze({ok:false,code:"INVALID_PROJECT"});
-      const candidates = [];
-      try {
-        for (const record of project.objects) {
-          const candidate = createCandidate(record);
-          if (!candidate) throw new Error("UNSUPPORTED_OBJECT");
-          candidates.push(candidate);
-        }
-        if (validateCandidates(candidates,project.objects) !== true) {
-          throw new Error("INVALID_GEOMETRY");
-        }
-      } catch (error) {
-        disposeCandidates(candidates);
-        return Object.freeze({ok:false,code:error.message || "OPEN_FAILED"});
-      }
-      if (replaceObjects(candidates) !== true) {
-        disposeCandidates(candidates);
-        return Object.freeze({ok:false,code:"REPLACE_FAILED"});
-      }
-      history.reset();
-      draft.replaceActive(candidates);
-      currentProject = project;
-      return Object.freeze({ok:true,code:"OPENED",project,snapshot:snapshot()});
+      return installProject(stored.project);
     },
     newProject() {
       if (replaceObjects([]) !== true) {

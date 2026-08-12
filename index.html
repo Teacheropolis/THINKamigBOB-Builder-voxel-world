@@ -75,7 +75,6 @@ MAJOR SYSTEM GUIDE:
 <link rel="preload" as="image" href="assets/images/builder-robot.png" fetchpriority="high"/>
 <link rel="preload" as="image" href="assets/images/builder-sign.png" fetchpriority="high"/>
 <link rel="preload" as="image" href="assets/images/sky-banner-plane.png" fetchpriority="high"/>
-<link rel="preload" as="image" href="assets/images/dashboard/dashboard-ticker-bezel-cropped.png" fetchpriority="high"/>
 <!-- =====================================================
 CSS SECTION 01: STEM COACH / PANEL CSS
 Preserved from working file. Future edits should target by section.
@@ -3722,8 +3721,6 @@ Keep button IDs and onclick handlers unchanged.
 <div class="startBeforePanel">
 <h2>Before You Start</h2>
 <div class="startBeforeGrid">
-<label><span>Student Name</span><input id="startStudentName" placeholder="Type your name"/></label>
-<label><span>Project Name</span><input id="startProjectName" placeholder="Optional project title"/></label>
 <button type="button" id="startBuildingButton" onclick="startSelectedWorld()" aria-label="Start Mission"></button>
 </div>
 <button id="resumeAutosaveButton" type="button" hidden>↻ Resume Saved Build</button>
@@ -3772,17 +3769,14 @@ Keep button IDs and onclick handlers unchanged.
   </div>
 </div>
 <div id="workshopProjectToast" aria-hidden="true"></div>
+<input id="workshopProjectFileInput" type="file" accept=".json,.thinkamigbob.json,application/json" hidden aria-hidden="true">
 <!-- =====================================================
 HTML SECTION 02 — BUILD DASHBOARD / BOTTOM TOOLBAR
 Future extraction target: dashboard HTML/CSS/JS.
 ===================================================== -->
 <div aria-label="Dashboard" id="buildBar">
-<div class="dashboardTickerAssembly" aria-hidden="true">
-<img alt="" aria-hidden="true" class="dashboardTitleArtwork" src="assets/images/dashboard/dashboard-ticker-bezel-cropped.png"/>
-<div class="dashboardTickerWindow">
-<div class="dashboardTickerText">WELCOME TO THINK-AMIG-BOB STEM BUILDER • SELECT A TOOL TO BEGIN •</div>
-</div>
-</div>
+<div id="dashboardHoverTab" role="button" tabindex="0" aria-label="Open build tools">Build Tools</div>
+<button id="dashboardTrimControl" type="button" aria-label="Open dashboard" aria-controls="buildBar" aria-expanded="false"></button>
 <div data-placeholder="true" id="worldTitle" class="missionDataStore" aria-hidden="true"></div>
 
 <div class="dashboard139MainGrid">
@@ -4230,9 +4224,8 @@ Nature ▶
       </div>
     </div>
   </section>
+  <div class="dashboard139MessageStrip"><span class="bottomToolMessage" id="toolMessage">Tool message will show here.</span></div>
 </div>
-
-<div class="dashboard139MessageStrip"><span class="bottomToolMessage" id="toolMessage">Tool message will show here.</span></div>
 </div>
 
 <div id="builderMissionTitleOverlay" aria-hidden="true" hidden></div>
@@ -4862,19 +4855,12 @@ Use this section for Builder title image updates.
 HTML SECTION: WORLD / SELECTED MISSION TITLE DISPLAY
 ===================================================== -->
 
-<div id="studentProjectBar">
-<label><b>Student:</b>
-<input id="studentName" placeholder="Name"/>
-</label>
-<label><b>Project:</b>
-<input id="projectName" placeholder="Optional title"/>
-</label>
-</div>
 <!-- =====================================================
 HTML SECTION: LEFT CURRENT MISSION PANEL
 ===================================================== -->
 <div id="info">
 <input accept=".json" id="loadFile" style="display:none" type="file"/>
+<img id="builderMissionLogo" src="assets/images/workshop/thinkamigbob-polished-transparent.png" alt="THINKamigBOB"/>
 <h2>Current Mission</h2>
 <p id="missionText"><b>Mission:</b> Build a Wizard Castle!</p>
 <p id="challengeTitle">Builder Challenge:</p>
@@ -5408,6 +5394,9 @@ let workshopSelectionFoundationController = null;
 let workshopSelectionFoundationModule = null;
 let workshopDraftController = null;
 let workshopProjectController = null;
+let workshopProjectFileService = null;
+let thinkamigbobBuildNaming = null;
+let builderProjectName = "";
 let workshopProjectDialogMode = null;
 let workshopProjectDialogReturnFocus = null;
 let workshopProjectPendingAction = null;
@@ -9745,11 +9734,12 @@ function saveImage(){
     return false;
   }
 
-  const studentName =
-    document.getElementById("studentName").value || "Student";
+  const studentName = "Student Builder";
 
-  const projectName =
-    document.getElementById("projectName")?.value || "THINKamigBOB Build";
+  const projectName = builderProjectName ||
+    (thinkamigbobBuildNaming
+      ? thinkamigbobBuildNaming.getBuilderMissionBuildName(window.selectedStartWorld)
+      : "THINKamigBOB Build");
 
   const today = new Date().toLocaleDateString();
 
@@ -9837,7 +9827,6 @@ function saveImage(){
 
       if(window.addMissionPassportFromCanvas48){
         window.addMissionPassportFromCanvas48(canvas, {
-          studentName: studentName,
           projectName: projectName,
           worldName: document.getElementById("worldTitle").textContent,
           badgeText: badge,
@@ -12243,6 +12232,28 @@ checkBadge();
   
  function saveWorld(){
 
+  // Compatibility guard: a stale Chromebook activation must never route a
+  // Workshop Save Build request through the legacy Builder world exporter.
+  if(document.body.classList.contains("workshopMode")){
+    return requestWorkshopProjectSave(
+      document.getElementById("workshopUtilitySave") || document.activeElement,
+      false
+    );
+  }
+
+  if(!builderProjectName){
+    return typeof window.requestBuilderProjectName==="function"
+      ? window.requestBuilderProjectName(document.activeElement)
+      : false;
+  }
+  return exportBuilderWorld(builderProjectName);
+}
+
+function exportBuilderWorld(name){
+  const acceptedName=thinkamigbobBuildNaming
+    ? thinkamigbobBuildNaming.normalizeThinkamigbobBuildName(name)
+    : String(name || "").trim();
+  if(!acceptedName) return false;
   const worldData = [];
 
   blocks.forEach(block => {
@@ -12262,8 +12273,7 @@ checkBadge();
   const saveData = {
     app: "THINKamigBOB Builder",
     version: 3,
-    projectName: document.getElementById("projectName")?.value || "",
-    studentName: document.getElementById("studentName")?.value || "",
+    projectName: acceptedName,
     blocks: worldData,
     favorites: favoriteData
   };
@@ -12280,16 +12290,41 @@ checkBadge();
   link.href =
     URL.createObjectURL(blob);
 
-  const projectFileName =
-    (document.getElementById("projectName")?.value || "thinkamigbob-world")
-      .replace(/[^a-z0-9-_]+/gi, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "") || "thinkamigbob-world";
-
-  link.download =
-    projectFileName + '.json';
+  link.download = thinkamigbobBuildNaming
+    ? thinkamigbobBuildNaming.createThinkamigbobBuildFilename(acceptedName)
+    : acceptedName.replace(/[^a-z0-9]+/gi,"-")+".thinkamigbob.json";
 
   link.click();
+  builderProjectName=acceptedName;
+  if(typeof window.showThinkamigbobBuildToast==="function"){
+    window.showThinkamigbobBuildToast("BUILD SAVED!");
+  }
+  return true;
+}
+
+function validateBuilderProjectFile(value){
+  const legacy=Array.isArray(value);
+  if(!legacy && (!value || value.app!=="THINKamigBOB Builder" || value.version!==3 ||
+    !Array.isArray(value.blocks))) return null;
+  const records=legacy ? value : value.blocks;
+  const shapes=["cube","sphere","trianglePrism"];
+  const valid=records.every(function(record){
+    return record && [record.x,record.y,record.z,record.color,
+      record.sx == null ? 1 : record.sx,
+      record.sy == null ? 1 : record.sy,
+      record.sz == null ? 1 : record.sz,
+      record.rotationY == null ? 0 : record.rotationY].every(Number.isFinite) &&
+      shapes.includes(record.shape || "cube") &&
+      (record.sx == null || record.sx>0) &&
+      (record.sy == null || record.sy>0) &&
+      (record.sz == null || record.sz>0);
+  });
+  if(!valid || (!legacy && !Array.isArray(value.favorites))) return null;
+  return {
+    blocks:records,
+    favorites:legacy ? [] : value.favorites,
+    projectName:legacy ? "" : String(value.projectName || "").trim().slice(0,60)
+  };
 }
 
 document.getElementById('loadFile')
@@ -12302,34 +12337,23 @@ document.getElementById('loadFile')
   const reader = new FileReader();
 
   reader.onload = function(e){
-
-    resetWorld();
-
-    const loadedData =
-      JSON.parse(e.target.result);
-
-    const worldData =
-      Array.isArray(loadedData)
-        ? loadedData
-        : loadedData.blocks || [];
-
-    favoriteData =
-      Array.isArray(loadedData)
-        ? []
-        : loadedData.favorites || [];
-
-    if(!Array.isArray(loadedData)){
-      const projectInput = document.getElementById("projectName");
-      const studentInput = document.getElementById("studentName");
-
-      if(projectInput){
-        projectInput.value = loadedData.projectName || "";
-      }
-
-      if(studentInput){
-        studentInput.value = loadedData.studentName || "";
-      }
+    let loadedData=null;
+    try{ loadedData=JSON.parse(e.target.result); }
+    catch(error){
+      document.getElementById("toolMessage").textContent=
+        "That file is not a supported Builder project. Your build is unchanged.";
+      return;
     }
+    const validated=validateBuilderProjectFile(loadedData);
+    if(!validated){
+      document.getElementById("toolMessage").textContent=
+        "That file is not a supported Builder project. Your build is unchanged.";
+      return;
+    }
+    resetWorld();
+    const worldData=validated.blocks;
+    favoriteData=validated.favorites;
+    builderProjectName=validated.projectName;
 
     worldData.forEach(data => {
 
@@ -12800,7 +12824,9 @@ window.getStartWorldLaunchers = getStartWorldLaunchers;
 
 function setSelectedStartWorld(fnName, buttonEl){
   const startWorldLaunchers = getStartWorldLaunchers();
-  selectedStartWorld = startWorldLaunchers[fnName] ? fnName : "buildCastle";
+  const nextStartWorld = startWorldLaunchers[fnName] ? fnName : "buildCastle";
+  if(nextStartWorld!==selectedStartWorld) builderProjectName="";
+  selectedStartWorld = nextStartWorld;
   window.selectedStartWorld = selectedStartWorld;
   if(selectedStartWorld !== "buildSpaceColony"){
     window.selectedSpaceDestination = null;
@@ -12847,16 +12873,6 @@ function chooseSpaceDestination(destination){
 }
 window.chooseSpaceDestination = chooseSpaceDestination;
 
-function syncStartFields(){
-  const sn = document.getElementById('startStudentName');
-  const pn = document.getElementById('startProjectName');
-  const student = document.getElementById('studentName');
-  const project = document.getElementById('projectName');
-  if(student && sn) student.value = sn.value;
-  if(project && pn) project.value = pn.value;
-}
-window.syncStartFields = syncStartFields;
-
 function hideStartScreen(){
   const screen = document.getElementById('startScreen');
   if(screen) screen.classList.add('hidden');
@@ -12868,12 +12884,6 @@ window.hideStartScreen = hideStartScreen;
 function showStartScreen(){
   if(typeof stopThinkerBob === 'function') stopThinkerBob();
   const screen = document.getElementById('startScreen');
-  const student = document.getElementById('studentName');
-  const project = document.getElementById('projectName');
-  const sn = document.getElementById('startStudentName');
-  const pn = document.getElementById('startProjectName');
-  if(sn && student) sn.value = student.value;
-  if(pn && project) pn.value = project.value;
   if(screen) screen.classList.remove('hidden');
   document.body.classList.add('starterScreenActive');
 }
@@ -12883,7 +12893,6 @@ function startSelectedWorld(){
   if(window.missionLaunchTransitionActive) return;
   window.missionLaunchTransitionActive = true;
 
-  syncStartFields();
   const startWorldLaunchers = getStartWorldLaunchers();
   selectedStartWorld = window.selectedStartWorld || selectedStartWorld || "buildCastle";
   if(!startWorldLaunchers[selectedStartWorld]){
@@ -14054,8 +14063,8 @@ Preserved from working file. Future edits should target by section.
       closeTimer = setTimeout(closeDashboard, 500);
     }
 
-    dashboard.addEventListener("mouseenter", openDashboard);
-    dashboard.addEventListener("mouseleave", closeDashboardSoon);
+    /* Deliberate activation owns dashboard visibility. Hover-only ownership
+       caused repeated open/close oscillation at the dashboard boundary. */
 
     tab.addEventListener("click", function(event){
       event.stopPropagation();
@@ -25435,8 +25444,7 @@ body.calmMode #reopenLibraryFromCoach{
         savedAt:Date.now(),
         selectedStartWorld:window.selectedStartWorld || "buildCastle",
         selectedSpaceDestination:window.selectedSpaceDestination || null,
-        studentName:(document.getElementById("studentName") || {}).value || "",
-        projectName:(document.getElementById("projectName") || {}).value || "",
+        projectName:builderProjectName || "",
         blocks:blocks.map(blockRecord),
         favorites:Array.isArray(favoriteData) ? favoriteData : [],
         checklist:checklist,
@@ -25498,10 +25506,7 @@ body.calmMode #reopenLibraryFromCoach{
   function resumeSavedBuild(){
     var state=readAutosave();
     if(!state) return;
-    var startStudent=document.getElementById("startStudentName");
-    var startProject=document.getElementById("startProjectName");
-    if(startStudent) startStudent.value=state.studentName || "";
-    if(startProject) startProject.value=state.projectName || "";
+    builderProjectName=String(state.projectName || "").trim().slice(0,60);
     window.selectedStartWorld=state.selectedStartWorld || "buildCastle";
     window.selectedSpaceDestination=state.selectedSpaceDestination || null;
     if(typeof window.startSelectedWorld === "function"){
@@ -31274,7 +31279,7 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls{
   transform:translateX(-50%);
 }
 
-body.workshopMode:not(.starterScreenActive) #workshopProjectToast.isVisible{
+body:not(.starterScreenActive) #workshopProjectToast.isVisible{
   opacity:1;
   visibility:visible;
 }
@@ -31427,7 +31432,7 @@ body.workshopMode:not(.starterScreenActive) #workshopHeader{
 
 body.workshopMode:not(.starterScreenActive) #workshopLogo{
   position:absolute;
-  top:-7px;
+  top:18px;
   left:18px;
   transform:none;
   display:block;
@@ -32378,7 +32383,7 @@ body.workshopMode:not(.starterScreenActive) #workshopRoot{
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox{
-  top:50px !important;
+  top:75px !important;
   left:8px !important;
   translate:none !important;
   display:flex !important;
@@ -36527,7 +36532,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
   function showWorkshopProjectToast(message){
     clearWorkshopProjectToast();
     var toast=document.getElementById("workshopProjectToast");
-    if(!toast || !message || currentWorkspaceMode!=="workshop") return false;
+    if(!toast || !message || document.body.classList.contains("starterScreenActive")) return false;
     toast.textContent=message;
     toast.classList.add("isVisible");
     workshopProjectToastTimer=setTimeout(function(){
@@ -36537,6 +36542,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     },3000);
     return true;
   }
+  window.showThinkamigbobBuildToast=showWorkshopProjectToast;
 
   function closeWorkshopProjectDialog(options){
     var dialog=document.getElementById("workshopProjectDialog");
@@ -36602,7 +36608,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     var primary=document.getElementById("workshopProjectPrimary");
     var saveGuard=document.getElementById("workshopProjectSaveGuard");
     var discard=document.getElementById("workshopProjectDiscard");
-    if(!dialog || !workshopProjectController) return false;
+    if(!dialog || (!workshopProjectController && mode!=="BUILDER_NAME")) return false;
     workshopProjectDialogMode=mode;
     dialog.hidden=false;
     name.hidden=true;
@@ -36614,12 +36620,18 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     saveGuard.hidden=true;
     discard.hidden=true;
     announceWorkshopProject("");
-    if(mode==="NAME"){
-      title.textContent="SAVE BUILD";
-      description.textContent="Give this build a short name on this Chromebook.";
+    if(mode==="NAME" || mode==="BUILDER_NAME"){
+      title.textContent="NAME YOUR BUILD";
+      description.textContent="Choose a short name for your build.";
       name.hidden=false;
       nameLabel.hidden=false;
-      name.value=workshopProjectPendingName || "";
+      name.value=mode==="BUILDER_NAME"
+        ? (builderProjectName || (thinkamigbobBuildNaming
+          ? thinkamigbobBuildNaming.getBuilderMissionBuildName(window.selectedStartWorld)
+          : "My Builder Project"))
+        : (workshopProjectPendingName || (thinkamigbobBuildNaming
+          ? thinkamigbobBuildNaming.getWorkshopBuildName()
+          : "My Workshop Build"));
       primary.textContent="SAVE";
       window.requestAnimationFrame(function(){ name.focus();name.select(); });
     }else if(mode==="OPEN"){
@@ -36706,13 +36718,38 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
         announceWorkshopProject("New Workshop project ready.");
       }else announceWorkshopProject("A new project could not be started.");
     }else if(action==="OPEN"){
-      configureWorkshopProjectDialog("OPEN");
+      var fileInput=document.getElementById("workshopProjectFileInput");
+      if(fileInput){
+        var dialog=document.getElementById("workshopProjectDialog");
+        if(dialog) dialog.hidden=true;
+        workshopProjectDialogMode=null;
+        fileInput.value="";
+        fileInput.click();
+      }
     }
   }
 
   function saveWorkshopProject(name,replaceDuplicate,continuePending){
-    var result=workshopProjectController.save(name,{replaceDuplicate:replaceDuplicate===true});
+    var prepared=workshopProjectController.prepareExport(name);
+    var result=prepared.ok && workshopProjectFileService
+      ? workshopProjectFileService.exportProject(prepared.project)
+      : prepared;
     if(result.ok){
+      var blob=new Blob([result.json],{type:"application/json;charset=utf-8"});
+      var url=URL.createObjectURL(blob);
+      var download=document.createElement("a");
+      download.href=url;
+      download.download=result.filename;
+      download.hidden=true;
+      document.body.appendChild(download);
+      download.click();
+      download.remove();
+      window.setTimeout(function(){ URL.revokeObjectURL(url); },0);
+      var confirmed=workshopProjectController.confirmExport(result.project);
+      if(!confirmed.ok){
+        announceWorkshopProject("This build could not be saved. Your current work is unchanged.");
+        return false;
+      }
       workshopProjectPendingName="";
       if(continuePending){
         finishWorkshopProjectPendingAction();
@@ -36723,13 +36760,10 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
       }
       return true;
     }
-    if(result.code==="DUPLICATE_NAME"){
-      workshopProjectPendingName=name;
-      configureWorkshopProjectDialog("DUPLICATE");
-    }else if(result.code==="UNSUPPORTED_OBJECT"){
+    if(result.code==="UNSUPPORTED_OBJECT"){
       announceWorkshopProject("This project contains Parts and Objects that are not save-ready yet.");
     }else{
-      announceWorkshopProject("This project could not be saved on this device.");
+      announceWorkshopProject("This build could not be exported. Your current work is unchanged.");
     }
     return false;
   }
@@ -36744,6 +36778,12 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     configureWorkshopProjectDialog("NAME");
     return true;
   }
+
+  function requestBuilderProjectName(returnFocus){
+    workshopProjectDialogReturnFocus=returnFocus || document.activeElement;
+    return configureWorkshopProjectDialog("BUILDER_NAME");
+  }
+  window.requestBuilderProjectName=requestBuilderProjectName;
 
   function requestWorkshopProjectAction(action,returnFocus){
     if(!workshopProjectController) return false;
@@ -36768,6 +36808,38 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     return true;
   }
 
+  function openWorkshopProjectFile(file){
+    function rejectFile(message){
+      closeWorkshopProjectDialog({restoreFocus:true});
+      announceWorkshopProject(message);
+      showWorkshopProjectToast(message);
+      return false;
+    }
+    if(!file || !workshopProjectFileService || !workshopProjectController){
+      return Promise.resolve(rejectFile("Choose a THINKamigBOB Workshop JSON file."));
+    }
+    if(file.size>5*1024*1024){
+      return Promise.resolve(rejectFile("That file is too large to be a Workshop build."));
+    }
+    return file.text().then(function(text){
+      var imported=workshopProjectFileService.importText(text);
+      if(!imported.ok){
+        return rejectFile("That file is not a supported Workshop build. Your current work is unchanged.");
+      }
+      var opened=workshopProjectController.importProject(imported.project);
+      if(!opened.ok){
+        return rejectFile("That build could not be opened. Your current work is unchanged.");
+      }
+      closeWorkshopProjectDialog({restoreFocus:true});
+      updateUndoRedoButtons();
+      announceWorkshopProject("Build opened!");
+      showWorkshopProjectToast("Build opened!");
+      return true;
+    }).catch(function(){
+      return rejectFile("That file could not be read. Your current work is unchanged.");
+    });
+  }
+
   function handleWorkshopProjectDialogKeydown(event){
     var dialog=document.getElementById("workshopProjectDialog");
     if(!dialog || dialog.hidden) return;
@@ -36776,7 +36848,8 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
       closeWorkshopProjectDialog({restoreFocus:true});
       return;
     }
-    if(event.key==="Enter" && workshopProjectDialogMode==="NAME" &&
+    if(event.key==="Enter" &&
+      (workshopProjectDialogMode==="NAME" || workshopProjectDialogMode==="BUILDER_NAME") &&
       event.target===document.getElementById("workshopProjectName")){
       event.preventDefault();
       var primary=document.getElementById("workshopProjectPrimary");
@@ -38469,6 +38542,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     var projectDiscard=document.getElementById("workshopProjectDiscard");
     var projectCancel=document.getElementById("workshopProjectCancel");
     var projectList=document.getElementById("workshopProjectList");
+    var projectFileInput=document.getElementById("workshopProjectFileInput");
     var mmButton=document.getElementById("workshopUnitMm");
     var cmButton=document.getElementById("workshopUnitCm");
 
@@ -38513,7 +38587,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     if(projectPrimary){
       projectPrimary.addEventListener("click",function(){
         var continuePending=!!workshopProjectPendingAction;
-        if(workshopProjectDialogMode==="NAME"){
+        if(workshopProjectDialogMode==="NAME" || workshopProjectDialogMode==="BUILDER_NAME"){
           var input=document.getElementById("workshopProjectName");
           var name=input ? input.value.trim() : "";
           if(!name){
@@ -38521,8 +38595,14 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
             if(input) input.focus();
             return;
           }
-          workshopProjectPendingName=name;
-          saveWorkshopProject(name,false,continuePending);
+          if(workshopProjectDialogMode==="BUILDER_NAME"){
+            builderProjectName=name;
+            closeWorkshopProjectDialog({restoreFocus:true});
+            exportBuilderWorld(name);
+          }else{
+            workshopProjectPendingName=name;
+            saveWorkshopProject(name,false,continuePending);
+          }
         }else if(workshopProjectDialogMode==="DUPLICATE"){
           saveWorkshopProject(
             workshopProjectPendingName,
@@ -38563,6 +38643,15 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
         var projectButton=event.target.closest("[data-workshop-project-id]");
         if(!projectButton || !projectList.contains(projectButton)) return;
         openStoredWorkshopProject(projectButton.dataset.workshopProjectId);
+      });
+    }
+    if(projectFileInput){
+      projectFileInput.addEventListener("change",function(){
+        var file=projectFileInput.files && projectFileInput.files[0];
+        openWorkshopProjectFile(file);
+      });
+      projectFileInput.addEventListener("cancel",function(){
+        closeWorkshopProjectDialog({restoreFocus:true});
       });
     }
     if(projectDialog){
@@ -38790,7 +38879,9 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     import("./js/workshop/persistence/workshop-draft-controller.mjs"),
     import("./js/workshop/persistence/workshop-project-serializer.mjs"),
     import("./js/workshop/persistence/workshop-project-storage.mjs"),
-    import("./js/workshop/persistence/workshop-project-controller.mjs")
+    import("./js/workshop/persistence/workshop-project-controller.mjs"),
+    import("./js/workshop/persistence/workshop-project-file-service.mjs"),
+    import("./js/persistence/thinkamigbob-build-naming.mjs")
   ])
     .then(function(modules){
       var module=modules[0];
@@ -38874,6 +38965,8 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
       var workshopProjectSerializerModule=modules[34];
       var workshopProjectStorageModule=modules[35];
       var workshopProjectControllerModule=modules[36];
+      var workshopProjectFileServiceModule=modules[37];
+      thinkamigbobBuildNaming=modules[38];
       workshopSelectionFoundationController=
         modules[31].createWorkshopSelectionFoundationController();
       workshopDraftController=workshopDraftModule.createWorkshopDraftController({
@@ -38890,6 +38983,10 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
             getItem:function(key){ return window.localStorage.getItem(key); },
             setItem:function(key,value){ window.localStorage.setItem(key,value); }
           },
+          validateProject:workshopProjectSerializer.validate
+        });
+      workshopProjectFileService=workshopProjectFileServiceModule
+        .createWorkshopProjectFileService({
           validateProject:workshopProjectSerializer.validate
         });
       var workshopProjectIdCounter=0;
@@ -39547,6 +39644,48 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
 
 <style id="builderMissionShortcutButtonsCSS">
 /* Builder-only shortcut presentation. Workshop retains its verified utility rail. */
+body:not(.starterScreenActive):not(.workshopMode) #builderMissionLogo{
+  display:block;
+  width:186px;
+  max-width:186px;
+  height:62px;
+  margin:0 0 3px;
+  object-fit:contain;
+  object-position:left center;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.36));
+}
+
+/* Keep the Builder View Cube level with the tightened left challenge column. */
+body:not(.starterScreenActive):not(.workshopMode) #viewCubeBox{
+  top:-14px !important;
+}
+
+/* Match the Builder View cube face to the verified Workshop cube footprint. */
+body:not(.starterScreenActive):not(.workshopMode) #viewCubeCanvas{
+  width:128px !important;
+  height:128px !important;
+}
+
+@media(max-height:700px){
+  body:not(.starterScreenActive):not(.workshopMode) #viewCubeCanvas{
+    width:96px !important;
+    height:96px !important;
+  }
+}
+
+/* The logo PNG includes transparent top padding. Lift the complete left-side
+   mission group so the visible THINKamigBOB lettering aligns with VIEW. */
+body:not(.starterScreenActive):not(.workshopMode) #info{
+  top:-22px !important;
+}
+
+body:not(.starterScreenActive):not(.workshopMode) #rightHudColumn{
+  top:18px !important;
+}
+
 body:not(.starterScreenActive) #builderMissionActions{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -39685,5 +39824,376 @@ body:not(.starterScreenActive):not(.workshopMode) #info #workspaceModeSwitch:act
 }
 </style>
 
+<!-- Builder dashboard simplification: keep the useful controls available without
+     the decorative hood/news-ticker assembly. -->
+<style id="builderDashboardWithoutHoodTickerCSS">
+body:not(.starterScreenActive) #buildBar,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen),
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover),
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):hover{
+  left:var(--dashboard139-left,16px) !important;
+  right:var(--dashboard139-coach-clearance,336px) !important;
+  width:auto !important;
+  max-width:none !important;
+  transform:translateY(calc(100% - 32px)) !important;
+  pointer-events:auto !important;
+  border:1px solid rgba(202,164,53,.58) !important;
+  border-bottom:0 !important;
+  border-radius:14px 14px 0 0 !important;
+  background:linear-gradient(180deg,rgba(20,34,48,.18),rgba(8,18,29,.12)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 -3px 10px rgba(0,0,0,.12),0 0 0 1px rgba(72,142,176,.16) !important;
+}
+body:not(.starterScreenActive) #buildBar.dashboardOpen,
+body:not(.starterScreenActive) #buildBar.dashboardOpen:hover{
+  left:var(--dashboard139-left,16px) !important;
+  right:var(--dashboard139-coach-clearance,336px) !important;
+  width:auto !important;
+  max-width:none !important;
+  transform:translateY(0) !important;
+  pointer-events:auto !important;
+  padding:31px 9px 8px !important;
+  border:1px solid rgba(202,164,53,.58) !important;
+  border-bottom:0 !important;
+  border-radius:14px 14px 0 0 !important;
+  background:linear-gradient(180deg,rgba(20,34,48,.18),rgba(8,18,29,.12)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 -3px 10px rgba(0,0,0,.12),0 0 0 1px rgba(72,142,176,.16) !important;
+}
+body:not(.starterScreenActive) #buildBar::before,
+body:not(.starterScreenActive) #buildBar::after{
+  content:none !important;
+  display:none !important;
+  background:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+body:not(.starterScreenActive) #buildBar.dashboardOpen::before,
+body:not(.starterScreenActive) #buildBar.dashboardOpen::after,
+body:not(.starterScreenActive) #buildBar:hover::before,
+body:not(.starterScreenActive) #buildBar:hover::after{
+  content:none !important;
+  display:none !important;
+  background:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+body:not(.starterScreenActive) #buildBar .dashboard139MainGrid,
+body:not(.starterScreenActive) #buildBar .dashboard139MessageStrip,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboard139MainGrid,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) .dashboard139MessageStrip{
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar.dashboardOpen .dashboard139MessageStrip,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar:hover .dashboard139MessageStrip{
+  left:42.5% !important;
+  width:43.5% !important;
+  max-width:none !important;
+  transform:none !important;
+  text-align:center !important;
+}
+body:not(.starterScreenActive) #tickerPassportPod,
+body:not(.starterScreenActive) #tickerLibraryPod{
+  display:none !important;
+}
+body:not(.starterScreenActive) #dashboardHoverTab{
+  position:absolute !important;
+  top:0 !important;
+  left:50% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:230px !important;
+  min-width:230px !important;
+  height:48px !important;
+  min-height:48px !important;
+  padding:0 18px !important;
+  transform:translateX(-50%) !important;
+  border:2px solid #c9952b !important;
+  border-bottom:0 !important;
+  border-radius:15px 15px 0 0 !important;
+  color:#8ff6ff !important;
+  -webkit-text-fill-color:#8ff6ff !important;
+  background:linear-gradient(180deg,#29495a 0%,#102734 48%,#06141d 100%) !important;
+  box-shadow:inset 0 1px 0 rgba(197,241,255,.32),0 -3px 8px rgba(0,0,0,.42),0 0 10px rgba(41,181,255,.36) !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+  font:0/1 "Eurostile","Orbitron",Arial,sans-serif !important;
+  cursor:pointer !important;
+  z-index:2501 !important;
+}
+body:not(.starterScreenActive) #buildBar.dashboardOpen #dashboardHoverTab,
+body:not(.starterScreenActive) #buildBar:hover #dashboardHoverTab,
+body:not(.starterScreenActive) #buildBar:not(.dashboardOpen):not(:hover) #dashboardHoverTab{
+  display:flex !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+}
+body:not(.starterScreenActive) #dashboardHoverTab::before{
+  content:"▲  BUILD TOOLS  ▲" !important;
+  display:block !important;
+  color:#8ff6ff !important;
+  -webkit-text-fill-color:#8ff6ff !important;
+  font:900 14px/1 "Eurostile","Orbitron",Arial,sans-serif !important;
+  letter-spacing:.08em !important;
+  text-shadow:0 1px 2px #001018,0 0 5px rgba(92,235,255,.92) !important;
+}
+body:not(.starterScreenActive) #dashboardHoverTab::after{
+  content:none !important;
+  display:none !important;
+}
+body:not(.starterScreenActive) #buildBar.dashboardOpen #dashboardHoverTab::before,
+body:not(.starterScreenActive) #buildBar:hover #dashboardHoverTab::before{
+  content:"▼  CLOSE TOOLS  ▼" !important;
+}
+body:not(.starterScreenActive) #dashboardHoverTab:hover{
+  filter:brightness(1.15) !important;
+}
+body:not(.starterScreenActive) #dashboardHoverTab:focus-visible{
+  outline:3px solid #fff !important;
+  outline-offset:3px !important;
+}
+body:not(.starterScreenActive) #dashboardHoverTab{
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #dashboardTrimControl{
+  position:absolute;
+  left:50%;
+  right:auto;
+  top:-11px;
+  bottom:auto;
+  z-index:20;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:280px;
+  min-width:280px;
+  height:32px;
+  min-height:44px;
+  padding:0 18px 12px;
+  transform:translateX(-50%);
+  border:0;
+  border:0;
+  border-radius:0;
+  color:#edf7fb;
+  -webkit-text-fill-color:#edf7fb;
+  background:transparent;
+  box-shadow:none;
+  font:900 13px/1 "Eurostile","Orbitron",Arial,sans-serif;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 7px rgba(62,205,241,.22);
+  font-size:0;
+  cursor:pointer;
+}
+body:not(.starterScreenActive):not(.workshopMode) #dashboardTrimControl:hover{
+  color:#ffffff;
+  -webkit-text-fill-color:#ffffff;
+  background:transparent;
+}
+body:not(.starterScreenActive):not(.workshopMode) #dashboardTrimControl:focus-visible{
+  outline:3px solid #08263c;
+  outline-offset:-8px;
+}
+body.starterScreenActive #dashboardTrimControl,
+body.workshopMode #dashboardTrimControl{display:none !important;}
+
+/* The Builder dashboard is now a permanent transparent control surface. */
+body:not(.starterScreenActive):not(.workshopMode) #buildBar,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar:not(.dashboardOpen),
+body:not(.starterScreenActive):not(.workshopMode) #buildBar:not(.dashboardOpen):not(:hover),
+body:not(.starterScreenActive):not(.workshopMode) #buildBar:not(.dashboardOpen):hover,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar.dashboardOpen,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar.dashboardOpen:hover{
+  transform:translateY(0) !important;
+  height:164px !important;
+  min-height:164px !important;
+  padding:25px 10px 8px !important;
+  background:linear-gradient(180deg,rgba(21,47,63,.20),rgba(5,21,32,.15)) !important;
+  backdrop-filter:blur(2px) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #dashboardTrimControl{
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139MainGrid{
+  grid-template-columns:92px minmax(170px,1.08fr) minmax(126px,.84fr) minmax(238px,1.42fr) minmax(175px,1fr) !important;
+  grid-template-rows:minmax(0,1fr) 24px !important;
+  gap:8px !important;
+  height:126px !important;
+  min-height:126px !important;
+  padding:0 !important;
+  align-items:stretch !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139MissionZone{
+  grid-column:1 !important;
+  grid-row:1 / 3 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139ShapeZone{
+  grid-column:2 !important;
+  grid-row:1 / 3 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139BuildZone{
+  grid-column:3 !important;
+  grid-row:1 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139UtilityZone{
+  grid-column:4 !important;
+  grid-row:1 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139VoiceZone{
+  grid-column:5 !important;
+  grid-row:1 / 3 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139Zone{
+  min-width:0 !important;
+  padding:27px 6px 24px !important;
+  transform:none !important;
+  border-left:1px solid rgba(85,211,238,.18) !important;
+  border-right:1px solid rgba(4,12,19,.22) !important;
+  border-radius:7px !important;
+  background:linear-gradient(180deg,rgba(20,57,76,.16),rgba(3,18,28,.09)) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139MissionZone{
+  padding:10px 2px 20px !important;
+  border-left:0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #returnMissionsButton{
+  width:84px !important;
+  height:74px !important;
+  min-height:74px !important;
+  margin:5px auto 0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139Zone .dashboard139ZoneLabel{
+  top:3px !important;
+  width:calc(100% - 12px) !important;
+  min-width:0 !important;
+  max-width:none !important;
+  height:20px !important;
+  padding:0 5px !important;
+  letter-spacing:.09em !important;
+  font-size:10px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #bottomBuildTools.dashboardGreenTools,
+body:not(.starterScreenActive):not(.workshopMode) .dashboardUtilityButtons,
+body:not(.starterScreenActive):not(.workshopMode) .dashboard139PlaybackButtons{
+  gap:6px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139ShapeRow{
+  margin-bottom:5px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139ShapeZone{
+  padding-inline:3px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139ShapeZone .colorScrollWrap{
+  grid-template-columns:30px minmax(0,1fr) 30px !important;
+  gap:2px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139ShapeZone .colorScrollArrow{
+  width:30px !important;
+  height:34px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #colorSwatchBar{
+  overflow-x:scroll !important;
+  scrollbar-width:auto !important;
+  scrollbar-color:#59e8ff rgba(5,25,37,.88) !important;
+  scrollbar-gutter:stable !important;
+  padding-inline:1px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #colorSwatchBar::-webkit-scrollbar{
+  display:block !important;
+  height:10px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #bottomBuildTools.dashboardGreenTools button{
+  height:33px !important;
+  min-height:33px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) .dashboardUtilityButtons button{
+  height:34px !important;
+  min-height:34px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #voiceControls .voiceButton{
+  height:31px !important;
+  min-height:31px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139MessageStrip{
+  position:relative !important;
+  grid-column:3 / 5 !important;
+  grid-row:2 !important;
+  align-self:end !important;
+  justify-self:stretch !important;
+  left:auto !important;
+  right:auto !important;
+  width:auto !important;
+  max-width:none !important;
+  height:24px !important;
+  min-height:24px !important;
+  bottom:auto !important;
+  transform:none !important;
+  text-align:center !important;
+  z-index:9 !important;
+  pointer-events:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar.dashboardOpen .dashboard139MessageStrip,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar:hover .dashboard139MessageStrip{
+  grid-column:3 / 5 !important;
+  grid-row:2 !important;
+  left:auto !important;
+  right:auto !important;
+  width:auto !important;
+  max-width:none !important;
+  height:24px !important;
+  min-height:24px !important;
+  bottom:auto !important;
+  transform:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #toolMessage.bottomToolMessage{
+  min-height:24px !important;
+  height:24px !important;
+  padding:2px 12px !important;
+  border:1px solid rgba(82,220,244,.42) !important;
+  border-radius:8px !important;
+  color:#effcff !important;
+  -webkit-text-fill-color:#effcff !important;
+  background:rgba(3,19,29,.74) !important;
+  box-shadow:inset 0 1px 0 rgba(203,250,255,.10),0 1px 4px rgba(0,0,0,.22) !important;
+  font-size:11px !important;
+  font-weight:800 !important;
+  line-height:1.1 !important;
+  letter-spacing:.01em !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.95) !important;
+}
+@media(max-width:1180px){
+  body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139MainGrid{
+    grid-template-columns:86px minmax(155px,1.02fr) minmax(112px,.78fr) minmax(210px,1.34fr) minmax(160px,.95fr) !important;
+    gap:6px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139Zone{
+    padding-inline:4px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #returnMissionsButton{
+    width:78px !important;
+    height:70px !important;
+    min-height:70px !important;
+  }
+}
+</style>
+<script id="dashboardTrimControlScript">
+(function(){
+  function install(){
+    var dashboard=document.getElementById("buildBar");
+    var control=document.getElementById("dashboardTrimControl");
+    if(!dashboard || !control || control.dataset.ready==="true") return;
+    control.dataset.ready="true";
+    dashboard.classList.add("dashboardOpen");
+    control.setAttribute("aria-expanded","true");
+    control.setAttribute("aria-hidden","true");
+    control.tabIndex=-1;
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",install,{once:true});
+  else install();
+})();
+</script>
 </body>
 </html>
