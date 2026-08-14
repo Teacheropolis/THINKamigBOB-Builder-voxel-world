@@ -77,6 +77,17 @@ test("portable import validates and replaces atomically",()=>{
   assert.equal(failed.resets,0);
 });
 
+test("an installed project exposes and can restore its previous identity",()=>{
+  const h=harness();
+  assert.equal(h.controller.open("saved").ok,true);
+  const imported=h.controller.importProject({
+    id:"file",name:"File",createdAt:1,updatedAt:3,objects:[{id:"from-file"}],
+  });
+  assert.equal(imported.previousProject.id,"saved");
+  h.controller.restoreProjectIdentity(imported.previousProject);
+  assert.equal(h.controller.getSnapshot().currentProjectId,"saved");
+});
+
 test("successful updates preserve creation time and advance only saved update time",()=>{
   const h=harness();
   assert.equal(h.controller.open("saved").ok,true);

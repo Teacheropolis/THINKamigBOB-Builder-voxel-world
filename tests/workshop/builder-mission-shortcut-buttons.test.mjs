@@ -15,8 +15,9 @@ test("Builder reuses the Workshop THINKamigBOB title above its mission challenge
 });
 
 test("Workshop branding matches the Builder top-left placement without covering its controls",()=>{
-  assert.match(source,/body\.workshopMode:not\(\.starterScreenActive\) #workshopLogo\{[\s\S]*?top:18px;[\s\S]*?left:18px;/);
+  assert.match(source,/body\.workshopMode:not\(\.starterScreenActive\) #workshopLogo\{[\s\S]*?top:4px;[\s\S]*?left:18px;/);
   assert.match(source,/body\.workshopMode:not\(\.starterScreenActive\) #viewCubeBox\{[\s\S]*?top:75px !important;[\s\S]*?left:8px !important;/);
+  assert.match(source,/@media\(max-height:760px\)\{[\s\S]*?#workshopLogo\{[\s\S]*?top:2px;[\s\S]*?#viewCubeBox\{[\s\S]*?top:calc\(38px \+ 0\.5mm\) !important;[\s\S]*?max-height:calc\(100vh - 216px\) !important;/);
 });
 
 test("Builder presents larger Badges and Passport shortcuts above Help",()=>{
@@ -27,10 +28,12 @@ test("Builder presents larger Badges and Passport shortcuts above Help",()=>{
   assert.match(source,/if\(el\.tagName !== 'BUTTON'\)\{[\s\S]*el\.onkeydown/);
 });
 
-test("Help keeps one slot and Open Workshop fills the remaining two slots",()=>{
-  assert.match(source,/var target=mode==="workshop" \? controlStation : missionPanel/);
+test("Help joins Utilities while Open Workshop remains a full-width Mission shortcut",()=>{
+  assert.match(source,/var compactMissionZone=document\.querySelector\("#builderRightToolsPanel \.dashboard139MissionZone"\)/);
+  assert.match(source,/var compactUtilityButtons=document\.querySelector\("#builderRightToolsPanel \.dashboard139UtilityZone \.dashboardUtilityButtons"\)/);
+  assert.match(source,/if\(mode==="workshop"\)\{[\s\S]*utilityRail\.appendChild\(helpButton\)[\s\S]*utilityRail\.appendChild\(modeSwitch\)/);
+  assert.match(source,/compactMissionZone\.appendChild\(modeSwitch\)[\s\S]*compactUtilityButtons\.appendChild\(helpButton\)/);
   assert.match(source,/\.observe\(document\.body,[\s\S]*?placeUtilityRail\(currentWorkspaceMode\);\s*updateModeControls\(\);/);
-  assert.match(source,/:not\(\.workshopMode\) #info #workspaceUtilityRail\{[\s\S]*grid-template-columns:minmax\(0,1fr\) minmax\(0,2fr\)/);
-  assert.match(source,/:not\(\.workshopMode\) #info #workspaceUtilityRail #helpButton\{[\s\S]*height:46px !important;[\s\S]*min-height:44px !important;/);
-  assert.match(source,/:not\(\.workshopMode\) #info #workspaceModeSwitch\{[\s\S]*width:100%;[\s\S]*height:46px;[\s\S]*builder-shortcut-grid-frame-glow\.png/);
+  assert.match(source,/\.dashboard139UtilityZone #helpButton\{[\s\S]*position:static !important;[\s\S]*width:100% !important;[\s\S]*font-size:10px !important/);
+  assert.match(source,/\.dashboard139MissionZone #workspaceModeSwitch\{[\s\S]*width:100% !important;[\s\S]*height:44px !important;[\s\S]*builder-shortcut-grid-frame-glow\.png[\s\S]*-webkit-text-fill-color:#fff !important/);
 });

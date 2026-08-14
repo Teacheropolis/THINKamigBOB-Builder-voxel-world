@@ -137,9 +137,9 @@ test("Builder-style theme preserves state and Chromebook geometry contracts", ()
   assert.match(theme,/#viewCubeBox #workspaceModeSwitch \.workspaceModeIcon\{[\s\S]*?display:none/);
   assert.match(source,/label\.innerHTML='<span class="workspaceModeReturnLine"><span class="workspaceModeReturnIcon" aria-hidden="true">↶<\/span><span class="workspaceModeReturnWords">RETURN TO<\/span><\/span><span class="workspaceModeMissionLine">MISSION<\/span>'/);
   assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeLabel\{[\s\S]*?color:#dffaff;[\s\S]*?text-transform:uppercase;[\s\S]*?white-space:normal;[\s\S]*?text-shadow:none/);
-  assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnIcon\{[\s\S]*?color:#fff;[\s\S]*?font:900 13px\/1 Arial[\s\S]*?text-shadow:none/);
+  assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnIcon\{[\s\S]*?color:#fff;[\s\S]*?font:900 9px\/1 Arial[\s\S]*?text-shadow:none/);
   assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnWords\{[\s\S]*?color:#bff7ff;[\s\S]*?text-shadow:[^;]*#45cce8/);
-  assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeMissionLine\{[\s\S]*?color:#effeff;[\s\S]*?font:900 15px/);
+  assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeMissionLine\{[\s\S]*?color:#effeff;[\s\S]*?font:900 7px/);
   assert.match(theme,/#workshopViewHome \.workshop-control-icon\{[\s\S]*?font-size:18px/);
   assert.match(theme,/#workshopViewHome > span,[\s\S]*?color:#83ff72/);
   assert.match(theme,/#workshopViewHome small\{[\s\S]*?display:none/);

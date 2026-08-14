@@ -38,6 +38,7 @@ export function createWorkshopProjectController({
   });
 
   const installProject = (project) => {
+    const previousProject = currentProject;
     const validated = serializer.validate(project);
     if (!validated) return Object.freeze({ok:false,code:"INVALID_PROJECT"});
     const candidates = [];
@@ -61,7 +62,9 @@ export function createWorkshopProjectController({
     history.reset();
     draft.replaceActive(candidates);
     currentProject = validated;
-    return Object.freeze({ok:true,code:"OPENED",project:validated,snapshot:snapshot()});
+    return Object.freeze({
+      ok:true,code:"OPENED",project:validated,previousProject,snapshot:snapshot()
+    });
   };
 
   return Object.freeze({
@@ -83,6 +86,10 @@ export function createWorkshopProjectController({
       return Object.freeze({ok:true,code:"SAVED",project:validated,snapshot:snapshot()});
     },
     importProject(project) { return installProject(project); },
+    restoreProjectIdentity(project) {
+      currentProject = project || null;
+      return snapshot();
+    },
     save(name,{replaceDuplicate=false}={}) {
       const timestamp = now();
       const id = currentProject ? currentProject.id : generateProjectId();

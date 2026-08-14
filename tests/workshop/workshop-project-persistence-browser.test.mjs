@@ -11,16 +11,16 @@ test("enables student-facing New Workshop Open Build and Save Build controls",()
   assert.match(source,/id="workshopPanelProject"[\s\S]*?<button type="button" disabled>Screenshot<\/button>/);
 });
 
-test("adds one Save and Open shortcut beneath Return to Mission",()=>{
+test("keeps Save Open and Return to Mission in one compact project row",()=>{
   assert.match(source,/id="workspaceModeSwitch"[\s\S]*?id="workshopUtilitySave"[\s\S]*?id="workshopUtilityOpen"/);
   assert.match(source,/id="workshopUtilitySave"[^>]*aria-label="Save Build"[^>]*>SAVE<\/button>/);
   assert.match(source,/id="workshopUtilityOpen"[^>]*aria-label="Open Build"[^>]*>OPEN<\/button>/);
   assert.match(source,/utilityProjectSave\.addEventListener\("click"[\s\S]*?requestWorkshopProjectSave\(utilityProjectSave,false\)/);
   assert.match(source,/utilityProjectOpen\.addEventListener\("click"[\s\S]*?requestWorkshopProjectAction\("OPEN",utilityProjectOpen\)/);
-  assert.match(source,/#workspaceUtilityRail\{[\s\S]*?flex:0 0 106px[\s\S]*?grid-template-columns:repeat\(2,minmax\(0,1fr\)\)[\s\S]*?grid-template-rows:58px 44px/);
-  assert.match(source,/#workspaceModeSwitch\{[\s\S]*?grid-column:1 \/ -1[\s\S]*?height:58px/);
+  assert.match(source,/#workspaceUtilityRail\{[\s\S]*?flex:0 0 44px[\s\S]*?grid-template-columns:minmax\(44px,\.78fr\) minmax\(44px,\.78fr\) minmax\(70px,1\.44fr\)[\s\S]*?grid-template-rows:44px/);
+  assert.match(source,/#workspaceModeSwitch\{[\s\S]*?grid-column:3[\s\S]*?grid-row:1[\s\S]*?height:44px/);
   assert.match(source,/\.workshopUtilityProjectButton\{display:none;\}/);
-  assert.match(source,/\.workshopUtilityProjectButton\{[\s\S]*?display:block;[\s\S]*?min-height:44px;[\s\S]*?color:#ff4fa3[\s\S]*?font:900 11px/);
+  assert.match(source,/\.workshopUtilityProjectButton\{[\s\S]*?display:block;[\s\S]*?min-height:44px;[\s\S]*?color:#ff4fa3[\s\S]*?font:900 7px/);
   assert.match(source,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeLabel\{[\s\S]*?color:#dffaff[\s\S]*?text-shadow:none/);
   assert.match(source,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnIcon\{[\s\S]*?color:#fff[\s\S]*?-webkit-text-fill-color:#fff[\s\S]*?text-shadow:none/);
   assert.match(source,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnWords\{[\s\S]*?color:#bff7ff/);
@@ -90,13 +90,25 @@ test("Open candidates validate before exact active replacement",()=>{
   assert.match(source,/restoreTrustedResizeFamily\(object,record\.family\)/);
 });
 
+test("Open accepts saved one-centimeter cubes centered on the Workshop placement plane",()=>{
+  assert.match(source,/bounds\.min\.y>=-0\.5/);
+  assert.doesNotMatch(source,/bounds\.min\.y>=0;/);
+});
+
 test("successful project replacement clears transient presentation and settles Home",()=>{
-  const start=source.indexOf("function settleWorkshopProjectPresentation()");
+  const start=source.indexOf("function settleWorkshopProjectPresentation(");
   const end=source.indexOf("function replaceWorkshopProjectObjects",start);
   const block=source.slice(start,end);
   assert.match(block,/clearWorkshopSelectedBlocks\(\)/);
   assert.match(block,/resetWorkshopEditFoundation\(\{preserveHistory:true\}\)/);
   assert.match(block,/resetEngineeringToolChest\(\)/);
   assert.match(block,/clearWorkshopEngineeringView\(\)/);
-  assert.match(block,/setWorkshopEngineeringView\("home"\)/);
+  assert.match(block,/prepareWorkshopHomeFrameSettlement\(onSettled\)/);
+});
+
+test("Open waits for visible Home settlement and rolls back before reporting failure",()=>{
+  assert.match(source,/function verifyWorkshopProjectVisibleSettlement\(expectedCount\)/);
+  assert.match(source,/object\.parent===scene && object\.visible!==false/);
+  assert.match(source,/verifyWorkshopProjectVisibleSettlement\(opened\.project\.objects\.length\)[\s\S]*rollbackWorkshopProjectReplacement\(\)[\s\S]*restoreProjectIdentity\(opened\.previousProject\)/);
+  assert.match(source,/commitWorkshopProjectReplacement\(\)[\s\S]*announceWorkshopProject\("Build opened!"\)/);
 });

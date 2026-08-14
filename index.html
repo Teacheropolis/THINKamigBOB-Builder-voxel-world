@@ -47,6 +47,57 @@ SAFETY RULE FOR FUTURE UPDATES:
 ===================================================== -->
 <head>
 <meta charset="UTF-8"/>
+<script id="starterFirstPaintClassScript">
+document.documentElement.classList.add('starterAssetsLoading');
+</script>
+<style id="starterFirstPaintCSS">
+/* First-paint cover: this is intentionally before fonts, preloads, and page artwork. */
+html.starterAssetsLoading{
+  background:#01040a !important;
+}
+html.starterAssetsLoading body{
+  visibility:visible !important;
+}
+html.starterAssetsLoading body > :not(#startScreen),
+html.starterAssetsLoading #startScreen > :not(#starterLoadingCover){
+  visibility:hidden !important;
+}
+html.starterAssetsLoading::before,
+html.starterAssetsLoading::after{
+  content:"";
+  position:fixed;
+  z-index:1;
+  pointer-events:none;
+}
+html.starterAssetsLoading::before{
+  inset:0;
+  background-image:
+    radial-gradient(circle at 50% 38%,rgba(20,112,148,.52),rgba(3,18,32,.96) 48%,#01040a 100%),
+    linear-gradient(rgba(72,216,255,.09) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(72,216,255,.09) 1px,transparent 1px);
+  background-color:#01040a;
+  background-size:100% 100%,40px 40px,40px 40px;
+  background-position:center,center,center;
+  background-repeat:no-repeat,repeat,repeat;
+}
+html.starterAssetsLoading::after{
+  content:"THINKamigBOB\A BOB is getting your mission ready...\A Loading…";
+  left:50%;
+  top:64%;
+  width:min(90vw,720px);
+  transform:translate(-50%,-50%);
+  color:#f5fbff;
+  white-space:pre-line;
+  text-align:center;
+  font:800 clamp(17px,2.5vw,25px)/1.65 Arial,sans-serif;
+  letter-spacing:.035em;
+  text-shadow:0 0 18px rgba(54,216,255,.52),0 3px 8px rgba(0,0,0,.8);
+}
+@media(prefers-reduced-motion:reduce){
+  html.starterAssetsLoading::before,
+  html.starterAssetsLoading::after{transition:none !important}
+}
+</style>
 <title>THINKamigBOB Builder</title>
 <!-- =====================================================
 BUILDER UPDATE #59 — CODE ORGANIZATION
@@ -1796,7 +1847,7 @@ input{
   padding:0 !important;
   z-index:760 !important;
   max-height:none !important;
-  overflow:visible !important;
+  overflow:hidden !important;
 }
 #toolboxButton{
   margin:0 !important;
@@ -1976,7 +2027,7 @@ input{
   background:rgba(5,10,24,.24);
   border:1px solid rgba(54,216,255,.22);
   border-radius:999px;
-  padding:4px 8px;
+  padding:2px 8px;
 }
 #floatingToolbox{
   bottom:10px !important;
@@ -3697,6 +3748,12 @@ Future extraction target: starter page HTML.
 Keep button IDs and onclick handlers unchanged.
 ===================================================== -->
 <div id="startScreen">
+<div id="starterLoadingCover" role="status" aria-live="polite" aria-atomic="true">
+  <div class="starterLoadingBob" aria-hidden="true"></div>
+  <div class="starterLoadingTitle">THINKamigBOB</div>
+  <div class="starterLoadingMessage">BOB is getting your mission ready...</div>
+  <div class="starterLoadingProgress" aria-hidden="true">Loading…</div>
+</div>
 <div id="startCard">
 <div class="startLogo">
 <div class="starterTitleBanner" role="img" aria-label="THINKamigBOB STEM Builder">
@@ -3747,6 +3804,74 @@ Keep button IDs and onclick handlers unchanged.
 </div>
 </div>
 </div>
+<script id="starterLoadingCoverScript">
+(function(){
+  var revealStarted=false;
+  function waitForStarterAssets(){
+    var waits=[];
+    var banner=document.querySelector('.starterBannerImage');
+    if(banner && typeof banner.decode==='function'){
+      waits.push(banner.decode().catch(function(){}));
+    }
+    if(document.fonts && document.fonts.ready){
+      waits.push(document.fonts.ready.catch(function(){}));
+    }
+    return Promise.all(waits);
+  }
+  function waitForStableStarterLayout(){
+    return new Promise(function(resolve){
+      var started=Date.now();
+      var lastSignature='';
+      var stableFrames=0;
+      function sample(){
+        var card=document.getElementById('startCard');
+        var tiles=document.querySelectorAll('.missionTile');
+        var tips=document.querySelectorAll('.startTip');
+        var banner=document.querySelector('.starterBannerImage');
+        var rect=card ? card.getBoundingClientRect() : null;
+        var valid=!!(
+          rect && rect.width>0 && rect.height>0 &&
+          tiles.length===10 && tips.length===4 &&
+          banner && banner.complete && banner.naturalWidth>0
+        );
+        var signature=valid ? [
+          Math.round(rect.width),
+          Math.round(rect.height),
+          tiles.length,
+          tips.length,
+          banner.naturalWidth,
+          banner.naturalHeight
+        ].join(':') : '';
+        stableFrames=valid && signature===lastSignature ? stableFrames+1 : 0;
+        lastSignature=signature;
+        if(stableFrames>=4 && Date.now()-started>=650){
+          resolve();
+          return;
+        }
+        window.requestAnimationFrame(sample);
+      }
+      window.requestAnimationFrame(sample);
+    });
+  }
+  function revealStarterPage(){
+    if(revealStarted) return;
+    revealStarted=true;
+    waitForStarterAssets().then(waitForStableStarterLayout).then(function(){
+      window.requestAnimationFrame(function(){
+        window.requestAnimationFrame(function(){
+          var root=document.documentElement;
+          var cover=document.getElementById('starterLoadingCover');
+          root.classList.add('starterAssetsReady');
+          root.classList.remove('starterAssetsLoading');
+          if(cover) cover.setAttribute('aria-hidden','true');
+        });
+      });
+    });
+  }
+  if(document.readyState === 'complete') revealStarterPage();
+  else window.addEventListener('load', revealStarterPage, {once:true});
+})();
+</script>
 <div id="workshopProjectDialog" role="dialog" aria-modal="true" aria-labelledby="workshopProjectDialogTitle" aria-describedby="workshopProjectDialogDescription" hidden>
   <div id="workshopProjectDialogPanel">
     <h2 id="workshopProjectDialogTitle">WORKSHOP PROJECT</h2>
@@ -3780,8 +3905,8 @@ Future extraction target: dashboard HTML/CSS/JS.
 <div data-placeholder="true" id="worldTitle" class="missionDataStore" aria-hidden="true"></div>
 
 <div class="dashboard139MainGrid">
-  <section class="dashboard139Zone dashboard139MissionZone" aria-label="Mission and library controls">
-    <div class="dashboard139ZoneLabel">Mission &amp; Library</div>
+  <section class="dashboard139Zone dashboard139MissionZone" aria-label="Mission and shortcut controls">
+    <div class="dashboard139ZoneLabel">Mission &amp; Shortcuts</div>
     <div class="dashboard139MissionButtons">
       <button id="missionPassportButton" type="button">🛂 Mission Passport</button>
       <div id="floatingToolbox">
@@ -4197,8 +4322,8 @@ Nature ▶
     <div class="dashboardLeft dashboardUtilityButtons">
       <button id="undoButton" onclick="undoLast()" disabled>Undo</button>
       <button id="redoButton" onclick="redoLast()" disabled>Redo</button>
-      <button onclick="saveWorld()">Save</button>
-      <button onclick="document.getElementById('loadFile').click()">Load</button>
+      <button id="builderSaveButton" onclick="saveWorld()">Save</button>
+      <button id="builderOpenButton" onclick="document.getElementById('loadFile').click()">Open</button>
       <button onclick="resetWorld()">Reset</button>
       <button onclick="saveImage()">Screenshot</button>
       <button aria-pressed="true" id="engineeringGridToggle" onclick="toggleEngineeringGrid()">▦ Grid: On</button>
@@ -4228,6 +4353,11 @@ Nature ▶
 </div>
 </div>
 
+<header id="builderGuidedCadHeader" aria-label="Builder project header">
+  <div id="builderGuidedCadBrand"></div>
+  <div id="builderGuidedCadMission"></div>
+  <div id="builderGuidedCadProjectActions" role="group" aria-label="Builder project actions"></div>
+</header>
 <div id="builderMissionTitleOverlay" aria-hidden="true" hidden></div>
 <!-- Empty Workshop layout regions reserve modular dashboard space without
      reparenting or intercepting input from the existing build viewport. -->
@@ -4732,9 +4862,16 @@ Future extraction target: STEM Coach and read-aloud UI.
   </button>
 </div>
 
-<div id="thinkerBobWorkshop" aria-hidden="true">
+<div id="thinkerBobWorkshop" role="group" aria-label="THINKer BOB AMIG coaching poster">
+  <section id="builderAmigPoster" aria-labelledby="builderAmigPosterTitle">
+    <h2 id="builderAmigPosterTitle" class="sr-only">AMIG learning guide</h2>
+    <div class="builderAmigLine"><strong class="builderAmigLetter builderAmigA">A</strong><span>Ask it!</span></div>
+    <div class="builderAmigLine"><strong class="builderAmigLetter builderAmigM">M</strong><span>Make it happen!</span></div>
+    <div class="builderAmigLine"><strong class="builderAmigLetter builderAmigI">I</strong><span>Improve it!</span></div>
+    <div class="builderAmigLine"><strong class="builderAmigLetter builderAmigG">G</strong><span>Grow what you know!</span></div>
+  </section>
   <!-- THINKer Bob rig integration: the articulated SVG is mounted here at runtime. -->
-  <div id="thinkerBobRigMount" aria-label="THINKer BOB in the workshop"></div>
+  <div id="thinkerBobRigMount" aria-hidden="true"></div>
   <!-- Inline fallback keeps Bob available when this page is opened with file://. -->
   <template id="thinkerBobRigTemplate"><svg xmlns="http://www.w3.org/2000/svg" width="389" height="582" viewBox="0 0 389 582" role="img"><style>
     .joint { transform-box: view-box; transform: rotate(var(--rotation, 0deg)); } .layer { pointer-events: none; }
@@ -4770,7 +4907,7 @@ Future extraction target: STEM Coach and read-aloud UI.
       <span class="readToBobStatsGearIcon" aria-hidden="true">⚙️</span>
       <strong id="readToBobStatsGears">0 GEARS</strong>
     </div>
-    <div id="readToBobStatsReadings">📚 0 READINGS COMPLETED</div>
+    <div id="readToBobStatsReadings" aria-label="0 readings completed"><span aria-hidden="true">📚</span> <strong id="readToBobStatsReadingsValue">0</strong> <span>READINGS</span></div>
   </div>
   <div class="readToBobStatsProgressGrid">
     <div class="readToBobStatsProgressCard">
@@ -4779,7 +4916,7 @@ Future extraction target: STEM Coach and read-aloud UI.
       <small id="readToBobStatsStarCount">0 OF 3</small>
     </div>
     <div class="readToBobStatsProgressCard">
-      <strong>⛑️ SAFETY LEVEL <b id="readToBobStatsSafetyLevel">1</b></strong>
+      <strong>🔴 SAFETY LEVEL <b id="readToBobStatsSafetyLevel">1</b></strong>
       <span id="readToBobStatsSafetySymbols" aria-hidden="true">□ □ □</span>
       <small id="readToBobStatsSafetyCount">0 OF 3</small>
     </div>
@@ -6894,6 +7031,52 @@ function renderReaderText(text, target = "thinkerBob"){
   }).join(" ");
 }
 
+function renderStructuredToolReader(info, toolId){
+  const box = document.getElementById("readerHighlightBox");
+  if(!box || !info){
+    return;
+  }
+  let wordIndex = 0;
+  function safe(value){
+    return String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function countPreparedWords(value){
+    const prepared = prepareSpeechText(value);
+    return prepared ? prepared.split(/\s+/).length : 0;
+  }
+  function readableWords(value){
+    const prepared = prepareSpeechText(value);
+    if(!prepared) return "";
+    return prepared.split(/\s+/).map(word => {
+      const index = wordIndex++;
+      return `<span class="readWord" data-word-index="${index}" role="button" tabindex="0" aria-label="Read from ${safe(word)}" onclick="readFromWord(${index})">${safe(word)}</span>`;
+    }).join(" ");
+  }
+  /* BOB's attention-getter and joke are spoken but not printed. The library
+     item already owns the passage header. Count all without duplicating it. */
+  wordIndex += countPreparedWords(window.currentBuilderBobPlayfulIntro || "");
+  wordIndex += countPreparedWords(info.title);
+  const vocabularyLabel = readableWords("Vocabulary:");
+  const vocabularyStart = wordIndex;
+  const vocabularySpeech = info.vocabulary.join(", ") + ".";
+  wordIndex += countPreparedWords(vocabularySpeech);
+  const vocabularyButtons = makeVocabButtons(toolId,info.vocabulary);
+  const factLabel = readableWords("STEM fact:");
+  const fact = readableWords(info.fact);
+  const questionLabel = readableWords("Think about it:");
+  const question = readableWords(info.question || "What do you notice as you build?");
+  const challengeLabel = readableWords("Builder challenge:");
+  const challenge = readableWords(info.challenge);
+  box.innerHTML = `
+    <section class="readerLessonSection readerVocabularySection" data-reader-word-start="${vocabularyStart}">
+      <h4>${vocabularyLabel}</h4><div class="readerVocabularyButtons">${vocabularyButtons}</div>
+      <div id="vocabDetailBox">Click a vocabulary word to learn what it means and how it connects to your build.</div>
+    </section>
+    <section class="readerLessonSection"><h4>${factLabel}</h4><p>${fact}</p></section>
+    <section class="readerLessonSection"><h4>${questionLabel}</h4><p>${question}</p></section>
+    <section class="readerLessonSection"><h4>${challengeLabel}</h4><p>${challenge}</p></section>`;
+}
+
 function updateReaderProgress(index){
   const fill = document.getElementById("readerProgressFill");
   if(!fill || currentReaderWords.length === 0){
@@ -7336,6 +7519,11 @@ function showToolInfo(toolId){
 
   currentThinkerBobSpeech = buildThinkerBobSpeech(info);
   renderReaderText(currentThinkerBobSpeech);
+  renderStructuredToolReader(info,toolId);
+  const activeReaderPassage = document.getElementById("readerHighlightBox");
+  if(activeReaderPassage){
+    activeReaderPassage.dataset.passageTitle = info.title;
+  }
 
   const autoRead = document.getElementById("autoReadToggle");
 
@@ -8366,6 +8554,12 @@ document.addEventListener('mousedown', (event)=>{
     mouseMoved = false;
     return;
   }
+  if(!workshopEventOwnsRendererCanvas(event)){
+    isDragging = false;
+    mouseMoved = false;
+    workshopCanvasOrbitPrepared = false;
+    return;
+  }
   if(document.body.classList.contains("workshopMode") &&
     event.target && typeof event.target.closest === "function" &&
     event.target.closest("#viewCubeBox")){
@@ -8483,6 +8677,8 @@ document.addEventListener('wheel', (event) => {
 
   if(readToBobBlocksBuilderEvent(event)) return;
 
+  if(!workshopEventOwnsRendererCanvas(event)) return;
+
   // Allow scrolling inside the menu panel
 if(
   event.target.closest("#info") ||
@@ -8544,6 +8740,8 @@ if(
 document.addEventListener('keydown', (event)=>{
 
   if(readToBobBlocksBuilderEvent(event)) return;
+
+  if(clickedUI(event)) return;
 
   // Rotate left
   if(event.key === "ArrowLeft"){
@@ -9265,6 +9463,9 @@ function clickedUI(event){
     event.target.closest("#floatingToolbox") ||
     event.target.closest("#toolbox") ||
     event.target.closest("#buildBar") ||
+    event.target.closest("#builderRightToolsPanel") ||
+    event.target.closest("#builderBobRightPanel") ||
+    event.target.closest("#builderGuidedCadHeader") ||
     event.target.closest("#studentProjectBar") ||
     event.target.closest("#blockColor") ||
     event.target.closest("#missionCard") ||
@@ -9281,6 +9482,7 @@ function clickedUI(event){
   "floatingToolbox",
   "toolbox",
   "buildBar",
+  "builderGuidedCadHeader",
   "studentProjectBar",
     "missionCard",
     "stemCoach",
@@ -9347,6 +9549,8 @@ document.addEventListener('click', (event)=>{
   if(readToBobBlocksBuilderEvent(event)) return;
 
   if(window.readToBobFeedbackActive) return;
+
+  if(!workshopEventOwnsRendererCanvas(event)) return;
 
   if(clickedUI(event)){
     return;
@@ -9582,6 +9786,8 @@ document.addEventListener('contextmenu', (event)=>{
   if(readToBobBlocksBuilderEvent(event)) return;
 
   if(window.readToBobFeedbackActive) return;
+
+  if(!workshopEventOwnsRendererCanvas(event)) return;
 
   const workshopInteraction=document.body.classList.contains("workshopMode");
   if(workshopInteraction && !workshopEventOwnsRendererCanvas(event)) return;
@@ -16817,7 +17023,7 @@ UPDATE #41: STEM Fact Skip After STEM Coach Click
         utterance.volume = 1;
         window.speechSynthesis.speak(utterance);
       }
-    }, 650);
+    }, 1900);
   }
 
   function wrapCloseMissionPopupForDailyIntro(){
@@ -17966,7 +18172,7 @@ Future extraction target: passport.css.
   .startBeforeGrid label{ grid-template-columns:1fr !important; gap:6px !important; }
   .startHowToWide{ grid-template-columns:repeat(2, minmax(0,1fr)) !important; }
 }
-@media(max-height:760px){
+@media(max-height:900px){
   #startCard{ padding-top:10px !important; }
   .starterTitleBanner{ width:100% !important; }
   .starterBannerImage{ max-height:190px !important; }
@@ -18338,6 +18544,250 @@ body.starterScreenActive,
   .startBeforePanel{ margin-top:12px !important; }
   .startHelpPanel{ display:block !important; margin-top:12px !important; }
   .startHowToWide .startTip{ min-height:58px !important; }
+}
+
+/* =====================================================
+   RESPONSIVE STARTER VIEWPORT + LIGHTWEIGHT LOAD COVER
+   Keeps the complete starter experience inside one viewport.
+   The loading cover reuses the approved idle BOB asset and leaves mission startup ownership unchanged.
+   ===================================================== */
+#starterLoadingCover{
+  position:fixed;
+  inset:0;
+  z-index:2200;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:clamp(8px,1.4vh,16px);
+  padding:24px;
+  box-sizing:border-box;
+  color:#f5fbff;
+  text-align:center;
+  background:
+    radial-gradient(circle at 50% 38%,rgba(20,112,148,.52),rgba(3,18,32,.96) 48%,#01040a 100%),
+    linear-gradient(rgba(72,216,255,.09) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(72,216,255,.09) 1px,transparent 1px);
+  background-color:#01040a;
+  background-size:100% 100%,40px 40px,40px 40px;
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transition:opacity .28s ease,visibility 0s linear;
+}
+html.starterAssetsReady #starterLoadingCover{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:none;
+}
+.starterLoadingMark{
+  width:clamp(64px,10vmin,104px);
+  aspect-ratio:1;
+  display:grid;
+  place-items:center;
+  color:#ffd34f;
+  font-size:clamp(50px,8vmin,82px);
+  line-height:1;
+  filter:drop-shadow(0 0 16px rgba(255,211,79,.42));
+  animation:starterLoadingTurn 2.4s linear infinite;
+}
+.starterLoadingBob{
+  display:block;
+  width:min(190px,28vmin);
+  aspect-ratio:389 / 582;
+  max-width:42vw;
+  max-height:32vh;
+  background-image:
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0000_antenna.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0001_mouth.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0002_eyes.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0003_head.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0004_neck.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0005_chest.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0006_tummy.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0007_hips.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0023_left-hand.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0022_lower-left-arm.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0021_upper-left-arm.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0020_left-shoulder.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0019_right-hand.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0018_lower-right-arm.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0017_upper-right-arm.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0016_right-shoulder.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0015_left-foot.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0014_lower-left-leg.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0013_left-knee.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0012_upper-left-leg.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0011_right-foot.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0010_lower-right-leg.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0009_right-knee.png"),
+    url("assets/images/characters/thinker-bob-rig-svg/assets/Bob_0008_upper-right-leg.png");
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:contain;
+  filter:drop-shadow(0 12px 20px rgba(0,0,0,.42)) drop-shadow(0 0 14px rgba(54,216,255,.2));
+}
+.starterLoadingTitle{
+  color:#70ddff;
+  font-size:clamp(28px,5vw,56px);
+  font-weight:1000;
+  letter-spacing:.035em;
+  text-shadow:0 0 18px rgba(54,216,255,.52),0 3px 8px rgba(0,0,0,.8);
+}
+.starterLoadingMessage{
+  font-size:clamp(16px,2.3vw,24px);
+  font-weight:800;
+  letter-spacing:.035em;
+}
+.starterLoadingProgress{
+  color:#70ddff;
+  font-size:clamp(13px,1.8vw,18px);
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+@keyframes starterLoadingTurn{to{transform:rotate(360deg)}}
+
+body.starterScreenActive,
+#startScreen{
+  width:100%;
+  height:100vh;
+  height:100dvh;
+  min-height:0 !important;
+  overflow:hidden !important;
+  overscroll-behavior:none;
+}
+#startScreen{
+  align-items:center !important;
+  padding:clamp(6px,1.4vh,16px) clamp(8px,1.5vw,22px) !important;
+  box-sizing:border-box !important;
+}
+#startCard{
+  width:min(1460px,97vw) !important;
+  height:min(100%,900px) !important;
+  max-height:100% !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+  padding:0 !important;
+  display:grid !important;
+  grid-template-rows:minmax(54px,clamp(68px,15vh,150px)) minmax(0,1fr) auto auto !important;
+  gap:clamp(6px,1.1vh,12px) !important;
+}
+.startLogo{
+  min-height:0 !important;
+  height:100% !important;
+  margin:0 !important;
+}
+.starterTitleBanner{
+  width:min(1000px,82vw) !important;
+  height:100% !important;
+}
+.starterBannerImage{
+  width:100% !important;
+  height:100% !important;
+  max-height:100% !important;
+  object-fit:contain !important;
+}
+.startMissionPanel{
+  min-height:0 !important;
+  padding:clamp(7px,1.2vh,13px) clamp(8px,1.2vw,18px) !important;
+  display:grid !important;
+  grid-template-rows:auto minmax(0,1fr) !important;
+}
+.startMissionPanel h2,
+.startBeforePanel h2,
+.startHelpPanel h2{
+  font-size:clamp(15px,2.2vh,24px) !important;
+  margin:0 0 clamp(5px,.8vh,10px) !important;
+}
+.startMissionGrid{
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  gap:clamp(5px,.75vw,11px) !important;
+  min-height:0 !important;
+}
+.startMissionGrid .missionTile{
+  min-width:0 !important;
+  min-height:44px !important;
+  height:100% !important;
+  border-radius:clamp(7px,1vw,12px) !important;
+}
+.missionArt{
+  min-height:0 !important;
+  font-size:clamp(22px,4.3vh,39px) !important;
+}
+.missionTileTitle{
+  min-height:0 !important;
+  padding:clamp(3px,.65vh,7px) clamp(3px,.55vw,8px) !important;
+  font-size:clamp(9px,1.55vh,14px) !important;
+  line-height:1.05 !important;
+  text-align:center !important;
+}
+.startBeforePanel{
+  min-height:50px !important;
+  margin:0 !important;
+  padding:clamp(6px,.9vh,10px) clamp(8px,1.2vw,16px) !important;
+  grid-template-columns:auto minmax(180px,1fr) !important;
+  gap:clamp(8px,1.2vw,16px) !important;
+}
+.startBeforePanel h2{
+  margin:0 !important;
+  white-space:nowrap !important;
+}
+.startBeforeGrid{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:0 !important;
+}
+#startBuildingButton{
+  min-height:44px !important;
+  height:clamp(44px,7vh,54px) !important;
+  padding:6px 14px !important;
+  font-size:clamp(18px,2.8vh,26px) !important;
+}
+.startHelpPanel{
+  display:block !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:clamp(5px,.8vh,9px) clamp(8px,1.2vw,16px) !important;
+}
+.startHelpPanel h2{margin-bottom:clamp(4px,.6vh,7px) !important}
+.startHowToWide{
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:clamp(4px,.7vw,10px) !important;
+}
+.startHowToWide .startTip{
+  min-width:0 !important;
+  min-height:44px !important;
+  padding:clamp(4px,.65vh,8px) clamp(5px,.7vw,10px) !important;
+  gap:clamp(4px,.6vw,9px) !important;
+}
+.startTipIcon{font-size:clamp(20px,3.4vh,32px) !important}
+.startTipText strong{font-size:clamp(12px,1.8vh,17px) !important}
+.startTipText span{font-size:clamp(9px,1.4vh,13px) !important}
+
+@media(max-height:720px){
+  #startCard{grid-template-rows:minmax(46px,11vh) minmax(0,1fr) auto auto !important}
+  .startTipText span{display:none !important}
+  .startHowToWide .startTip{justify-content:center !important}
+}
+@media(max-height:560px){
+  #startCard{grid-template-rows:44px minmax(0,1fr) 46px !important}
+  .startHelpPanel{display:none !important}
+  .startBeforePanel h2{font-size:13px !important}
+}
+@media(max-width:700px){
+  #startScreen{padding:5px !important}
+  #startCard{width:100% !important}
+  .startBeforePanel{grid-template-columns:1fr !important;gap:3px !important}
+  .startBeforePanel h2{text-align:center !important}
+  .startTipText span{display:none !important}
+  .startHowToWide .startTip{justify-content:center !important}
+}
+@media(prefers-reduced-motion:reduce){
+  .starterLoadingMark{animation:none !important}
+  #starterLoadingCover{transition:none !important}
 }
 
 
@@ -19017,13 +19467,14 @@ for Object Library selections and vocabulary buttons.
     }
   }
 
-  function speakAuto68C(text, target){
+  function speakAuto68C(text, target, options){
+    options = options || {};
     text = clean68C(text);
     if(!autoReadOn68C() || !text || text.length < 2){ return; }
     if(!("speechSynthesis" in window)){ return; }
 
     try{
-      if(typeof renderReaderText === "function"){
+      if(!options.skipRender && typeof renderReaderText === "function"){
         renderReaderText(text, target || "thinkerBob");
       }
     }catch(e){}
@@ -19038,6 +19489,73 @@ for Object Library selections and vocabulary buttons.
         spokenText = prepareBrandPronunciationForSpeech(text);
       }
     }catch(e){}
+
+    var attentionGetter = clean68C(window.currentBuilderBobAttentionGetter || "");
+    var playfulOpener = clean68C(window.currentBuilderBobPlayfulOpener || "");
+    var playfulIntro = clean68C(window.currentBuilderBobPlayfulIntro || "");
+    if(attentionGetter && playfulOpener && playfulIntro && !options.lessonContinuation && text.indexOf(playfulIntro) === 0){
+      var lessonText = text.slice(playfulIntro.length).trim();
+      var playfulVoice = selectedVoice68C();
+      function expressiveUtterance(line,pitch,rate){
+        var expression=new SpeechSynthesisUtterance((window.prepareBrandPronunciationForSpeech || function(value){return value;})(line));
+        if(playfulVoice){ expression.voice=playfulVoice; expression.lang=playfulVoice.lang || "en-US"; }
+        else{ expression.lang="en-US"; }
+        expression.rate=rate;
+        expression.pitch=pitch;
+        expression.volume=1;
+        return expression;
+      }
+      var attentionUtterance=expressiveUtterance(attentionGetter,1.18,Math.min(1.18,speechRate68C()+0.15));
+      var playfulUtterance = expressiveUtterance(playfulOpener,1.10,Math.min(1.12,speechRate68C()+0.09));
+      attentionUtterance.onstart=function(){
+        document.body.classList.add("builderBobPlayfulExpression");
+        window.dispatchEvent(new CustomEvent("builderBobExpressiveMessage",{detail:{message:attentionGetter,stage:"attention"}}));
+        showControls68C();
+      };
+      attentionUtterance.onend=function(){
+        document.body.classList.add("builderBobLessonTransition");
+        window.setTimeout(function(){
+          document.body.classList.remove("builderBobLessonTransition");
+          window.speechSynthesis.speak(playfulUtterance);
+        },140);
+      };
+      playfulUtterance.onstart=function(){
+        window.dispatchEvent(new CustomEvent("builderBobExpressiveMessage",{detail:{message:playfulOpener,stage:"joke"}}));
+        showControls68C();
+      };
+      playfulUtterance.onend=function(){
+        document.body.classList.remove("builderBobPlayfulExpression");
+        document.body.classList.add("builderBobLessonTransition");
+        window.setTimeout(function(){
+          document.body.classList.remove("builderBobLessonTransition");
+          if(lessonText){
+            window.dispatchEvent(new CustomEvent("builderBobExpressiveMessage",{detail:{message:"Click a word to read from there.",stage:"reading"}}));
+            speakAuto68C(lessonText,target,{skipRender:true,lessonContinuation:true,wordOffset:playfulIntro.split(/\s+/).length});
+          }
+        },240);
+      };
+      playfulUtterance.onerror=function(){
+        document.body.classList.remove("builderBobPlayfulExpression");
+        if(lessonText){ speakAuto68C(lessonText,target,{skipRender:true,lessonContinuation:true,wordOffset:playfulIntro.split(/\s+/).length}); }
+      };
+      /* ChromeOS can clip the beginning of the first utterance while opening
+         its audio channel. Prime that channel with a near-silent utterance,
+         then start BOB's motion from the real attention utterance onstart. */
+      window.dispatchEvent(new CustomEvent("builderBobExpressiveMessage",{detail:{message:attentionGetter,stage:"attention"}}));
+      showControls68C();
+      var audioPrimer=expressiveUtterance("Ready",1,1);
+      audioPrimer.volume=0.01;
+      audioPrimer.onend=function(){
+        window.setTimeout(function(){
+          window.speechSynthesis.speak(attentionUtterance);
+        },120);
+      };
+      audioPrimer.onerror=function(){
+        window.speechSynthesis.speak(attentionUtterance);
+      };
+      window.speechSynthesis.speak(audioPrimer);
+      return;
+    }
 
     var utterance = new SpeechSynthesisUtterance(spokenText);
     var voice = selectedVoice68C();
@@ -19057,7 +19575,7 @@ for Object Library selections and vocabulary buttons.
       if(event.name && event.name !== "word"){ return; }
       try{
         var before = spokenText.slice(0, event.charIndex).trim();
-        var index = before ? before.split(/\s+/).length : 0;
+        var index = (options.wordOffset || 0) + (before ? before.split(/\s+/).length : 0);
         if(typeof highlightReaderWord === "function"){
           highlightReaderWord(Math.max(0, Math.min(index, words.length - 1)));
         }
@@ -19098,10 +19616,83 @@ for Object Library selections and vocabulary buttons.
   }
 
   function buildSpeech68C(info){
+    var itemName = clean68C(info && info.title ? info.title : "this build");
+    var openerKey = itemName.toLowerCase();
+    var attentionGetters = [
+      "Hey, builders! BOB here—smash that curiosity button!",
+      "Breaking STEM news! A brilliant builder just entered the lab!",
+      "Oh, wow—you’re here! My circuits just did a happy dance!",
+      "Greetings! I just traveled from the far side of the Idea Galaxy to see you!",
+      "Attention, engineering crew! Captain BOB is reporting for brainpower duty!",
+      "Live from the THINKamigBOB studio—it’s today’s amazing builder!",
+      "Hold onto your hard hats! Something clever is about to happen!",
+      "Beep-beep, big news! My favorite inventor just picked a new topic!"
+    ];
+    var itemOpeners = {
+      "building":"This lesson has a solid foundation—no kidding around the corners!",
+      "magic portal":"Portal alert! This lesson may open a doorway to brilliant ideas!",
+      "volcano":"This topic is erupting with ideas—lava good lesson!",
+      "rainbow bridge":"Let’s cross into learning—this bridge has a colorful span of ideas!",
+      "crystal cluster":"Crystal clear thinking ahead—this lesson really rocks!",
+      "tree":"Let’s branch out—this lesson is rooted in great ideas!",
+      "pond":"Water we waiting for? Let’s dive into this pond lesson!",
+      "rocks":"This lesson rocks—and that is the stone-cold truth!",
+      "rain gauge":"Rain or shine, this lesson measures up!",
+      "weather balloon":"Up, up, and learn away—this topic is looking bright!",
+      "tornado shelter":"Twist and learn! This lesson will blow you away safely!",
+      "lightning rod":"Watt a shocking topic—let’s conduct some learning!",
+      "thermometer":"This lesson is heating up, but BOB will keep his cool!",
+      "wind turbine":"I’m a big fan of this topic—let’s turn ideas into power!",
+      "solar panels":"Here comes the sun—and a bright idea powered lesson!",
+      "power line":"Stay current—this lesson is positively electric!",
+      "battery":"Charge into learning—BOB has a positive attitude!",
+      "electric car":"Watt are we waiting for? Let’s drive into this electric lesson!",
+      "rocket":"This lesson is ready to launch—prepare for some out-of-this-world ideas!",
+      "satellite":"Let’s orbit some new ideas—this lesson has excellent reception!",
+      "rover":"Rover and out? Not yet—we have a planet of ideas to explore!",
+      "solar array":"Array of sunshine incoming—let’s power up our thinking!",
+      "space greenhouse":"Lettuce grow some ideas—this space garden is out of this world!",
+      "bridge beam":"Beam me up, Builder—this lesson is spanning great ideas!",
+      "support column":"You can count on this column—it always stands up for learning!",
+      "ramp":"This lesson is on the rise—let’s incline our minds!",
+      "test tower":"Tower of knowledge ahead—let’s rise to the challenge!",
+      "plant cell":"Plant yourself here—this cell lesson is growing great ideas!",
+      "animal cell":"Time for a cell-fie! Let’s zoom in on animal cells!",
+      "cell wall":"No wallflowers here—this cell wall stands strong for learning!",
+      "cell membrane":"Let’s get through this lesson—but only what the membrane allows!",
+      "nucleus":"Welcome to the cell’s control center—this topic is positively nuclear!",
+      "dna":"DNA stands for Definitely Neat Answers—let’s unravel this lesson!",
+      "mitochondria":"Power up! The mitochondria are the powerhouse of this punchline!",
+      "chloroplast":"Sun’s out, chloroplasts out—let’s make some bright ideas!",
+      "small vacuole":"Small vacuole, big storage ideas—let’s pack in some learning!",
+      "large vacuole":"This vacuole has room for water and a whole lot of knowledge!",
+      "endoplasmic reticulum":"The ER is a cell highway—let’s take the learning lane!",
+      "ribosomes":"Ribosomes are protein builders—talk about a tiny construction crew!",
+      "golgi body":"Special delivery! The Golgi has packaged a lesson for you!",
+      "lysosome":"Waste not, want not—the lysosome is ready to clean up this lesson!"
+    };
+    var fallbackOpeners = [
+      "No bolts about it—" + itemName + " is geared for fun!",
+      "BOB has computed it: " + itemName + " plus learning equals awesome!",
+      "Let’s build some brainpower with " + itemName + "!"
+    ];
+    var fallbackIndex = 0;
+    for(var openerCharacter=0; openerCharacter<itemName.length; openerCharacter++){
+      fallbackIndex = (fallbackIndex + itemName.charCodeAt(openerCharacter)) % fallbackOpeners.length;
+    }
+    window.builderBobAttentionSequence=(window.builderBobAttentionSequence || 0)+1;
+    var attentionIndex=(fallbackIndex+window.builderBobAttentionSequence-1)%attentionGetters.length;
+    var attentionGetter=attentionGetters[attentionIndex];
+    var playfulOpener = itemOpeners[openerKey] || fallbackOpeners[fallbackIndex];
+    var playfulIntro=attentionGetter+" "+playfulOpener;
+    window.currentBuilderBobAttentionGetter=attentionGetter;
+    window.currentBuilderBobPlayfulOpener = playfulOpener;
+    window.currentBuilderBobPlayfulIntro = playfulIntro;
     if(typeof buildThinkerBobSpeech === "function"){
-      try{ return buildThinkerBobSpeech(info); }catch(e){}
+      try{ return playfulIntro + " " + buildThinkerBobSpeech(info); }catch(e){}
     }
     return [
+      playfulIntro,
       info && info.title ? info.title : "",
       info && info.vocabulary ? "Vocabulary: " + info.vocabulary.join(", ") + "." : "",
       info && info.fact ? "STEM Fact: " + info.fact : "",
@@ -25101,7 +25692,7 @@ body:not(.starterScreenActive) #openPassportFromBadge{
   box-shadow:none !important;
   color:#8ff6ff !important;
   -webkit-text-fill-color:#8ff6ff !important;
-  font-family:"Eurostile","Orbitron",Arial,sans-serif !important;
+  font-family:"Lexend","Segoe UI",Arial,sans-serif !important;
   font-size:13px !important;
   line-height:1 !important;
   font-weight:600 !important;
@@ -27172,7 +27763,23 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     requestingMicrophone=true;
     updateListeningButtons();
     setReadToBobStatus("Allow the microphone once, then BOB will begin the countdown.");
+    var requestSettled=false;
+    var requestTimeout=window.setTimeout(function(){
+      if(requestSettled || attemptToken !== readToBobAttemptToken) return;
+      requestSettled=true;
+      readToBobAttemptToken++;
+      requestingMicrophone=false;
+      updateListeningButtons();
+      setReadToBobStatus("BOB could not reach the microphone. Check Chromebook microphone access, then try again.",true);
+      restoreReadToBobCountdownFocus();
+    },8000);
     return navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      if(requestSettled){
+        if(stream && stream.getTracks) stream.getTracks().forEach(function(track){ track.stop(); });
+        return false;
+      }
+      requestSettled=true;
+      window.clearTimeout(requestTimeout);
       if(attemptToken !== readToBobAttemptToken){
         if(stream && stream.getTracks) stream.getTracks().forEach(function(track){ track.stop(); });
         return false;
@@ -27180,9 +27787,20 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
       readingMicrophoneStream=stream;
       setReadToBobStatus("Microphone ready. BOB is starting to listen.");
       return true;
-    }).catch(function(){
+    }).catch(function(error){
+      if(requestSettled) return false;
+      requestSettled=true;
+      window.clearTimeout(requestTimeout);
       if(attemptToken !== readToBobAttemptToken) return false;
-      setReadToBobStatus("Microphone permission was not allowed. Ask your teacher, then allow the microphone and try again.");
+      var errorName=error && error.name;
+      var message=errorName === "NotFoundError"
+        ? "No microphone was found. Check your Chromebook microphone, then try again."
+        : errorName === "NotReadableError"
+          ? "The microphone is busy in another app. Close that app, then try again."
+          : errorName === "AbortError"
+            ? "Microphone startup was interrupted. Please try again."
+            : "Microphone permission was not allowed. Ask your teacher, then allow the microphone and try again.";
+      setReadToBobStatus(message,true);
       return false;
     }).finally(function(){
       if(attemptToken === readToBobAttemptToken){
@@ -28211,6 +28829,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     var safetySymbols=byReadToBobId("readToBobStatsSafetySymbols");
     var safetyCount=byReadToBobId("readToBobStatsSafetyCount");
     var readings=byReadToBobId("readToBobStatsReadings");
+    var readingsValue=byReadToBobId("readToBobStatsReadingsValue");
     if(gears) gears.textContent=progress.gears+" GEAR"+(progress.gears === 1 ? "" : "S");
     if(starLevel) starLevel.textContent=progress.star.level+1;
     if(starSymbols) starSymbols.textContent=progressSymbolsForReadToBobReward("star",progress.star.progress);
@@ -28219,8 +28838,12 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
     if(safetySymbols) safetySymbols.textContent=progressSymbolsForReadToBobReward("helmet",progress.helmet.progress);
     if(safetyCount) safetyCount.textContent=progress.helmet.progress+" OF 3";
     if(readings){
-      readings.textContent="📚 "+progress.readingsCompleted+" READING"+
-        (progress.readingsCompleted === 1 ? "" : "S")+" COMPLETED";
+      var readingCount=progress.readingsCompleted;
+      if(readingsValue) readingsValue.textContent=readingCount;
+      var readingsLabel=readings.querySelector("span:last-child");
+      if(readingsLabel) readingsLabel.textContent="READING"+(readingCount === 1 ? "" : "S");
+      readings.setAttribute("aria-label",readingCount+" reading"+
+        (readingCount === 1 ? "" : "s")+" completed");
     }
   };
   function presentReadToBobReward(progress){
@@ -28758,7 +29381,11 @@ body.calmMode #thinkerBobRigMount{animation:none !important;}
   var waveTimers=[];
   var speechTiltTimer=null;
   var greetingPlaying=false;
-  var workshopGreetingPlayed=false;
+  var missionPopupWelcomeTimer=0;
+  var missionPopupWelcomeOwner=0;
+  var missionPopupWelcomePending=false;
+  var MISSION_POPUP_WELCOME_DELAY_MS=320;
+  var MISSION_POPUP_WAVE_CYCLES=2;
 
   function rigRoot(){ return document.querySelector("#thinkerBobRigMount svg"); }
   function rigJoint(id){
@@ -28815,8 +29442,16 @@ body.calmMode #thinkerBobRigMount{animation:none !important;}
     },145);
   };
 
+  function reducedMotionRequested(){
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+
   window.playThinkerBobGreeting=function(){
     if(!rigRoot() || greetingPlaying) return;
+    if(reducedMotionRequested()){
+      window.setThinkerBobNeutral();
+      return;
+    }
     greetingPlaying=true;
     clearWaveTimers();
     /* Bob's anatomical right arm is on the viewer's left in this rig. */
@@ -28826,14 +29461,60 @@ body.calmMode #thinkerBobRigMount{animation:none !important;}
     setJointRotation("right-upper-arm",0);
     setJointRotation("right-lower-arm",-12);
     setJointRotation("right-hand",18);
-    queueWave(410,function(){ setJointRotation("right-lower-arm",-30); setJointRotation("right-hand",-14); });
-    queueWave(760,function(){ setJointRotation("right-lower-arm",8); setJointRotation("right-hand",18); });
-    queueWave(1110,function(){ setJointRotation("right-lower-arm",-30); setJointRotation("right-hand",-14); });
-    queueWave(1470,function(){
+    queueWave(260,function(){ setJointRotation("right-lower-arm",-30); setJointRotation("right-hand",-14); });
+    queueWave(520,function(){ setJointRotation("right-lower-arm",8); setJointRotation("right-hand",18); });
+    queueWave(780,function(){ setJointRotation("right-lower-arm",-30); setJointRotation("right-hand",-14); });
+    queueWave(1040,function(){ setJointRotation("right-lower-arm",8); setJointRotation("right-hand",18); });
+    queueWave(1300,function(){
       ["right-shoulder","right-upper-arm","right-lower-arm","right-hand"].forEach(function(id){ setJointRotation(id,0); });
       greetingPlaying=false;
+      var mount=document.getElementById("thinkerBobRigMount");
+      if(mount){
+        mount.dataset.welcomeWaveCycles=String(MISSION_POPUP_WAVE_CYCLES);
+        mount.dataset.welcomeWaveState="idle";
+      }
     });
   };
+
+  function missionPopupIsVisiblyOpen(){
+    var popup=document.getElementById("missionPopup");
+    if(!popup || popup.hidden) return false;
+    return (!window.getComputedStyle || window.getComputedStyle(popup).display!=="none");
+  }
+
+  function cancelMissionPopupWelcome(){
+    missionPopupWelcomeOwner+=1;
+    missionPopupWelcomePending=false;
+    if(missionPopupWelcomeTimer){
+      window.clearTimeout(missionPopupWelcomeTimer);
+      missionPopupWelcomeTimer=0;
+    }
+    clearWaveTimers();
+    if(typeof window.setThinkerBobNeutral==="function") window.setThinkerBobNeutral();
+    var mount=document.getElementById("thinkerBobRigMount");
+    if(mount) mount.dataset.welcomeWaveState="waiting-for-popup";
+  }
+
+  function queueMissionPopupWelcome(){
+    if(!missionPopupWelcomePending) return;
+    missionPopupWelcomePending=false;
+    var owner=missionPopupWelcomeOwner;
+    window.dispatchEvent(new CustomEvent("builderBobMissionWelcome",{
+      detail:{owner:owner,delay:MISSION_POPUP_WELCOME_DELAY_MS,waves:MISSION_POPUP_WAVE_CYCLES}
+    }));
+    missionPopupWelcomeTimer=window.setTimeout(function(){
+      missionPopupWelcomeTimer=0;
+      if(owner!==missionPopupWelcomeOwner || missionPopupIsVisiblyOpen() ||
+        document.body.classList.contains("starterScreenActive") ||
+        document.body.classList.contains("workshopMode")) return;
+      window.loadThinkerBobRig().then(function(){
+        if(owner!==missionPopupWelcomeOwner || missionPopupIsVisiblyOpen()) return;
+        var mount=document.getElementById("thinkerBobRigMount");
+        if(mount) mount.dataset.welcomeWaveState="waving";
+        window.playThinkerBobGreeting();
+      });
+    },MISSION_POPUP_WELCOME_DELAY_MS);
+  }
 
   function tiltThinkerBobForSpeech(){
     if(!rigRoot()) return;
@@ -28860,10 +29541,6 @@ body.calmMode #thinkerBobRigMount{animation:none !important;}
     mount.replaceChildren(document.importNode(svg,true));
     window.setThinkerBobNeutral();
     scheduleBlink();
-    if(workshopIsOpen() && !workshopGreetingPlayed){
-      workshopGreetingPlayed=true;
-      window.setTimeout(window.playThinkerBobGreeting,260);
-    }
     return rigRoot();
   }
 
@@ -28893,33 +29570,29 @@ body.calmMode #thinkerBobRigMount{animation:none !important;}
   };
 
   function installWorkshopAndSpeechHooks(){
-    var originalHideStart=window.hideStartScreen;
-    if(originalHideStart && !originalHideStart.__thinkerBobRigWrapped){
-      var wrappedHideStart=function(){
-        var result=originalHideStart.apply(this,arguments);
-        workshopGreetingPlayed=true;
-        window.loadThinkerBobRig().then(function(){ window.playThinkerBobGreeting(); });
+    var originalShowMissionPopup=window.showMissionPopup;
+    if(originalShowMissionPopup && !originalShowMissionPopup.__thinkerBobMissionWelcomeOwner){
+      var wrappedShowMissionPopup=function(){
+        cancelMissionPopupWelcome();
+        var result=originalShowMissionPopup.apply(this,arguments);
+        missionPopupWelcomePending=missionPopupIsVisiblyOpen();
         return result;
       };
-      wrappedHideStart.__thinkerBobRigWrapped=true;
-      window.hideStartScreen=wrappedHideStart;
-      try{ hideStartScreen=window.hideStartScreen; }catch(error){}
+      wrappedShowMissionPopup.__thinkerBobMissionWelcomeOwner=true;
+      window.showMissionPopup=wrappedShowMissionPopup;
+      try{ showMissionPopup=window.showMissionPopup; }catch(error){}
     }
-    var originalToggle=window.toggleStemCoach;
-    if(originalToggle && !originalToggle.__thinkerBobRigWrapped){
-      var wrappedToggle=function(){
-        var content=document.getElementById("stemCoachContent");
-        var wasClosed=!!content && content.style.display==="none";
-        var result=originalToggle.apply(this,arguments);
-        if(wasClosed){
-          workshopGreetingPlayed=true;
-          window.loadThinkerBobRig().then(function(){ window.playThinkerBobGreeting(); });
-        }
+    var originalCloseMissionPopup=window.closeMissionPopup;
+    if(originalCloseMissionPopup && !originalCloseMissionPopup.__thinkerBobMissionWelcomeOwner){
+      var wrappedCloseMissionPopup=function(){
+        var wasMissionPopupOpen=missionPopupIsVisiblyOpen();
+        var result=originalCloseMissionPopup.apply(this,arguments);
+        if(wasMissionPopupOpen && !missionPopupIsVisiblyOpen()) queueMissionPopupWelcome();
         return result;
       };
-      wrappedToggle.__thinkerBobRigWrapped=true;
-      window.toggleStemCoach=wrappedToggle;
-      try{ toggleStemCoach=window.toggleStemCoach; }catch(error){}
+      wrappedCloseMissionPopup.__thinkerBobMissionWelcomeOwner=true;
+      window.closeMissionPopup=wrappedCloseMissionPopup;
+      try{ closeMissionPopup=window.closeMissionPopup; }catch(error){}
     }
     var originalSpeak=window.speakText;
     if(originalSpeak && !originalSpeak.__thinkerBobRigWrapped){
@@ -31432,7 +32105,7 @@ body.workshopMode:not(.starterScreenActive) #workshopHeader{
 
 body.workshopMode:not(.starterScreenActive) #workshopLogo{
   position:absolute;
-  top:18px;
+  top:4px;
   left:18px;
   transform:none;
   display:block;
@@ -32445,6 +33118,30 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls{
   overflow-y:auto;
   overscroll-behavior:contain;
   scrollbar-width:thin;
+  scrollbar-color:#71efff #071a26;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls::-webkit-scrollbar{
+  width:14px;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls::-webkit-scrollbar-track{
+  border:1px solid rgba(143,246,255,.78);
+  border-radius:8px;
+  background:#071a26;
+  box-shadow:inset 0 0 4px rgba(0,0,0,.92);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls::-webkit-scrollbar-thumb{
+  min-height:44px;
+  border:3px solid #071a26;
+  border-radius:8px;
+  background:linear-gradient(180deg,#d7fcff,#45cce8);
+  box-shadow:0 0 5px rgba(69,204,232,.8);
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls::-webkit-scrollbar-thumb:hover{
+  background:linear-gradient(180deg,#fff,#74f3ff);
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewRemoteTitle{
@@ -32478,11 +33175,11 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls #wo
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceUtilityRail{
-  flex:0 0 106px;
+  flex:0 0 44px;
   position:static;
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  grid-template-rows:58px 44px;
+  grid-template-columns:minmax(44px,.78fr) minmax(44px,.78fr) minmax(70px,1.44fr);
+  grid-template-rows:44px;
   align-items:stretch;
   gap:4px;
   width:100%;
@@ -32500,12 +33197,13 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceUtilityRail #
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch{
-  grid-column:1 / -1;
+  grid-column:3;
+  grid-row:1;
   width:100%;
-  height:58px;
-  min-height:58px;
+  height:44px;
+  min-height:44px;
   padding:3px 4px;
-  font-size:8px !important;
+  font-size:7px !important;
 }
 
 .workshopUtilityProjectButton{display:none;}
@@ -32526,8 +33224,36 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox .workshopUtilityProject
   background-repeat:no-repeat;
   background-size:100% 100%;
   box-shadow:none;
-  font:900 11px/1.05 "Lexend",Arial,sans-serif;
+  font:900 7px/1 "Lexend",Arial,sans-serif;
   text-shadow:0 1px 2px rgba(0,0,0,.98),0 0 3px #ff267f,0 0 6px rgba(255,79,163,.9);
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilitySave,
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilityOpen{
+  grid-row:1;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilitySave{
+  grid-column:1;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilityOpen{
+  grid-column:2;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox .workshopUtilityProjectButton::before{
+  display:block;
+  margin-bottom:1px;
+  font-size:10px;
+  line-height:1;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilitySave::before{
+  content:"💾";
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilityOpen::before{
+  content:"📁";
 }
 
 @media(max-width:1100px){
@@ -32540,10 +33266,31 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox .workshopUtilityProject
   }
 }
 
-@media(max-height:700px){
+@media(max-height:900px){
   body.workshopMode:not(.starterScreenActive) #viewCubeCanvas{
-    width:96px !important;
-    height:96px !important;
+    width:76px !important;
+    height:76px !important;
+  }
+
+  body.workshopMode:not(.starterScreenActive) #workshopEngineeringControlStationTitle{
+    padding:3px 2px;
+  }
+
+  body.workshopMode:not(.starterScreenActive) #viewDiceHint{
+    line-height:1.05;
+  }
+}
+
+/* Chromebook-height Workshop clearance: keep the complete Return to Mission
+   control above the fixed 148px engineering dashboard. */
+@media(max-height:760px){
+  body.workshopMode:not(.starterScreenActive) #workshopLogo{
+    top:2px;
+  }
+
+  body.workshopMode:not(.starterScreenActive) #viewCubeBox{
+    top:calc(38px + 0.5mm) !important;
+    max-height:calc(100vh - 216px) !important;
   }
 }
 
@@ -33253,6 +34000,35 @@ body.workshopMode:not(.starterScreenActive) #workshopViewHome{
   white-space:nowrap;
 }
 
+/* ChromeOS may conceal native overlay scrollbars. Keep native View Remote
+   scrolling authoritative while providing a persistent visual affordance. */
+#workshopViewScrollAffordance{
+  position:absolute;
+  z-index:10050;
+  width:12px;
+  overflow:hidden;
+  border:1px solid rgba(143,246,255,.82);
+  border-radius:7px;
+  box-sizing:border-box;
+  background:#04121b;
+  box-shadow:0 0 0 1px rgba(255,255,255,.45),0 0 7px rgba(69,204,232,.88);
+  pointer-events:none;
+}
+
+#workshopViewScrollThumb{
+  position:absolute;
+  top:0;
+  left:1px;
+  right:1px;
+  min-height:44px;
+  border-radius:6px;
+  background:linear-gradient(180deg,#fff,#54efff 46%,#168db7);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.45);
+  transform:translateY(0);
+}
+
+#workshopViewScrollAffordance[hidden]{display:none !important;}
+
 body.workshopMode:not(.starterScreenActive) #workshopViewHome > span,
 body.workshopMode:not(.starterScreenActive) #workshopViewHome .workshop-control-icon{
   color:#83ff72;
@@ -33287,7 +34063,11 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch .w
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[aria-pressed="true"] .workspaceModeLabel{
-  display:block;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  column-gap:2px;
   color:#dffaff;
   -webkit-text-fill-color:#dffaff;
   text-transform:uppercase;
@@ -33296,17 +34076,18 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[ar
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[aria-pressed="true"] .workspaceModeReturnLine{
-  display:block;
-  font:900 12px/1.05 "Lexend",Arial,sans-serif;
-  letter-spacing:.025em;
+  display:inline-flex;
+  align-items:center;
+  font:900 6px/1 "Lexend",Arial,sans-serif;
+  letter-spacing:0;
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[aria-pressed="true"] .workspaceModeReturnIcon{
   display:inline-block;
-  margin-right:4px;
+  margin-right:2px;
   color:#fff;
   -webkit-text-fill-color:#fff;
-  font:900 13px/1 Arial,sans-serif;
+  font:900 9px/1 Arial,sans-serif;
   text-shadow:none;
 }
 
@@ -33317,12 +34098,12 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[ar
 }
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[aria-pressed="true"] .workspaceModeMissionLine{
-  display:block;
-  margin-top:2px;
+  display:inline;
+  margin-top:0;
   color:#effeff;
   -webkit-text-fill-color:#effeff;
-  font:900 15px/1 "Lexend",Arial,sans-serif;
-  letter-spacing:.08em;
+  font:900 7px/1 "Lexend",Arial,sans-serif;
+  letter-spacing:.015em;
   text-shadow:0 1px 2px rgba(0,0,0,.98),0 0 3px #45cce8,0 0 8px rgba(137,238,255,.96);
 }
 
@@ -33396,6 +34177,67 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
   }
 }
 </style>
+
+<script id="workshopViewScrollAffordanceScript">
+(function(){
+  var controls;
+  var track;
+  var thumb;
+  var resizeObserver;
+
+  function sync(){
+    if(!controls || !track || !thumb) return;
+    var clientHeight=controls.clientHeight;
+    var scrollHeight=controls.scrollHeight;
+    var bounds=controls.getBoundingClientRect();
+    if(!(clientHeight>0) || !(scrollHeight>clientHeight+1) || !(bounds.height>0)){
+      track.hidden=true;
+      thumb.style.transform="translateY(0px)";
+      return;
+    }
+    track.hidden=false;
+    track.style.left=Math.max(0,bounds.right-12)+"px";
+    track.style.top=Math.max(0,bounds.top+4)+"px";
+    track.style.height=Math.max(44,bounds.height-8)+"px";
+    var trackHeight=track.clientHeight;
+    var thumbHeight=Math.max(44,Math.min(trackHeight,trackHeight*(clientHeight/scrollHeight)));
+    var scrollRange=scrollHeight-clientHeight;
+    var travel=Math.max(0,trackHeight-thumbHeight);
+    var offset=scrollRange>0 ? travel*(controls.scrollTop/scrollRange) : 0;
+    thumb.style.height=thumbHeight+"px";
+    thumb.style.transform="translateY("+offset+"px)";
+  }
+
+  function install(){
+    controls=document.getElementById("workshopEngineeringViewControls");
+    if(!controls) return;
+    track=document.getElementById("workshopViewScrollAffordance");
+    if(!track){
+      track=document.createElement("div");
+      thumb=document.createElement("span");
+      track.id="workshopViewScrollAffordance";
+      thumb.id="workshopViewScrollThumb";
+      track.setAttribute("aria-hidden","true");
+      track.appendChild(thumb);
+      document.body.appendChild(track);
+    }else{
+      thumb=document.getElementById("workshopViewScrollThumb");
+    }
+    controls.addEventListener("scroll",sync,{passive:true});
+    window.addEventListener("resize",sync,{passive:true});
+    if(window.visualViewport) window.visualViewport.addEventListener("resize",sync,{passive:true});
+    if(typeof ResizeObserver==="function"){
+      resizeObserver=new ResizeObserver(sync);
+      resizeObserver.observe(controls);
+    }
+    new MutationObserver(sync).observe(document.body,{attributes:true,attributeFilter:["class"]});
+    requestAnimationFrame(function(){requestAnimationFrame(sync);});
+  }
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",install,{once:true});
+  else install();
+})();
+</script>
 
 <script id="workshopModeShellScript">
 (function(){
@@ -36274,9 +37116,23 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     if(!utilityRail) return;
     var controlStation=document.getElementById("viewCubeBox");
     var missionPanel=document.getElementById("info");
-    var target=mode==="workshop" ? controlStation : missionPanel;
-    if(target && utilityRail.parentElement!==target){
-      target.appendChild(utilityRail);
+    var compactMissionZone=document.querySelector("#builderRightToolsPanel .dashboard139MissionZone");
+    var compactUtilityButtons=document.querySelector("#builderRightToolsPanel .dashboard139UtilityZone .dashboardUtilityButtons");
+    var helpButton=document.getElementById("helpButton");
+    var modeSwitch=document.getElementById("workspaceModeSwitch");
+    if(mode==="workshop"){
+      if(helpButton && helpButton.parentElement!==utilityRail) utilityRail.appendChild(helpButton);
+      if(modeSwitch && modeSwitch.parentElement!==utilityRail) utilityRail.appendChild(modeSwitch);
+      if(controlStation && utilityRail.parentElement!==controlStation) controlStation.appendChild(utilityRail);
+      return;
+    }
+    if(compactMissionZone && compactUtilityButtons){
+      if(modeSwitch && modeSwitch.parentElement!==compactMissionZone) compactMissionZone.appendChild(modeSwitch);
+      if(helpButton && helpButton.parentElement!==compactUtilityButtons) compactUtilityButtons.appendChild(helpButton);
+      return;
+    }
+    if(missionPanel && utilityRail.parentElement!==missionPanel){
+      missionPanel.appendChild(utilityRail);
     }
   }
 
@@ -36457,7 +37313,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
       return [bounds.min.x,bounds.min.y,bounds.min.z,
         bounds.max.x,bounds.max.y,bounds.max.z].every(Number.isFinite) &&
         bounds.min.x>=-25 && bounds.max.x<=25 &&
-        bounds.min.z>=-25 && bounds.max.z<=25 && bounds.min.y>=0;
+        bounds.min.z>=-25 && bounds.max.z<=25 && bounds.min.y>=-0.5;
     });
   }
 
@@ -36474,7 +37330,9 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     });
   }
 
-  function settleWorkshopProjectPresentation(){
+  var workshopProjectReplacementTransaction=null;
+
+  function settleWorkshopProjectPresentation(onSettled){
     clearWorkshopRulerSelectionHighlight();
     clearWorkshopSelectedBlocks();
     clearWorkshopSelectionRestore();
@@ -36484,7 +37342,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     moveSelectedMode=false;
     resetEngineeringToolChest();
     clearWorkshopEngineeringView();
-    setWorkshopEngineeringView("home");
+    prepareWorkshopHomeFrameSettlement(onSettled);
     updateUndoRedoButtons();
     syncWorkshopMoveControls();
   }
@@ -36500,15 +37358,46 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
         scene.add(object);
         blocks.push(object);
       });
+      workshopProjectReplacementTransaction={previous:previous,next:nextObjects.slice()};
       settleWorkshopProjectPresentation();
-      disposeWorkshopProjectObjects(previous);
       return true;
     }catch(error){
+      workshopProjectReplacementTransaction=null;
       nextObjects.forEach(function(object){ scene.remove(object); });
       blocks.length=0;
       previous.forEach(function(object){ scene.add(object);blocks.push(object); });
       return false;
     }
+  }
+
+  function commitWorkshopProjectReplacement(){
+    if(!workshopProjectReplacementTransaction) return;
+    disposeWorkshopProjectObjects(workshopProjectReplacementTransaction.previous);
+    workshopProjectReplacementTransaction=null;
+  }
+
+  function rollbackWorkshopProjectReplacement(){
+    var transaction=workshopProjectReplacementTransaction;
+    if(!transaction) return false;
+    transaction.next.forEach(function(object){ scene.remove(object); });
+    blocks.length=0;
+    transaction.previous.forEach(function(object){ scene.add(object);blocks.push(object); });
+    disposeWorkshopProjectObjects(transaction.next);
+    workshopProjectReplacementTransaction=null;
+    settleWorkshopProjectPresentation();
+    return true;
+  }
+
+  function verifyWorkshopProjectVisibleSettlement(expectedCount){
+    return new Promise(function(resolve){
+      settleWorkshopProjectPresentation(function(applied){
+        var attached=blocks.length===expectedCount && blocks.every(function(object){
+          return object && object.parent===scene && object.visible!==false;
+        });
+        var bounds=expectedCount ? getWorkshopEngineeringModelBounds() : null;
+        resolve(attached && (expectedCount===0 || (!!applied && !!bounds)));
+      });
+    });
   }
 
   function announceWorkshopProject(message){
@@ -36713,6 +37602,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     if(action==="NEW"){
       var created=workshopProjectController.newProject();
       if(created.ok){
+        commitWorkshopProjectReplacement();
         updateUndoRedoButtons();
         closeWorkshopProjectDialog({restoreFocus:true});
         announceWorkshopProject("New Workshop project ready.");
@@ -36802,10 +37692,19 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
       announceWorkshopProject("That project could not be opened. Your current work is unchanged.");
       return false;
     }
-    closeWorkshopProjectDialog({restoreFocus:true});
-    updateUndoRedoButtons();
-    announceWorkshopProject("Project opened.");
-    return true;
+    return verifyWorkshopProjectVisibleSettlement(result.project.objects.length).then(function(visible){
+      if(!visible){
+        rollbackWorkshopProjectReplacement();
+        workshopProjectController.restoreProjectIdentity(result.previousProject);
+        announceWorkshopProject("That project could not be shown. Your current work is unchanged.");
+        return false;
+      }
+      commitWorkshopProjectReplacement();
+      closeWorkshopProjectDialog({restoreFocus:true});
+      updateUndoRedoButtons();
+      announceWorkshopProject("Project opened.");
+      return true;
+    });
   }
 
   function openWorkshopProjectFile(file){
@@ -36830,11 +37729,19 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
       if(!opened.ok){
         return rejectFile("That build could not be opened. Your current work is unchanged.");
       }
-      closeWorkshopProjectDialog({restoreFocus:true});
-      updateUndoRedoButtons();
-      announceWorkshopProject("Build opened!");
-      showWorkshopProjectToast("Build opened!");
-      return true;
+      return verifyWorkshopProjectVisibleSettlement(opened.project.objects.length).then(function(visible){
+        if(!visible){
+          rollbackWorkshopProjectReplacement();
+          workshopProjectController.restoreProjectIdentity(opened.previousProject);
+          return rejectFile("That build could not be shown. Your current work is unchanged.");
+        }
+        commitWorkshopProjectReplacement();
+        closeWorkshopProjectDialog({restoreFocus:true});
+        updateUndoRedoButtons();
+        announceWorkshopProject("Build opened!");
+        showWorkshopProjectToast("Build opened!");
+        return true;
+      });
     }).catch(function(){
       return rejectFile("That file could not be read. Your current work is unchanged.");
     });
@@ -40194,6 +41101,2583 @@ body:not(.starterScreenActive):not(.workshopMode) #toolMessage.bottomToolMessage
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",install,{once:true});
   else install();
 })();
+</script>
+
+<!-- =====================================================
+BUILDER RIGHT TOOLS / BOTTOM THINKER BOB PRESENTATION
+Moves the existing Builder controls without duplicating their event owners.
+===================================================== -->
+<style id="builderRightToolsBottomBobCSS">
+body:not(.starterScreenActive):not(.workshopMode) #rightHudColumn{
+  top:12px !important;
+  bottom:12px !important;
+  width:316px !important;
+  max-width:min(316px,calc(var(--workshop-visible-viewport-width) - 24px)) !important;
+  gap:8px !important;
+}
+
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel{
+  flex:1 1 auto;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:8px;
+  box-sizing:border-box;
+  padding:9px;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-gutter:stable;
+  scrollbar-width:auto;
+  scrollbar-color:#59e8ff rgba(5,25,37,.72);
+  border:1px solid rgba(202,164,53,.62);
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(20,54,72,.72),rgba(5,22,33,.66));
+  box-shadow:inset 0 1px 0 rgba(210,249,255,.13),0 5px 16px rgba(0,0,0,.22);
+  pointer-events:auto;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel::-webkit-scrollbar{width:12px;}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel::-webkit-scrollbar-track{background:rgba(5,25,37,.72);border-radius:8px;}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel::-webkit-scrollbar-thumb{min-height:44px;background:linear-gradient(#8ff6ff,#269ec5);border:2px solid #0b2a3b;border-radius:8px;}
+
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139Zone{
+  position:relative !important;
+  inset:auto !important;
+  grid-column:1 / -1 !important;
+  grid-row:auto !important;
+  min-width:0 !important;
+  min-height:118px;
+  box-sizing:border-box;
+  padding:29px 7px 9px !important;
+  padding-bottom:9px !important;
+  transform:none !important;
+  overflow:visible !important;
+  border:1px solid rgba(91,218,241,.24) !important;
+  border-radius:9px !important;
+  background:linear-gradient(180deg,rgba(27,72,92,.43),rgba(4,20,30,.34)) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ZoneLabel{
+  position:absolute !important;
+  top:5px !important;
+  left:6px !important;
+  right:6px !important;
+  width:auto !important;
+  height:19px !important;
+  min-width:0 !important;
+  max-width:none !important;
+  padding:0 4px !important;
+  transform:none !important;
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  color:#bff8ff !important;
+  font:900 10px/1 "Eurostile","Orbitron",Arial,sans-serif !important;
+  letter-spacing:.08em !important;
+  text-align:center;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeZone{
+  grid-column:1 / -1 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone{
+  min-height:74px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 82px;
+  align-items:center;
+  gap:7px;
+  padding-top:28px !important;
+  padding-bottom:8px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionButtons{min-width:0;}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #returnMissionsButton{
+  width:78px !important;
+  height:58px !important;
+  min-height:44px !important;
+  margin:0 !important;
+  font-size:10px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeZone{
+  min-height:142px;
+  transform:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeRow{
+  display:grid !important;
+  grid-template-columns:1fr 1fr;
+  gap:5px;
+  margin-bottom:6px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .colorScrollWrap{
+  display:grid !important;
+  grid-template-columns:30px minmax(0,1fr) 30px !important;
+  gap:4px !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #colorSwatchBar{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  overflow-x:scroll !important;
+  overflow-y:hidden !important;
+  scrollbar-gutter:stable !important;
+  overscroll-behavior-x:contain !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #colorSwatchBar button{
+  flex:0 0 44px !important;
+  width:44px !important;
+  min-width:44px !important;
+  height:44px !important;
+  min-height:44px !important;
+  box-sizing:border-box !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #bottomBuildTools,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboardUtilityButtons{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(44px,1fr)) !important;
+  gap:6px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139BuildZone,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone{
+  grid-column:1 / -1 !important;
+  transform:none !important;
+  padding-bottom:9px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139BuildZone #bottomBuildTools,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone .dashboardUtilityButtons{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  grid-template-columns:repeat(2,minmax(44px,1fr)) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #bottomBuildTools button,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboardUtilityButtons button{
+  grid-column:auto !important;
+  grid-row:auto !important;
+  width:100% !important;
+  height:44px !important;
+  min-height:44px !important;
+  margin:0 !important;
+  padding:4px 3px !important;
+  box-sizing:border-box !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel button,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel select{
+  min-height:44px !important;
+  font-size:11px !important;
+}
+
+/* The former dashboard footprint becomes a stable bottom THINKer BOB dock. */
+body:not(.starterScreenActive):not(.workshopMode) #buildBar,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar:not(.dashboardOpen),
+body:not(.starterScreenActive):not(.workshopMode) #buildBar.dashboardOpen,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar:hover{
+  left:16px !important;
+  right:336px !important;
+  height:136px !important;
+  min-height:136px !important;
+  padding:8px !important;
+  transform:none !important;
+  overflow:hidden !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139MainGrid{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 320px !important;
+  grid-template-rows:minmax(0,1fr) 27px !important;
+  gap:7px 10px !important;
+  height:118px !important;
+  min-height:118px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoach{
+  position:relative !important;
+  inset:auto !important;
+  grid-column:1 !important;
+  grid-row:1 !important;
+  display:grid !important;
+  grid-template-columns:82px minmax(210px,.9fr) minmax(160px,1fr) !important;
+  grid-template-rows:25px minmax(0,1fr) !important;
+  gap:5px 9px !important;
+  width:100% !important;
+  max-width:none !important;
+  height:83px !important;
+  max-height:83px !important;
+  min-height:83px !important;
+  margin:0 !important;
+  padding:5px 8px !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  pointer-events:auto !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoachHeader{
+  grid-column:1 / -1 !important;
+  grid-row:1 !important;
+  min-height:25px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoachToggle{min-height:25px !important;height:25px !important;}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #thinkerBobWorkshop{
+  grid-column:1 !important;
+  grid-row:2 !important;
+  display:block !important;
+  height:48px !important;
+  min-height:48px !important;
+  overflow:hidden !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #thinkerBobRigMount{
+  width:58px !important;
+  height:84px !important;
+  margin:-7px auto 0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoachActionGroup,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #readToBobStatsPanel{
+  grid-column:2 !important;
+  margin:0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoachActionGroup{
+  grid-row:2 !important;
+  align-self:start;
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:4px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoachActionGroup button{
+  min-height:44px !important;
+  height:44px !important;
+  font-size:9px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #readToBobStatsPanel{
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoachContent{
+  grid-column:3 !important;
+  grid-row:2 !important;
+  min-height:0 !important;
+  max-height:48px !important;
+  margin:0 !important;
+  padding:6px 8px !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain;
+  font-size:11px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoachContent p{margin:0 0 4px !important;}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139VoiceZone{
+  position:relative !important;
+  inset:auto !important;
+  grid-column:2 !important;
+  grid-row:1 / 3 !important;
+  min-width:0 !important;
+  padding:22px 6px 3px !important;
+  overflow:hidden !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139VoiceZone .dashboard139ZoneLabel{top:3px !important;}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #voiceControls{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) !important;
+  grid-template-rows:44px 37px !important;
+  gap:4px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139PlaybackButtons,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139VoiceSelectors,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139AccessibilityToggles{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139PlaybackButtons{
+  grid-column:1 / -1 !important;
+  grid-row:1 !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:4px !important;
+  height:44px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139PlaybackButtons button{
+  width:100% !important;
+  min-width:0 !important;
+  height:44px !important;
+  min-height:44px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139VoiceSelectors{
+  grid-column:1 !important;
+  grid-row:2 !important;
+  grid-template-columns:12px minmax(0,1fr) 54px !important;
+  gap:3px !important;
+  height:37px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139VoiceSelectors select{
+  min-width:0 !important;
+  max-width:100% !important;
+  height:37px !important;
+  min-height:37px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139AccessibilityToggles{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:4px !important;
+  min-width:0 !important;
+  grid-column:2 !important;
+  grid-row:2 !important;
+  height:37px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139AccessibilityToggles label{
+  min-width:0 !important;
+  overflow:hidden !important;
+  font-size:8px !important;
+  height:37px !important;
+  white-space:nowrap !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139MessageStrip,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar.dashboardOpen .dashboard139MessageStrip,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar:hover .dashboard139MessageStrip{
+  position:relative !important;
+  inset:auto !important;
+  grid-column:1 !important;
+  grid-row:2 !important;
+  width:auto !important;
+  height:27px !important;
+  min-height:27px !important;
+  transform:none !important;
+}
+body.starterScreenActive #builderRightToolsPanel,
+body.workshopMode #builderRightToolsPanel{display:none !important;}
+
+@media(max-width:1280px){
+  body:not(.starterScreenActive):not(.workshopMode) #rightHudColumn{width:298px !important;max-width:298px !important;}
+  body:not(.starterScreenActive):not(.workshopMode) #buildBar{right:316px !important;}
+  body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoach{
+    grid-template-columns:72px minmax(190px,.9fr) minmax(145px,1fr) !important;
+  }
+}
+@media(max-height:720px){
+  body:not(.starterScreenActive):not(.workshopMode) #rightHudColumn{top:6px !important;bottom:6px !important;}
+  body:not(.starterScreenActive):not(.workshopMode) #rightHudColumn > #worldTitle{padding:6px 9px !important;}
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel{gap:5px;padding:6px;}
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139Zone{min-height:102px;padding-top:27px !important;}
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone{min-height:68px;}
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeZone{min-height:128px;}
+}
+</style>
+<script id="builderRightToolsBottomBobScript">
+(function(){
+  function install(){
+    var rightColumn=document.getElementById("rightHudColumn");
+    var dashboardGrid=document.querySelector("#buildBar .dashboard139MainGrid");
+    var coach=document.getElementById("stemCoach");
+    if(!rightColumn || !dashboardGrid || !coach || document.getElementById("builderRightToolsPanel")) return;
+
+    var tools=document.createElement("section");
+    tools.id="builderRightToolsPanel";
+    tools.setAttribute("aria-label","Builder tools");
+
+    var mission=document.querySelector("#buildBar .dashboard139MissionZone");
+    var shapes=document.querySelector("#buildBar .dashboard139ShapeZone");
+    var build=document.querySelector("#buildBar .dashboard139BuildZone");
+    var utilities=document.querySelector("#buildBar .dashboard139UtilityZone");
+    var voice=document.querySelector("#buildBar .dashboard139VoiceZone");
+    [mission,shapes,build,utilities,voice].forEach(function(zone){if(zone) tools.appendChild(zone);});
+
+    rightColumn.appendChild(tools);
+    dashboardGrid.prepend(coach);
+    document.body.classList.add("builderDashboardSwapReady");
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",install,{once:true});
+  else install();
+})();
+</script>
+
+<!-- =====================================================
+BUILDER GUIDED CAD FIVE-REGION SHELL — PHASE 1
+Presentation-only ownership for the header, Mission panel, viewport,
+right tools, and bottom THINKer BOB dock.
+===================================================== -->
+<style id="builderGuidedCadLayoutCSS">
+:root{
+  --builder-guided-edge:18px;
+  --builder-guided-gap:12px;
+  --builder-guided-header-height:52px;
+  --builder-guided-left-width:300px;
+  --builder-guided-right-width:272px;
+  --builder-guided-bottom-height:170px;
+  --builder-guided-region-top:calc(var(--builder-guided-edge) + var(--builder-guided-header-height) + var(--builder-guided-gap));
+  --builder-guided-region-bottom:calc(var(--builder-guided-edge) + var(--builder-guided-bottom-height) + var(--builder-guided-gap));
+  --builder-guided-center-left:calc(var(--builder-guided-edge) + var(--builder-guided-left-width) + var(--builder-guided-gap));
+  --builder-guided-center-right:calc(var(--builder-guided-edge) + var(--builder-guided-right-width) + var(--builder-guided-gap));
+}
+
+body:not(.starterScreenActive):not(.workshopMode){
+  overflow-x:hidden !important;
+}
+body.starterScreenActive #builderGuidedCadHeader,
+body.workshopMode #builderGuidedCadHeader{
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadHeader{
+  position:fixed;
+  z-index:118;
+  top:var(--builder-guided-edge);
+  left:var(--builder-guided-edge);
+  right:var(--builder-guided-edge);
+  height:var(--builder-guided-header-height);
+  min-width:0;
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:var(--builder-guided-left-width) minmax(180px,1fr) var(--builder-guided-right-width);
+  align-items:center;
+  gap:var(--builder-guided-gap);
+  padding:4px 8px;
+  border:1px solid rgba(78,211,238,.34);
+  border-radius:10px;
+  background:linear-gradient(180deg,rgba(15,55,75,.80),rgba(3,27,40,.72));
+  box-shadow:inset 0 1px 0 rgba(220,251,255,.14),0 3px 12px rgba(0,0,0,.20);
+  overflow:hidden;
+  pointer-events:auto;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand,
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadMission,
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadProjectActions{
+  min-width:0;
+  height:100%;
+  display:flex;
+  align-items:center;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand{justify-content:flex-start;}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadMission{justify-content:center;overflow:hidden;}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadProjectActions{
+  justify-content:flex-end;
+  gap:8px;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand #builderMissionLogo{
+  position:static !important;
+  inset:auto !important;
+  width:auto !important;
+  max-width:205px !important;
+  height:38px !important;
+  max-height:38px !important;
+  margin:0 !important;
+  transform:none !important;
+  object-fit:contain;
+  object-position:left center;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadMission #builderMissionTitleOverlay{
+  position:static !important;
+  inset:auto !important;
+  width:auto !important;
+  max-width:100% !important;
+  margin:0 !important;
+  transform:none !important;
+  font-size:16px !important;
+  line-height:1 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadProjectActions button{
+  width:calc((100% - 8px)/2) !important;
+  max-width:142px !important;
+  min-width:74px !important;
+  height:44px !important;
+  min-height:44px !important;
+  margin:0 !important;
+  padding:4px 10px !important;
+  box-sizing:border-box !important;
+  font-size:11px !important;
+}
+
+/* Permanent Mission panel; its contents scroll without moving the page. */
+body:not(.starterScreenActive):not(.workshopMode) #info{
+  position:fixed !important;
+  z-index:105 !important;
+  top:var(--builder-guided-region-top) !important;
+  bottom:var(--builder-guided-region-bottom) !important;
+  left:var(--builder-guided-edge) !important;
+  width:var(--builder-guided-left-width) !important;
+  height:auto !important;
+  max-height:none !important;
+  min-height:0 !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  padding:10px !important;
+  transform:none !important;
+  translate:none !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  scrollbar-width:auto;
+  scrollbar-color:#59e8ff rgba(5,25,37,.72);
+}
+body:not(.starterScreenActive):not(.workshopMode) #info::-webkit-scrollbar{display:block;width:10px;}
+body:not(.starterScreenActive):not(.workshopMode) #info::-webkit-scrollbar-track{background:rgba(5,25,37,.72);border-radius:8px;}
+body:not(.starterScreenActive):not(.workshopMode) #info::-webkit-scrollbar-thumb{min-height:44px;background:linear-gradient(#8ff6ff,#269ec5);border:2px solid #0b2a3b;border-radius:8px;}
+
+/* Right tools and bottom BOB dock occupy their own protected regions. */
+body:not(.starterScreenActive):not(.workshopMode) #rightHudColumn{
+  top:var(--builder-guided-region-top) !important;
+  right:var(--builder-guided-edge) !important;
+  bottom:var(--builder-guided-region-bottom) !important;
+  width:var(--builder-guided-right-width) !important;
+  max-width:var(--builder-guided-right-width) !important;
+  min-height:0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel{
+  width:100% !important;
+  min-height:0 !important;
+  background:linear-gradient(180deg,rgba(17,58,77,.68),rgba(3,24,36,.58)) !important;
+  border-color:rgba(92,225,246,.42) !important;
+  box-shadow:inset 0 1px 0 rgba(222,252,255,.13),0 4px 14px rgba(0,0,0,.18) !important;
+  backdrop-filter:blur(3px);
+  -webkit-backdrop-filter:blur(3px);
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139Zone{
+  background:linear-gradient(180deg,rgba(27,75,96,.56),rgba(4,24,35,.46)) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139VoiceZone{
+  position:relative !important;
+  inset:auto !important;
+  grid-column:1 / -1 !important;
+  grid-row:auto !important;
+  min-height:188px !important;
+  padding:29px 7px 9px !important;
+  transform:none !important;
+  overflow:hidden !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #voiceControls{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  grid-template-rows:auto auto auto !important;
+  gap:6px !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  overflow:visible !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139PlaybackButtons,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139VoiceSelectors,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139AccessibilityToggles{
+  position:static !important;
+  grid-column:1 !important;
+  grid-row:auto !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139PlaybackButtons{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(44px,1fr)) !important;
+  gap:4px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139VoiceSelectors{
+  display:grid !important;
+  grid-template-columns:14px minmax(0,1fr) 64px !important;
+  gap:4px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139AccessibilityToggles{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:5px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139AccessibilityToggles label{
+  min-width:0 !important;
+  min-height:44px !important;
+  box-sizing:border-box !important;
+  white-space:normal !important;
+  overflow:hidden !important;
+  font-size:9px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139PlaybackButtons,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139VoiceSelectors,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139AccessibilityToggles{
+  overflow:hidden !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar:not(.dashboardOpen),
+body:not(.starterScreenActive):not(.workshopMode) #buildBar.dashboardOpen,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar:hover{
+  left:var(--builder-guided-edge) !important;
+  right:var(--builder-guided-center-right) !important;
+  bottom:0 !important;
+  height:var(--builder-guided-bottom-height) !important;
+  min-height:var(--builder-guided-bottom-height) !important;
+  transform:none !important;
+  translate:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139MainGrid{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  grid-template-rows:minmax(0,1fr) 32px !important;
+  gap:8px !important;
+  height:152px !important;
+  min-height:152px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoach{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  grid-template-columns:110px minmax(220px,.8fr) minmax(260px,1.4fr) !important;
+  grid-template-rows:30px minmax(0,1fr) !important;
+  width:100% !important;
+  height:110px !important;
+  min-height:110px !important;
+  max-height:110px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #thinkerBobWorkshop{
+  height:70px !important;
+  min-height:70px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #thinkerBobRigMount{
+  width:82px !important;
+  height:116px !important;
+  margin:-10px auto 0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoachContent{
+  max-height:70px !important;
+  font-size:12px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar .dashboard139MessageStrip,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar.dashboardOpen .dashboard139MessageStrip,
+body:not(.starterScreenActive):not(.workshopMode) #buildBar:hover .dashboard139MessageStrip{
+  grid-column:1 !important;
+  grid-row:2 !important;
+  height:32px !important;
+  min-height:32px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #buildBar #toolMessage.bottomToolMessage{
+  height:32px !important;
+  min-height:32px !important;
+  font-size:12px !important;
+}
+
+/* Keep the existing View control below the header without changing its camera. */
+body:not(.starterScreenActive):not(.workshopMode) #viewCubeBox{
+  top:var(--builder-guided-region-top) !important;
+  left:var(--builder-guided-center-left) !important;
+  transform:none !important;
+  translate:none !important;
+}
+
+@media(max-width:1280px){
+  :root{
+    --builder-guided-right-width:258px;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadHeader{
+    grid-template-columns:var(--builder-guided-left-width) minmax(150px,1fr) var(--builder-guided-right-width);
+  }
+}
+@media(max-height:720px){
+  :root{
+    --builder-guided-edge:12px;
+    --builder-guided-gap:10px;
+    --builder-guided-header-height:50px;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadHeader{padding-block:2px;}
+  body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand #builderMissionLogo{height:34px !important;max-height:34px !important;}
+  body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadProjectActions button{height:44px !important;min-height:44px !important;}
+  body:not(.starterScreenActive):not(.workshopMode) #buildBar #stemCoach{
+    grid-template-columns:92px minmax(200px,.9fr) minmax(230px,1.35fr) !important;
+  }
+}
+</style>
+<script id="builderGuidedCadLayoutScript">
+(function(){
+  function install(){
+    var header=document.getElementById("builderGuidedCadHeader");
+    var brand=document.getElementById("builderGuidedCadBrand");
+    var mission=document.getElementById("builderGuidedCadMission");
+    var actions=document.getElementById("builderGuidedCadProjectActions");
+    var logo=document.getElementById("builderMissionLogo");
+    var title=document.getElementById("builderMissionTitleOverlay");
+    var save=document.getElementById("builderSaveButton");
+    var open=document.getElementById("builderOpenButton");
+    if(!header || !brand || !mission || !actions || !logo || !title || !save || !open) return;
+    if(header.dataset.ready==="true") return;
+    header.dataset.ready="true";
+    brand.appendChild(logo);
+    mission.appendChild(title);
+    actions.appendChild(save);
+    actions.appendChild(open);
+    document.body.classList.add("builderGuidedCadLayoutReady");
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",install,{once:true});
+  else install();
+})();
+</script>
+
+<!-- =====================================================
+BUILDER GUIDED CAD SHELL — APPROVED REGION SWAP
+Existing controls only: tools left, THINKer BOB right, challenge bottom.
+===================================================== -->
+<style id="builderGuidedCadRegionSwapCSS">
+:root{
+  --builder-swap-left-width:218px;
+  --builder-swap-right-width:264px;
+  --builder-swap-bottom-height:112px;
+  --builder-swap-region-bottom:var(--builder-guided-edge);
+  --builder-swap-center-left:calc(var(--builder-guided-edge) + var(--builder-swap-left-width) + var(--builder-guided-gap));
+  --builder-swap-center-right:calc(var(--builder-guided-edge) + var(--builder-swap-right-width) + var(--builder-guided-gap));
+}
+
+body.starterScreenActive #builderBobRightPanel,
+body.workshopMode #builderBobRightPanel,
+body.starterScreenActive #builderRightToolsPanel,
+body.workshopMode #builderRightToolsPanel{display:none !important;}
+
+/* Left: highly transparent Builder tools with opaque controls. */
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel{
+  position:fixed !important;
+  z-index:106 !important;
+  top:var(--builder-guided-region-top) !important;
+  bottom:var(--builder-swap-region-bottom) !important;
+  left:var(--builder-guided-edge) !important;
+  right:auto !important;
+  width:var(--builder-swap-left-width) !important;
+  max-width:var(--builder-swap-left-width) !important;
+  min-height:0 !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  padding:2px !important;
+  transform:none !important;
+  translate:none !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  background:linear-gradient(180deg,rgba(7,43,61,.27),rgba(2,24,36,.20)) !important;
+  border:1px solid rgba(102,232,249,.40) !important;
+  box-shadow:inset 0 1px 0 rgba(220,252,255,.10),0 3px 10px rgba(0,0,0,.13) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  gap:7px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139Zone{
+  background:linear-gradient(180deg,rgba(20,67,87,.30),rgba(3,26,39,.22)) !important;
+  border-color:rgba(105,229,248,.30) !important;
+  padding-inline:4px !important;
+  padding-bottom:5px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel button,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel select{
+  opacity:1 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone{
+  height:167px !important;
+  min-height:168px !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  grid-auto-rows:max-content !important;
+  gap:3px !important;
+  padding:25px 4px 4px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #returnMissionsButton{
+  width:100% !important;
+  max-width:none !important;
+  height:44px !important;
+  min-height:44px !important;
+  max-height:44px !important;
+  aspect-ratio:auto !important;
+  margin:0 auto !important;
+  padding:4px 10px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background-color:transparent !important;
+  background-image:url("assets/images/dashboard/button-faces/builder-shortcut-grid-frame-glow.png") !important;
+  background-repeat:no-repeat !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  box-shadow:none !important;
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.32)) !important;
+  color:#8ff6ff !important;
+  -webkit-text-fill-color:#8ff6ff !important;
+  font:800 10px/1.05 "Eurostile","Orbitron",Arial,sans-serif !important;
+  letter-spacing:.035em !important;
+  text-align:center !important;
+  text-shadow:0 1px 2px #001018,0 0 4px rgba(92,235,255,.88) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #builderMissionActions,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceUtilityRail{
+  position:static !important;
+  inset:auto !important;
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:3px !important;
+  width:100% !important;
+  max-width:none !important;
+  margin:0 !important;
+  transform:none !important;
+  translate:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceUtilityRail{
+  grid-template-columns:minmax(58px,.72fr) minmax(0,1.28fr) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #helpButton{
+  max-width:72px !important;
+  justify-self:start !important;
+  font-size:8.5px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceModeSwitch{
+  position:relative !important;
+  isolation:isolate !important;
+  width:100% !important;
+  max-width:none !important;
+  height:44px !important;
+  min-height:44px !important;
+  max-height:44px !important;
+  margin:0 !important;
+  padding:4px 10px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background-color:transparent !important;
+  background-image:url("assets/images/dashboard/button-faces/builder-shortcut-grid-frame-glow.png") !important;
+  background-repeat:no-repeat !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  box-shadow:none !important;
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.32)) !important;
+  color:#fff !important;
+  -webkit-text-fill-color:#fff !important;
+  font:900 10px/1.05 "Eurostile","Orbitron",Arial,sans-serif !important;
+  letter-spacing:.035em !important;
+  text-align:center !important;
+  text-shadow:0 1px 2px #001018,0 0 4px #fff,0 0 8px rgba(143,246,255,.92) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceModeSwitch:hover,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceModeSwitch:focus-visible{
+  filter:brightness(1.16) saturate(1.08) drop-shadow(0 5px 5px rgba(0,0,0,.34)) !important;
+  outline:3px solid #fff !important;
+  outline-offset:2px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #builderMissionActions button,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceUtilityRail button{
+  min-width:0 !important;
+  width:100% !important;
+  min-height:44px !important;
+  height:44px !important;
+  max-height:44px !important;
+  padding:3px !important;
+  font-size:9px !important;
+  line-height:1.05 !important;
+  white-space:normal !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeZone{
+  height:146px !important;
+  min-height:146px !important;
+  max-height:146px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139BuildZone{
+  height:120px !important;
+  min-height:120px !important;
+  max-height:120px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone{
+  height:167px !important;
+  min-height:167px !important;
+  max-height:167px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #bottomBuildTools,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboardUtilityButtons{
+  gap:3px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #bottomBuildTools button,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboardUtilityButtons button{
+  height:44px !important;
+  min-height:44px !important;
+  max-height:44px !important;
+  padding:3px !important;
+  font-size:10px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone #helpButton{
+  position:static !important;
+  inset:auto !important;
+  transform:none !important;
+  translate:none !important;
+  width:100% !important;
+  max-width:none !important;
+  justify-self:stretch !important;
+  font-size:10px !important;
+}
+/* Utilities are no longer position-mapped to legacy Save/Load artwork. */
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone .dashboardUtilityButtons button{
+  background-color:transparent !important;
+  background-image:url("assets/images/dashboard/button-faces/builder-shortcut-grid-frame-glow.png") !important;
+  background-repeat:no-repeat !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  text-shadow:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone #helpButton{
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  text-shadow:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone .dashboardUtilityButtons button:nth-child(1){background-image:url("assets/images/dashboard/button-faces/utility-undo.png") !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone .dashboardUtilityButtons button:nth-child(2){background-image:url("assets/images/dashboard/button-faces/utility-redo.png") !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone .dashboardUtilityButtons button:nth-child(3){background-image:url("assets/images/dashboard/button-faces/utility-reset.png") !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone .dashboardUtilityButtons button:nth-child(4){background-image:url("assets/images/dashboard/button-faces/utility-screenshot.png") !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone #engineeringGridToggle{background-image:url("assets/images/dashboard/button-faces/utility-grid-on.png") !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone #engineeringGridToggle[aria-pressed="false"]{background-image:url("assets/images/dashboard/button-faces/utility-grid-off.png") !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone #helpButton{background-image:url("assets/images/dashboard/button-faces/utility-help.png") !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .colorScrollWrap{
+  position:relative !important;
+  display:block !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  gap:0 !important;
+  width:100% !important;
+  max-width:100% !important;
+  overflow-x:hidden !important;
+  overflow-y:hidden !important;
+  overscroll-behavior-x:contain !important;
+  padding-bottom:16px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .colorScrollWrap > .colorScrollArrow{
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #colorSwatchBar{
+  width:100% !important;
+  min-width:0 !important;
+  overflow-x:scroll !important;
+  overflow-y:hidden !important;
+  scrollbar-gutter:stable !important;
+  overscroll-behavior-x:contain !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #colorSwatchBar button,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #colorSwatchBar .colorSwatch{
+  flex:0 0 40px !important;
+  width:40px !important;
+  min-width:40px !important;
+  height:40px !important;
+  min-height:40px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderColorScrollAffordance{
+  position:absolute;
+  left:4px;
+  right:4px;
+  bottom:0;
+  height:12px;
+  border:2px solid #d3a734;
+  border-radius:999px;
+  background:#071f2d;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.9),0 0 5px rgba(72,231,255,.62);
+  pointer-events:auto;
+  cursor:pointer;
+  touch-action:none;
+  user-select:none;
+  overflow:hidden;
+  z-index:2;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderColorScrollAffordance[hidden]{display:none !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderColorScrollThumb{
+  display:block;
+  width:44px;
+  min-width:44px;
+  height:100%;
+  border-radius:999px;
+  border:1px solid #eaffff;
+  background:linear-gradient(180deg,#e8ffff,#5cecff 45%,#079fc7 55%,#006e94);
+  box-shadow:0 0 7px rgba(72,231,255,1);
+  transform:translateX(0);
+  will-change:transform,width;
+  cursor:grab;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderColorScrollThumb:active{cursor:grabbing;}
+
+/* Right: familiar THINKer BOB teaching panel with Voice and message ownership. */
+body:not(.starterScreenActive):not(.workshopMode) #rightHudColumn{
+  top:var(--builder-guided-region-top) !important;
+  right:var(--builder-guided-edge) !important;
+  bottom:0 !important;
+  width:var(--builder-swap-right-width) !important;
+  max-width:var(--builder-swap-right-width) !important;
+  min-height:0 !important;
+  height:auto !important;
+  max-height:none !important;
+  overflow:hidden !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel{
+  position:fixed !important;
+  top:var(--builder-guided-region-top) !important;
+  right:var(--builder-guided-edge) !important;
+  bottom:0 !important;
+  left:auto !important;
+  flex:none;
+  min-height:0;
+  height:auto !important;
+  max-height:none;
+  width:var(--builder-swap-right-width) !important;
+  max-width:var(--builder-swap-right-width) !important;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:7px;
+  padding:7px;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  scrollbar-width:auto;
+  scrollbar-color:#59e8ff rgba(5,25,37,.55);
+  border:1px solid rgba(102,232,249,.40);
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(7,43,61,.20),rgba(2,24,36,.14));
+  box-shadow:inset 0 1px 0 rgba(220,252,255,.10),0 3px 10px rgba(0,0,0,.13);
+  pointer-events:auto;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel::-webkit-scrollbar{width:10px;}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel::-webkit-scrollbar-track{background:rgba(5,25,37,.55);border-radius:8px;}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel::-webkit-scrollbar-thumb{min-height:44px;background:linear-gradient(#8ff6ff,#269ec5);border:2px solid #0b2a3b;border-radius:8px;}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoach{
+  position:relative !important;
+  inset:auto !important;
+  display:flex !important;
+  flex-direction:column !important;
+  width:100% !important;
+  max-width:none !important;
+  height:auto !important;
+  max-height:none !important;
+  min-height:250px !important;
+  flex:1 1 auto !important;
+  margin:0 !important;
+  padding:7px !important;
+  box-sizing:border-box !important;
+  transform:none !important;
+  translate:none !important;
+  overflow:hidden !important;
+  background:rgba(8,46,65,.38) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #thinkerBobWorkshop{
+  display:block !important;
+  height:104px !important;
+  min-height:104px !important;
+  overflow:hidden !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #thinkerBobRigMount{
+  width:104px !important;
+  height:150px !important;
+  margin:-14px auto 0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoachActionGroup{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:5px !important;
+  width:100% !important;
+  margin:5px 0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoachActionGroup button{min-height:44px !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoachContent{
+  flex:1 1 auto !important;
+  min-height:82px !important;
+  max-height:none !important;
+  margin:0 !important;
+  padding:8px !important;
+  overflow-y:auto !important;
+  background:rgba(6,31,46,.70) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139VoiceZone{
+  position:relative !important;
+  inset:auto !important;
+  width:100% !important;
+  min-height:170px !important;
+  box-sizing:border-box !important;
+  padding:29px 7px 9px !important;
+  transform:none !important;
+  translate:none !important;
+  overflow:hidden !important;
+  background:rgba(8,46,65,.34) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #voiceControls{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  grid-template-rows:auto auto auto !important;
+  gap:6px !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139PlaybackButtons,
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139VoiceSelectors,
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139AccessibilityToggles{
+  position:static !important;
+  grid-column:1 !important;
+  grid-row:auto !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139PlaybackButtons{display:grid !important;grid-template-columns:repeat(3,minmax(44px,1fr)) !important;gap:4px !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139VoiceSelectors{display:grid !important;grid-template-columns:14px minmax(0,1fr) 58px !important;gap:4px !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139AccessibilityToggles{display:grid !important;grid-template-columns:1fr 1fr !important;gap:4px !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139PlaybackButtons button,
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139VoiceSelectors select{
+  height:44px !important;
+  min-height:44px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139AccessibilityToggles label{min-width:0 !important;min-height:44px !important;box-sizing:border-box !important;white-space:normal !important;overflow:hidden !important;font-size:9px !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139MessageStrip{
+  position:relative !important;
+  inset:auto !important;
+  width:100% !important;
+  height:34px !important;
+  min-height:34px !important;
+  box-sizing:border-box !important;
+  transform:none !important;
+  translate:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #toolMessage.bottomToolMessage{width:100% !important;height:34px !important;min-height:34px !important;font-size:11px !important;}
+
+/* Bottom: compact horizontal Builder Challenge and shortcuts. */
+body:not(.starterScreenActive):not(.workshopMode) #info{
+  position:fixed !important;
+  z-index:105 !important;
+  top:auto !important;
+  right:var(--builder-swap-center-right) !important;
+  bottom:var(--builder-guided-edge) !important;
+  left:var(--builder-swap-center-left) !important;
+  width:auto !important;
+  max-width:none !important;
+  height:var(--builder-swap-bottom-height) !important;
+  min-height:var(--builder-swap-bottom-height) !important;
+  max-height:var(--builder-swap-bottom-height) !important;
+  box-sizing:border-box !important;
+  display:grid !important;
+  grid-template-columns:160px minmax(0,1fr) !important;
+  grid-template-rows:44px minmax(0,1fr) !important;
+  gap:6px 10px !important;
+  margin:0 !important;
+  padding:8px 10px !important;
+  transform:none !important;
+  translate:none !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain;
+  background:linear-gradient(180deg,rgba(9,47,65,.70),rgba(3,25,37,.64)) !important;
+  border:1px solid rgba(102,232,249,.40) !important;
+  border-radius:12px !important;
+  box-shadow:inset 0 1px 0 rgba(220,252,255,.12),0 3px 10px rgba(0,0,0,.14) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #info > h2,
+body:not(.starterScreenActive):not(.workshopMode) #info #missionText{display:none !important;}
+body:not(.starterScreenActive):not(.workshopMode) #info #challengeTitle{
+  grid-column:1 !important;
+  grid-row:1 / 3 !important;
+  position:static !important;
+  inset:auto !important;
+  width:auto !important;
+  margin:0 !important;
+  transform:none !important;
+  font-size:18px !important;
+  line-height:1.08 !important;
+  align-self:center !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #info #templateIncludesPanel{
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #info #challengeChecklist{
+  grid-column:2 !important;
+  grid-row:1 / 3 !important;
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  align-content:center !important;
+  gap:4px 8px !important;
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  margin:0 !important;
+  overflow-y:auto !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #info #challengeChecklist label{
+  position:relative !important;
+  display:block !important;
+  inset:auto !important;
+  width:auto !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  height:auto !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  padding:4px 5px 4px 32px !important;
+  font-size:11.5px !important;
+  line-height:1.08 !important;
+  white-space:normal !important;
+  overflow:hidden !important;
+  transform:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #info #challengeChecklist br{display:none !important;}
+body:not(.starterScreenActive):not(.workshopMode) #info #challengeChecklist label span{
+  display:block !important;
+  width:auto !important;
+  max-width:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #info #challengeChecklist label input{
+  position:absolute !important;
+  left:5px !important;
+  top:6px !important;
+  width:20px !important;
+  height:20px !important;
+  margin:0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #info > p:not(#missionText):not(#challengeTitle):not(#moreChallenge),
+body:not(.starterScreenActive):not(.workshopMode) #info #moreChallenge{display:none !important;}
+/* Save and Open have one student-facing home in the header. */
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #builderSaveButton,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #builderOpenButton{display:none !important;}
+
+/* Empty legacy dashboard shell has no presentation after reparenting. */
+body:not(.starterScreenActive):not(.workshopMode) #buildBar{display:none !important;}
+
+/* View cube remains inside the newly enlarged center viewport. */
+body:not(.starterScreenActive):not(.workshopMode) #viewCubeBox{
+  top:var(--builder-guided-region-top) !important;
+  left:var(--builder-swap-center-left) !important;
+}
+
+@media(max-width:1280px){
+  :root{
+    --builder-swap-left-width:204px;
+    --builder-swap-right-width:246px;
+    --builder-swap-bottom-height:112px;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #info{
+    grid-template-columns:150px minmax(0,1fr) !important;
+    gap:5px 8px !important;
+    padding:7px 8px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #info #challengeTitle{font-size:16px !important;}
+  body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadHeader{
+    grid-template-columns:var(--builder-swap-left-width) minmax(150px,1fr) var(--builder-swap-right-width) !important;
+  }
+}
+@media(max-height:720px){
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel{gap:5px;padding:5px;}
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoach{height:auto !important;min-height:242px !important;max-height:none !important;flex:1 1 auto !important;padding:5px !important;}
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoachContent{min-height:70px !important;max-height:none !important;}
+}
+</style>
+<script id="builderGuidedCadRegionSwapScript">
+(function(){
+  function install(){
+    var tools=document.getElementById("builderRightToolsPanel");
+    var rightColumn=document.getElementById("rightHudColumn");
+    var coach=document.getElementById("stemCoach");
+    var voice=document.querySelector(".dashboard139VoiceZone");
+    var message=document.querySelector(".dashboard139MessageStrip");
+    var mission=tools && tools.querySelector(".dashboard139MissionZone");
+    var utilityButtons=tools && tools.querySelector(".dashboard139UtilityZone .dashboardUtilityButtons");
+    var actions=document.getElementById("builderMissionActions");
+    var utilityRail=document.getElementById("workspaceUtilityRail");
+    var helpButton=document.getElementById("helpButton");
+    var modeSwitch=document.getElementById("workspaceModeSwitch");
+    if(!tools || !rightColumn || !coach || !voice || !message || !mission || !utilityButtons || !actions || !utilityRail || !helpButton || !modeSwitch || document.getElementById("builderBobRightPanel")) return;
+    var bob=document.createElement("section");
+    bob.id="builderBobRightPanel";
+    bob.setAttribute("aria-label","THINKer BOB and voice controls");
+    document.body.appendChild(tools);
+    mission.appendChild(actions);
+    mission.appendChild(modeSwitch);
+    utilityButtons.appendChild(helpButton);
+    bob.appendChild(coach);
+    bob.appendChild(voice);
+    bob.appendChild(message);
+    rightColumn.appendChild(bob);
+    if(!document.getElementById("builderColorScrollAffordance")){
+      var colorWrap=tools.querySelector(".colorScrollWrap");
+      var colorBar=document.getElementById("colorSwatchBar");
+      if(colorWrap && colorBar){
+        var scrollTrack=document.createElement("div");
+        var scrollThumb=document.createElement("span");
+        scrollTrack.id="builderColorScrollAffordance";
+        scrollTrack.setAttribute("aria-hidden","true");
+        scrollThumb.id="builderColorScrollThumb";
+        scrollTrack.appendChild(scrollThumb);
+        colorWrap.appendChild(scrollTrack);
+        function syncColorScrollAffordance(){
+          var clientWidth=colorBar.clientWidth;
+          var scrollWidth=colorBar.scrollWidth;
+          var trackWidth=Math.max(0,colorWrap.clientWidth-8);
+          if(!(clientWidth>0) || !(scrollWidth>clientWidth) || !(trackWidth>0)){
+            scrollTrack.hidden=true;
+            scrollThumb.style.transform="translateX(0px)";
+            return;
+          }
+          scrollTrack.hidden=false;
+          var thumbWidth=Math.max(44,Math.min(trackWidth,trackWidth*(clientWidth/scrollWidth)));
+          var scrollRange=scrollWidth-clientWidth;
+          var travel=Math.max(0,trackWidth-thumbWidth);
+          var offset=scrollRange>0 ? travel*(colorBar.scrollLeft/scrollRange) : 0;
+          scrollThumb.style.width=thumbWidth+"px";
+          scrollThumb.style.transform="translateX("+offset+"px)";
+        }
+        function setColorScrollFromPointer(clientX,centerThumb){
+          var bounds=scrollTrack.getBoundingClientRect();
+          var trackWidth=bounds.width;
+          var thumbWidth=scrollThumb.getBoundingClientRect().width;
+          var travel=Math.max(0,trackWidth-thumbWidth);
+          var local=clientX-bounds.left-(centerThumb ? thumbWidth/2 : 0);
+          var ratio=travel>0 ? Math.max(0,Math.min(1,local/travel)) : 0;
+          colorBar.scrollLeft=ratio*Math.max(0,colorBar.scrollWidth-colorBar.clientWidth);
+          syncColorScrollAffordance();
+        }
+        var colorScrollDrag=null;
+        scrollTrack.addEventListener("pointerdown",function(event){
+          event.preventDefault();
+          var onThumb=event.target===scrollThumb;
+          colorScrollDrag={
+            pointerId:event.pointerId,
+            startX:event.clientX,
+            startScrollLeft:colorBar.scrollLeft
+          };
+          scrollTrack.setPointerCapture(event.pointerId);
+          if(!onThumb){
+            setColorScrollFromPointer(event.clientX,true);
+            colorScrollDrag.startScrollLeft=colorBar.scrollLeft;
+          }
+        });
+        scrollTrack.addEventListener("pointermove",function(event){
+          if(!colorScrollDrag || colorScrollDrag.pointerId!==event.pointerId) return;
+          event.preventDefault();
+          var trackWidth=scrollTrack.getBoundingClientRect().width;
+          var thumbWidth=scrollThumb.getBoundingClientRect().width;
+          var travel=Math.max(1,trackWidth-thumbWidth);
+          var scrollRange=Math.max(0,colorBar.scrollWidth-colorBar.clientWidth);
+          colorBar.scrollLeft=colorScrollDrag.startScrollLeft+((event.clientX-colorScrollDrag.startX)/travel)*scrollRange;
+          syncColorScrollAffordance();
+        });
+        function endColorScrollDrag(event){
+          if(!colorScrollDrag || colorScrollDrag.pointerId!==event.pointerId) return;
+          colorScrollDrag=null;
+          if(scrollTrack.hasPointerCapture(event.pointerId)) scrollTrack.releasePointerCapture(event.pointerId);
+        }
+        scrollTrack.addEventListener("pointerup",endColorScrollDrag);
+        scrollTrack.addEventListener("pointercancel",endColorScrollDrag);
+        colorBar.addEventListener("wheel",function(event){
+          var scrollRange=Math.max(0,colorBar.scrollWidth-colorBar.clientWidth);
+          if(!(scrollRange>0)) return;
+          var movement=Math.abs(event.deltaX)>Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+          if(!Number.isFinite(movement) || movement===0) return;
+          var previous=colorBar.scrollLeft;
+          colorBar.scrollLeft=Math.max(0,Math.min(scrollRange,previous+movement));
+          if(colorBar.scrollLeft!==previous){
+            event.preventDefault();
+            event.stopPropagation();
+            syncColorScrollAffordance();
+          }
+        },{passive:false});
+        colorBar.addEventListener("scroll",syncColorScrollAffordance,{passive:true});
+        window.addEventListener("resize",syncColorScrollAffordance,{passive:true});
+        if(typeof ResizeObserver==="function"){
+          new ResizeObserver(syncColorScrollAffordance).observe(colorWrap);
+        }
+        requestAnimationFrame(function(){requestAnimationFrame(syncColorScrollAffordance);});
+      }
+    }
+    document.body.classList.add("builderGuidedCadRegionSwapReady");
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",install,{once:true});
+  else install();
+})();
+</script>
+
+<!-- =====================================================
+BUILDER FLOATING BOB + POINTS-FIRST COACH PANEL
+Reuses the existing BOB rig, score board, and project controls.
+===================================================== -->
+<style id="builderFloatingBobPointsPanelCSS">
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadProjectActions{
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone{
+  height:208px !important;
+  min-height:208px !important;
+  max-height:208px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderProjectActionsLeft{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+  width:100%;
+  margin:5px 0 6px !important;
+  order:-2;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderProjectActionsLeft > button{
+  position:static !important;
+  inset:auto !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:34px !important;
+  min-height:34px !important;
+  margin:0 !important;
+  transform:none !important;
+  translate:none !important;
+  padding:2px 6px !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  letter-spacing:.06em !important;
+  text-transform:uppercase !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand{
+  overflow:visible !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel{
+  gap:6px !important;
+}
+/* Keep Open Workshop visually independent without increasing the rail's
+   total vertical demand: the shape group receives the spacing recovered
+   from the two lower inter-section gaps. */
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeZone{
+  margin-top:15px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand #builderMissionLogo{
+  width:100% !important;
+  max-width:224px !important;
+  height:42px !important;
+  max-height:42px !important;
+  object-fit:contain !important;
+  object-position:left center !important;
+  filter:contrast(1.12) saturate(1.08) drop-shadow(0 1px 2px rgba(0,0,0,.58)) !important;
+}
+@media(max-width:1280px), (max-height:720px){
+  body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand #builderMissionLogo{
+    height:40px !important;
+    max-height:40px !important;
+  }
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #builderProjectActionsLeft #builderSaveButton,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #builderProjectActionsLeft #builderOpenButton{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #returnMissionsButton{
+  order:-1;
+}
+
+/* Match every gold-framed left-rail control to the compact Open Badges size. */
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #returnMissionsButton,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #builderMissionActions button,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceUtilityRail button,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #bottomBuildTools button,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboardUtilityButtons button{
+  height:38px !important;
+  min-height:38px !important;
+  max-height:38px !important;
+  padding-block:2px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone{
+  height:184px !important;
+  min-height:184px !important;
+  max-height:184px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139BuildZone{
+  height:108px !important;
+  min-height:108px !important;
+  max-height:108px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone{
+  height:149px !important;
+  min-height:149px !important;
+  max-height:149px !important;
+}
+
+/* The BOB artwork is a temporary, nonblocking presentation over the build. */
+body:not(.starterScreenActive):not(.workshopMode) #thinkerBobWorkshop{
+  position:fixed !important;
+  z-index:1200 !important;
+  top:calc(var(--builder-guided-region-top) + 12px) !important;
+  right:calc(var(--builder-guided-edge) + var(--builder-swap-right-width) + 14px) !important;
+  width:190px !important;
+  height:180px !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  border:1px solid rgba(103,232,249,.56) !important;
+  border-radius:16px !important;
+  background:linear-gradient(180deg,rgba(7,43,61,.88),rgba(2,22,33,.78)) !important;
+  box-shadow:0 10px 30px rgba(0,0,0,.30),0 0 16px rgba(72,230,255,.28) !important;
+  pointer-events:none !important;
+  opacity:0 !important;
+  visibility:hidden !important;
+  transform:translateY(-8px) scale(.96) !important;
+  transition:opacity .22s ease,transform .22s ease,visibility 0s linear .22s !important;
+}
+body:not(.starterScreenActive):not(.workshopMode).builderBobFloatingVisible #thinkerBobWorkshop{
+  opacity:1 !important;
+  visibility:visible !important;
+  transform:translateY(0) scale(1) !important;
+  transition:opacity .22s ease,transform .22s ease !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #thinkerBobWorkshop #thinkerBobRigMount{
+  position:absolute !important;
+  z-index:4 !important;
+  left:49% !important;
+  right:auto !important;
+  top:4px !important;
+  bottom:auto !important;
+  width:51% !important;
+  height:calc(100% + 3px) !important;
+  margin:0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster{
+  position:absolute;
+  z-index:3;
+  top:8px;
+  left:7px;
+  bottom:57px;
+  width:51%;
+  box-sizing:border-box;
+  display:grid;
+  grid-template-rows:repeat(4,minmax(0,1fr));
+  gap:1px;
+  padding:10px 5px 5px;
+  overflow:hidden;
+  border:1px solid rgba(9,43,72,.34);
+  border-radius:2px;
+  background:linear-gradient(160deg,#fffef9 0%,#f4f1e9 100%);
+  box-shadow:0 3px 7px rgba(0,0,0,.32);
+  transform:rotate(-.55deg);
+  transform-origin:center;
+  pointer-events:none;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster::before,
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster::after{
+  content:"";
+  position:absolute;
+  top:3px;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#8ee9ff 0 16%,#0876cb 32%,#003d81 74%);
+  box-shadow:0 1px 2px rgba(0,0,0,.55);
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster::before{left:5px;}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster::after{right:5px;}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster .builderAmigLine{
+  min-width:0;
+  display:grid;
+  grid-template-columns:22px minmax(0,1fr);
+  align-items:center;
+  gap:2px;
+  color:#10253c;
+  font:800 8.5px/1.08 "Lexend","Arial Rounded MT Bold",Arial,sans-serif;
+  text-align:left;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster .builderAmigLetter{
+  display:block;
+  font:900 21px/.9 "Lexend","Arial Black",Arial,sans-serif;
+  text-align:center;
+  text-shadow:0 1px 0 rgba(255,255,255,.75),0 1px 2px rgba(0,0,0,.22);
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster .builderAmigA{color:#1267b2;}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster .builderAmigM{color:#3d8d29;}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster .builderAmigI{color:#e56d08;}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster .builderAmigG{color:#71368d;}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster .builderAmigLine span{
+  min-width:0;
+  overflow-wrap:normal;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster .builderAmigG + span{
+  line-height:1.02;
+}
+body:not(.starterScreenActive):not(.workshopMode).builderBobPlayfulExpression #thinkerBobWorkshop #thinkerBobRigMount{
+  animation:builderBobPlayfulReaction .88s ease-in-out 2 !important;
+  transform-origin:50% 72% !important;
+}
+@keyframes builderBobPlayfulReaction{
+  0%,100%{transform:translateY(0) rotate(0deg) scale(1);}
+  28%{transform:translateY(-7px) rotate(-3deg) scale(1.025);}
+  58%{transform:translateY(-2px) rotate(3deg) scale(1.015);}
+}
+body:not(.starterScreenActive):not(.workshopMode) #thinkerBobWorkshop .thinkerBobWorkshopBackboard,
+body:not(.starterScreenActive):not(.workshopMode) #thinkerBobWorkshop .thinkerBobWorkbench{
+  pointer-events:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderFloatingBobMessage{
+  position:absolute;
+  z-index:6;
+  left:8px;
+  right:8px;
+  bottom:8px;
+  min-height:42px;
+  padding:7px 9px;
+  box-sizing:border-box;
+  border:1px solid rgba(91,232,255,.72);
+  border-radius:9px;
+  color:#f7fbff;
+  background:rgba(3,25,38,.90);
+  font:800 11px/1.35 "Eurostile","Orbitron",Arial,sans-serif;
+  text-align:center;
+  text-shadow:0 1px 2px #001018;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderFloatingBobMessage strong{
+  color:#ffd766;
+  -webkit-text-fill-color:#ffd766;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderFloatingBobMessage[data-message-state="welcome"]{
+  color:#f7fbff;
+  border-color:#8ff6ff;
+  box-shadow:0 0 9px rgba(143,246,255,.38);
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderFloatingBobMessage[data-message-state="reading"]{
+  color:#78edff;
+  border-color:#34dfff;
+  box-shadow:0 0 10px rgba(52,223,255,.48);
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderFloatingBobMessage[data-message-state="vocabulary"]{
+  color:#ffe16a;
+  border-color:#ffd34d;
+  box-shadow:0 0 10px rgba(255,211,77,.45);
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderFloatingBobMessage[data-message-state="attention"]{
+  color:#ff9fdf;
+  border-color:#ff54bd;
+  box-shadow:0 0 12px rgba(255,84,189,.55);
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderFloatingBobMessage[data-message-state="joke"]{
+  color:#b8ff65;
+  border-color:#8dff3d;
+  box-shadow:0 0 12px rgba(141,255,61,.50);
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobFunSpeechBubble{
+  position:fixed;
+  z-index:1201;
+  top:calc(var(--builder-guided-region-top) + 24px);
+  right:calc(var(--builder-guided-edge) + var(--builder-swap-right-width) + 218px);
+  width:min(270px,24vw);
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:13px 16px;
+  box-sizing:border-box;
+  border:3px solid #ff54bd;
+  border-radius:22px;
+  background:#fffdf6;
+  color:#9e176d;
+  font:900 14px/1.35 "Lexend","Eurostile",Arial,sans-serif;
+  text-align:center;
+  text-shadow:none;
+  box-shadow:0 8px 22px rgba(0,0,0,.28),0 0 16px rgba(255,84,189,.45);
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(8px) scale(.94);
+  transition:opacity .18s ease,transform .18s ease,visibility 0s linear .18s;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobFunSpeechBubble::after{
+  content:"";
+  position:absolute;
+  right:-19px;
+  bottom:17px;
+  width:30px;
+  height:25px;
+  background:#fffdf6;
+  border-right:3px solid currentColor;
+  border-bottom:3px solid currentColor;
+  transform:skewX(-28deg) rotate(-15deg);
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobFunSpeechBubble[data-stage="attention"]{
+  color:#9e176d;
+  border-color:#ff54bd;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobFunSpeechBubble[data-stage="joke"]{
+  color:#28710a;
+  border-color:#79df35;
+  box-shadow:0 8px 22px rgba(0,0,0,.28),0 0 16px rgba(121,223,53,.45);
+}
+body:not(.starterScreenActive):not(.workshopMode).builderBobFunBubbleVisible #builderBobFunSpeechBubble{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0) scale(1);
+  transition:opacity .18s ease,transform .18s ease;
+}
+@media(max-width:1280px){
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobFunSpeechBubble{
+    right:calc(var(--builder-guided-edge) + var(--builder-swap-right-width) + 182px);
+    width:210px;
+    font-size:12px;
+  }
+}
+
+/* The permanent right rail begins with the authoritative points board. */
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoachHeader{
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoach{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:7px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readToBobStatsPanel{
+  display:grid !important;
+  grid-template-columns:auto minmax(0,1fr) !important;
+  grid-template-rows:22px 30px !important;
+  align-items:center !important;
+  gap:4px 7px !important;
+  order:1 !important;
+  margin:0 !important;
+  padding:5px 7px !important;
+  flex:0 0 auto !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readToBobStatsHeader{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  margin:0 !important;
+  font-size:9px !important;
+  line-height:1 !important;
+  text-align:left !important;
+  white-space:nowrap !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsSummary{
+  display:block !important;
+  grid-column:2 !important;
+  grid-row:1 !important;
+  min-height:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsGearTotal{
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readToBobStatsReadings{
+  font-size:9px !important;
+  line-height:1 !important;
+  text-align:right !important;
+  white-space:nowrap !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressGrid{
+  grid-column:1 / -1 !important;
+  grid-row:2 !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:5px !important;
+  margin:0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressCard{
+  min-height:28px !important;
+  padding:2px 5px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressCard strong{
+  font-size:8px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressCard strong b{
+  min-width:15px !important;
+  min-height:15px !important;
+  font-size:12px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressCard span{
+  font-size:11px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoachActionGroup{
+  order:2 !important;
+  margin:0 !important;
+  flex:0 0 auto !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoachContent{
+  order:3 !important;
+  flex:1 1 auto !important;
+  min-height:110px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139VoiceZone{
+  flex:0 0 auto !important;
+}
+/* The right rail occupies the unused right side of the header and reaches
+   the bottom edge, giving the actual reading passage the maximum height. */
+body:not(.starterScreenActive):not(.workshopMode) #rightHudColumn,
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel{
+  top:var(--builder-guided-edge) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoachContent{
+  display:flex !important;
+  flex-direction:column !important;
+  overflow:hidden !important;
+  padding:0 !important;
+  background:transparent !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #thinkerBobPanel{
+  display:flex !important;
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  flex-direction:column !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+/* The normal coach copy is the speech source; the clickable passage is the
+   single student-facing copy so no lesson is shown twice. */
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #thinkerBobPanel > :not(#readerHighlightBox){
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox{
+  display:block !important;
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  width:100% !important;
+  margin:0 !important;
+  padding:12px !important;
+  box-sizing:border-box !important;
+  overflow-y:auto !important;
+  font-size:14px !important;
+  line-height:1.62 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox::before{
+  content:attr(data-passage-title) !important;
+  white-space:normal !important;
+  display:block !important;
+  margin:0 0 12px !important;
+  padding:0 0 9px !important;
+  border-bottom:2px solid rgba(72,230,255,.52) !important;
+  color:#fff3a6 !important;
+  font:900 14px/1.45 "Orbitron","Eurostile",Arial,sans-serif !important;
+  letter-spacing:.045em !important;
+  text-shadow:0 1px 2px #001018,0 0 8px rgba(72,230,255,.62) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox .readerLessonSection{
+  display:block !important;
+  margin:0 0 15px !important;
+  padding:0 0 12px !important;
+  border-bottom:1px solid rgba(112,207,232,.24) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox .readerLessonSection:last-child{
+  border-bottom:0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox h3,
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox h4{
+  display:block !important;
+  margin:0 0 8px !important;
+  color:#ffd766 !important;
+  -webkit-text-fill-color:#ffd766 !important;
+  font-family:"Orbitron","Eurostile",Arial,sans-serif !important;
+  font-weight:900 !important;
+  line-height:1.35 !important;
+  text-shadow:0 1px 2px #001018,0 0 7px rgba(255,215,102,.40) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox h3{font-size:17px !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox h4{font-size:15px !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox h3 .readWord,
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox h4 .readWord{
+  color:inherit !important;
+  -webkit-text-fill-color:inherit !important;
+  font:inherit !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox h3 .readWord.currentReadWord,
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox h4 .readWord.currentReadWord{
+  color:#10202b !important;
+  -webkit-text-fill-color:#10202b !important;
+  text-shadow:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readerVocabularyButtons{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:6px !important;
+  margin:0 0 9px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readerVocabularyButtons .vocabButton{
+  min-height:44px !important;
+  padding:7px 10px !important;
+  font-size:12px !important;
+}
+/* Builder Read-to-BOB readability polish: keep the established right rail and
+   canvas allocation fixed while spending less space on internal gaps. */
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoach{
+  gap:5px !important;
+  padding:5px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readToBobStatsPanel{
+  grid-template-rows:22px 32px !important;
+  gap:2px 6px !important;
+  padding:4px 6px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readToBobStatsHeader{
+  font-size:10.5px !important;
+  line-height:1.05 !important;
+  font-weight:950 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readToBobStatsReadings{
+  font-size:10.5px !important;
+  line-height:1.05 !important;
+  font-weight:950 !important;
+  color:#f1fcff !important;
+  text-shadow:0 0 5px rgba(72,230,255,.42) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressGrid{
+  gap:4px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressCard{
+  min-height:30px !important;
+  padding:1px 4px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressCard strong{
+  font-size:9.5px !important;
+  line-height:16px !important;
+  font-weight:950 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressCard strong b{
+  min-width:20px !important;
+  min-height:20px !important;
+  font-size:16px !important;
+  line-height:18px !important;
+  font-weight:1000 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoachActionGroup{
+  gap:4px !important;
+  margin:0 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readerHighlightBox{
+  padding:10px !important;
+  font-size:15.5px !important;
+  line-height:1.55 !important;
+}
+/* Four-row student progress hierarchy within the existing fixed right rail. */
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readToBobStatsPanel{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  gap:2px !important;
+  padding:4px 6px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readToBobStatsHeader{
+  flex:0 0 auto !important;
+  padding:1px 0 3px !important;
+  font-size:12.25px !important;
+  line-height:1.1 !important;
+  text-align:center !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsSummary{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-height:28px !important;
+  padding:1px 5px !important;
+  border-radius:6px !important;
+  background:rgba(3,20,29,.58) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readToBobStatsReadings{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:4px !important;
+  width:100% !important;
+  font-size:11px !important;
+  line-height:1 !important;
+  text-align:center !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readToBobStatsReadingsValue{
+  color:#fff !important;
+  font-size:18px !important;
+  line-height:1 !important;
+  font-weight:1000 !important;
+  font-variant-numeric:tabular-nums !important;
+  text-shadow:0 0 7px rgba(72,230,255,.62) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressGrid{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  grid-template-rows:repeat(2,minmax(28px,auto)) !important;
+  gap:2px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressCard{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-height:28px !important;
+  padding:1px 5px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressCard strong{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:5px !important;
+  width:100% !important;
+  font-size:10.5px !important;
+  line-height:1 !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressCard strong b{
+  min-width:22px !important;
+  min-height:22px !important;
+  margin-left:auto !important;
+  font-size:18px !important;
+  line-height:20px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToBobStatsProgressCard > span{
+  display:none !important;
+}
+@media(max-width:1280px){
+  body:not(.starterScreenActive):not(.workshopMode) #thinkerBobWorkshop{
+    width:164px !important;
+    height:158px !important;
+    right:calc(var(--builder-guided-edge) + var(--builder-swap-right-width) + 9px) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #thinkerBobWorkshop #thinkerBobRigMount{
+    left:49% !important;
+    width:51% !important;
+    top:4px !important;
+    bottom:auto !important;
+    height:calc(100% + 3px) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster{
+    top:7px;
+    left:6px;
+    bottom:55px;
+    width:51%;
+    padding:9px 4px 4px;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster .builderAmigLine{
+    grid-template-columns:19px minmax(0,1fr);
+    gap:1px;
+    font-size:7.5px;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderAmigPoster .builderAmigLetter{
+    font-size:18px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body:not(.starterScreenActive):not(.workshopMode) #thinkerBobWorkshop{transition:none !important;}
+  body:not(.starterScreenActive):not(.workshopMode).builderBobPlayfulExpression #thinkerBobWorkshop #thinkerBobRigMount{
+    animation:none !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobFunSpeechBubble{transition:none !important;}
+}
+</style>
+<script id="builderFloatingBobPointsPanelScript">
+(function(){
+  var entryTimer=0;
+  var entryVisibleUntil=0;
+  var wasBuilderActive=false;
+  var lessonReadingPending=false;
+  var lessonSpeechWasActive=false;
+  var selectedVocabularyWord="";
+  var floatingMessage=null;
+  var funSpeechBubble=null;
+  function builderIsActive(){
+    return !document.body.classList.contains("starterScreenActive") &&
+      !document.body.classList.contains("workshopMode");
+  }
+  function studentIsReading(){
+    return document.body.classList.contains("readToBobPracticeActive") ||
+      document.body.classList.contains("readToBobFeedbackActive") ||
+      !!window.readToBobPracticeActive || !!window.readToBobFeedbackActive;
+  }
+  function bobIsReading(){
+    return document.body.classList.contains("builderBobLessonTransition") || !!(window.speechSynthesis &&
+      (window.speechSynthesis.speaking || window.speechSynthesis.pending || window.speechSynthesis.paused));
+  }
+  function setFloatingMessage(html,state){
+    if(floatingMessage){
+      floatingMessage.innerHTML=html;
+      floatingMessage.dataset.messageState=state || "welcome";
+    }
+  }
+  window.addEventListener("builderBobExpressiveMessage",function(event){
+    var detail=event.detail || {};
+    var state=detail.stage === "attention" ? "attention" :
+      (detail.stage === "joke" ? "joke" : "reading");
+    setFloatingMessage(String(detail.message || ""),state);
+    if(!funSpeechBubble){
+      funSpeechBubble=document.getElementById("builderBobFunSpeechBubble");
+    }
+    if(funSpeechBubble && (state === "attention" || state === "joke")){
+      funSpeechBubble.textContent=String(detail.message || "");
+      funSpeechBubble.dataset.stage=state;
+      document.body.classList.add("builderBobFunBubbleVisible");
+    }else{
+      document.body.classList.remove("builderBobFunBubbleVisible");
+    }
+    entryVisibleUntil=Math.max(entryVisibleUntil,Date.now()+6000);
+  });
+  window.addEventListener("builderBobMissionWelcome",function(){
+    entryVisibleUntil=Math.max(entryVisibleUntil,Date.now()+2400);
+    updateFloatingBob();
+  });
+  function movePassageToVocabulary(){
+    var vocabulary=document.querySelector("#readerHighlightBox .readerVocabularySection");
+    var passage=document.getElementById("readerHighlightBox");
+    if(vocabulary && passage){
+      passage.scrollTop=Math.max(0,vocabulary.offsetTop-passage.offsetTop-8);
+      vocabulary.classList.add("readerVocabularyReady");
+      window.setTimeout(function(){vocabulary.classList.remove("readerVocabularyReady");},1800);
+    }
+    setFloatingMessage("Click a vocabulary word for more ideas.","vocabulary");
+    entryVisibleUntil=Math.max(entryVisibleUntil,Date.now()+6500);
+  }
+  function updateFloatingBob(){
+    var active=builderIsActive();
+    if(active && !wasBuilderActive){
+      entryVisibleUntil=Date.now()+7000;
+      window.clearTimeout(entryTimer);
+      entryTimer=window.setTimeout(updateFloatingBob,7050);
+    }
+    wasBuilderActive=active;
+    var speechActive=bobIsReading();
+    if(lessonReadingPending && speechActive) lessonSpeechWasActive=true;
+    if(lessonReadingPending && lessonSpeechWasActive && !speechActive){
+      lessonReadingPending=false;
+      lessonSpeechWasActive=false;
+      movePassageToVocabulary();
+    }
+    if(studentIsReading()){
+      setFloatingMessage("I’m listening. Read at your own pace.","reading");
+    }else if(speechActive && selectedVocabularyWord){
+      setFloatingMessage("Vocabulary: <strong>"+selectedVocabularyWord+"</strong>","vocabulary");
+    }else if(speechActive){
+      setFloatingMessage("Click a word to read from there.","reading");
+    }else if(Date.now()<entryVisibleUntil && !lessonReadingPending){
+      setFloatingMessage("Welcome! I’m THINKer BOB, your STEM Coach.","welcome");
+    }
+    document.body.classList.toggle("builderBobFloatingVisible",
+      active && (Date.now()<entryVisibleUntil || studentIsReading() || speechActive));
+  }
+  function install(){
+    var tools=document.getElementById("builderRightToolsPanel");
+    var mission=tools && tools.querySelector(".dashboard139MissionZone");
+    var returnButton=document.getElementById("returnMissionsButton");
+    var save=document.getElementById("builderSaveButton");
+    var open=document.getElementById("builderOpenButton");
+    var bobArtwork=document.getElementById("thinkerBobWorkshop");
+    if(!mission || !returnButton || !save || !open || !bobArtwork) return;
+    if(!document.getElementById("builderBobFunSpeechBubble")){
+      funSpeechBubble=document.createElement("div");
+      funSpeechBubble.id="builderBobFunSpeechBubble";
+      funSpeechBubble.setAttribute("role","status");
+      funSpeechBubble.setAttribute("aria-live","polite");
+      funSpeechBubble.setAttribute("aria-atomic","true");
+      document.body.appendChild(funSpeechBubble);
+    }else{
+      funSpeechBubble=document.getElementById("builderBobFunSpeechBubble");
+    }
+    if(typeof window.showToolInfo==="function" && !window.showToolInfo.__structuredReaderFinalOwner){
+      var activeShowToolInfo=window.showToolInfo;
+      var structuredShowToolInfo=function(toolId){
+        var result=activeShowToolInfo.apply(this,arguments);
+        var info=(window.TOOL_INFO && window.TOOL_INFO[toolId]) ||
+          (typeof TOOL_INFO!=="undefined" ? TOOL_INFO[toolId] : null);
+        if(info && typeof renderStructuredToolReader==="function"){
+          selectedVocabularyWord="";
+          lessonReadingPending=true;
+          lessonSpeechWasActive=false;
+          renderStructuredToolReader(info,toolId);
+          var passage=document.getElementById("readerHighlightBox");
+          if(passage) passage.dataset.passageTitle=info.title;
+        }
+        return result;
+      };
+      structuredShowToolInfo.__structuredReaderFinalOwner=true;
+      window.showToolInfo=structuredShowToolInfo;
+      try{ showToolInfo=window.showToolInfo; }catch(error){}
+    }
+    var vocabularySpeechLeadTimer=0;
+    if(typeof window.showVocabDetail==="function" && !window.showVocabDetail.__floatingBobVocabularyOwner){
+      var activeShowVocabDetail=window.showVocabDetail;
+      var floatingVocabDetail=function(toolId,word){
+        selectedVocabularyWord=String(word || "").replace(/[^a-zA-Z0-9 -]/g,"").trim();
+        lessonReadingPending=false;
+        lessonSpeechWasActive=false;
+        entryVisibleUntil=Math.max(entryVisibleUntil,Date.now()+5500);
+        setFloatingMessage("Vocabulary: <strong>"+selectedVocabularyWord+"</strong>","vocabulary");
+        updateFloatingBob();
+        if(vocabularySpeechLeadTimer){ window.clearTimeout(vocabularySpeechLeadTimer); }
+        var owner=this;
+        var args=arguments;
+        vocabularySpeechLeadTimer=window.setTimeout(function(){
+          vocabularySpeechLeadTimer=0;
+          activeShowVocabDetail.apply(owner,args);
+        },500);
+      };
+      floatingVocabDetail.__floatingBobVocabularyOwner=true;
+      window.showVocabDetail=floatingVocabDetail;
+      try{ showVocabDetail=window.showVocabDetail; }catch(error){}
+    }
+    var projectActions=document.getElementById("builderProjectActionsLeft");
+    if(!projectActions){
+      projectActions=document.createElement("div");
+      projectActions.id="builderProjectActionsLeft";
+      projectActions.setAttribute("aria-label","Builder project actions");
+      mission.insertBefore(projectActions,returnButton);
+    }
+    projectActions.appendChild(save);
+    projectActions.appendChild(open);
+    if(bobArtwork.parentElement!==document.body) document.body.appendChild(bobArtwork);
+    floatingMessage=document.getElementById("builderFloatingBobMessage");
+    if(!floatingMessage){
+      floatingMessage=document.createElement("div");
+      floatingMessage.id="builderFloatingBobMessage";
+      floatingMessage.setAttribute("aria-live","polite");
+      floatingMessage.setAttribute("aria-atomic","true");
+      bobArtwork.appendChild(floatingMessage);
+    }
+    new MutationObserver(updateFloatingBob).observe(document.body,{attributes:true,attributeFilter:["class"]});
+    updateFloatingBob();
+    window.setInterval(updateFloatingBob,250);
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",install,{once:true});
+  else install();
+})();
+</script>
+<style id="builderGearWorkshopUpgradeProgressCSS">
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadHeader{
+  right:calc(var(--builder-guided-edge) + var(--builder-swap-right-width) + var(--builder-guided-gap)) !important;
+  grid-template-columns:minmax(195px,215px) minmax(145px,175px) minmax(220px,1fr) minmax(190px,225px) !important;
+  min-height:52px !important;
+  height:52px !important;
+  padding:4px 8px !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand #builderMissionLogo{
+  width:auto !important;
+  max-width:245px !important;
+  height:46px !important;
+  max-height:46px !important;
+  object-position:left center !important;
+  transform:scale(1.25) !important;
+  transform-origin:left center !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand{
+  overflow:hidden;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGearTotal{
+  grid-column:2;
+  width:100%;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderNextWorkshopUpgrade{
+  grid-column:4;
+  width:100%;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGearTotal,
+body:not(.starterScreenActive):not(.workshopMode) #builderNextWorkshopUpgrade{
+  display:grid;
+  grid-template-columns:auto auto minmax(0,1fr);
+  grid-template-rows:1fr;
+  align-items:center;
+  column-gap:5px;
+  min-width:0;
+  color:#fff;
+  font-family:Lexend,Arial,sans-serif;
+  white-space:nowrap;
+  text-shadow:0 2px 2px rgba(0,0,0,.72);
+}
+body:not(.starterScreenActive):not(.workshopMode) .builderGearProgressIcon{
+  color:#ffc928;
+  font-size:24px;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.72));
+}
+body:not(.starterScreenActive):not(.workshopMode) .builderGearProgressLabel{
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+  background:
+    radial-gradient(circle at center,
+      #8ff6ff 0 1px,
+      rgba(143,246,255,.84) 1.1px 1.45px,
+      transparent 1.55px) 0 0 / 3px 3px;
+  -webkit-background-clip:text;
+  background-clip:text;
+  font-family:Lexend,Arial,Helvetica,sans-serif;
+  font-size:24px;
+  font-weight:800;
+  line-height:1;
+  text-shadow:none;
+  filter:
+    drop-shadow(0 0 1px rgba(92,235,255,.95))
+    drop-shadow(0 0 4px rgba(41,181,255,.72))
+    drop-shadow(0 1px 1px rgba(0,0,0,.48));
+  animation:none !important;
+  opacity:1;
+  font-variant-numeric:tabular-nums;
+}
+body:not(.starterScreenActive):not(.workshopMode) .builderGearProgressCopy{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  justify-content:center;
+  color:#dff8ff;
+  font-size:8.5px;
+  font-weight:800;
+  line-height:1.15;
+  letter-spacing:.02em;
+  overflow:hidden;
+}
+body:not(.starterScreenActive):not(.workshopMode) .builderGearProgressCopy span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadMission{
+  position:relative !important;
+  grid-column:3;
+  left:auto !important;
+  top:auto !important;
+  width:100% !important;
+  height:auto !important;
+  transform:none !important;
+  pointer-events:none;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadProjectActions{
+  display:none !important;
+}
+#builderWorkshopUpgradeAnnouncement{
+  position:fixed;
+  z-index:180;
+  top:94px;
+  left:50%;
+  transform:translateX(-50%);
+  max-width:min(520px,calc(100vw - 40px));
+  padding:10px 18px;
+  border:2px solid #ffd84f;
+  border-radius:12px;
+  color:#fff7bd;
+  background:rgba(2,25,39,.94);
+  box-shadow:0 0 18px rgba(255,210,38,.55);
+  font:900 17px/1.15 Lexend,Arial,sans-serif;
+  text-align:center;
+  pointer-events:none;
+  animation:builderWorkshopUpgradeNotice 2.8s ease both;
+}
+#builderWorkshopUpgradeAnnouncement[hidden]{display:none !important;}
+@keyframes builderWorkshopUpgradeNotice{
+  0%{opacity:0;transform:translate(-50%,-8px) scale(.98);}
+  14%,78%{opacity:1;transform:translate(-50%,0) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-4px) scale(1);}
+}
+@media(max-width:1280px), (max-height:720px){
+  :root{--builder-guided-header-height:52px !important;}
+  body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadHeader{
+    grid-template-columns:minmax(180px,200px) minmax(125px,150px) minmax(170px,1fr) minmax(180px,205px) !important;
+    height:52px !important;
+    min-height:52px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand #builderMissionLogo{
+    max-width:225px !important;
+    height:44px !important;
+    max-height:44px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderGearTotal,
+  body:not(.starterScreenActive):not(.workshopMode) #builderNextWorkshopUpgrade{column-gap:4px;}
+  body:not(.starterScreenActive):not(.workshopMode) .builderGearProgressIcon{font-size:20px;}
+  body:not(.starterScreenActive):not(.workshopMode) .builderGearProgressLabel{font-size:24px;}
+  body:not(.starterScreenActive):not(.workshopMode) .builderGearProgressCopy{font-size:7.5px;}
+  body:not(.starterScreenActive):not(.workshopMode) #builderGearTotal{
+    width:100%;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderNextWorkshopUpgrade{
+    width:100%;
+    max-width:230px;
+  }
+}
+@media(min-width:1400px){
+  :root{
+    /* The wide Builder workspace is bounded by unequal left/right rails.
+       Keep the complete title/progress group centered between those rails. */
+    --builder-wide-workspace-center-shift:-24px;
+    --builder-wide-workspace-center:calc(50vw - var(--builder-guided-edge) + var(--builder-wide-workspace-center-shift));
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadHeader{
+    display:block !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand{
+    position:absolute;
+    left:8px;
+    top:4px;
+    width:215px;
+    height:44px;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadMission{
+    position:absolute !important;
+    left:var(--builder-wide-workspace-center) !important;
+    top:50% !important;
+    width:320px !important;
+    transform:translate(-50%,-50%) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderGearTotal{
+    position:absolute;
+    left:calc(var(--builder-wide-workspace-center) - 345px);
+    right:auto;
+    top:50%;
+    width:175px;
+    transform:translateY(-50%);
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderNextWorkshopUpgrade{
+    position:absolute;
+    left:calc(var(--builder-wide-workspace-center) + 170px);
+    top:50%;
+    width:225px;
+    transform:translateY(-50%);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #builderWorkshopUpgradeAnnouncement{animation:none;}
+}
+</style>
+<style id="builderStartMissionCompactLayoutPolish">
+/* =====================================================
+   BUILDER START MISSION SCREEN — COMPACT CHROMEBOOK LAYOUT
+   Presentation only. Restores the approved banner width while
+   preserving the complete 5 x 2 mission and help experience.
+   ===================================================== */
+@media (min-width:701px) and (max-height:760px){
+  body.starterScreenActive #startCard{
+    grid-template-rows:auto auto auto auto !important;
+    gap:5px !important;
+    height:100% !important;
+    padding:2px 0 4px !important;
+  }
+  body.starterScreenActive .startLogo{
+    height:auto !important;
+  }
+  body.starterScreenActive .starterTitleBanner{
+    width:min(1210px,86vw) !important;
+    height:auto !important;
+    margin-inline:auto !important;
+  }
+  body.starterScreenActive .starterBannerImage{
+    width:100% !important;
+    height:auto !important;
+    max-height:none !important;
+    object-fit:contain !important;
+  }
+  body.starterScreenActive .startMissionPanel{
+    padding:4px 14px 6px !important;
+  }
+  body.starterScreenActive .startMissionPanel h2{
+    margin-bottom:3px !important;
+  }
+  body.starterScreenActive .startMissionGrid{
+    grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+    grid-template-rows:repeat(2,70px) !important;
+    gap:5px 10px !important;
+  }
+  body.starterScreenActive .startMissionGrid .missionTile{
+    min-height:44px !important;
+    height:70px !important;
+  }
+  body.starterScreenActive .missionArt{
+    min-height:0 !important;
+    font-size:clamp(22px,3.7vh,30px) !important;
+  }
+  body.starterScreenActive .missionTileTitle{
+    min-height:0 !important;
+    padding:3px 7px 4px !important;
+    font-size:clamp(11px,1.7vh,13px) !important;
+  }
+  body.starterScreenActive .startBeforePanel{
+    min-height:0 !important;
+    padding:3px 12px !important;
+    gap:8px !important;
+  }
+  body.starterScreenActive .startBeforeGrid{
+    justify-items:center !important;
+  }
+  body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton{
+    width:min(220px,100%) !important;
+    min-width:0 !important;
+    max-width:220px !important;
+    height:auto !important;
+    min-height:44px !important;
+    aspect-ratio:475/158 !important;
+    margin:0 auto !important;
+    padding:0 !important;
+  }
+  body.starterScreenActive .startHelpPanel{
+    display:block !important;
+    padding:3px 12px 5px !important;
+  }
+  body.starterScreenActive .startHelpPanel h2{
+    margin-bottom:2px !important;
+  }
+  body.starterScreenActive .startHowToWide{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:7px !important;
+  }
+  body.starterScreenActive .startHowToWide .startTip{
+    min-height:44px !important;
+    padding:3px 7px !important;
+    gap:5px !important;
+  }
+  body.starterScreenActive .startTipText span{
+    display:block !important;
+    font-size:clamp(9px,1.35vh,12px) !important;
+  }
+}
+</style>
+<script type="module" id="builderGearWorkshopUpgradeProgressScript">
+import {createThinkamigbobGearProgress} from "./js/progression/thinkamigbob-gear-progress.mjs";
+import {WORKSHOP_UPGRADE_THRESHOLDS} from "./js/workshop/progression/workshop-upgrade-registry.mjs";
+
+const header=document.getElementById("builderGuidedCadHeader");
+const mission=document.getElementById("builderGuidedCadMission");
+const total=document.createElement("div");
+const next=document.createElement("div");
+const announcement=document.createElement("div");
+total.id="builderGearTotal";
+total.setAttribute("aria-label","0 total Gears collected");
+total.innerHTML='<span class="builderGearProgressIcon" aria-hidden="true">⚙</span><span class="builderGearProgressLabel">0</span><span class="builderGearProgressCopy" aria-hidden="true"><span>GEARS</span><span>TOTAL COLLECTED</span></span>';
+next.id="builderNextWorkshopUpgrade";
+next.setAttribute("aria-label","50 Gears to the next Workshop Upgrade");
+next.innerHTML='<span class="builderGearProgressIcon" aria-hidden="true">🛠</span><span class="builderGearProgressLabel">50</span><span class="builderGearProgressCopy" aria-hidden="true"><span>TO NEXT</span><span>WORKSHOP UPGRADE</span></span>';
+announcement.id="builderWorkshopUpgradeAnnouncement";
+announcement.setAttribute("role","status");
+announcement.setAttribute("aria-live","polite");
+announcement.setAttribute("aria-atomic","true");
+announcement.hidden=true;
+if(header && mission){
+  header.insertBefore(total,mission);
+  mission.insertAdjacentElement("afterend",next);
+  document.body.appendChild(announcement);
+}
+
+const progress=createThinkamigbobGearProgress({
+  storage:window.localStorage,
+  thresholds:WORKSHOP_UPGRADE_THRESHOLDS
+});
+let noticeTimer=0;
+function render(snapshot){
+  const gears=snapshot.cumulativeGears;
+  total.querySelector(".builderGearProgressLabel").textContent=gears;
+  total.setAttribute("aria-label",gears+" total Gear"+(gears===1?"":"s")+" collected");
+  const label=next.querySelector(".builderGearProgressLabel");
+  const copy=next.querySelector(".builderGearProgressCopy");
+  if(snapshot.allCurrentUpgradesUnlocked){
+    label.textContent="✨";
+    copy.innerHTML="<span>ALL CURRENT</span><span>UPGRADES UNLOCKED</span>";
+    next.setAttribute("aria-label","All current Workshop Upgrades unlocked");
+  }else{
+    label.textContent=snapshot.gearsToNextUpgrade;
+    copy.innerHTML="<span>TO NEXT</span><span>WORKSHOP UPGRADE</span>";
+    next.setAttribute("aria-label",snapshot.gearsToNextUpgrade+" Gears to the next Workshop Upgrade");
+  }
+  if(snapshot.newlyUnlocked.length){
+    window.clearTimeout(noticeTimer);
+    announcement.textContent="✨ WORKSHOP UPGRADE UNLOCKED!";
+    announcement.hidden=false;
+    noticeTimer=window.setTimeout(function(){ announcement.hidden=true; },2900);
+  }
+}
+progress.subscribe(render);
+window.getThinkamigbobGearProgressSnapshot=()=>progress.getSnapshot();
+window.synchronizeThinkamigbobGearTotal=function(value){ return progress.synchronizeTotal(value); };
+
+const priorUpdate=window.updateReadToBobStats;
+if(typeof priorUpdate==="function"){
+  window.updateReadToBobStats=function(readingProgress){
+    const result=priorUpdate.apply(this,arguments);
+    let authoritativeProgress=readingProgress;
+    if(!authoritativeProgress){
+      try{
+        authoritativeProgress=JSON.parse(
+          window.localStorage.getItem("thinkamigbobReadToBobRewardProgress01") || "null"
+        );
+      }catch(error){ authoritativeProgress=null; }
+    }
+    if(authoritativeProgress && Number.isFinite(Number(authoritativeProgress.gears))){
+      progress.synchronizeTotal(authoritativeProgress.gears);
+    }
+    return result;
+  };
+  window.updateReadToBobStats();
+}
 </script>
 </body>
 </html>
