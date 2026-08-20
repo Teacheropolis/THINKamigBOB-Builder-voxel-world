@@ -11,16 +11,16 @@ test("enables student-facing New Workshop Open Build and Save Build controls",()
   assert.match(source,/id="workshopPanelProject"[\s\S]*?<button type="button" disabled>Screenshot<\/button>/);
 });
 
-test("keeps Save Open and Return to Mission in one compact project row",()=>{
+test("keeps equal Save and Open controls below View Remote",()=>{
   assert.match(source,/id="workspaceModeSwitch"[\s\S]*?id="workshopUtilitySave"[\s\S]*?id="workshopUtilityOpen"/);
   assert.match(source,/id="workshopUtilitySave"[^>]*aria-label="Save Build"[^>]*>SAVE<\/button>/);
   assert.match(source,/id="workshopUtilityOpen"[^>]*aria-label="Open Build"[^>]*>OPEN<\/button>/);
   assert.match(source,/utilityProjectSave\.addEventListener\("click"[\s\S]*?requestWorkshopProjectSave\(utilityProjectSave,false\)/);
   assert.match(source,/utilityProjectOpen\.addEventListener\("click"[\s\S]*?requestWorkshopProjectAction\("OPEN",utilityProjectOpen\)/);
-  assert.match(source,/#workspaceUtilityRail\{[\s\S]*?flex:0 0 44px[\s\S]*?grid-template-columns:minmax\(44px,\.78fr\) minmax\(44px,\.78fr\) minmax\(70px,1\.44fr\)[\s\S]*?grid-template-rows:44px/);
-  assert.match(source,/#workspaceModeSwitch\{[\s\S]*?grid-column:3[\s\S]*?grid-row:1[\s\S]*?height:44px/);
+  assert.match(source,/#workspaceUtilityRail\{[\s\S]*?flex:0 0 48px[\s\S]*?grid-template-columns:repeat\(2,minmax\(44px,1fr\)\)[\s\S]*?grid-template-rows:48px/);
+  assert.match(source,/quickToolbar\.insertBefore\(modeSwitch,quickToolbar\.firstElementChild\)/);
   assert.match(source,/\.workshopUtilityProjectButton\{display:none;\}/);
-  assert.match(source,/\.workshopUtilityProjectButton\{[\s\S]*?display:block;[\s\S]*?min-height:44px;[\s\S]*?color:#ff4fa3[\s\S]*?font:900 7px/);
+  assert.match(source,/\.workshopUtilityProjectButton\{[\s\S]*?display:block;[\s\S]*?min-height:48px;[\s\S]*?color:#ff4fa3[\s\S]*?font:900 9px/);
   assert.match(source,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeLabel\{[\s\S]*?color:#dffaff[\s\S]*?text-shadow:none/);
   assert.match(source,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnIcon\{[\s\S]*?color:#fff[\s\S]*?-webkit-text-fill-color:#fff[\s\S]*?text-shadow:none/);
   assert.match(source,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnWords\{[\s\S]*?color:#bff7ff/);

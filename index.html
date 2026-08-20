@@ -4513,6 +4513,10 @@ Nature ▶
               <img class="engineering-drawer-indicator" src="assets/images/workshop/production/engineering-tool-chest/indicator-red.png" alt="" aria-hidden="true" />
             </button>
             <div id="engineeringDrawerColorsMaterialsContent" class="engineering-drawer-content engineering-color-material-drawer" hidden>
+              <section class="engineering-drawer-section engineering-platform-color-section" aria-labelledby="engineeringPlatformColorHeading">
+                <h3 id="engineeringPlatformColorHeading">Platform Color</h3>
+                <button id="workshopPlatformColorButton" type="button" aria-label="Change Engineering Build Plane Color" title="Change Engineering Build Plane Color"><span class="workshop-control-icon" aria-hidden="true">🎨</span><span>PLATFORM COLOR</span></button>
+              </section>
               <div id="workshopPlatformColorModePanel" hidden>
                 <strong>PLATFORM COLOR MODE</strong>
                 <p>Choose a color for the frosted build platform.</p>
@@ -4658,7 +4662,6 @@ Future extraction target: view controls.
   <button id="workshopViewBottom" type="button" data-workshop-view="bottom" aria-label="Bottom View" aria-pressed="false" title="Bottom View (6)"><span class="workshop-control-icon" aria-hidden="true">⬇</span><span>BOTTOM</span><small>6</small></button>
   <button id="workshopViewHome" type="button" data-workshop-view="home" aria-label="Home Perspective View" aria-pressed="false" title="Home Perspective View (0)"><span class="workshop-control-icon" aria-hidden="true">⌂</span><span>HOME</span><small>0</small></button>
   <button id="workshopFitSelection" type="button" aria-label="Fit selected object or build in the current view" aria-pressed="false" title="Fit Selection (F)" disabled><span class="workshop-control-icon" aria-hidden="true">⌗</span><span>FIT SELECTION</span><small>F</small></button>
-  <button id="workshopPlatformColorButton" type="button" aria-label="Change Engineering Build Plane Color" title="Change Engineering Build Plane Color"><span class="workshop-control-icon" aria-hidden="true">🎨</span><span>PLATFORM COLOR</span></button>
 </div>
 <div id="workspaceUtilityRail">
   <button id="helpButton" type="button" title="Open Builder Help" aria-label="Open Builder Help">? HELP</button>
@@ -4687,7 +4690,6 @@ This control is available only after a mission has started.
 <div id="workshopDashboard" role="region" aria-label="Workshop design tools, Advanced mode" data-workshop-console-name="Workshop design tools" data-workshop-console-mode="grand-master">
   <div id="workshopEngineeringDashboard">
     <div id="workshopQuickAccessToolbar" role="toolbar" aria-label="Workshop quick access">
-      <button id="workshopQuickCube" type="button" aria-pressed="true" onclick="chooseWorkshopBuildShape('cube')"><span class="workshop-control-icon" aria-hidden="true">🧊</span><span>Cube</span></button>
       <button id="workshopQuickSelect" type="button" onclick="startSelectMode()"><span class="workshop-control-icon" aria-hidden="true">⌖</span><span>Select</span></button>
       <button id="workshopQuickUndo" type="button" onclick="undoLast()" disabled><span class="workshop-control-icon" aria-hidden="true">↶</span><span>Undo</span></button>
       <button id="workshopQuickDelete" type="button" onclick="deleteWorkshopSelectedStructure()"><span class="workshop-control-icon" aria-hidden="true">✕</span><span>Delete</span></button>
@@ -5843,13 +5845,6 @@ function syncWorkshopBuildShapeControls(shape){
     );
   });
 
-  const workshopQuickCube = document.getElementById("workshopQuickCube");
-  if(workshopQuickCube){
-    workshopQuickCube.setAttribute(
-      "aria-pressed",
-      requestedShape === "cube" ? "true" : "false"
-    );
-  }
 }
 
 const blockShapeSelect = document.getElementById("blockShape");
@@ -7533,7 +7528,79 @@ function showToolInfo(toolId){
 }
   
 
-function setGroundColor(color){
+const builderMissionPlatformTextureSpecs=Object.freeze({
+  castle:Object.freeze({family:"fine-stone",seed:1103,contrast:0.12,repeat:10}),
+  playground:Object.freeze({family:"rubber-safety-grain",seed:2207,contrast:0.11,repeat:12}),
+  habitat:Object.freeze({family:"natural-earth",seed:3301,contrast:0.055,repeat:10}),
+  dragon:Object.freeze({family:"dark-rock",seed:4409,contrast:0.14,repeat:9}),
+  futureCity:Object.freeze({family:"architectural-concrete",seed:5501,contrast:0.10,repeat:12}),
+  weather:Object.freeze({family:"weather-resistant-concrete",seed:6607,contrast:0.05,repeat:11}),
+  energy:Object.freeze({family:"industrial-composite",seed:7703,contrast:0.05,repeat:12}),
+  moon:Object.freeze({family:"lunar-dust",seed:8803,contrast:0.13,repeat:10}),
+  mars:Object.freeze({family:"rust-mineral",seed:9901,contrast:0.14,repeat:10}),
+  engineering:Object.freeze({family:"technical-composite",seed:10103,contrast:0.11,repeat:12})
+});
+const builderMissionPlatformTextureCache=new Map();
+
+function builderPlatformNoise(x,y,seed){
+  var value=Math.sin((x*12.9898)+(y*78.233)+(seed*0.017))*43758.5453;
+  return value-Math.floor(value);
+}
+
+function createBuilderMissionPlatformTexture(spec){
+  var canvas=document.createElement("canvas");
+  canvas.width=128;
+  canvas.height=128;
+  var context=canvas.getContext("2d",{alpha:false});
+  var pixels=context.createImageData(canvas.width,canvas.height);
+  var family=spec.family;
+  for(var y=0;y<canvas.height;y+=1){
+    for(var x=0;x<canvas.width;x+=1){
+      var fine=builderPlatformNoise(x,y,spec.seed)-0.5;
+      var broad=builderPlatformNoise(Math.floor(x/5),Math.floor(y/5),spec.seed+37)-0.5;
+      var grain=fine*0.72+broad*0.28;
+      if(family==="rubber-safety-grain" || family==="technical-composite" || family==="industrial-composite"){
+        grain=fine*0.9+((x+y+spec.seed)%17===0 ? -0.1 : 0);
+      }else if(family==="dark-rock" || family==="lunar-dust" || family==="rust-mineral"){
+        grain=fine*0.55+broad*0.45;
+      }
+      var level=Math.round(255*(1+(grain*2*spec.contrast)));
+      level=Math.max(0,Math.min(255,level));
+      var offset=(y*canvas.width+x)*4;
+      pixels.data[offset]=level;
+      pixels.data[offset+1]=level;
+      pixels.data[offset+2]=level;
+      pixels.data[offset+3]=255;
+    }
+  }
+  context.putImageData(pixels,0,0);
+  var texture=new THREE.CanvasTexture(canvas);
+  texture.wrapS=THREE.RepeatWrapping;
+  texture.wrapT=THREE.RepeatWrapping;
+  texture.repeat.set(spec.repeat,spec.repeat);
+  texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+  if("colorSpace" in texture && THREE.SRGBColorSpace) texture.colorSpace=THREE.SRGBColorSpace;
+  texture.userData={
+    builderPlatformTextureFamily:spec.family,
+    builderPlatformTextureContrast:spec.contrast,
+    builderPlatformTextureCached:true
+  };
+  return texture;
+}
+
+function getBuilderMissionPlatformTexture(missionKey){
+  var spec=builderMissionPlatformTextureSpecs[missionKey];
+  if(!spec) return null;
+  if(!builderMissionPlatformTextureCache.has(missionKey)){
+    builderMissionPlatformTextureCache.set(
+      missionKey,
+      createBuilderMissionPlatformTexture(spec)
+    );
+  }
+  return builderMissionPlatformTextureCache.get(missionKey);
+}
+
+function setGroundColor(color,missionKey){
   const greenGroundColors = [0x55aa55, 0x228B22, 0x3f8f36, 0x5fb14a];
 
   if(greenGroundColors.includes(color)){
@@ -7541,9 +7608,15 @@ function setGroundColor(color){
     return;
   }
 
-  ground.material.map = null;
+  var missionTexture=missionKey
+    ? getBuilderMissionPlatformTexture(missionKey)
+    : null;
+  ground.material.map = missionTexture;
   ground.material.color.set(color);
   ground.material.needsUpdate = true;
+  ground.userData.builderPlatformTextureFamily=missionTexture
+    ? missionTexture.userData.builderPlatformTextureFamily
+    : "plain";
   syncEngineeringGridStyle(false);
 }
 
@@ -11723,7 +11796,7 @@ cameraDistance = 24;
 cameraHeight = 5;
 updateCamera();
   
-setGroundColor(0x999999);
+setGroundColor(0x999999,"castle");
 setSkyColor(0x87CEEB);
 addMovingClouds(); 
 
@@ -11789,7 +11862,7 @@ cameraDistance = 24;
 cameraHeight = 5;
 updateCamera();
   
-setGroundColor(0xDEB887);
+setGroundColor(0xDEB887,"playground");
 setSkyColor(0xB0E2FF);
 addMovingClouds();
   
@@ -11868,7 +11941,7 @@ cameraDistance = 24;
 cameraHeight = 5;
 updateCamera();
   
-setGroundColor(0x55aa55);
+setGroundColor(0x55aa55,"habitat");
 setSkyColor(0x87CEEB);
 addMovingClouds();
 
@@ -11932,7 +12005,7 @@ cameraDistance = 24;
 cameraHeight = 5;
 updateCamera();
   
-setGroundColor(0x333333);
+setGroundColor(0x333333,"dragon");
 setSkyColor(0xFF8C00);
 addDragonSmoke();
 
@@ -11989,7 +12062,7 @@ function buildFutureCity(){
 
 resetWorld();
 resetChecklist();
-setGroundColor(0x777777);
+setGroundColor(0x777777,"futureCity");
 setSkyColor(0x191970);
 
 addStars();
@@ -12061,7 +12134,7 @@ function buildSpaceColony(planet = "moon"){
   updateCamera();
 
   const isMars = planet === "mars";
-  setGroundColor(isMars ? 0x8B3A20 : 0x777777);
+  setGroundColor(isMars ? 0x8B3A20 : 0x777777,isMars ? "mars" : "moon");
   setSkyColor(isMars ? 0x6B2B1A : 0x000022);
 
   clearAtmosphere();
@@ -12148,7 +12221,7 @@ function buildEnergyCity(){
   cameraHeight = 5;
   updateCamera();
 
-  setGroundColor(0x55aa55);
+  setGroundColor(0x55aa55,"energy");
   setSkyColor(0x87CEEB);
   addMovingClouds();
 
@@ -12262,7 +12335,7 @@ function buildWeatherWorld(){
   cameraHeight = 5;
   updateCamera();
 
-  setGroundColor(0x55aa55);
+  setGroundColor(0x55aa55,"weather");
   setSkyColor(0x87CEEB);
 
   addMovingClouds();
@@ -12342,7 +12415,7 @@ function buildEngineeringWorld(){
   cameraHeight = 5;
   updateCamera();
 
-  setGroundColor(0x777777);
+  setGroundColor(0x777777,"engineering");
   setSkyColor(0x87CEEB);
   addMovingClouds();
 
@@ -17522,7 +17595,364 @@ Reader controls stay in one fixed place during read aloud.
 HTML/JS SECTION — HELP POPUP
 Small help modal kept inline for now.
 ===================================================== -->
-<div id="helpModal"><div id="helpBox"><h2>How to Use the Builder</h2><ol><li>Choose a world.</li><li>Select an object or block.</li><li>Build your idea.</li><li>Use the tools to move, rotate, or color objects.</li><li>Complete your mission.</li><li><strong>Reading with BOB:</strong> Press <strong>Tab</strong> to focus a reading word, then press <strong>Enter</strong> or <strong>Space</strong> to have BOB read from that word.</li></ol><button id="closeHelp">Close</button></div></div><script>document.addEventListener("DOMContentLoaded",()=>{const b=document.getElementById("helpButton"),m=document.getElementById("helpModal"),c=document.getElementById("closeHelp");b.onclick=()=>m.style.display="block";c.onclick=()=>m.style.display="none";m.onclick=e=>{if(e.target===m)m.style.display="none"}});</script>
+<div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpDialogTitle" aria-describedby="helpDialogSummary" hidden>
+  <div id="helpBox" tabindex="-1">
+    <header id="helpDialogHeader">
+      <div>
+        <p id="helpDialogEyebrow">THINKamigBOB HELP</p>
+        <h2 id="helpDialogTitle">Builder Help</h2>
+        <p id="helpDialogSummary">Pick a topic or scroll to learn what each tool does.</p>
+      </div>
+      <button id="closeHelp" type="button" aria-label="Close Help">Close</button>
+    </header>
+    <div id="helpNavigationBar">
+      <label for="helpSectionSelect">Jump to</label>
+      <select id="helpSectionSelect">
+        <option value="getting-started">Getting Started</option>
+        <option value="building-editing">Building and Editing</option>
+        <option value="moving-camera">Moving the Camera</option>
+        <option value="saving-work">Saving Your Work</option>
+        <option value="bob-reading">THINKer BOB and Reading</option>
+        <option value="gears-upgrades">Gears and Workshop Upgrades</option>
+        <option value="engineering-tools">Workshop Engineering Tools</option>
+        <option value="cursor-guide">Cursor Guide</option>
+        <option value="troubleshooting">Troubleshooting</option>
+      </select>
+    </div>
+    <div id="helpContentViewport" tabindex="0" aria-label="Help topics">
+      <article id="builderHelpContent" class="helpContextContent" data-help-context="builder">
+        <section data-help-section="getting-started">
+          <h3>Getting Started</h3>
+          <div class="helpQuickStart" aria-labelledby="builderHelpQuickStartTitle">
+            <h4 id="builderHelpQuickStartTitle">Builder Quick Start</h4>
+            <ol>
+              <li>Pick a shape and color.</li>
+              <li>Move the CAD crosshair onto the platform.</li>
+              <li>Click to place a block.</li>
+              <li>Use Select, Move, or Delete to change your build.</li>
+              <li>Save your work before leaving.</li>
+            </ol>
+          </div>
+          <p><strong>Builder Challenge:</strong> Use the checklist for mission goals. Check each goal as you finish it.</p>
+          <p><strong>Shapes &amp; Colors:</strong> Pick Cube, Sphere, Wedge, or another available shape. Then choose its color.</p>
+        </section>
+        <section data-help-section="building-editing">
+          <h3>Building and Editing</h3>
+          <p><strong>Place:</strong> Move the CAD crosshair to an open platform spot and click or tap.</p>
+          <p><strong>Select:</strong> Choose an object before changing it. <strong>Move</strong> repositions it. <strong>Delete</strong> removes it.</p>
+          <p><strong>Foundation:</strong> Add or work with the mission's starting foundation.</p>
+          <p><strong>Undo / Redo:</strong> Undo reverses your last change. Redo brings that change back.</p>
+          <p><strong>Reset:</strong> Start the current mission build over. Read the warning before confirming.</p>
+          <p><strong>Grid On / Off:</strong> Show the building grid for alignment, or hide it for a clear view.</p>
+          <p><strong>Screenshot:</strong> Save a picture of your build.</p>
+        </section>
+        <section data-help-section="moving-camera">
+          <h3>Moving the Camera</h3>
+          <p><strong>View Cube:</strong> Click a face to look from that direction. Drag the cube to orbit. Double-click it for Home.</p>
+          <p><strong>Build view:</strong> Drag to orbit around the build. Use the mouse wheel or trackpad to zoom. Use Home to return to the mission view.</p>
+        </section>
+        <section data-help-section="saving-work">
+          <h3>Saving Your Work</h3>
+          <p><strong>Save:</strong> Name your build the first time. Builder suggests a name from your mission and downloads a project file.</p>
+          <p><strong>Open:</strong> Choose a saved THINKamigBOB project file. Builder checks it before replacing your build.</p>
+          <p><strong>Return to Missions:</strong> Go back to choose another mission. Save first if you want a project file to keep.</p>
+          <p><strong>Badges and Passport:</strong> Badges celebrate accomplishments. Passport shows your progress across missions.</p>
+          <p><strong>Open Workshop:</strong> Enter the engineering workspace. Your Builder project stays safe in Builder.</p>
+        </section>
+        <section data-help-section="bob-reading">
+          <h3>THINKer BOB and Reading</h3>
+          <p><strong>Open Library:</strong> Choose a STEM reading. Yellow vocabulary words can open meanings and build ideas.</p>
+          <p><strong>Read to BOB:</strong> Practice reading aloud. Allow microphone access when your browser asks.</p>
+          <p><strong>Voice Reader:</strong> Let BOB read text aloud. Click a word to start reading there.</p>
+          <p><strong>Calm Mode:</strong> Use quieter motion and presentation while keeping the tools available.</p>
+        </section>
+        <section data-help-section="gears-upgrades">
+          <h3>Gears and Workshop Upgrades</h3>
+          <p><strong>Gear total:</strong> Gears add up as you complete STEM work. They are never spent.</p>
+          <p><strong>Next Workshop Upgrade:</strong> The header shows how many more Gears unlock the next Workshop upgrade.</p>
+        </section>
+        <section data-help-section="engineering-tools">
+          <h3>Workshop Engineering Tools</h3>
+          <p>Use <strong>Open Workshop</strong> for precision tools, rulers, measurements, and engineering parts. Workshop Help explains those tools.</p>
+        </section>
+        <section data-help-section="cursor-guide">
+          <h3>Cursor Guide</h3>
+          <p><strong>CAD crosshair:</strong> The pointer is over an area where you can build or interact with the 3D platform.</p>
+          <p><strong>Industrial gear cursor:</strong> The pointer is over interface tools, panels, or controls.</p>
+        </section>
+        <section data-help-section="troubleshooting">
+          <h3>Troubleshooting</h3>
+          <p><strong>A block will not place:</strong> Move onto the platform, choose a shape, and try an open spot.</p>
+          <p><strong>Move or Delete does nothing:</strong> Select the object first, then choose the action.</p>
+          <p><strong>The camera moved unexpectedly:</strong> Stop dragging and use Home or a View Cube face.</p>
+          <p><strong>A saved project is missing:</strong> Check the Chromebook Downloads folder, then reopen the file chooser.</p>
+          <p><strong>Read to BOB cannot use the microphone:</strong> Allow microphone access in the browser and try again.</p>
+          <p><strong>A Workshop tool is locked:</strong> Keep earning Gears to reach the next Workshop upgrade.</p>
+          <p><strong>Controls do not fit on a Chromebook:</strong> Use the panel's scrollbar. Keep browser zoom at its normal setting.</p>
+        </section>
+      </article>
+      <article id="workshopHelpContent" class="helpContextContent" data-help-context="workshop" hidden>
+        <section data-help-section="getting-started">
+          <h3>Getting Started</h3>
+          <div class="helpQuickStart" aria-labelledby="workshopHelpQuickStartTitle">
+            <h4 id="workshopHelpQuickStartTitle">Workshop Quick Start</h4>
+            <ol>
+              <li>Open Workshop.</li>
+              <li>Choose a part or engineering tool.</li>
+              <li>Place or select an object on the platform.</li>
+              <li>Use the View controls to inspect it.</li>
+              <li>Save your work before leaving.</li>
+            </ol>
+          </div>
+          <p><strong>Enter Workshop:</strong> Use Open Workshop in Builder. <strong>Return to Mission</strong> leaves Workshop and returns to Builder.</p>
+          <p>Your Builder project stays in Builder. Your current Workshop draft is preserved when you leave and return.</p>
+        </section>
+        <section data-help-section="building-editing">
+          <h3>Building and Editing</h3>
+          <p><strong>Add:</strong> Choose Shapes or Parts &amp; Objects in the Tool Chest, then place an eligible item on the active Grid.</p>
+          <p><strong>Select:</strong> Select One chooses one item. Select Multiple refines a connected build. Select Stack chooses a vertical stack.</p>
+          <p><strong>Move:</strong> Reposition the selection. <strong>Rotate</strong> turns supported objects. <strong>Delete</strong> removes the selection.</p>
+          <p><strong>Undo / Redo:</strong> Step backward or forward through committed Workshop changes.</p>
+        </section>
+        <section data-help-section="moving-camera">
+          <h3>Moving the Camera</h3>
+          <p><strong>Workshop Home:</strong> Return to the centered, bounded engineering workspace.</p>
+          <p><strong>Fit Selection:</strong> Frame the selected object or build without changing its coordinates.</p>
+          <p><strong>View Cube and View Remote:</strong> Choose Top, Front, Back, Left, Right, or Bottom. Drag only when you mean to orbit.</p>
+          <p><strong>Grid and rulers:</strong> Grid cells and ruler numbers show real engineering coordinates. Zooming can reveal more workspace.</p>
+        </section>
+        <section data-help-section="saving-work">
+          <h3>Saving Your Work</h3>
+          <p><strong>Save:</strong> Name and download a validated Workshop project file.</p>
+          <p><strong>Open:</strong> Choose a supported Workshop project file. Workshop checks the whole file before changing your draft.</p>
+          <p><strong>Unsaved changes:</strong> A warning may offer Save, Discard, or Cancel before Open or New replaces changed work. Cancel keeps everything as it is.</p>
+        </section>
+        <section data-help-section="bob-reading">
+          <h3>THINKer BOB and Reading</h3>
+          <p>Return to Builder to use Open Library, Read to BOB, Voice Reader, and Calm Mode. Your Workshop draft remains protected.</p>
+        </section>
+        <section data-help-section="gears-upgrades">
+          <h3>Gears and Workshop Upgrades</h3>
+          <p>Gears are cumulative and never spent. Keep earning Gears in STEM work to unlock Workshop upgrades automatically.</p>
+          <p>If a tool is locked, the Builder header shows your progress toward the next Workshop Upgrade.</p>
+        </section>
+        <section data-help-section="engineering-tools">
+          <h3>Workshop Engineering Tools</h3>
+          <p><strong>Tool Chest:</strong> Open its drawers for shapes, parts, materials, favorites, and engineering tools.</p>
+          <p><strong>Engineering Table:</strong> The central platform is your measured build surface. The Grid and active frame show where building is allowed.</p>
+          <p><strong>Projector:</strong> Use supported projection tools to present engineering information without changing object coordinates.</p>
+          <p><strong>Smart Board:</strong> Displays supported project and measurement information.</p>
+          <p><strong>Measurement Assistant:</strong> Reports the current selection's real dimensions and units.</p>
+        </section>
+        <section data-help-section="cursor-guide">
+          <h3>Cursor Guide</h3>
+          <p><strong>CAD crosshair:</strong> The pointer is over an area where you can build or interact with the 3D platform.</p>
+          <p><strong>Industrial gear cursor:</strong> The pointer is over interface tools, panels, or controls.</p>
+        </section>
+        <section data-help-section="troubleshooting">
+          <h3>Troubleshooting</h3>
+          <p><strong>A block will not place:</strong> Keep the whole object inside the active Grid and away from collisions.</p>
+          <p><strong>Move or Delete does nothing:</strong> Select an eligible object or structure first.</p>
+          <p><strong>The camera moved unexpectedly:</strong> Press Home once, or choose a View Remote direction.</p>
+          <p><strong>A saved project is missing:</strong> Check Downloads, then choose Open again. Unsupported files fail safely.</p>
+          <p><strong>Read to BOB cannot use the microphone:</strong> Return to Builder and allow microphone access in the browser.</p>
+          <p><strong>A Workshop tool is locked:</strong> Keep earning Gears until its Workshop upgrade unlocks.</p>
+          <p><strong>Controls do not fit on a Chromebook:</strong> Scroll inside the tool panel or Help window, not the page.</p>
+        </section>
+      </article>
+    </div>
+  </div>
+</div>
+<style id="builderWorkshopExpandedHelpCSS">
+body.helpOpen{overflow:hidden !important;}
+#helpModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:2600;
+  align-items:center;
+  justify-content:center;
+  padding:clamp(10px,2vh,24px);
+  background:rgba(2,16,27,.78);
+  backdrop-filter:blur(4px);
+}
+#helpModal:not([hidden]){display:flex;}
+#helpBox{
+  display:grid;
+  grid-template-rows:auto auto minmax(0,1fr);
+  width:min(860px,calc(100vw - 24px));
+  height:min(720px,calc(100vh - 24px));
+  max-width:none;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  color:#f5fbff;
+  background:linear-gradient(160deg,#173e51,#092638 72%);
+  border:2px solid #55e7ff;
+  border-radius:18px;
+  box-shadow:0 18px 55px rgba(0,0,0,.48),inset 0 0 0 3px rgba(227,184,63,.3);
+}
+#helpDialogHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  min-height:76px;
+  padding:12px 16px;
+  background:rgba(3,26,40,.96);
+  border-bottom:2px solid #d9aa32;
+}
+#helpDialogEyebrow{margin:0 0 2px;color:#76edff;font-size:12px;font-weight:900;letter-spacing:.14em;}
+#helpDialogTitle{margin:0;color:#fff;font-size:clamp(22px,3vw,30px);line-height:1.05;}
+#helpDialogSummary{margin:4px 0 0;color:#d8edf5;font-size:14px;}
+#closeHelp{
+  position:static;
+  flex:0 0 auto;
+  min-width:92px;
+  min-height:44px;
+  padding:8px 14px;
+  color:#071a28;
+  background:#f4c94f;
+  border:2px solid #fff1a4;
+  border-radius:11px;
+  font-size:16px;
+  font-weight:900;
+}
+#closeHelp:focus-visible,#helpSectionSelect:focus-visible{outline:3px solid #fff;outline-offset:2px;}
+#helpNavigationBar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 16px;
+  background:rgba(8,44,59,.98);
+  border-bottom:1px solid rgba(118,237,255,.45);
+}
+#helpNavigationBar label{font-weight:900;color:#f4c94f;}
+#helpSectionSelect{
+  flex:1;
+  min-width:0;
+  min-height:44px;
+  padding:7px 34px 7px 10px;
+  color:#fff;
+  background:#071d2c;
+  border:2px solid #4edff7;
+  border-radius:9px;
+  font:700 15px/1.2 system-ui,sans-serif;
+}
+#helpContentViewport{
+  min-height:0;
+  overflow-y:scroll;
+  overscroll-behavior:contain;
+  touch-action:pan-y;
+  scrollbar-gutter:stable;
+  padding:12px 18px 28px;
+  scroll-behavior:smooth;
+}
+#helpContentViewport::-webkit-scrollbar{width:15px;}
+#helpContentViewport::-webkit-scrollbar-track{background:#041b29;border-left:1px solid #32798b;}
+#helpContentViewport::-webkit-scrollbar-thumb{min-height:44px;background:#5be5fa;border:3px solid #041b29;border-radius:12px;}
+.helpContextContent[hidden]{display:none !important;}
+.helpContextContent{max-width:760px;margin:0 auto;}
+.helpContextContent section{padding:12px 4px 15px;border-bottom:1px solid rgba(118,237,255,.25);scroll-margin-top:8px;}
+.helpContextContent section:last-child{border-bottom:0;}
+.helpContextContent h3{margin:0 0 9px;color:#f4c94f;font-size:clamp(19px,2.4vw,24px);}
+.helpContextContent h4{margin:0 0 7px;color:#7cf0ff;font-size:17px;}
+.helpContextContent p,.helpContextContent li{font:600 clamp(14px,1.8vw,17px)/1.45 system-ui,sans-serif;}
+.helpContextContent p{margin:7px 0;}
+.helpContextContent strong{color:#8ff3ff;}
+.helpQuickStart{padding:12px 14px;margin:2px 0 12px;background:rgba(4,20,31,.68);border:1px solid #5eeaff;border-radius:12px;}
+.helpQuickStart ol{margin:0;padding-left:24px;}
+.helpQuickStart li+li{margin-top:4px;}
+@media(max-width:700px), (max-height:620px){
+  #helpModal{padding:6px;}
+  #helpBox{width:calc(100vw - 12px);height:calc(100vh - 12px);border-radius:13px;}
+  #helpDialogHeader{min-height:66px;padding:9px 11px;}
+  #helpDialogSummary{font-size:12px;}
+  #closeHelp{min-width:78px;}
+  #helpNavigationBar{padding:6px 10px;}
+  #helpNavigationBar label{font-size:13px;}
+  #helpContentViewport{padding:7px 12px 20px;}
+  .helpContextContent section{padding-top:9px;}
+}
+</style>
+<script id="builderWorkshopExpandedHelpScript">
+document.addEventListener("DOMContentLoaded",function(){
+  var button=document.getElementById("helpButton");
+  var modal=document.getElementById("helpModal");
+  var box=document.getElementById("helpBox");
+  var closeButton=document.getElementById("closeHelp");
+  var title=document.getElementById("helpDialogTitle");
+  var summary=document.getElementById("helpDialogSummary");
+  var sectionSelect=document.getElementById("helpSectionSelect");
+  var builderContent=document.getElementById("builderHelpContent");
+  var workshopContent=document.getElementById("workshopHelpContent");
+  var previousFocus=null;
+  if(!button||!modal||!box||!closeButton||!title||!summary||!sectionSelect||!builderContent||!workshopContent) return;
+
+  function currentContext(){
+    return document.body.classList.contains("workshopMode") ? "workshop" : "builder";
+  }
+  function activeContent(){
+    return currentContext()==="workshop" ? workshopContent : builderContent;
+  }
+  function applyContext(){
+    var workshop=currentContext()==="workshop";
+    builderContent.hidden=workshop;
+    workshopContent.hidden=!workshop;
+    title.textContent=workshop ? "Workshop Help" : "Builder Help";
+    summary.textContent=workshop
+      ? "Use precision tools, views, measurements, and projects safely."
+      : "Build your mission, use THINKer BOB, and save your work.";
+    button.setAttribute("aria-label",workshop ? "Open Workshop Help" : "Open Builder Help");
+    button.setAttribute("title",workshop ? "Open Workshop Help" : "Open Builder Help");
+    sectionSelect.value="getting-started";
+    document.getElementById("helpContentViewport").scrollTop=0;
+  }
+  function openHelp(){
+    previousFocus=document.activeElement;
+    applyContext();
+    modal.hidden=false;
+    modal.style.display="flex";
+    button.setAttribute("aria-expanded","true");
+    document.body.classList.add("helpOpen");
+    closeButton.focus();
+  }
+  function closeHelp(){
+    modal.hidden=true;
+    modal.style.display="none";
+    button.setAttribute("aria-expanded","false");
+    document.body.classList.remove("helpOpen");
+    if(previousFocus && typeof previousFocus.focus==="function") previousFocus.focus();
+  }
+
+  button.setAttribute("aria-haspopup","dialog");
+  button.setAttribute("aria-controls","helpModal");
+  button.setAttribute("aria-expanded","false");
+  button.onclick=openHelp;
+  closeButton.onclick=closeHelp;
+  modal.onclick=function(event){ if(event.target===modal) closeHelp(); };
+  sectionSelect.onchange=function(){
+    var target=activeContent().querySelector('[data-help-section="'+sectionSelect.value+'"]');
+    if(target) target.scrollIntoView({block:"start"});
+  };
+  modal.addEventListener("keydown",function(event){
+    if(event.key==="Escape"){
+      event.preventDefault();
+      closeHelp();
+      return;
+    }
+    if(event.key!=="Tab") return;
+    var focusable=Array.prototype.slice.call(modal.querySelectorAll('button:not([disabled]),select:not([disabled]),[tabindex="0"]'))
+      .filter(function(control){ return control.offsetParent!==null; });
+    if(!focusable.length) return;
+    var first=focusable[0];
+    var last=focusable[focusable.length-1];
+    if(event.shiftKey && document.activeElement===first){ event.preventDefault(); last.focus(); }
+    else if(!event.shiftKey && document.activeElement===last){ event.preventDefault(); first.focus(); }
+  });
+  applyContext();
+});
+</script>
 
 <!-- =====================================================
 CSS SECTION — MISSION PASSPORT SHELL
@@ -31832,8 +32262,7 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls{
 #workshopViewTop,
 #workshopViewBottom,
 #workshopViewHome,
-#workshopFitSelection,
-#workshopPlatformColorButton{
+#workshopFitSelection{
   grid-column:1 / -1;
 }
 
@@ -31843,13 +32272,27 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls{
   filter:saturate(.45);
 }
 
-#workshopEngineeringViewControls #workshopPlatformColorButton{
-  min-height:38px;
-  margin-top:2px;
+#engineeringDrawerColorsMaterialsContent #workshopPlatformColorButton{
+  width:100%;
+  min-height:44px;
+  padding:8px 10px;
   border-color:#46c9e8;
+  border-radius:8px;
   color:#dffbff;
   background:linear-gradient(180deg,#184d67,#0a2f43 58%,#061c2b);
+  box-shadow:inset 0 1px rgba(255,255,255,.16),0 3px 8px rgba(0,0,0,.34);
+  font:900 9px/1 "Lexend",Arial,sans-serif;
   letter-spacing:.04em;
+}
+
+#engineeringDrawerColorsMaterialsContent #workshopPlatformColorButton:hover{
+  border-color:#8ff6ff;
+  filter:brightness(1.14);
+}
+
+#engineeringDrawerColorsMaterialsContent #workshopPlatformColorButton:focus-visible{
+  outline:3px solid #8ff6ff;
+  outline-offset:2px;
 }
 
 #workshopPlatformColorDialog{
@@ -32917,15 +33360,6 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls{
   font-size:9px;
 }
 
-#workshopEngineeringViewControls #workshopPlatformColorButton{
-  min-height:44px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  font-size:10px;
-}
-
 .workshop-ruler-label{
   font-size:10px;
   font-weight:800;
@@ -33168,18 +33602,12 @@ body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls but
   font-size:7px;
 }
 
-body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls #workshopPlatformColorButton{
-  min-height:44px;
-  margin-top:0;
-  font-size:8px;
-}
-
 body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceUtilityRail{
-  flex:0 0 44px;
+  flex:0 0 48px;
   position:static;
   display:grid;
-  grid-template-columns:minmax(44px,.78fr) minmax(44px,.78fr) minmax(70px,1.44fr);
-  grid-template-rows:44px;
+  grid-template-columns:repeat(2,minmax(44px,1fr));
+  grid-template-rows:48px;
   align-items:stretch;
   gap:4px;
   width:100%;
@@ -33196,23 +33624,13 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceUtilityRail #
   font-size:8px !important;
 }
 
-body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch{
-  grid-column:3;
-  grid-row:1;
-  width:100%;
-  height:44px;
-  min-height:44px;
-  padding:3px 4px;
-  font-size:7px !important;
-}
-
 .workshopUtilityProjectButton{display:none;}
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox .workshopUtilityProjectButton{
   display:block;
   width:100%;
-  height:44px;
-  min-height:44px;
+  height:48px;
+  min-height:48px;
   padding:3px 4px;
   border:0;
   border-radius:0;
@@ -33224,7 +33642,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox .workshopUtilityProject
   background-repeat:no-repeat;
   background-size:100% 100%;
   box-shadow:none;
-  font:900 7px/1 "Lexend",Arial,sans-serif;
+  font:900 9px/1 "Lexend",Arial,sans-serif;
   text-shadow:0 1px 2px rgba(0,0,0,.98),0 0 3px #ff267f,0 0 6px rgba(255,79,163,.9);
 }
 
@@ -33244,7 +33662,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilityOpen{
 body.workshopMode:not(.starterScreenActive) #viewCubeBox .workshopUtilityProjectButton::before{
   display:block;
   margin-bottom:1px;
-  font-size:10px;
+  font-size:12px;
   line-height:1;
 }
 
@@ -33254,6 +33672,18 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilitySave::b
 
 body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilityOpen::before{
   content:"📁";
+}
+
+/* Keep project labels crisp while retaining the existing icon and button
+   treatments. This is deliberately scoped away from every other control. */
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilitySave,
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilityOpen{
+  text-shadow:none;
+}
+
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilitySave::before,
+body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilityOpen::before{
+  text-shadow:0 1px 2px rgba(0,0,0,.98),0 0 3px #ff267f,0 0 6px rgba(255,79,163,.9);
 }
 
 @media(max-width:1100px){
@@ -33290,7 +33720,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workshopUtilityOpen::b
 
   body.workshopMode:not(.starterScreenActive) #viewCubeBox{
     top:calc(38px + 0.5mm) !important;
-    max-height:calc(100vh - 216px) !important;
+    max-height:calc(100vh - 202px) !important;
   }
 }
 
@@ -34040,34 +34470,52 @@ body.workshopMode:not(.starterScreenActive) #workshopViewHome .workshop-control-
   line-height:1;
 }
 
+body.workshopMode:not(.starterScreenActive) #workshopViewHome > span:not(.workshop-control-icon){
+  text-shadow:none;
+}
+
 body.workshopMode:not(.starterScreenActive) #workshopViewHome small{
   display:none;
 }
 
-body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch{
-  border:0;
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch{
+  --workshop-view-highlight:#236b9b;
+  --workshop-view-base:#082d50;
+  --workshop-view-shadow:#031323;
+  width:100%;
+  min-width:0;
+  height:44px;
+  min-height:44px;
+  padding:2px;
+  box-sizing:border-box;
+  border:7px solid transparent;
+  border-image-source:var(--workshop-builder-face);
+  border-image-slice:30;
+  border-image-width:7px;
+  border-image-repeat:stretch;
   border-radius:0;
   color:#ffad32;
-  background-color:transparent;
-  background-image:var(--workshop-builder-face);
-  background-position:center;
-  background-repeat:no-repeat;
-  background-size:100% 100%;
-  box-shadow:none;
-  font:900 13px/1.05 "Lexend",Arial,sans-serif;
+  background:linear-gradient(180deg,var(--workshop-view-highlight),var(--workshop-view-base) 42%,var(--workshop-view-shadow));
+  box-shadow:inset 0 0 0 2px #7fefff,inset 0 1px rgba(255,255,255,.18);
+  font:900 10px/1.05 "Lexend",Arial,sans-serif;
   text-shadow:0 1px 2px rgba(0,0,0,.98),0 0 2px #ff8a00,0 0 5px rgba(255,159,28,.9);
 }
 
-body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch .workspaceModeIcon{
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar{
+  grid-template-columns:minmax(82px,1.45fr) repeat(5,minmax(44px,1fr));
+  gap:2px;
+}
+
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch .workspaceModeIcon{
   display:none;
 }
 
-body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[aria-pressed="true"] .workspaceModeLabel{
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch[aria-pressed="true"] .workspaceModeLabel{
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  flex-wrap:wrap;
-  column-gap:2px;
+  gap:1px;
   color:#dffaff;
   -webkit-text-fill-color:#dffaff;
   text-transform:uppercase;
@@ -34075,14 +34523,15 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[ar
   text-shadow:none;
 }
 
-body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[aria-pressed="true"] .workspaceModeReturnLine{
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch[aria-pressed="true"] .workspaceModeReturnLine{
   display:inline-flex;
   align-items:center;
-  font:900 6px/1 "Lexend",Arial,sans-serif;
+  justify-content:center;
+  font:900 8px/1 "Lexend",Arial,sans-serif;
   letter-spacing:0;
 }
 
-body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[aria-pressed="true"] .workspaceModeReturnIcon{
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch[aria-pressed="true"] .workspaceModeReturnIcon{
   display:inline-block;
   margin-right:2px;
   color:#fff;
@@ -34091,23 +34540,23 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[ar
   text-shadow:none;
 }
 
-body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[aria-pressed="true"] .workspaceModeReturnWords{
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch[aria-pressed="true"] .workspaceModeReturnWords{
   color:#bff7ff;
   -webkit-text-fill-color:#bff7ff;
-  text-shadow:0 1px 2px rgba(0,0,0,.98),0 0 3px #45cce8,0 0 8px rgba(137,238,255,.96);
+  text-shadow:none;
 }
 
-body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[aria-pressed="true"] .workspaceModeMissionLine{
-  display:inline;
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch[aria-pressed="true"] .workspaceModeMissionLine{
+  display:block;
   margin-top:0;
   color:#effeff;
   -webkit-text-fill-color:#effeff;
-  font:900 7px/1 "Lexend",Arial,sans-serif;
+  font:900 8px/1 "Lexend",Arial,sans-serif;
   letter-spacing:.015em;
-  text-shadow:0 1px 2px rgba(0,0,0,.98),0 0 3px #45cce8,0 0 8px rgba(137,238,255,.96);
+  text-shadow:none;
 }
 
-body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch[aria-pressed="true"]{
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch[aria-pressed="true"]{
   filter:brightness(1.16) saturate(1.2) drop-shadow(0 0 4px rgba(69,204,232,.82));
 }
 
@@ -34123,14 +34572,13 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox .workshopUtilityProject
   filter:brightness(.88);
 }
 
-body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:hover{
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch:hover{
   color:#ffffff;
-  background-image:var(--workshop-builder-face);
   filter:brightness(1.28) saturate(1.18) drop-shadow(0 0 7px rgba(127,239,255,.78)) drop-shadow(0 0 3px rgba(255,213,92,.58));
   transform:translateY(-1px);
 }
 
-body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:active{
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch:active{
   transform:translateY(1px);
   filter:brightness(.88);
   box-shadow:none;
@@ -34159,7 +34607,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
   body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button,
   body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button,
   body.workshopMode:not(.starterScreenActive) #workshopEngineeringViewControls button[data-workshop-view],
-  body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch{
+  body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch{
     transition:none;
   }
 
@@ -34171,8 +34619,8 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
   body.workshopMode:not(.starterScreenActive) #workshopConsoleTabs button:active:not(:disabled),
   body.workshopMode:not(.starterScreenActive) .workshop-dashboard-controls button:active:not(:disabled),
   body.workshopMode:not(.starterScreenActive) .workshop-design-group-controls button:active:not(:disabled),
-  body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:hover,
-  body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:active{
+  body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch:hover,
+  body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch:active{
     transform:none;
   }
 }
@@ -37121,8 +37569,11 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     var helpButton=document.getElementById("helpButton");
     var modeSwitch=document.getElementById("workspaceModeSwitch");
     if(mode==="workshop"){
+      var quickToolbar=document.getElementById("workshopQuickAccessToolbar");
       if(helpButton && helpButton.parentElement!==utilityRail) utilityRail.appendChild(helpButton);
-      if(modeSwitch && modeSwitch.parentElement!==utilityRail) utilityRail.appendChild(modeSwitch);
+      if(modeSwitch && quickToolbar && modeSwitch.parentElement!==quickToolbar){
+        quickToolbar.insertBefore(modeSwitch,quickToolbar.firstElementChild);
+      }
       if(controlStation && utilityRail.parentElement!==controlStation) controlStation.appendChild(utilityRail);
       return;
     }
@@ -39435,6 +39886,7 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     var workshopDashboard=document.getElementById("workshopDashboard");
     var engineeringToolChest=document.getElementById("engineeringToolChest");
     var engineeringViewControls=document.getElementById("workshopEngineeringViewControls");
+    var platformColorButton=document.getElementById("workshopPlatformColorButton");
     var platformColorDialog=document.getElementById("workshopPlatformColorDialog");
     var platformColorConfirm=document.getElementById("workshopPlatformColorConfirm");
     var platformColorDialogCancel=document.getElementById("workshopPlatformColorDialogCancel");
@@ -39564,17 +40016,15 @@ body.workshopMode:not(.starterScreenActive) #viewCubeBox #workspaceModeSwitch:ac
     if(projectDialog){
       projectDialog.addEventListener("keydown",handleWorkshopProjectDialogKeydown);
     }
+    if(platformColorButton){
+      platformColorButton.addEventListener("click",openPlatformColorDialog);
+    }
 
     if(engineeringViewControls){
       engineeringViewControls.addEventListener("click",function(event){
         var fitSelectionButton=event.target.closest("#workshopFitSelection");
         if(fitSelectionButton && engineeringViewControls.contains(fitSelectionButton)){
           fitWorkshopSelection();
-          return;
-        }
-        var platformColorButton=event.target.closest("#workshopPlatformColorButton");
-        if(platformColorButton && engineeringViewControls.contains(platformColorButton)){
-          openPlatformColorDialog();
           return;
         }
         var button=event.target.closest("[data-workshop-view]");
@@ -43600,6 +44050,49 @@ body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadProjectAction
     display:block !important;
     font-size:clamp(9px,1.35vh,12px) !important;
   }
+}
+</style>
+<style id="builderNavigationNameplateAquaPerimeterCSS">
+/* Builder navigation keeps the authored brass-and-aqua PNG contour. Increase
+   its physical-screen clarity without drawing a second CSS frame or changing
+   the button geometry. */
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #returnMissionsButton,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceModeSwitch{
+  filter:brightness(1.10) saturate(1.24) contrast(1.06) drop-shadow(0 4px 4px rgba(0,0,0,.32)) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #returnMissionsButton:hover,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceModeSwitch:hover{
+  filter:brightness(1.20) saturate(1.28) contrast(1.06) drop-shadow(0 5px 5px rgba(0,0,0,.34)) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #returnMissionsButton:active,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceModeSwitch:active{
+  filter:brightness(.92) saturate(1.18) contrast(1.04) drop-shadow(0 2px 3px rgba(0,0,0,.28)) !important;
+}
+</style>
+<style id="builderWorkshopCadCursorCSS">
+/* Keep cursor ownership aligned with interaction ownership: the live Three.js
+   canvas is the build surface; every surrounding Builder/Workshop surface is
+   interface chrome. */
+:root{
+  --builder-tools-gold-gear-cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg id='goldGear8Teeth' fill='%23d9a326' stroke='%23072535' stroke-width='1.4' stroke-linejoin='miter'%3E%3Crect x='13' y='1' width='6' height='9'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(45 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(90 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(135 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(180 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(225 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(270 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(315 16 16)'/%3E%3Ccircle cx='16' cy='16' r='10.2'/%3E%3C/g%3E%3Ccircle id='aquaEdgeHighlight' cx='16' cy='16' r='9.4' fill='none' stroke='%235eeaff' stroke-width='.8'/%3E%3Ccircle id='darkCenterHole' cx='16' cy='16' r='4.1' fill='%23192834' stroke='%23072535' stroke-width='1.3'/%3E%3C/svg%3E") 16 16,default;
+  --builder-cad-crosshair-cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23072535' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%235eeaff' stroke-width='1.4'/%3E%3Cpath d='M16 1v10M16 21v10M1 16h10M21 16h10' stroke='%23072535' stroke-width='3'/%3E%3Cpath d='M16 1v10M16 21v10M1 16h10M21 16h10' stroke='%235eeaff' stroke-width='1.4'/%3E%3Ccircle cx='16' cy='16' r='1.7' fill='%23f6c744' stroke='%23072535'/%3E%3C/svg%3E") 16 16,crosshair;
+}
+
+body:not(.starterScreenActive),
+body:not(.starterScreenActive) *{
+  cursor:var(--builder-tools-gold-gear-cursor) !important;
+}
+
+body:not(.starterScreenActive) > canvas:not(#viewCubeCanvas){
+  cursor:var(--builder-cad-crosshair-cursor) !important;
+}
+
+body:not(.starterScreenActive) #viewCubeCanvas{
+  cursor:grab !important;
+}
+
+body:not(.starterScreenActive) #viewCubeCanvas:active{
+  cursor:grabbing !important;
 }
 </style>
 <script type="module" id="builderGearWorkshopUpgradeProgressScript">

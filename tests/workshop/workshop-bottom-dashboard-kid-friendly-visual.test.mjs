@@ -94,7 +94,9 @@ test("future controls live only in the retained More Tools route", () => {
 test("Quick Access and accessible dashboard language remain authoritative", () => {
   assert.match(source,/id="workshopDashboard"[^>]*aria-label="Workshop design tools, Advanced mode"/);
   assert.match(source,/id="workshopConsoleTabs"[^>]*aria-label="Workshop tool areas"/);
-  assert.equal((source.match(/id="workshopQuick(?:Cube|Select|Undo|Delete|Screenshot|Help)"/g)||[]).length,6);
+  assert.equal((source.match(/id="workshopQuick(?:Select|Undo|Delete|Screenshot|Help)"/g)||[]).length,5);
+  assert.doesNotMatch(source,/id="workshopQuickCube"/);
+  assert.match(source,/quickToolbar\.insertBefore\(modeSwitch,quickToolbar\.firstElementChild\)/);
   assert.match(source,/"Workshop design tools, "[\s\S]*?"Advanced mode"/);
 });
 
@@ -133,13 +135,16 @@ test("Builder-style theme preserves state and Chromebook geometry contracts", ()
   assert.doesNotMatch(theme,/#workshopView(?:Top|Front|Back|Left|Right|Bottom)\{/);
   assert.match(theme,/#workshopViewHome\{[\s\S]*?--workshop-view-highlight:#24708d;[\s\S]*?--workshop-view-base:#0b3a55;[\s\S]*?--workshop-view-shadow:#041d2c;[\s\S]*?display:flex;[\s\S]*?flex-flow:row nowrap;[\s\S]*?align-items:center;[\s\S]*?white-space:nowrap/);
   assert.match(theme,/#workshopEngineeringViewControls button\[data-workshop-view\]\{[\s\S]*?border-image-source:var\(--workshop-builder-face\)[\s\S]*?border-image-slice:30/);
-  assert.match(theme,/#viewCubeBox #workspaceModeSwitch\{[\s\S]*?background-image:var\(--workshop-builder-face\)[\s\S]*?font:900 13px\/1\.05 "Lexend"/);
-  assert.match(theme,/#viewCubeBox #workspaceModeSwitch \.workspaceModeIcon\{[\s\S]*?display:none/);
+  assert.match(theme,/#workshopQuickAccessToolbar\{[\s\S]*?grid-template-columns:minmax\(82px,1\.45fr\) repeat\(5,minmax\(44px,1fr\)\);[\s\S]*?gap:2px/);
+  assert.match(theme,/#workshopQuickAccessToolbar #workspaceModeSwitch\{[\s\S]*?width:100%;[\s\S]*?height:44px;[\s\S]*?border-image-source:var\(--workshop-builder-face\);[\s\S]*?font:900 10px\/1\.05 "Lexend"/);
+  assert.match(theme,/#workshopQuickAccessToolbar #workspaceModeSwitch \.workspaceModeIcon\{[\s\S]*?display:none/);
   assert.match(source,/label\.innerHTML='<span class="workspaceModeReturnLine"><span class="workspaceModeReturnIcon" aria-hidden="true">↶<\/span><span class="workspaceModeReturnWords">RETURN TO<\/span><\/span><span class="workspaceModeMissionLine">MISSION<\/span>'/);
   assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeLabel\{[\s\S]*?color:#dffaff;[\s\S]*?text-transform:uppercase;[\s\S]*?white-space:normal;[\s\S]*?text-shadow:none/);
   assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnIcon\{[\s\S]*?color:#fff;[\s\S]*?font:900 9px\/1 Arial[\s\S]*?text-shadow:none/);
-  assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnWords\{[\s\S]*?color:#bff7ff;[\s\S]*?text-shadow:[^;]*#45cce8/);
-  assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeMissionLine\{[\s\S]*?color:#effeff;[\s\S]*?font:900 7px/);
+  assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnWords\{[\s\S]*?color:#bff7ff;[\s\S]*?text-shadow:none/);
+  assert.match(theme,/#workshopQuickAccessToolbar #workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeLabel\{[\s\S]*?flex-direction:column;[\s\S]*?gap:1px/);
+  assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnLine\{[\s\S]*?justify-content:center;[\s\S]*?font:900 8px/);
+  assert.match(theme,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeMissionLine\{[\s\S]*?display:block;[\s\S]*?color:#effeff;[\s\S]*?font:900 8px[\s\S]*?text-shadow:none/);
   assert.match(theme,/#workshopViewHome \.workshop-control-icon\{[\s\S]*?font-size:18px/);
   assert.match(theme,/#workshopViewHome > span,[\s\S]*?color:#83ff72/);
   assert.match(theme,/#workshopViewHome small\{[\s\S]*?display:none/);
