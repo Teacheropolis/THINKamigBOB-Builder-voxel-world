@@ -3784,7 +3784,6 @@ Keep button IDs and onclick handlers unchanged.
   <div class="starterResumeRegion">
     <div id="starterResumeViewport" class="starterResumeViewport" tabindex="0" aria-label="Saved mission builds">
       <div id="starterResumeTrack" class="starterResumeTrack">
-        <button id="resumeAutosaveButton" type="button" hidden>↻ Resume Saved Build</button>
       </div>
     </div>
     <div id="starterResumeScrollControls" class="starterResumeScrollControls" hidden>
@@ -26381,7 +26380,7 @@ body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton .tickerPodActi
 
 <style id="autosaveAndCalmModeCSS">
 /* The resume action stays available only when this browser holds a saved build. */
-#resumeAutosaveButton{
+.resumeAutosaveButton{
   display:block;
   margin:8px auto 0;
   padding:8px 14px;
@@ -26394,8 +26393,8 @@ body:not(.starterScreenActive) #tickerPassportPod.tickerPodButton .tickerPodActi
   box-shadow:0 2px 7px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.17);
   cursor:pointer;
 }
-#resumeAutosaveButton[hidden]{display:none !important;}
-#resumeAutosaveButton:hover{filter:brightness(1.14);transform:translateY(-1px);}
+.resumeAutosaveButton[hidden]{display:none !important;}
+.resumeAutosaveButton:hover{filter:brightness(1.14);transform:translateY(-1px);}
 
 body:not(.starterScreenActive) .dashboard139AccessibilityToggles{
   display:flex !important;
@@ -26455,15 +26454,60 @@ body.calmMode #reopenLibraryFromCoach{
 <script id="studentAutosaveAndCalmModeScript">
 (function(){
   var AUTOSAVE_KEY="thinkamigbob-student-autosave-v1";
+  var AUTOSAVE_COLLECTION_KEY="thinkamigbob-student-autosaves-v2";
   var CALM_MODE_KEY="thinkamigbob-calm-mode";
   var saveTimer=0;
   var autosaveNoticeShown=false;
+  var resumeRestorePending=false;
+
+  var MISSION_TITLES={
+    buildCastle:"Castle Builder",
+    buildPlayground:"Playground Builder",
+    buildHabitat:"Habitat Builder",
+    buildDragonLair:"Dragon Lair",
+    buildFutureCity:"Future City",
+    buildWeatherWorld:"Weather Station",
+    buildEnergyCity:"Energy City",
+    buildSpaceColony:"Moon or Mars Colony",
+    buildMoonColony:"Moon Colony",
+    buildMarsColony:"Mars Colony",
+    buildEngineeringWorld:"Engineering Challenge",
+    buildCellWorld:"Cell Builder Lab"
+  };
+
+  function isAutosaveState(state){
+    return !!state && typeof state==="object" && !Array.isArray(state) &&
+      typeof state.selectedStartWorld==="string" && Array.isArray(state.blocks);
+  }
 
   function readAutosave(){
     try{
       var raw=localStorage.getItem(AUTOSAVE_KEY);
       return raw ? JSON.parse(raw) : null;
     }catch(error){ return null; }
+  }
+
+  function readAutosaves(){
+    var builds={};
+    try{
+      var raw=localStorage.getItem(AUTOSAVE_COLLECTION_KEY);
+      var collection=raw ? JSON.parse(raw) : null;
+      if(collection && collection.version===2 && collection.builds && typeof collection.builds==="object" && !Array.isArray(collection.builds)){
+        Object.keys(collection.builds).forEach(function(key){
+          var state=collection.builds[key];
+          if(isAutosaveState(state) && state.selectedStartWorld===key) builds[key]=state;
+        });
+      }
+    }catch(error){}
+    var legacy=readAutosave();
+    if(isAutosaveState(legacy) && !builds[legacy.selectedStartWorld]){
+      builds[legacy.selectedStartWorld]=legacy;
+    }
+    return builds;
+  }
+
+  function writeAutosaves(builds){
+    localStorage.setItem(AUTOSAVE_COLLECTION_KEY,JSON.stringify({version:2,builds:builds}));
   }
 
   function blockRecord(block){
@@ -26492,7 +26536,7 @@ body.calmMode #reopenLibraryFromCoach{
   }
 
   function saveNow(showFeedback){
-    if(document.body.classList.contains("starterScreenActive") || !blocks || !scene) return;
+    if(document.body.classList.contains("starterScreenActive") || resumeRestorePending || !blocks || !scene) return;
     try{
       var checklist=Array.prototype.map.call(document.querySelectorAll("#challengeChecklist input"), function(input){ return !!input.checked; });
       var state={
@@ -26508,6 +26552,11 @@ body.calmMode #reopenLibraryFromCoach{
         selectedShape:(document.getElementById("blockShape") || {}).value || "cube",
         skyVehicle:document.getElementById("skyBannerPlane")?.classList.contains("skyBannerRocket") ? "rocket" : "plane"
       };
+      var savedBuilds=readAutosaves();
+      savedBuilds[state.selectedStartWorld]=state;
+      writeAutosaves(savedBuilds);
+      /* Keep the former latest-build record so existing students and older
+         releases can still resume their most recent mission. */
       localStorage.setItem(AUTOSAVE_KEY,JSON.stringify(state));
       if(showFeedback) showSaveStatus();
       refreshResumeButton();
@@ -26517,7 +26566,7 @@ body.calmMode #reopenLibraryFromCoach{
   }
 
   function scheduleSave(){
-    if(document.body.classList.contains("starterScreenActive")) return;
+    if(document.body.classList.contains("starterScreenActive") || resumeRestorePending) return;
     window.clearTimeout(saveTimer);
     saveTimer=window.setTimeout(function(){ saveNow(true); },700);
   }
@@ -26559,27 +26608,45 @@ body.calmMode #reopenLibraryFromCoach{
     scheduleSave();
   }
 
-  function resumeSavedBuild(){
-    var state=readAutosave();
+  function resumeSavedBuild(missionKey){
+    var state=readAutosaves()[missionKey];
     if(!state) return;
+    resumeRestorePending=true;
+    window.clearTimeout(saveTimer);
     builderProjectName=String(state.projectName || "").trim().slice(0,60);
     window.selectedStartWorld=state.selectedStartWorld || "buildCastle";
     window.selectedSpaceDestination=state.selectedSpaceDestination || null;
     if(typeof window.startSelectedWorld === "function"){
       window.startSelectedWorld();
-      window.setTimeout(function(){ restoreSavedBuild(state); },1050);
+      window.setTimeout(function(){
+        restoreSavedBuild(state);
+        resumeRestorePending=false;
+        scheduleSave();
+      },1050);
+    }else{
+      resumeRestorePending=false;
     }
   }
 
   function refreshResumeButton(){
-    var button=document.getElementById("resumeAutosaveButton");
-    var state=readAutosave();
-    if(!button) return;
-    button.hidden=!state;
-    if(state){
-      var label=(state.selectedStartWorld || "build").replace(/^build/,"").replace(/([A-Z])/g," $1").trim();
-      button.textContent="↻ Resume Saved Build" + (label ? " — " + label : "");
-    }
+    var track=document.getElementById("starterResumeTrack");
+    if(!track) return;
+    var savedBuilds=readAutosaves();
+    var states=Object.keys(savedBuilds).map(function(key){ return savedBuilds[key]; });
+    states.sort(function(a,b){ return (Number(b.savedAt)||0)-(Number(a.savedAt)||0); });
+    track.replaceChildren();
+    states.forEach(function(state){
+      var missionKey=state.selectedStartWorld;
+      var label=MISSION_TITLES[missionKey] || missionKey.replace(/^build/,"").replace(/([A-Z])/g," $1").trim();
+      var button=document.createElement("button");
+      button.type="button";
+      button.className="resumeAutosaveButton";
+      button.dataset.missionKey=missionKey;
+      button.textContent="↻ Resume Saved Build — "+label;
+      button.setAttribute("aria-label","Resume saved build — "+label);
+      button.addEventListener("click",function(){ resumeSavedBuild(missionKey); });
+      track.appendChild(button);
+    });
     if(typeof window.updateStarterResumeScrollAffordance === "function"){
       window.requestAnimationFrame(window.updateStarterResumeScrollAffordance);
     }
@@ -26627,8 +26694,6 @@ body.calmMode #reopenLibraryFromCoach{
   });
   window.addEventListener("beforeunload",function(){ saveNow(false); });
 
-  var resumeButton=document.getElementById("resumeAutosaveButton");
-  if(resumeButton) resumeButton.addEventListener("click",resumeSavedBuild);
   var calmEnabled=false;
   try{ calmEnabled=localStorage.getItem(CALM_MODE_KEY) === "true"; }catch(error){}
   window.setCalmMode(calmEnabled);
@@ -26690,7 +26755,7 @@ body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):hov
   min-width:0;
 }
 #starterOpenSavedBuildButton,
-#resumeAutosaveButton{
+.resumeAutosaveButton{
   min-height:44px;
   height:44px;
   margin:0 !important;
@@ -26719,7 +26784,7 @@ body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):hov
 }
 .starterResumeViewport::-webkit-scrollbar{display:none;}
 .starterResumeTrack{display:flex;flex-wrap:nowrap;gap:8px;width:max-content;min-width:100%;}
-#resumeAutosaveButton{
+.resumeAutosaveButton{
   flex:0 0 auto;
   min-width:250px;
   max-width:none;
@@ -26771,7 +26836,7 @@ body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):hov
 .starterResumeViewport:focus-visible,
 .starterResumeScrollControls button:focus-visible,
 .starterResumeScrollRail:focus-visible,
-#resumeAutosaveButton:focus-visible{
+.resumeAutosaveButton:focus-visible{
   outline:3px solid #36d8ff;
   outline-offset:2px;
 }

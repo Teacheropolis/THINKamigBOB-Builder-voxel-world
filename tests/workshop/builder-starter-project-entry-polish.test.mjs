@@ -42,12 +42,18 @@ test("Open stays fixed at the far left and reuses the validated Builder file inp
 });
 
 test("Resume retains dynamic mission naming and canonical autosave restoration",()=>{
-  assert.match(starter,/id="starterResumeTrack"[\s\S]*id="resumeAutosaveButton"/);
-  assert.match(source,/button\.textContent="↻ Resume Saved Build" \+ \(label \? " — " \+ label : ""\)/);
-  assert.match(source,/resumeButton\.addEventListener\("click",resumeSavedBuild\)/);
-  assert.match(source,/function resumeSavedBuild\(\)\{[\s\S]*readAutosave\(\)[\s\S]*window\.selectedStartWorld=state\.selectedStartWorld[\s\S]*window\.startSelectedWorld\(\)/);
+  assert.match(starter,/id="starterResumeTrack" class="starterResumeTrack">\s*<\/div>/);
+  assert.match(source,/var AUTOSAVE_COLLECTION_KEY="thinkamigbob-student-autosaves-v2"/);
+  assert.match(source,/savedBuilds\[state\.selectedStartWorld\]=state/);
+  assert.match(source,/Object\.keys\(savedBuilds\)\.map/);
+  assert.match(source,/button\.className="resumeAutosaveButton"/);
+  assert.match(source,/button\.textContent="↻ Resume Saved Build — "\+label/);
+  assert.match(source,/button\.addEventListener\("click",function\(\)\{ resumeSavedBuild\(missionKey\); \}\)/);
+  assert.match(source,/function resumeSavedBuild\(missionKey\)\{[\s\S]*readAutosaves\(\)\[missionKey\][\s\S]*window\.selectedStartWorld=state\.selectedStartWorld[\s\S]*window\.startSelectedWorld\(\)/);
+  assert.match(source,/var legacy=readAutosave\(\)[\s\S]*builds\[legacy\.selectedStartWorld\]=legacy/);
+  assert.match(source,/resumeRestorePending=true[\s\S]*restoreSavedBuild\(state\)[\s\S]*resumeRestorePending=false/);
   assert.match(polish,/\.starterResumeTrack\{[\s\S]*flex-wrap:nowrap;[\s\S]*width:max-content/);
-  assert.match(polish,/#resumeAutosaveButton\{[\s\S]*border:2px solid #8df5ff;[\s\S]*color:#eaffff;/);
+  assert.match(polish,/\.resumeAutosaveButton\{[\s\S]*border:2px solid #8df5ff;[\s\S]*color:#eaffff;/);
 });
 
 test("custom Resume scroller is visible only for overflow and owns all scroll input",()=>{
