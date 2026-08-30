@@ -12,8 +12,9 @@ test("the independent rectangular navigation overlay is removed",()=>{
   assert.doesNotMatch(source,/#(?:returnMissionsButton|workspaceModeSwitch)::after\{[\s\S]*major-navigation-frame/);
 });
 
-test("Workshop Return to Mission strengthens its original inset aqua contour",()=>{
-  assert.match(source,/#workshopQuickAccessToolbar #workspaceModeSwitch\{[\s\S]*height:44px;[\s\S]*border-image-source:var\(--workshop-builder-face\)[\s\S]*box-shadow:inset 0 0 0 2px #7fefff,inset 0 1px rgba\(255,255,255,\.18\)/);
+test("Workshop Return to Builder reuses the Builder navigation frame artwork",()=>{
+  assert.match(source,/#workshopQuickAccessToolbar #workspaceModeSwitch\{[\s\S]*height:44px;[\s\S]*background-image:url\("assets\/images\/dashboard\/button-faces\/builder-shortcut-grid-frame-glow\.png"\)[\s\S]*background-size:100% 100%[\s\S]*box-shadow:none/);
+  assert.doesNotMatch(source,/#workshopQuickAccessToolbar #workspaceModeSwitch\{[^}]*border-image-source:/);
 });
 
 test("Builder Return to Missions and Open Workshop retain the original decorative contour artwork",()=>{

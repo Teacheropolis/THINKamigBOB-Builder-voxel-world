@@ -24,8 +24,9 @@ test("keeps equal Save and Open controls below View Remote",()=>{
   assert.match(source,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeLabel\{[\s\S]*?color:#dffaff[\s\S]*?text-shadow:none/);
   assert.match(source,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnIcon\{[\s\S]*?color:#fff[\s\S]*?-webkit-text-fill-color:#fff[\s\S]*?text-shadow:none/);
   assert.match(source,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeReturnWords\{[\s\S]*?color:#bff7ff/);
-  assert.match(source,/#workspaceModeSwitch\[aria-pressed="true"\] \.workspaceModeMissionLine\{[\s\S]*?color:#effeff/);
-  assert.match(source,/workspaceModeReturnIcon[^>]*aria-hidden="true">↶<\/span><span class="workspaceModeReturnWords">RETURN TO<\/span>/);
+  assert.match(source,/workspaceModeReturnWords">RETURN TO<\/span>[\s\S]*workspaceModeBuilderLine">BUILDER<\/span>/);
+  assert.doesNotMatch(source,/workspaceModeMissionLine/);
+  assert.match(source,/majorNavigationArrow is-back workspaceModeReturnIcon[^>]*aria-hidden="true"><\/span><span class="workspaceModeReturnWords">RETURN TO<\/span>/);
 });
 
 test("Open chooser shows real Build Name and Last Saved metadata",()=>{

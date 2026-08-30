@@ -3776,11 +3776,26 @@ Keep button IDs and onclick handlers unchanged.
 </div>
 </div>
 <div class="startBeforePanel">
-<h2>Before You Start</h2>
 <div class="startBeforeGrid">
-<button type="button" id="startBuildingButton" onclick="startSelectedWorld()" aria-label="Start Mission"></button>
+<button type="button" id="startBuildingButton" onclick="startSelectedWorld()" aria-label="Start a Mission"><span class="startMissionActionLabel">START A MISSION</span></button>
 </div>
-<button id="resumeAutosaveButton" type="button" hidden>↻ Resume Saved Build</button>
+<div id="starterProjectEntryRow" class="starterProjectEntryRow" aria-label="Open or resume a saved build">
+  <button id="starterOpenSavedBuildButton" type="button" onclick="openStarterSavedBuild()">OPEN A SAVED BUILD</button>
+  <div class="starterResumeRegion">
+    <div id="starterResumeViewport" class="starterResumeViewport" tabindex="0" aria-label="Saved mission builds">
+      <div id="starterResumeTrack" class="starterResumeTrack">
+        <button id="resumeAutosaveButton" type="button" hidden>↻ Resume Saved Build</button>
+      </div>
+    </div>
+    <div id="starterResumeScrollControls" class="starterResumeScrollControls" hidden>
+      <button id="starterResumeScrollLeft" type="button" aria-label="Scroll saved builds left">‹</button>
+      <div id="starterResumeScrollRail" class="starterResumeScrollRail" role="scrollbar" tabindex="0" aria-label="Saved build position" aria-controls="starterResumeViewport" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+        <span id="starterResumeScrollThumb" class="starterResumeScrollThumb" aria-hidden="true"></span>
+      </div>
+      <button id="starterResumeScrollRight" type="button" aria-label="Scroll saved builds right">›</button>
+    </div>
+  </div>
+</div>
 </div>
 <div id="spaceDestinationChooser" role="dialog" aria-modal="true" aria-labelledby="spaceDestinationTitle" hidden>
   <div class="spaceDestinationCard">
@@ -12611,7 +12626,10 @@ document.getElementById('loadFile')
 
   const file = event.target.files[0];
 
-  if(!file) return;
+  if(!file){
+    window.starterBuilderFileOpenPending=false;
+    return;
+  }
 
   const reader = new FileReader();
 
@@ -12619,12 +12637,14 @@ document.getElementById('loadFile')
     let loadedData=null;
     try{ loadedData=JSON.parse(e.target.result); }
     catch(error){
+      window.starterBuilderFileOpenPending=false;
       document.getElementById("toolMessage").textContent=
         "That file is not a supported Builder project. Your build is unchanged.";
       return;
     }
     const validated=validateBuilderProjectFile(loadedData);
     if(!validated){
+      window.starterBuilderFileOpenPending=false;
       document.getElementById("toolMessage").textContent=
         "That file is not a supported Builder project. Your build is unchanged.";
       return;
@@ -12667,10 +12687,25 @@ document.getElementById('loadFile')
 
     document.getElementById("toolMessage").innerHTML =
       "💾 World and favorites loaded.";
+    if(window.starterBuilderFileOpenPending){
+      window.starterBuilderFileOpenPending=false;
+      if(typeof window.hideStartScreen === "function") window.hideStartScreen();
+      if(typeof window.updateCreatorBarSelection === "function") window.updateCreatorBarSelection();
+    }
   };
 
   reader.readAsText(file);
 }); 
+
+function openStarterSavedBuild(){
+  window.starterBuilderFileOpenPending=true;
+  const input=document.getElementById('loadFile');
+  if(input){
+    input.value='';
+    input.click();
+  }
+}
+window.openStarterSavedBuild=openStarterSavedBuild;
 
 function setMoonEnvironment(){
 
@@ -17678,7 +17713,7 @@ Small help modal kept inline for now.
         <section data-help-section="cursor-guide">
           <h3>Cursor Guide</h3>
           <p><strong>CAD crosshair:</strong> The pointer is over an area where you can build or interact with the 3D platform.</p>
-          <p><strong>Industrial gear cursor:</strong> The pointer is over interface tools, panels, or controls.</p>
+          <p><strong>Precision Driver cursor:</strong> The pointer is over interface tools, panels, or controls. Its aqua + is the exact click point.</p>
         </section>
         <section data-help-section="troubleshooting">
           <h3>Troubleshooting</h3>
@@ -17747,7 +17782,7 @@ Small help modal kept inline for now.
         <section data-help-section="cursor-guide">
           <h3>Cursor Guide</h3>
           <p><strong>CAD crosshair:</strong> The pointer is over an area where you can build or interact with the 3D platform.</p>
-          <p><strong>Industrial gear cursor:</strong> The pointer is over interface tools, panels, or controls.</p>
+          <p><strong>Precision Driver cursor:</strong> The pointer is over interface tools, panels, or controls. Its aqua + is the exact click point.</p>
         </section>
         <section data-help-section="troubleshooting">
           <h3>Troubleshooting</h3>
@@ -26545,6 +26580,9 @@ body.calmMode #reopenLibraryFromCoach{
       var label=(state.selectedStartWorld || "build").replace(/^build/,"").replace(/([A-Z])/g," $1").trim();
       button.textContent="↻ Resume Saved Build" + (label ? " — " + label : "");
     }
+    if(typeof window.updateStarterResumeScrollAffordance === "function"){
+      window.requestAnimationFrame(window.updateStarterResumeScrollAffordance);
+    }
   }
 
   function wrapForAutosave(name){
@@ -26596,6 +26634,242 @@ body.calmMode #reopenLibraryFromCoach{
   window.setCalmMode(calmEnabled);
   refreshResumeButton();
   window.scheduleStudentAutosave=scheduleSave;
+})();
+</script>
+
+<style id="starterMissionProjectEntryPolishCSS">
+body.starterScreenActive .startBeforePanel{
+  display:grid !important;
+  grid-template-rows:auto auto !important;
+  gap:7px !important;
+  padding:4px 12px 6px !important;
+}
+body.starterScreenActive .startBeforeGrid{
+  display:grid !important;
+  justify-items:center !important;
+}
+body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton{
+  display:grid !important;
+  place-items:center !important;
+  width:min(260px,100%) !important;
+  max-width:260px !important;
+  min-height:48px !important;
+  height:48px !important;
+  aspect-ratio:auto !important;
+  padding:0 22px !important;
+  border:2px solid #fff0a8 !important;
+  border-radius:18px !important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.48),transparent 31%),
+    linear-gradient(180deg,#ffe77b 0%,#efbf35 54%,#b87905 100%) !important;
+  box-shadow:0 4px 0 #754900,0 7px 12px rgba(0,0,0,.34),inset 0 1px 0 #fffbd0 !important;
+  color:#102038 !important;
+  -webkit-text-fill-color:#102038 !important;
+  filter:none !important;
+  overflow:hidden !important;
+}
+body.starterScreenActive #startBuildingButton .startMissionActionLabel{
+  display:block !important;
+  color:#102038 !important;
+  -webkit-text-fill-color:#102038 !important;
+  font:900 18px/1 "Oxanium",Arial,sans-serif !important;
+  letter-spacing:.055em !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.76) !important;
+  white-space:nowrap !important;
+}
+body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):hover{
+  transform:translateY(-1px) !important;
+  filter:brightness(1.05) !important;
+}
+.starterProjectEntryRow{
+  display:grid;
+  grid-template-columns:184px minmax(0,1fr);
+  align-items:start;
+  gap:10px;
+  width:100%;
+  min-width:0;
+}
+#starterOpenSavedBuildButton,
+#resumeAutosaveButton{
+  min-height:44px;
+  height:44px;
+  margin:0 !important;
+  border-radius:12px;
+  font:900 11px/1.08 "Oxanium",Arial,sans-serif;
+  letter-spacing:.035em;
+  cursor:pointer;
+}
+#starterOpenSavedBuildButton{
+  width:184px;
+  padding:0 12px;
+  border:2px solid #f7fbff;
+  background:linear-gradient(180deg,#163a57,#071b2c);
+  color:#fff;
+  box-shadow:0 3px 0 #06101a,0 4px 8px rgba(0,0,0,.34),inset 0 0 0 2px rgba(54,216,255,.42);
+}
+.starterResumeRegion{min-width:0;display:grid;gap:3px;}
+.starterResumeViewport{
+  min-width:0;
+  overflow-x:auto;
+  overflow-y:hidden;
+  overscroll-behavior:contain;
+  touch-action:pan-x;
+  scrollbar-width:none;
+  border-radius:12px;
+}
+.starterResumeViewport::-webkit-scrollbar{display:none;}
+.starterResumeTrack{display:flex;flex-wrap:nowrap;gap:8px;width:max-content;min-width:100%;}
+#resumeAutosaveButton{
+  flex:0 0 auto;
+  min-width:250px;
+  max-width:none;
+  padding:0 16px;
+  border:2px solid #8df5ff;
+  background:linear-gradient(180deg,#10516c,#062b43);
+  color:#eaffff;
+  box-shadow:0 3px 0 #052034,0 4px 8px rgba(0,0,0,.30),inset 0 0 8px rgba(72,230,255,.30);
+  white-space:nowrap;
+}
+.starterResumeScrollControls{
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) 44px;
+  align-items:center;
+  gap:7px;
+  min-height:44px;
+}
+.starterResumeScrollControls[hidden]{display:none !important;}
+.starterResumeScrollControls > button{
+  width:44px;
+  height:44px;
+  min-width:44px;
+  min-height:44px;
+  padding:0;
+  border:1px solid #72eaff;
+  border-radius:10px;
+  background:#092d45;
+  color:#d9fbff;
+  font:900 27px/1 Arial,sans-serif;
+}
+.starterResumeScrollRail{
+  position:relative;
+  height:12px;
+  border:1px solid rgba(126,239,255,.75);
+  border-radius:999px;
+  background:#041827;
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.75);
+}
+.starterResumeScrollThumb{
+  position:absolute;
+  inset:1px auto 1px 1px;
+  min-width:44px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#22cce8,#8af5ff);
+  box-shadow:0 0 7px rgba(72,230,255,.72);
+  touch-action:none;
+}
+#starterOpenSavedBuildButton:focus-visible,
+.starterResumeViewport:focus-visible,
+.starterResumeScrollControls button:focus-visible,
+.starterResumeScrollRail:focus-visible,
+#resumeAutosaveButton:focus-visible{
+  outline:3px solid #36d8ff;
+  outline-offset:2px;
+}
+@media (max-width:700px){
+  .starterProjectEntryRow{grid-template-columns:150px minmax(0,1fr);gap:7px;}
+  #starterOpenSavedBuildButton{width:150px;font-size:10px;}
+}
+@media (min-width:701px) and (max-height:760px){
+  body.starterScreenActive .startBeforePanel{gap:5px !important;padding-block:2px 4px !important;}
+  body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton{height:44px !important;min-height:44px !important;}
+  body.starterScreenActive #startBuildingButton .startMissionActionLabel{font-size:16px !important;}
+}
+</style>
+
+<script id="starterMissionProjectEntryScrollScript">
+(function(){
+  var viewport=document.getElementById("starterResumeViewport");
+  var track=document.getElementById("starterResumeTrack");
+  var controls=document.getElementById("starterResumeScrollControls");
+  var left=document.getElementById("starterResumeScrollLeft");
+  var right=document.getElementById("starterResumeScrollRight");
+  var rail=document.getElementById("starterResumeScrollRail");
+  var thumb=document.getElementById("starterResumeScrollThumb");
+  if(!viewport || !track || !controls || !left || !right || !rail || !thumb) return;
+
+  function maximum(){ return Math.max(0,viewport.scrollWidth-viewport.clientWidth); }
+  function update(){
+    var max=maximum();
+    var overflow=Number.isFinite(max) && max>1 && viewport.clientWidth>0;
+    controls.hidden=!overflow;
+    if(!overflow) return;
+    var railWidth=rail.clientWidth;
+    if(!Number.isFinite(railWidth) || railWidth<=0) return;
+    var width=Math.max(44,Math.min(railWidth,railWidth*(viewport.clientWidth/viewport.scrollWidth)));
+    var travel=Math.max(0,railWidth-width-2);
+    var ratio=max ? Math.max(0,Math.min(1,viewport.scrollLeft/max)) : 0;
+    thumb.style.width=width+"px";
+    thumb.style.transform="translateX("+(travel*ratio)+"px)";
+    left.disabled=viewport.scrollLeft<=1;
+    right.disabled=viewport.scrollLeft>=max-1;
+    rail.setAttribute("aria-valuemax",String(Math.round(max)));
+    rail.setAttribute("aria-valuenow",String(Math.round(viewport.scrollLeft)));
+  }
+  function move(amount){ viewport.scrollBy({left:amount,behavior:"smooth"}); }
+  function keyScroll(event){
+    var amount=Math.max(160,viewport.clientWidth*.8);
+    if(event.key==="ArrowLeft") move(-80);
+    else if(event.key==="ArrowRight") move(80);
+    else if(event.key==="PageUp") move(-amount);
+    else if(event.key==="PageDown") move(amount);
+    else if(event.key==="Home") viewport.scrollTo({left:0,behavior:"smooth"});
+    else if(event.key==="End") viewport.scrollTo({left:maximum(),behavior:"smooth"});
+    else return;
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  left.addEventListener("click",function(){ move(-Math.max(160,viewport.clientWidth*.8)); });
+  right.addEventListener("click",function(){ move(Math.max(160,viewport.clientWidth*.8)); });
+  viewport.addEventListener("keydown",keyScroll);
+  rail.addEventListener("keydown",keyScroll);
+  viewport.addEventListener("wheel",function(event){
+    var max=maximum();
+    if(max<=1) return;
+    var delta=Math.abs(event.deltaX)>Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+    if(!delta) return;
+    var canMove=(delta<0 && viewport.scrollLeft>0) || (delta>0 && viewport.scrollLeft<max);
+    if(!canMove) return;
+    viewport.scrollLeft+=delta;
+    event.preventDefault();
+    event.stopPropagation();
+  },{passive:false});
+  thumb.addEventListener("pointerdown",function(event){
+    if(controls.hidden) return;
+    var startX=event.clientX;
+    var startScroll=viewport.scrollLeft;
+    var railWidth=rail.clientWidth;
+    var thumbWidth=thumb.getBoundingClientRect().width;
+    var travel=Math.max(1,railWidth-thumbWidth-2);
+    var max=maximum();
+    thumb.setPointerCapture(event.pointerId);
+    function drag(moveEvent){ viewport.scrollLeft=startScroll+((moveEvent.clientX-startX)/travel)*max; }
+    function finish(upEvent){
+      thumb.removeEventListener("pointermove",drag);
+      thumb.removeEventListener("pointerup",finish);
+      thumb.removeEventListener("pointercancel",finish);
+      if(thumb.hasPointerCapture(upEvent.pointerId)) thumb.releasePointerCapture(upEvent.pointerId);
+    }
+    thumb.addEventListener("pointermove",drag);
+    thumb.addEventListener("pointerup",finish);
+    thumb.addEventListener("pointercancel",finish);
+    event.preventDefault();
+  });
+  viewport.addEventListener("scroll",update,{passive:true});
+  window.addEventListener("resize",update,{passive:true});
+  if(typeof ResizeObserver==="function") new ResizeObserver(update).observe(viewport);
+  if(typeof MutationObserver==="function") new MutationObserver(update).observe(track,{childList:true,subtree:true,attributes:true,attributeFilter:["hidden"]});
+  window.setTimeout(update,0);
+  window.updateStarterResumeScrollAffordance=update;
 })();
 </script>
 
@@ -34479,30 +34753,27 @@ body.workshopMode:not(.starterScreenActive) #workshopViewHome small{
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch{
-  --workshop-view-highlight:#236b9b;
-  --workshop-view-base:#082d50;
-  --workshop-view-shadow:#031323;
   width:100%;
   min-width:0;
   height:44px;
   min-height:44px;
-  padding:2px;
+  padding:5px 12px;
   box-sizing:border-box;
-  border:7px solid transparent;
-  border-image-source:var(--workshop-builder-face);
-  border-image-slice:30;
-  border-image-width:7px;
-  border-image-repeat:stretch;
+  border:0;
   border-radius:0;
-  color:#ffad32;
-  background:linear-gradient(180deg,var(--workshop-view-highlight),var(--workshop-view-base) 42%,var(--workshop-view-shadow));
-  box-shadow:inset 0 0 0 2px #7fefff,inset 0 1px rgba(255,255,255,.18);
+  color:#dffaff;
+  background-color:transparent;
+  background-image:url("assets/images/dashboard/button-faces/builder-shortcut-grid-frame-glow.png");
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:100% 100%;
+  box-shadow:none;
   font:900 10px/1.05 "Lexend",Arial,sans-serif;
-  text-shadow:0 1px 2px rgba(0,0,0,.98),0 0 2px #ff8a00,0 0 5px rgba(255,159,28,.9);
+  text-shadow:none;
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar{
-  grid-template-columns:minmax(82px,1.45fr) repeat(5,minmax(44px,1fr));
+  grid-template-columns:minmax(104px,1.85fr) repeat(5,minmax(44px,1fr));
   gap:2px;
 }
 
@@ -34515,7 +34786,7 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:1px;
+  gap:0;
   color:#dffaff;
   -webkit-text-fill-color:#dffaff;
   text-transform:uppercase;
@@ -34527,16 +34798,15 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  font:900 8px/1 "Lexend",Arial,sans-serif;
+  font:900 10px/1 "Lexend",Arial,sans-serif;
   letter-spacing:0;
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch[aria-pressed="true"] .workspaceModeReturnIcon{
   display:inline-block;
   margin-right:2px;
-  color:#fff;
-  -webkit-text-fill-color:#fff;
-  font:900 9px/1 Arial,sans-serif;
+  color:#7fefff;
+  -webkit-text-fill-color:#7fefff;
   text-shadow:none;
 }
 
@@ -34546,13 +34816,11 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
   text-shadow:none;
 }
 
-body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch[aria-pressed="true"] .workspaceModeMissionLine{
-  display:block;
-  margin-top:0;
-  color:#effeff;
-  -webkit-text-fill-color:#effeff;
-  font:900 8px/1 "Lexend",Arial,sans-serif;
-  letter-spacing:.015em;
+body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspaceModeSwitch[aria-pressed="true"] .workspaceModeBuilderLine{
+  color:#fff;
+  -webkit-text-fill-color:#fff;
+  font:900 12px/1 "Lexend",Arial,sans-serif;
+  letter-spacing:.35px;
   text-shadow:none;
 }
 
@@ -34824,10 +35092,11 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
       }
     }
     if(label && currentWorkspaceMode!=="workshop"){
-      label.textContent=state==="LOADING" && workshopStartupRequested ? "Loading Workshop…" :
+      var workshopAction=state==="LOADING" && workshopStartupRequested ? "LOADING WORKSHOP…" :
         state==="STARTING" ? "Opening Workshop…" :
         state==="STOPPING" ? "Closing Workshop…" :
         state==="FAILED" ? "Retry Workshop" : "Open Workshop";
+      label.innerHTML='<span class="workspaceModeOpenWords">'+workshopAction.toUpperCase()+'</span><span class="majorNavigationArrow is-forward workspaceModeForwardIcon" aria-hidden="true"></span>';
     }
     if(message) getWorkshopStartupStatusElement().textContent=message;
   }
@@ -37541,17 +37810,17 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
 
     if(!modeSwitch) return;
     modeSwitch.setAttribute("aria-pressed",workshopIsActive ? "true" : "false");
-    modeSwitch.title=workshopIsActive ? "Return to Mission" : "Open Workshop";
-    modeSwitch.setAttribute("aria-label",workshopIsActive ? "Return to Mission" : "Open Workshop");
+    modeSwitch.title=workshopIsActive ? "Return to Builder" : "Open Workshop";
+    modeSwitch.setAttribute("aria-label",workshopIsActive ? "Return to Builder" : "Open Workshop");
 
     var icon=modeSwitch.querySelector(".workspaceModeIcon");
     var label=modeSwitch.querySelector(".workspaceModeLabel");
     if(icon) icon.textContent=workshopIsActive ? "🧱" : "🛠";
     if(label){
       if(workshopIsActive){
-        label.innerHTML='<span class="workspaceModeReturnLine"><span class="workspaceModeReturnIcon" aria-hidden="true">↶</span><span class="workspaceModeReturnWords">RETURN TO</span></span><span class="workspaceModeMissionLine">MISSION</span>';
+        label.innerHTML='<span class="workspaceModeReturnLine"><span class="majorNavigationArrow is-back workspaceModeReturnIcon" aria-hidden="true"></span><span class="workspaceModeReturnWords">RETURN TO</span></span><span class="workspaceModeBuilderLine">BUILDER</span>';
       }else{
-        label.textContent="Open Workshop";
+        label.innerHTML='<span class="workspaceModeOpenWords">OPEN WORKSHOP</span><span class="majorNavigationArrow is-forward workspaceModeForwardIcon" aria-hidden="true"></span>';
       }
     }
     if(!workshopIsActive && workshopStartupState!=="OFF" && workshopStartupState!=="READY"){
@@ -37565,6 +37834,7 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
     var controlStation=document.getElementById("viewCubeBox");
     var missionPanel=document.getElementById("info");
     var compactMissionZone=document.querySelector("#builderRightToolsPanel .dashboard139MissionZone");
+    var builderNavigation=document.getElementById("builderMajorNavigation");
     var compactUtilityButtons=document.querySelector("#builderRightToolsPanel .dashboard139UtilityZone .dashboardUtilityButtons");
     var helpButton=document.getElementById("helpButton");
     var modeSwitch=document.getElementById("workspaceModeSwitch");
@@ -37578,7 +37848,8 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
       return;
     }
     if(compactMissionZone && compactUtilityButtons){
-      if(modeSwitch && modeSwitch.parentElement!==compactMissionZone) compactMissionZone.appendChild(modeSwitch);
+      if(modeSwitch && builderNavigation && modeSwitch.parentElement!==builderNavigation) builderNavigation.appendChild(modeSwitch);
+      else if(modeSwitch && !builderNavigation && modeSwitch.parentElement!==compactMissionZone) compactMissionZone.appendChild(modeSwitch);
       if(helpButton && helpButton.parentElement!==compactUtilityButtons) compactUtilityButtons.appendChild(helpButton);
       return;
     }
@@ -44052,20 +44323,161 @@ body:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadProjectAction
   }
 }
 </style>
+<style id="builderWorkshopMajorNavigationCSS">
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel{
+  position:fixed !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation{
+  position:absolute;
+  left:6px;
+  right:6px;
+  bottom:8px;
+  display:grid;
+  grid-template-rows:44px 44px;
+  gap:5px;
+  z-index:12;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation > button{
+  width:100% !important;
+  min-width:0 !important;
+  height:44px !important;
+  min-height:44px !important;
+  margin:0 !important;
+  padding:5px 16px !important;
+  box-sizing:border-box !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background-color:transparent !important;
+  background-image:url("assets/images/dashboard/button-faces/builder-shortcut-grid-frame-glow.png") !important;
+  background-repeat:no-repeat !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  color:#dffaff !important;
+  -webkit-text-fill-color:#dffaff !important;
+  font:900 12px/1 "Lexend",Arial,sans-serif !important;
+  letter-spacing:.15px !important;
+  text-shadow:none !important;
+  overflow:hidden !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation #returnMissionsButton{
+  display:flex !important;
+  width:100% !important;
+  height:44px !important;
+  min-height:44px !important;
+  aspect-ratio:auto !important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+#builderMajorNavigation .builderNavigationLine,
+#builderMajorNavigation #workspaceModeSwitch .workspaceModeLabel{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+}
+#builderMajorNavigation .majorNavigationArrow,
+#workshopQuickAccessToolbar #workspaceModeSwitch .majorNavigationArrow{
+  position:relative;
+  display:inline-block;
+  width:18px;
+  height:12px;
+  flex:0 0 18px;
+  color:#7fefff;
+  filter:drop-shadow(0 0 2px rgba(127,239,255,.58));
+}
+#builderMajorNavigation .majorNavigationArrow::before,
+#workshopQuickAccessToolbar #workspaceModeSwitch .majorNavigationArrow::before{
+  content:"";
+  position:absolute;
+  top:4px;
+  width:12px;
+  height:4px;
+  border-radius:1px;
+  background:currentColor;
+}
+#builderMajorNavigation .majorNavigationArrow::after,
+#workshopQuickAccessToolbar #workspaceModeSwitch .majorNavigationArrow::after{
+  content:"";
+  position:absolute;
+  top:0;
+  width:0;
+  height:0;
+  border-top:6px solid transparent;
+  border-bottom:6px solid transparent;
+}
+#builderMajorNavigation .majorNavigationArrow.is-back::before,
+#workshopQuickAccessToolbar #workspaceModeSwitch .majorNavigationArrow.is-back::before{left:6px;}
+#builderMajorNavigation .majorNavigationArrow.is-back::after,
+#workshopQuickAccessToolbar #workspaceModeSwitch .majorNavigationArrow.is-back::after{
+  left:0;
+  border-right:8px solid currentColor;
+}
+#builderMajorNavigation .majorNavigationArrow.is-forward::before{right:6px;}
+#builderMajorNavigation .majorNavigationArrow.is-forward::after{
+  right:0;
+  border-left:8px solid currentColor;
+}
+#builderMajorNavigation .builderNavigationLine{
+  font-size:10px;
+}
+#builderMajorNavigation .builderNavigationSecondLine{
+  display:block;
+  font-size:14px;
+  line-height:1;
+  letter-spacing:.35px;
+}
+#builderMajorNavigation #workspaceModeSwitch .workspaceModeIcon{
+  display:none;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone{
+  height:126px !important;
+  min-height:126px !important;
+  max-height:126px !important;
+}
+</style>
+<script id="builderWorkshopMajorNavigationScript">
+(function(){
+  function installBuilderMajorNavigation(){
+    var panel=document.getElementById("builderRightToolsPanel");
+    var returnButton=document.getElementById("returnMissionsButton");
+    var workshopButton=document.getElementById("workspaceModeSwitch");
+    if(!panel || !returnButton || !workshopButton) return;
+    var navigation=document.getElementById("builderMajorNavigation");
+    if(!navigation){
+      navigation=document.createElement("nav");
+      navigation.id="builderMajorNavigation";
+      navigation.setAttribute("aria-label","Builder navigation");
+      panel.appendChild(navigation);
+    }
+    returnButton.setAttribute("aria-label","Return to Missions");
+    returnButton.title="Return to Missions";
+    returnButton.innerHTML='<span class="builderNavigationLine"><span class="majorNavigationArrow is-back" aria-hidden="true"></span><span>RETURN TO</span></span><span class="builderNavigationSecondLine">MISSIONS</span>';
+    navigation.appendChild(returnButton);
+    if(!document.body.classList.contains("workshopMode")){
+      navigation.appendChild(workshopButton);
+      var label=workshopButton.querySelector(".workspaceModeLabel");
+      if(label) label.innerHTML='<span class="workspaceModeOpenWords">OPEN WORKSHOP</span><span class="majorNavigationArrow is-forward workspaceModeForwardIcon" aria-hidden="true"></span>';
+    }
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",installBuilderMajorNavigation);
+  else installBuilderMajorNavigation();
+})();
+</script>
 <style id="builderNavigationNameplateAquaPerimeterCSS">
 /* Builder navigation keeps the authored brass-and-aqua PNG contour. Increase
    its physical-screen clarity without drawing a second CSS frame or changing
    the button geometry. */
-body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #returnMissionsButton,
-body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceModeSwitch{
+body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation #returnMissionsButton,
+body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation #workspaceModeSwitch{
   filter:brightness(1.10) saturate(1.24) contrast(1.06) drop-shadow(0 4px 4px rgba(0,0,0,.32)) !important;
 }
-body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #returnMissionsButton:hover,
-body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceModeSwitch:hover{
+body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation #returnMissionsButton:hover,
+body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation #workspaceModeSwitch:hover{
   filter:brightness(1.20) saturate(1.28) contrast(1.06) drop-shadow(0 5px 5px rgba(0,0,0,.34)) !important;
 }
-body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #returnMissionsButton:active,
-body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #workspaceModeSwitch:active{
+body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation #returnMissionsButton:active,
+body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation #workspaceModeSwitch:active{
   filter:brightness(.92) saturate(1.18) contrast(1.04) drop-shadow(0 2px 3px rgba(0,0,0,.28)) !important;
 }
 </style>
@@ -44074,13 +44486,41 @@ body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashb
    canvas is the build surface; every surrounding Builder/Workshop surface is
    interface chrome. */
 :root{
-  --builder-tools-gold-gear-cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg id='goldGear8Teeth' fill='%23d9a326' stroke='%23072535' stroke-width='1.4' stroke-linejoin='miter'%3E%3Crect x='13' y='1' width='6' height='9'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(45 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(90 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(135 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(180 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(225 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(270 16 16)'/%3E%3Crect x='13' y='1' width='6' height='9' transform='rotate(315 16 16)'/%3E%3Ccircle cx='16' cy='16' r='10.2'/%3E%3C/g%3E%3Ccircle id='aquaEdgeHighlight' cx='16' cy='16' r='9.4' fill='none' stroke='%235eeaff' stroke-width='.8'/%3E%3Ccircle id='darkCenterHole' cx='16' cy='16' r='4.1' fill='%23192834' stroke='%23072535' stroke-width='1.3'/%3E%3C/svg%3E") 16 16,default;
+  --builder-tools-precision-driver-cursor:url("./assets/images/cursors/thinkamigbob-precision-driver-cursor-v2.png") 58 20,pointer;
   --builder-cad-crosshair-cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23072535' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%235eeaff' stroke-width='1.4'/%3E%3Cpath d='M16 1v10M16 21v10M1 16h10M21 16h10' stroke='%23072535' stroke-width='3'/%3E%3Cpath d='M16 1v10M16 21v10M1 16h10M21 16h10' stroke='%235eeaff' stroke-width='1.4'/%3E%3Ccircle cx='16' cy='16' r='1.7' fill='%23f6c744' stroke='%23072535'/%3E%3C/svg%3E") 16 16,crosshair;
 }
 
 body:not(.starterScreenActive),
 body:not(.starterScreenActive) *{
-  cursor:var(--builder-tools-gold-gear-cursor) !important;
+  cursor:var(--builder-tools-precision-driver-cursor) !important;
+}
+
+/* Directly actionable interface controls use the familiar hand pointer. The
+   Precision Driver remains the cursor for surrounding Builder/Workshop chrome. */
+body:not(.starterScreenActive) :is(
+  button:not(:disabled),
+  a[href],
+  summary,
+  select:not(:disabled),
+  input:is([type="button"],[type="submit"],[type="reset"],[type="checkbox"],[type="radio"],[type="range"]):not(:disabled),
+  label[for],
+  [role="button"]:not([aria-disabled="true"]),
+  [role="link"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="checkbox"]:not([aria-disabled="true"]),
+  [role="radio"]:not([aria-disabled="true"]),
+  [role="switch"]:not([aria-disabled="true"])
+){
+  cursor:pointer !important;
+}
+
+body:not(.starterScreenActive) :is(
+  button:disabled,
+  select:disabled,
+  input:disabled,
+  [aria-disabled="true"]
+){
+  cursor:not-allowed !important;
 }
 
 body:not(.starterScreenActive) > canvas:not(#viewCubeCanvas){
@@ -44172,5 +44612,232 @@ if(typeof priorUpdate==="function"){
   window.updateReadToBobStats();
 }
 </script>
+<style id="starterMissionProjectEntryFinalLayoutOwnership">
+@media (min-width:701px){
+  body.starterScreenActive #startScreen #startCard .startBeforePanel{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:44px 44px !important;
+    align-items:center !important;
+    gap:5px !important;
+    min-height:0 !important;
+    height:101px !important;
+    padding:4px 18px !important;
+  }
+  body.starterScreenActive #startScreen #startCard .startBeforeGrid{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:44px !important;
+    place-items:center !important;
+    width:100% !important;
+    height:44px !important;
+  }
+  body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton{
+    width:260px !important;
+    min-width:260px !important;
+    max-width:260px !important;
+    height:44px !important;
+    min-height:44px !important;
+    aspect-ratio:auto !important;
+    margin:0 auto !important;
+  }
+  body.starterScreenActive #starterProjectEntryRow{
+    display:grid !important;
+    grid-template-columns:184px minmax(0,1fr) !important;
+    grid-template-rows:44px !important;
+    align-items:center !important;
+    gap:10px !important;
+    width:100% !important;
+    height:44px !important;
+  }
+  body.starterScreenActive #starterOpenSavedBuildButton{
+    justify-self:start !important;
+  }
+}
+</style>
+<style id="starterMissionPrimaryActionPolish">
+body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton{
+  position:relative !important;
+  isolation:isolate !important;
+  border:2px solid #ffe18a !important;
+  border-radius:13px !important;
+  background:
+    linear-gradient(180deg,rgba(255,250,199,.48) 0%,rgba(255,250,199,0) 28%),
+    linear-gradient(180deg,#f9d96b 0%,#dda92f 58%,#b97812 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    inset 0 -3px 0 rgba(91,48,0,.42),
+    0 0 0 3px rgba(105,61,8,.88),
+    0 5px 0 #704108,
+    0 8px 14px rgba(0,0,0,.42),
+    0 0 16px rgba(255,202,61,.45) !important;
+  color:#10263a !important;
+  -webkit-text-fill-color:#10263a !important;
+  overflow:visible !important;
+  filter:none !important;
+}
+body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton::before,
+body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton::after{
+  content:"" !important;
+  display:block !important;
+  position:absolute !important;
+  top:50% !important;
+  width:8px !important;
+  height:8px !important;
+  border-radius:50% !important;
+  background:#704108 !important;
+  border:1px solid #ffd978 !important;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.7),0 0 3px rgba(255,220,115,.8) !important;
+  transform:translateY(-50%) !important;
+  z-index:1 !important;
+}
+body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton::before{left:10px !important;}
+body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton::after{right:10px !important;}
+body.starterScreenActive #startBuildingButton .startMissionActionLabel{
+  position:relative !important;
+  z-index:2 !important;
+  display:block !important;
+  font-family:"Arial Black",Impact,sans-serif !important;
+  font-size:18px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  letter-spacing:.07em !important;
+  color:#10263a !important;
+  -webkit-text-fill-color:#10263a !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.72) !important;
+}
+body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):hover{
+  transform:translateY(-2px) scale(1.025) !important;
+  filter:brightness(1.06) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 0 -3px 0 rgba(91,48,0,.4),
+    0 0 0 3px rgba(105,61,8,.92),
+    0 7px 0 #704108,
+    0 11px 18px rgba(0,0,0,.45),
+    0 0 22px rgba(255,213,76,.72) !important;
+}
+body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):active{
+  transform:translateY(3px) !important;
+  box-shadow:inset 0 2px 5px rgba(86,47,0,.35),0 0 0 3px rgba(105,61,8,.9),0 2px 0 #704108 !important;
+}
+body.starterScreenActive #startBuildingButton:focus-visible{
+  outline:3px solid #35dcff !important;
+  outline-offset:6px !important;
+}
+</style>
+<style id="starterMissionApprovedArtworkAndTitleRestoreCSS">
+/* Use the approved transparent button artwork while retaining the canonical
+   mission-launch control and handler. Mission cards are slightly shorter so
+   the original large STEM Builder banner can remain the visual anchor. */
+body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton{
+  width:min(320px,100%) !important;
+  min-width:0 !important;
+  max-width:320px !important;
+  height:auto !important;
+  min-height:44px !important;
+  aspect-ratio:2100/690 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background-color:transparent !important;
+  background-image:url("assets/images/start-a-mission-button-transparent.png") !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  background-size:contain !important;
+  box-shadow:none !important;
+  filter:drop-shadow(0 6px 8px rgba(0,0,0,.42)) !important;
+  overflow:visible !important;
+}
+@media (min-width:701px){
+  body.starterScreenActive #startCard{
+    grid-template-rows:minmax(170px,200px) minmax(0,1fr) auto auto !important;
+  }
+  body.starterScreenActive .startLogo,
+  body.starterScreenActive .starterTitleBanner{
+    height:100% !important;
+  }
+  body.starterScreenActive .starterTitleBanner{
+    width:min(1320px,92vw) !important;
+  }
+  body.starterScreenActive .starterBannerImage{
+    width:100% !important;
+    height:100% !important;
+    max-height:none !important;
+    object-fit:contain !important;
+  }
+  body.starterScreenActive .startMissionGrid{
+    grid-template-rows:repeat(2,minmax(120px,1fr)) !important;
+  }
+  body.starterScreenActive #startScreen #startCard .startBeforePanel{
+    grid-template-rows:105px 44px !important;
+    height:162px !important;
+    overflow:visible !important;
+  }
+  body.starterScreenActive #startScreen #startCard .startBeforeGrid{
+    grid-template-rows:105px !important;
+    height:105px !important;
+    overflow:visible !important;
+  }
+}
+body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton::before,
+body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton::after{
+  content:none !important;
+  display:none !important;
+}
+body.starterScreenActive #startBuildingButton .startMissionActionLabel{
+  position:absolute !important;
+  width:1px !important;
+  height:1px !important;
+  padding:0 !important;
+  margin:-1px !important;
+  overflow:hidden !important;
+  clip:rect(0 0 0 0) !important;
+  white-space:nowrap !important;
+  border:0 !important;
+}
+body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):hover{
+  transform:translateY(-2px) scale(1.02) !important;
+  filter:brightness(1.06) drop-shadow(0 8px 10px rgba(0,0,0,.48)) !important;
+}
+body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):active{
+  transform:translateY(2px) !important;
+  filter:brightness(.98) drop-shadow(0 3px 5px rgba(0,0,0,.38)) !important;
+}
+@media (min-width:701px) and (max-height:760px){
+  body.starterScreenActive #startCard{
+    grid-template-rows:140px minmax(0,1fr) auto auto !important;
+  }
+  body.starterScreenActive .starterTitleBanner{
+    width:min(1320px,94vw) !important;
+  }
+  body.starterScreenActive .startMissionGrid{
+    grid-template-rows:repeat(2,56px) !important;
+  }
+  body.starterScreenActive .startMissionGrid .missionTile{
+    height:56px !important;
+  }
+  body.starterScreenActive .missionArt{
+    font-size:clamp(20px,3.2vh,26px) !important;
+  }
+  body.starterScreenActive .missionTileTitle{
+    padding:2px 6px 3px !important;
+    font-size:clamp(10px,1.5vh,12px) !important;
+  }
+  body.starterScreenActive #startScreen #startCard .startBeforePanel{
+    grid-template-rows:82px 44px !important;
+    height:139px !important;
+  }
+  body.starterScreenActive #startScreen #startCard .startBeforeGrid{
+    grid-template-rows:82px !important;
+    height:82px !important;
+  }
+  body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuildingButton{
+    width:250px !important;
+    max-width:250px !important;
+    min-height:44px !important;
+  }
+}
+</style>
 </body>
 </html>
