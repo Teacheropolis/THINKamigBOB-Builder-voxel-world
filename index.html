@@ -44904,5 +44904,82 @@ body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):act
   }
 }
 </style>
+<style id="starterMultiMissionResumeClearanceCSS">
+/* Multiple saved missions add a second, 44px-tall scroll-control row. Keep
+   that complete resume region below the approved Start a Mission artwork. */
+@media (min-width:701px){
+  body.starterScreenActive #startScreen #startCard .startBeforePanel{
+    grid-template-rows:105px minmax(91px,auto) !important;
+    gap:8px !important;
+    height:auto !important;
+    min-height:216px !important;
+    overflow:hidden !important;
+  }
+  body.starterScreenActive #starterProjectEntryRow{
+    grid-template-rows:minmax(91px,auto) !important;
+    align-items:start !important;
+    height:auto !important;
+    min-height:91px !important;
+  }
+  body.starterScreenActive .starterResumeRegion{
+    grid-template-rows:44px 44px !important;
+    min-height:91px !important;
+  }
+}
+@media (min-width:701px) and (max-height:760px){
+  body.starterScreenActive #startScreen #startCard .startBeforePanel{
+    grid-template-rows:82px minmax(91px,auto) !important;
+    min-height:193px !important;
+  }
+}
+</style>
+<style id="bobGuidanceFoundationCSS">
+#bobGuidanceRoot[hidden]{display:none!important}
+#bobGuidanceRoot{position:fixed;inset:0;z-index:2147483000;pointer-events:none}
+.bobGuidanceCurtain,.bobGuidanceGuard{position:fixed;background:rgba(2,16,29,.58);pointer-events:auto}
+.bobGuidanceGuard{background:transparent}
+.bobGuidanceCallout{position:fixed;width:min(330px,calc(100vw - 16px));max-height:min(360px,calc(100vh - 16px));overflow:auto;padding:16px;border:2px solid #47e6ff;border-radius:16px;background:linear-gradient(180deg,#123c55,#071d31);box-shadow:0 12px 30px rgba(0,0,0,.55),0 0 18px rgba(71,230,255,.35);color:#fff;pointer-events:auto}
+.bobGuidanceCallout h2{margin:0 34px 6px 0;color:#8ff3ff;font:800 19px/1.2 system-ui,sans-serif}
+.bobGuidanceCategory{margin:0 0 8px;color:#ffdc58;font:800 12px/1.2 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.bobGuidanceMessage{margin:0 0 14px;font:600 15px/1.45 system-ui,sans-serif}
+.bobGuidanceActions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.bobGuidanceActions button{min-width:44px;min-height:44px;padding:8px 12px;border:1px solid #62eaff;border-radius:9px;background:#082a42;color:#fff;font:800 13px/1 system-ui,sans-serif;cursor:pointer}
+.bobGuidanceActions button:hover,.bobGuidanceActions button:focus-visible{background:#0e4568;outline:3px solid #ffd84d;outline-offset:2px}
+.bobGuidanceClose{position:absolute;top:8px;right:8px;width:44px;padding:0!important;font-size:20px!important}
+.bobGuidanceTarget{outline:4px solid #54ecff!important;outline-offset:5px!important;box-shadow:0 0 0 8px rgba(84,236,255,.2),0 0 24px rgba(84,236,255,.9)!important}
+@media (prefers-reduced-motion:reduce){.bobGuidanceCallout,.bobGuidanceTarget{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
+<div id="bobGuidanceRoot" hidden aria-hidden="true">
+  <div class="bobGuidanceCurtain" data-bob-guidance="top"></div>
+  <div class="bobGuidanceCurtain" data-bob-guidance="right"></div>
+  <div class="bobGuidanceCurtain" data-bob-guidance="bottom"></div>
+  <div class="bobGuidanceCurtain" data-bob-guidance="left"></div>
+  <div class="bobGuidanceGuard" data-bob-guidance="guard"></div>
+  <section class="bobGuidanceCallout" data-bob-guidance="callout" role="dialog" aria-modal="false" aria-labelledby="bobGuidanceTitle" aria-describedby="bobGuidanceMessage">
+    <h2 id="bobGuidanceTitle" data-bob-guidance="title">THINKer BOB</h2>
+    <p class="bobGuidanceCategory" data-bob-guidance="category" hidden></p>
+    <p class="bobGuidanceMessage" id="bobGuidanceMessage" data-bob-guidance="message"></p>
+    <div class="bobGuidanceActions">
+      <button type="button" data-bob-guidance="show-me">Show me</button>
+      <button type="button" data-bob-guidance="back">Back</button>
+      <button type="button" data-bob-guidance="next">Next</button>
+      <button type="button" class="bobGuidanceClose" data-bob-guidance="cancel" aria-label="Close BOB Guidance">×</button>
+    </div>
+  </section>
+</div>
+<script type="module" id="bobGuidanceFoundationBootstrap">
+import {createBobGuidanceController} from "./js/guidance/bob-guidance-controller.mjs";
+const root=document.getElementById("bobGuidanceRoot");
+if(root){
+  const controller=createBobGuidanceController({root});
+  Object.defineProperty(window,"bobGuidance",{value:controller,writable:false,configurable:false});
+  let modeSignature=`${document.body.className}|${document.body.dataset.workspaceMode||""}`;
+  new MutationObserver(()=>{
+    const next=`${document.body.className}|${document.body.dataset.workspaceMode||""}`;
+    if(next!==modeSignature){modeSignature=next;controller.handleViewChange();}
+  }).observe(document.body,{attributes:true,attributeFilter:["class","data-workspace-mode"]});
+  window.addEventListener("pagehide",()=>controller.cancel("pagehide"),{once:true});
+}
+</script>
 </body>
 </html>

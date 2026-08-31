@@ -8,6 +8,7 @@ const starter=source.slice(starterStart,source.indexOf('<script id="starterLoadi
 const polish=source.match(/<style id="starterMissionProjectEntryPolishCSS">([\s\S]*?)<\/style>/)?.[1] || "";
 const primaryAction=source.match(/<style id="starterMissionPrimaryActionPolish">([\s\S]*?)<\/style>/)?.[1] || "";
 const approvedArtwork=source.match(/<style id="starterMissionApprovedArtworkAndTitleRestoreCSS">([\s\S]*?)<\/style>/)?.[1] || "";
+const resumeClearance=source.match(/<style id="starterMultiMissionResumeClearanceCSS">([\s\S]*?)<\/style>/)?.[1] || "";
 const scrolling=source.match(/<script id="starterMissionProjectEntryScrollScript">([\s\S]*?)<\/script>/)?.[1] || "";
 
 test("starter project entry uses the approved hierarchy and canonical mission start",()=>{
@@ -68,6 +69,12 @@ test("custom Resume scroller is visible only for overflow and owns all scroll in
   for(const key of ["ArrowLeft","ArrowRight","PageUp","PageDown","Home","End"]){
     assert.match(scrolling,new RegExp(`event\\.key===\"${key}\"`));
   }
+});
+
+test("multi-mission Resume controls remain below the Start a Mission artwork",()=>{
+  assert.match(resumeClearance,/\.startBeforePanel\{[\s\S]*grid-template-rows:105px minmax\(91px,auto\)[\s\S]*min-height:216px[\s\S]*overflow:hidden/);
+  assert.match(resumeClearance,/#starterProjectEntryRow\{[\s\S]*grid-template-rows:minmax\(91px,auto\)[\s\S]*min-height:91px/);
+  assert.match(resumeClearance,/\.starterResumeRegion\{[\s\S]*grid-template-rows:44px 44px[\s\S]*min-height:91px/);
 });
 
 test("starter scope keeps the ten missions and four help cards without Workshop or Inventor entry",()=>{
