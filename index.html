@@ -30215,10 +30215,13 @@ body.calmMode #thinkerBobRigMount{animation:none !important;}
     return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }
 
-  window.playThinkerBobGreeting=function(){
+  window.playThinkerBobGreeting=function(welcomeOwner){
     if(!rigRoot() || greetingPlaying) return;
     if(reducedMotionRequested()){
       window.setThinkerBobNeutral();
+      window.dispatchEvent(new CustomEvent("builderBobMissionWelcomeComplete",{
+        detail:{owner:welcomeOwner,waves:0,reducedMotion:true}
+      }));
       return;
     }
     greetingPlaying=true;
@@ -30242,6 +30245,9 @@ body.calmMode #thinkerBobRigMount{animation:none !important;}
         mount.dataset.welcomeWaveCycles=String(MISSION_POPUP_WAVE_CYCLES);
         mount.dataset.welcomeWaveState="idle";
       }
+      window.dispatchEvent(new CustomEvent("builderBobMissionWelcomeComplete",{
+        detail:{owner:welcomeOwner,waves:MISSION_POPUP_WAVE_CYCLES,reducedMotion:false}
+      }));
     });
   };
 
@@ -30280,7 +30286,7 @@ body.calmMode #thinkerBobRigMount{animation:none !important;}
         if(owner!==missionPopupWelcomeOwner || missionPopupIsVisiblyOpen()) return;
         var mount=document.getElementById("thinkerBobRigMount");
         if(mount) mount.dataset.welcomeWaveState="waving";
-        window.playThinkerBobGreeting();
+        window.playThinkerBobGreeting(owner);
       });
     },MISSION_POPUP_WELCOME_DELAY_MS);
   }
@@ -44947,6 +44953,12 @@ body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):act
 .bobGuidanceActions button:hover,.bobGuidanceActions button:focus-visible{background:#0e4568;outline:3px solid #ffd84d;outline-offset:2px}
 .bobGuidanceClose{position:absolute;top:8px;right:8px;width:44px;padding:0!important;font-size:20px!important}
 .bobGuidanceTarget{outline:4px solid #54ecff!important;outline-offset:5px!important;box-shadow:0 0 0 8px rgba(84,236,255,.2),0 0 24px rgba(84,236,255,.9)!important}
+.bobGuidanceChallengeReveal{overflow:visible!important;z-index:2147482990!important}
+.bobGuidanceChallengeTemplateReveal #templateIncludesPanel{display:block!important;grid-column:2!important;grid-row:1 / 3!important;align-self:stretch!important;min-width:0!important;margin:0!important;padding:7px 10px!important;overflow:auto!important;background:rgba(4,29,43,.9)!important;border:1px solid rgba(84,236,255,.65)!important;border-radius:9px!important}
+.bobGuidanceChallengeTemplateReveal #templateIncludesPanel[hidden]{display:block!important}
+.bobGuidanceChallengeTemplateReveal #templateIncludesTitle{margin:0 0 4px!important;color:#8ff3ff!important;font:800 12px/1.15 system-ui,sans-serif!important;text-transform:uppercase!important}
+.bobGuidanceChallengeTemplateReveal #templateIncludesList{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:3px 10px!important;margin:0!important;padding-left:18px!important;color:#fff!important;font:700 12px/1.15 system-ui,sans-serif!important}
+.bobGuidanceChallengeTemplateReveal #challengeChecklist{display:none!important}
 @media (prefers-reduced-motion:reduce){.bobGuidanceCallout,.bobGuidanceTarget{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 </style>
 <div id="bobGuidanceRoot" hidden aria-hidden="true">
@@ -44969,14 +44981,27 @@ body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):act
 </div>
 <script type="module" id="bobGuidanceFoundationBootstrap">
 import {createBobGuidanceController} from "./js/guidance/bob-guidance-controller.mjs";
+import {installFirstMissionBuilderChallengeGuidance} from "./js/guidance/bob-first-mission-builder-challenge-guidance.mjs";
 const root=document.getElementById("bobGuidanceRoot");
 if(root){
   const controller=createBobGuidanceController({root});
-  Object.defineProperty(window,"bobGuidance",{value:controller,writable:false,configurable:false});
-  let modeSignature=`${document.body.className}|${document.body.dataset.workspaceMode||""}`;
+  if(Object.isExtensible(window)){
+    Object.defineProperty(window,"bobGuidance",{value:controller,writable:false,configurable:false});
+  }
+  installFirstMissionBuilderChallengeGuidance({guidance:controller});
+  let guidanceViewState={
+    starter:document.body.classList.contains("starterScreenActive"),
+    workshop:document.body.classList.contains("workshopMode"),
+  };
   new MutationObserver(()=>{
-    const next=`${document.body.className}|${document.body.dataset.workspaceMode||""}`;
-    if(next!==modeSignature){modeSignature=next;controller.handleViewChange();}
+    const next={
+      starter:document.body.classList.contains("starterScreenActive"),
+      workshop:document.body.classList.contains("workshopMode"),
+    };
+    if((next.starter&&!guidanceViewState.starter)||(next.workshop&&!guidanceViewState.workshop)){
+      controller.handleViewChange();
+    }
+    guidanceViewState=next;
   }).observe(document.body,{attributes:true,attributeFilter:["class","data-workspace-mode"]});
   window.addEventListener("pagehide",()=>controller.cancel("pagehide"),{once:true});
 }

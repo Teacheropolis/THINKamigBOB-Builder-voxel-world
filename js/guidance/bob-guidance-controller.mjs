@@ -21,6 +21,7 @@ function normalizeStep(step, index) {
     amigCategory:step.amigCategory ? String(step.amigCategory) : null,
     guidanceType, placement, highlight:step.highlight !== false,
     showMe:step.showMe !== false, next:step.next !== false,
+    nextLabel:step.nextLabel ? String(step.nextLabel) : "Next",
     back:step.back !== false, cancel:step.cancel !== false,
     completion:step.completion === "target-activation" ? "target-activation" : "manual",
     reveal:typeof step.reveal === "function" ? step.reveal : null,
@@ -108,6 +109,7 @@ export function createBobGuidanceController({
     title.textContent=step.title; message.textContent=step.message;
     category.textContent=step.amigCategory || ""; category.hidden=!step.amigCategory;
     showMe.hidden=!step.showMe; back.hidden=!step.back || index===0; next.hidden=!step.next;
+    next.textContent=step.nextLabel;
     cancelButton.hidden=!step.cancel; target.classList?.toggle("bobGuidanceTarget",step.highlight);
     root.hidden=false; root.setAttribute("aria-hidden","false");
     if(step.completion === "target-activation") {
