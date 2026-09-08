@@ -4600,63 +4600,6 @@ Nature ▶
 </div>
 <div id="workshopPrecisionCursor" aria-hidden="true">Precision: 1 cm</div>
 
-<section id="readToBobPractice" hidden role="dialog" aria-modal="false" aria-label="Read to BOB practice">
-  <button id="readToBobCloseButton" type="button" aria-label="Close Read to BOB practice" onclick="toggleReadToBobPractice()">×</button>
-  <div class="readToBobPracticeTitle">🎙 READ TO BOB</div>
-  <p class="readToBobPracticeIntro"><strong>1.</strong> Press Start Reading and wait for BOB’s 3–2–1 countdown. <strong>2.</strong> Read only the glowing passage below.</p>
-  <div class="readToBobPassageCard" aria-label="Your reading passage">
-    <div class="readToBobPassageLabel">YOUR READING PASSAGE</div>
-    <div id="readToBobFluencyIndicator" hidden role="status" aria-live="polite" aria-label="Punctuation coaching"></div>
-    <p id="readToBobSentencePreview" aria-live="polite"></p>
-    <div id="readToBobPaceWarning" hidden role="alert" aria-live="assertive"></div>
-    <div id="readToBobPhoneticHelp" hidden role="status" aria-live="polite">
-      <span class="readToBobHelpIcon" aria-hidden="true">💡</span>
-      <span id="readToBobPhoneticHelpText"></span>
-      <button id="readToBobHearWordButton" type="button" onclick="hearReadToBobHelpWord()">🔊 Hear BOB say it</button>
-      <button type="button" onclick="hideReadToBobPhoneticHelp()">I’ll try it</button>
-    </div>
-  </div>
-  <p id="readToBobAdaptiveNote">BOB will keep the full passage when your reading is steady.</p>
-  <div id="readToBobFeedback" hidden aria-live="polite">
-    <div class="readToBobFeedbackLabel">BOB’S FEEDBACK</div>
-    <p id="readToBobFeedbackText"></p>
-  </div>
-  <div id="readToBobFluencyFeedback" hidden role="status" aria-live="polite"></div>
-  <div id="readToBobCountdownPopup" hidden role="dialog" aria-modal="true" aria-labelledby="readToBobCountdownLabel">
-    <div class="readToBobCountdownCard">
-      <div id="readToBobCountdownLabel">Get ready to read</div>
-      <div id="readToBobCountdown" aria-live="assertive" aria-atomic="true"></div>
-      <button id="readToBobCountdownCancelButton" type="button" onclick="stopReadToBobListening()">Cancel</button>
-    </div>
-  </div>
-  <div id="readToBobRewardPopup" hidden role="dialog" aria-modal="true" aria-labelledby="readToBobRewardHeader">
-    <div class="readToBobRewardCard">
-      <div id="readToBobRewardHeader">READ TO BOB REWARD</div>
-      <div id="readToBobRewardSymbol" aria-hidden="true"></div>
-      <div id="readToBobRewardTitle"></div>
-      <p id="readToBobRewardMessage"></p>
-      <div id="readToBobGearReward" aria-live="polite"></div>
-      <div id="readToBobRewardLevelUp" hidden></div>
-      <div class="readToBobRewardProgress">
-        <div id="readToBobRewardProgressLabel"></div>
-        <div id="readToBobRewardProgressSymbols" aria-hidden="true"></div>
-        <div id="readToBobRewardProgressText"></div>
-      </div>
-      <div id="readToBobRewardRetryHint" hidden>TRY AGAIN FOR A STAR AND MORE GEARS</div>
-      <div class="readToBobRewardButtons">
-        <button id="readToBobRewardTryAgainButton" type="button" onclick="retryReadToBobRewardPassage()">TRY AGAIN</button>
-        <button id="readToBobRewardBackButton" type="button" onclick="closeReadToBobRewardToBuilder()">BACK TO BUILDER</button>
-      </div>
-    </div>
-  </div>
-  <div class="readToBobListeningControls">
-    <button id="readToBobListenButton" type="button" onclick="startReadToBobListening()">🎙 Start Reading</button>
-    <button id="readToBobStopButton" type="button" onclick="stopReadToBobListening()" disabled>Stop</button>
-  </div>
-  <p id="readToBobListenStatus" role="status" aria-live="polite">Select Start Reading when you are ready.</p>
-  <div id="readToBobTranscript" aria-live="polite">Your words will appear here while BOB listens.</div>
-  <p class="readToBobPrivacyNote">Audio and transcript stay only in this practice session.</p>
-</section>
 <!-- =====================================================
 HTML SECTION 03 — VIEW CUBE / CAMERA HELPER
 Future extraction target: view controls.
@@ -4872,7 +4815,7 @@ Future extraction target: STEM Coach and read-aloud UI.
 <div id="rightHudColumn">
 <div id="stemCoach">
 <div id="stemCoachHeader">
-  <button id="stemCoachToggle" type="button" aria-expanded="true" aria-controls="thinkerBobWorkshop stemCoachActionGroup readToBobStatsPanel stemCoachContent" onclick="toggleStemCoach()">
+  <button id="stemCoachToggle" type="button" aria-expanded="true" aria-controls="thinkerBobWorkshop stemCoachActionGroup stemCoachContent" onclick="toggleStemCoach()">
     <span class="stemCoachHeaderTitle"><span class="stemCoachThinkerBob">THINKer BOB</span><span class="stemCoachOxanium"> — STEM Coach</span></span>
     <span class="stemCoachToggleIndicator" aria-hidden="true">▼</span>
   </button>
@@ -4914,9 +4857,8 @@ Future extraction target: STEM Coach and read-aloud UI.
 
 <section id="stemCoachActionGroup" aria-label="STEM Coach actions">
   <button id="reopenLibraryFromCoach" type="button" onclick="reopenObjectLibraryFromCoach(event)">↗ OPEN LIBRARY</button>
-  <button id="readToBobPracticeButton" type="button" aria-expanded="false" aria-controls="readToBobPractice" onclick="startStemCoachReadToBob()">🎙️ Read to BOB</button>
 </section>
-<section id="readToBobStatsPanel" aria-labelledby="readToBobStatsHeader">
+<section id="readToBobStatsPanel" hidden aria-hidden="true" data-retired-student-oral-reading="true" aria-labelledby="readToBobStatsHeader">
   <div id="readToBobStatsHeader">🎙️ READ TO BOB STATS</div>
   <div class="readToBobStatsSummary">
     <div class="readToBobStatsGearTotal">
@@ -6459,12 +6401,6 @@ function toggleStemCoach(){
 
   button.setAttribute("aria-expanded", String(!isCollapsed));
   if(indicator) indicator.textContent = isCollapsed ? "▶" : "▼";
-
-  if(!isCollapsed){
-    if(typeof window.updateReadToBobStats === "function"){
-      window.updateReadToBobStats();
-    }
-  }
 
   positionRightPanels();
 }  
@@ -8485,11 +8421,12 @@ viewCubeScene.add(viewCubeHighlight);
 const viewDiceRaycaster = new THREE.Raycaster();
 const viewDiceMouse = new THREE.Vector2();
 
-function readToBobBlocksBuilderEvent(event){
-  if(window.isReadToBobModalInteractionBlocked &&
-    window.isReadToBobModalInteractionBlocked()) return true;
-  return !!(window.isReadToBobReaderInteraction &&
-    window.isReadToBobReaderInteraction(event));
+function builderUiBlocksCanvasEvent(event){
+  const target = event && event.target;
+  if(!target || typeof target.closest !== "function") return false;
+  return !!target.closest(
+    "#rightHudColumn, #builderBobRightPanel, #buildBar, #missionPopup, #helpDialog, #workshopProjectDialog"
+  );
 }
 
 function viewFromDiceFace(materialIndex){
@@ -8514,7 +8451,7 @@ function requestViewDicePreset(view){
 }
 
 viewCubeCanvas.addEventListener("click", function(event){
-  if(readToBobBlocksBuilderEvent(event)) return;
+  if(builderUiBlocksCanvasEvent(event)) return;
   if(viewDiceMoved){
     viewDiceMoved = false;
     return;
@@ -8536,7 +8473,7 @@ viewCubeCanvas.addEventListener("click", function(event){
 });
 
 viewCubeCanvas.addEventListener("dblclick", function(event){
-  if(readToBobBlocksBuilderEvent(event)) return;
+  if(builderUiBlocksCanvasEvent(event)) return;
   requestViewDicePreset("home");
 });
 
@@ -8547,7 +8484,7 @@ let viewDiceLastY = 0;
 let viewDiceWorkshopDragPrepared = false;
 
 viewCubeCanvas.addEventListener("mousedown", function(event){
-  if(readToBobBlocksBuilderEvent(event)){
+  if(builderUiBlocksCanvasEvent(event)){
     viewDiceDragging = false;
     return;
   }
@@ -8559,7 +8496,7 @@ viewCubeCanvas.addEventListener("mousedown", function(event){
 });
 
 document.addEventListener("mousemove", function(event){
-  if(readToBobBlocksBuilderEvent(event)){
+  if(builderUiBlocksCanvasEvent(event)){
     viewDiceDragging = false;
     return;
   }
@@ -8636,7 +8573,7 @@ function updateCamera(){
 }
 
 document.addEventListener('mousedown', (event)=>{
-  if(readToBobBlocksBuilderEvent(event)){
+  if(builderUiBlocksCanvasEvent(event)){
     isDragging = false;
     mouseMoved = false;
     return;
@@ -8679,7 +8616,7 @@ document.addEventListener('mouseup', ()=>{
 });
 
 document.addEventListener("keydown", (event) => {
-  if(readToBobBlocksBuilderEvent(event)) return;
+  if(builderUiBlocksCanvasEvent(event)) return;
 
   if(event.key==="Escape" && document.body.classList.contains("workshopMode") &&
     workshopSelectionFoundationController &&
@@ -8708,7 +8645,7 @@ document.addEventListener("keydown", (event) => {
   
 document.addEventListener('mousemove', (event)=>{
 
-  if(readToBobBlocksBuilderEvent(event)){
+  if(builderUiBlocksCanvasEvent(event)){
     isDragging = false;
     return;
   }
@@ -8762,7 +8699,7 @@ document.addEventListener('mousemove', (event)=>{
 
 document.addEventListener('wheel', (event) => {
 
-  if(readToBobBlocksBuilderEvent(event)) return;
+  if(builderUiBlocksCanvasEvent(event)) return;
 
   if(!workshopEventOwnsRendererCanvas(event)) return;
 
@@ -8826,7 +8763,7 @@ if(
 // Arrow key camera controls
 document.addEventListener('keydown', (event)=>{
 
-  if(readToBobBlocksBuilderEvent(event)) return;
+  if(builderUiBlocksCanvasEvent(event)) return;
 
   if(clickedUI(event)) return;
 
@@ -9633,7 +9570,7 @@ function workshopNativeControlOwnsKeyboardClick(event){
 
 document.addEventListener('click', (event)=>{
 
-  if(readToBobBlocksBuilderEvent(event)) return;
+  if(builderUiBlocksCanvasEvent(event)) return;
 
   if(window.readToBobFeedbackActive) return;
 
@@ -9870,7 +9807,7 @@ if(intersects.length > 0){
 });
 
 document.addEventListener('contextmenu', (event)=>{
-  if(readToBobBlocksBuilderEvent(event)) return;
+  if(builderUiBlocksCanvasEvent(event)) return;
 
   if(window.readToBobFeedbackActive) return;
 
@@ -11605,30 +11542,10 @@ function chooseMissionPopupReading(mode){
   const popupSpeech = buildMissionPopupSpeech();
   currentThinkerBobSpeech = popupSpeech;
 
-  if(typeof window.cancelReadToBobStartup === "function") window.cancelReadToBobStartup();
-  if(mode !== "student"){
-    const practice = document.getElementById("readToBobPractice");
-    if(practice && !practice.hidden && typeof window.toggleReadToBobPractice === "function"){
-      window.toggleReadToBobPractice();
-    }
-  }
-
   if(mode === "bob"){
     if(choice) choice.hidden = true;
     renderReaderText(popupSpeech, "popup");
     speakText(popupSpeech, 0, "popup");
-    return;
-  }
-
-  if(mode === "student"){
-    if(typeof window.setReadToBobMissionPassage === "function"){
-      window.setReadToBobMissionPassage(popupSpeech);
-    }
-    closeMissionPopup();
-    window.setTimeout(function(){
-      var practice = document.getElementById("readToBobPractice");
-      if(practice && practice.hidden && typeof window.toggleReadToBobPractice === "function") window.toggleReadToBobPractice();
-    },80);
     return;
   }
 
@@ -17696,7 +17613,6 @@ Small help modal kept inline for now.
         <section data-help-section="bob-reading">
           <h3>THINKer BOB and Reading</h3>
           <p><strong>Open Library:</strong> Choose a STEM reading. Yellow vocabulary words can open meanings and build ideas.</p>
-          <p><strong>Read to BOB:</strong> Practice reading aloud. Allow microphone access when your browser asks.</p>
           <p><strong>Voice Reader:</strong> Let BOB read text aloud. Click a word to start reading there.</p>
           <p><strong>Calm Mode:</strong> Use quieter motion and presentation while keeping the tools available.</p>
         </section>
@@ -17720,7 +17636,7 @@ Small help modal kept inline for now.
           <p><strong>Move or Delete does nothing:</strong> Select the object first, then choose the action.</p>
           <p><strong>The camera moved unexpectedly:</strong> Stop dragging and use Home or a View Cube face.</p>
           <p><strong>A saved project is missing:</strong> Check the Chromebook Downloads folder, then reopen the file chooser.</p>
-          <p><strong>Read to BOB cannot use the microphone:</strong> Allow microphone access in the browser and try again.</p>
+          <p><strong>BOB does not start reading:</strong> Choose Open Library, select a reading, and make sure Voice Reader is on.</p>
           <p><strong>A Workshop tool is locked:</strong> Keep earning Gears to reach the next Workshop upgrade.</p>
           <p><strong>Controls do not fit on a Chromebook:</strong> Use the panel's scrollbar. Keep browser zoom at its normal setting.</p>
         </section>
@@ -17763,7 +17679,7 @@ Small help modal kept inline for now.
         </section>
         <section data-help-section="bob-reading">
           <h3>THINKer BOB and Reading</h3>
-          <p>Return to Builder to use Open Library, Read to BOB, Voice Reader, and Calm Mode. Your Workshop draft remains protected.</p>
+          <p>Return to Builder to use Open Library, BOB's Voice Reader, and Calm Mode. Your Workshop draft remains protected.</p>
         </section>
         <section data-help-section="gears-upgrades">
           <h3>Gears and Workshop Upgrades</h3>
@@ -17789,7 +17705,7 @@ Small help modal kept inline for now.
           <p><strong>Move or Delete does nothing:</strong> Select an eligible object or structure first.</p>
           <p><strong>The camera moved unexpectedly:</strong> Press Home once, or choose a View Remote direction.</p>
           <p><strong>A saved project is missing:</strong> Check Downloads, then choose Open again. Unsupported files fail safely.</p>
-          <p><strong>Read to BOB cannot use the microphone:</strong> Return to Builder and allow microphone access in the browser.</p>
+          <p><strong>BOB does not start reading:</strong> Return to Builder, open a Library reading, and make sure Voice Reader is on.</p>
           <p><strong>A Workshop tool is locked:</strong> Keep earning Gears until its Workshop upgrade unlocks.</p>
           <p><strong>Controls do not fit on a Chromebook:</strong> Scroll inside the tool panel or Help window, not the page.</p>
         </section>
@@ -27848,7 +27764,7 @@ body:not(.starterScreenActive) .readToBobPrivacyNote{
 }
 </style>
 
-<script id="readToBobStepOneScript">
+<script id="readToBobStepOneScript" type="application/x-thinkamigbob-retired-student-oral-reading">
 (function(){
   var recognition=null;
   var listening=false;
@@ -37919,8 +37835,10 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
       return;
     }
     if(compactMissionZone && compactUtilityButtons){
-      if(modeSwitch && builderNavigation && modeSwitch.parentElement!==builderNavigation) builderNavigation.appendChild(modeSwitch);
-      else if(modeSwitch && !builderNavigation && modeSwitch.parentElement!==compactMissionZone) compactMissionZone.appendChild(modeSwitch);
+      var compactBuilderHeight=window.matchMedia && window.matchMedia("(max-height:700px)").matches;
+      var modeSwitchOwner=compactBuilderHeight ? compactMissionZone : builderNavigation;
+      if(modeSwitch && modeSwitchOwner && modeSwitch.parentElement!==modeSwitchOwner) modeSwitchOwner.appendChild(modeSwitch);
+      else if(modeSwitch && !modeSwitchOwner && modeSwitch.parentElement!==compactMissionZone) compactMissionZone.appendChild(modeSwitch);
       if(helpButton && helpButton.parentElement!==compactUtilityButtons) compactUtilityButtons.appendChild(helpButton);
       return;
     }
@@ -39763,7 +39681,7 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
       event.defaultPrevented ||
       event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
       workshopVisibleModalOwnsInteraction() ||
-      readToBobBlocksBuilderEvent(event)){
+      builderUiBlocksCanvasEvent(event)){
       return false;
     }
 
@@ -43953,9 +43871,7 @@ body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .readToB
       !document.body.classList.contains("workshopMode");
   }
   function studentIsReading(){
-    return document.body.classList.contains("readToBobPracticeActive") ||
-      document.body.classList.contains("readToBobFeedbackActive") ||
-      !!window.readToBobPracticeActive || !!window.readToBobFeedbackActive;
+    return false;
   }
   function bobIsReading(){
     return document.body.classList.contains("builderBobLessonTransition") || !!(window.speechSynthesis &&
@@ -44521,18 +44437,25 @@ body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashb
       navigation.setAttribute("aria-label","Builder navigation");
       panel.appendChild(navigation);
     }
+    /* Navigation is the final, distinct rail group. Re-appending also repairs
+       an older in-session layout that nested it inside Mission & Shortcuts. */
+    panel.appendChild(navigation);
     returnButton.setAttribute("aria-label","Return to Missions");
     returnButton.title="Return to Missions";
     returnButton.innerHTML='<span class="builderNavigationLine"><span class="majorNavigationArrow is-back" aria-hidden="true"></span><span>RETURN TO</span></span><span class="builderNavigationSecondLine">MISSIONS</span>';
     navigation.appendChild(returnButton);
     if(!document.body.classList.contains("workshopMode")){
       navigation.appendChild(workshopButton);
+      var compactMissionZone=document.querySelector("#builderRightToolsPanel .dashboard139MissionZone");
+      var compactBuilderHeight=window.matchMedia && window.matchMedia("(max-height:700px)").matches;
+      if(compactBuilderHeight && compactMissionZone) compactMissionZone.appendChild(workshopButton);
       var label=workshopButton.querySelector(".workspaceModeLabel");
       if(label) label.innerHTML='<span class="workspaceModeOpenWords">OPEN WORKSHOP</span><span class="majorNavigationArrow is-forward workspaceModeForwardIcon" aria-hidden="true"></span>';
     }
   }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",installBuilderMajorNavigation);
   else installBuilderMajorNavigation();
+  window.addEventListener("resize",installBuilderMajorNavigation,{passive:true});
 })();
 </script>
 <style id="builderNavigationNameplateAquaPerimeterCSS">
@@ -44550,6 +44473,356 @@ body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation #works
 body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation #returnMissionsButton:active,
 body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation #workspaceModeSwitch:active{
   filter:brightness(.92) saturate(1.18) contrast(1.04) drop-shadow(0 2px 3px rgba(0,0,0,.28)) !important;
+}
+</style>
+<style id="builderResponsiveHeightAllocationCSS">
+/* The Builder's left rail owns its vertical overflow. Keep every section and
+   navigation control in normal flow so shorter screens never place navigation
+   over Utilities or send scrolling to the build surface. */
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain !important;
+  touch-action:pan-y !important;
+  scrollbar-gutter:stable !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeZone,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139BuildZone,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139UtilityZone{
+  flex:0 0 auto !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  grid-auto-rows:44px !important;
+  align-items:stretch !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation{
+  position:static !important;
+  inset:auto !important;
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(44px,1fr)) !important;
+  grid-template-rows:44px !important;
+  gap:3px !important;
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  z-index:auto !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderProjectActionsLeft > button,
+body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation > button{
+  height:44px !important;
+  min-height:44px !important;
+  max-height:44px !important;
+}
+
+@media(max-height:760px){
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel{
+    gap:3px !important;
+    padding:2px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139Zone{
+    padding:22px 3px 3px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ZoneLabel{
+    top:2px !important;
+    left:3px !important;
+    right:3px !important;
+    height:17px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone{
+    gap:3px !important;
+    padding-top:22px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeZone{
+    margin-top:0 !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #bottomBuildTools,
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboardUtilityButtons{
+    gap:3px !important;
+  }
+}
+
+/* PLAN RESIZE compact-height allocation. These rules intentionally begin
+   below the approved 1204x695 baseline and preserve 44px controls. */
+@media(max-height:660px){
+  :root{
+    --builder-swap-bottom-height:94px;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel{
+    gap:2px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139Zone{
+    padding:19px 2px 2px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ZoneLabel{
+    top:1px !important;
+    left:2px !important;
+    right:2px !important;
+    height:16px !important;
+    min-height:16px !important;
+    line-height:16px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone{
+    gap:2px !important;
+    padding-top:19px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #bottomBuildTools,
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboardUtilityButtons{
+    gap:2px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation{
+    flex:0 0 auto !important;
+    gap:2px !important;
+    margin-top:4px !important;
+    padding-top:5px !important;
+    border-top:1px solid rgba(143,246,255,.48) !important;
+  }
+
+  body:not(.starterScreenActive):not(.workshopMode) #info{
+    grid-template-columns:138px minmax(0,1fr) !important;
+    grid-template-rows:minmax(0,1fr) !important;
+    gap:4px 6px !important;
+    padding:5px 7px !important;
+    overflow:hidden !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #info #challengeTitle{
+    grid-row:1 !important;
+    font-size:15px !important;
+    line-height:1.02 !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #info #challengeChecklist{
+    grid-row:1 !important;
+    grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+    gap:3px 5px !important;
+    overflow:hidden !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #info #challengeChecklist label{
+    padding:2px 4px 2px 27px !important;
+    font-size:10px !important;
+    line-height:1.04 !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #info #challengeChecklist label input{
+    left:4px !important;
+    top:50% !important;
+    width:19px !important;
+    height:19px !important;
+    transform:translateY(-50%) !important;
+  }
+
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel{
+    gap:3px !important;
+    padding:3px !important;
+    overflow-y:auto !important;
+    overscroll-behavior:contain !important;
+    scrollbar-gutter:stable !important;
+    scrollbar-color:#8ff6ff rgba(3,24,36,.92) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoach{
+    flex:1 0 250px !important;
+    min-height:250px !important;
+    padding:3px !important;
+    gap:3px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #stemCoachContent{
+    min-height:64px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139VoiceZone{
+    min-height:158px !important;
+    padding:24px 4px 5px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #voiceControls{
+    gap:3px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel .dashboard139MessageStrip,
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #toolMessage.bottomToolMessage{
+    height:32px !important;
+    min-height:32px !important;
+  }
+}
+
+/* At genuinely short heights, compact the Builder's left rail as one system.
+   The 1204x695 Chromebook baseline stays on the regular 44px presentation;
+   this tier removes decorative space while retaining the 44px control floor
+   so 1024x640 can show the complete rail without scrolling. */
+@media(max-height:700px){
+  :root{
+    --builder-left-compact-section-gap:0px;
+    --builder-left-compact-section-pad-x:1px;
+    --builder-left-compact-label-height:12px;
+    --builder-left-compact-control-height:44px;
+    --builder-left-compact-nav-height:44px;
+    --builder-left-compact-swatch-size:44px;
+    --builder-left-compact-slider-space:6px;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel{
+    gap:var(--builder-left-compact-section-gap) !important;
+    padding:1px !important;
+    overflow-y:auto !important;
+    scrollbar-gutter:stable !important;
+    scrollbar-width:thin !important;
+    scrollbar-color:#62eaff rgba(3,24,36,.92) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel::-webkit-scrollbar{
+    display:block !important;
+    width:8px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel::-webkit-scrollbar-track{
+    background:rgba(3,24,36,.92) !important;
+    border:1px solid rgba(143,246,255,.38) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel::-webkit-scrollbar-thumb{
+    min-height:44px !important;
+    background:#62eaff !important;
+    border:1px solid #082a3e !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139Zone{
+    padding:calc(var(--builder-left-compact-label-height) + 1px) var(--builder-left-compact-section-pad-x) 0 !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ZoneLabel{
+    top:0 !important;
+    left:1px !important;
+    right:1px !important;
+    height:var(--builder-left-compact-label-height) !important;
+    min-height:var(--builder-left-compact-label-height) !important;
+    padding:0 1px !important;
+    line-height:var(--builder-left-compact-label-height) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone{
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-auto-rows:var(--builder-left-compact-control-height) !important;
+    gap:1px !important;
+    padding-top:calc(var(--builder-left-compact-label-height) + 1px) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #builderProjectActionsLeft,
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #builderMissionActions{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(44px,1fr)) !important;
+    gap:1px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #builderProjectActionsLeft{
+    gap:1px !important;
+    margin:0 !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #builderProjectActionsLeft > button,
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139MissionZone #builderMissionActions button,
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #bottomBuildTools button,
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboardUtilityButtons button{
+    height:var(--builder-left-compact-control-height) !important;
+    min-height:var(--builder-left-compact-control-height) !important;
+    max-height:var(--builder-left-compact-control-height) !important;
+    padding-block:1px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeZone{
+    margin-top:0 !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeRow{
+    gap:1px !important;
+    margin-bottom:0 !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeZone #blockShape{
+    height:var(--builder-left-compact-control-height) !important;
+    min-height:var(--builder-left-compact-control-height) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .colorScrollWrap{
+    padding-bottom:var(--builder-left-compact-slider-space) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #colorSwatchBar button,
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #colorSwatchBar .colorSwatch{
+    flex-basis:var(--builder-left-compact-swatch-size) !important;
+    width:var(--builder-left-compact-swatch-size) !important;
+    min-width:var(--builder-left-compact-swatch-size) !important;
+    height:var(--builder-left-compact-swatch-size) !important;
+    min-height:var(--builder-left-compact-swatch-size) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #bottomBuildTools,
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboardUtilityButtons{
+    gap:0 !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation{
+    grid-template-rows:var(--builder-left-compact-nav-height) !important;
+    gap:1px !important;
+    margin-top:0 !important;
+    padding-top:0 !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation > button{
+    grid-column:auto !important;
+    width:auto !important;
+    min-width:0 !important;
+    height:var(--builder-left-compact-nav-height) !important;
+    min-height:var(--builder-left-compact-nav-height) !important;
+    max-height:var(--builder-left-compact-nav-height) !important;
+    padding-block:1px !important;
+  }
+}
+
+/* Keep the build surface dominant at compact laptop and Chromebook widths.
+   Both side owners narrow together; their controls retain two usable columns. */
+@media(max-width:1100px){
+  :root{
+    --builder-swap-left-width:188px;
+    --builder-swap-right-width:232px;
+  }
+}
+
+@media(max-height:620px){
+  :root{
+    --builder-swap-bottom-height:90px;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #info{
+    grid-template-columns:126px minmax(0,1fr) !important;
+    padding:4px 6px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #info #challengeTitle{
+    font-size:14px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #info #challengeChecklist label{
+    font-size:9.5px !important;
+  }
+}
+
+/* Below the compact no-scroll target, retain a contained fallback rather than
+   shrinking student controls under the approved 44px floor. */
+@media(max-height:600px){
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel{
+    padding-right:3px !important;
+    overflow-y:auto !important;
+    scrollbar-gutter:stable !important;
+    scrollbar-width:auto !important;
+    scrollbar-color:#8ff6ff rgba(3,24,36,.92) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel::-webkit-scrollbar{
+    display:block !important;
+    width:12px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel::-webkit-scrollbar-track{
+    background:rgba(3,24,36,.92) !important;
+    border:1px solid rgba(143,246,255,.38) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel::-webkit-scrollbar-thumb{
+    min-height:44px !important;
+    background:#62eaff !important;
+    border:2px solid #082a3e !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel::-webkit-scrollbar{
+    width:12px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel::-webkit-scrollbar-track{
+    background:rgba(3,24,36,.92) !important;
+    border:1px solid rgba(143,246,255,.38) !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel::-webkit-scrollbar-thumb{
+    min-height:44px !important;
+    background:#62eaff !important;
+    border:2px solid #082a3e !important;
+  }
 }
 </style>
 <style id="builderWorkshopCadCursorCSS">
@@ -44663,25 +44936,6 @@ progress.subscribe(render);
 window.getThinkamigbobGearProgressSnapshot=()=>progress.getSnapshot();
 window.synchronizeThinkamigbobGearTotal=function(value){ return progress.synchronizeTotal(value); };
 
-const priorUpdate=window.updateReadToBobStats;
-if(typeof priorUpdate==="function"){
-  window.updateReadToBobStats=function(readingProgress){
-    const result=priorUpdate.apply(this,arguments);
-    let authoritativeProgress=readingProgress;
-    if(!authoritativeProgress){
-      try{
-        authoritativeProgress=JSON.parse(
-          window.localStorage.getItem("thinkamigbobReadToBobRewardProgress01") || "null"
-        );
-      }catch(error){ authoritativeProgress=null; }
-    }
-    if(authoritativeProgress && Number.isFinite(Number(authoritativeProgress.gears))){
-      progress.synchronizeTotal(authoritativeProgress.gears);
-    }
-    return result;
-  };
-  window.updateReadToBobStats();
-}
 </script>
 <style id="starterMissionProjectEntryFinalLayoutOwnership">
 @media (min-width:701px){
@@ -45006,5 +45260,24 @@ if(root){
   window.addEventListener("pagehide",()=>controller.cancel("pagehide"),{once:true});
 }
 </script>
+<style id="studentOralReadingRetirementCSS">
+/* BOB continues to narrate Library and Mission content. Student microphone
+   practice and its live reward presentation are intentionally retired. */
+#readToBobPractice,
+#readToBobStatsPanel,
+#readToBobPracticeButton{
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel #readToBobStatsPanel[data-retired-student-oral-reading="true"]{
+  display:none !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #stemCoachActionGroup{
+  grid-template-columns:minmax(0,1fr) !important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #reopenLibraryFromCoach{
+  width:100% !important;
+  min-width:0 !important;
+}
+</style>
 </body>
 </html>

@@ -3,16 +3,31 @@ import fs from "node:fs";
 import test from "node:test";
 
 const source=fs.readFileSync(new URL("../../index.html",import.meta.url),"utf8");
-const start=source.indexOf("function prepareReadToBobMicrophone(attemptToken)");
-const end=source.indexOf("window.hideReadToBobPhoneticHelp",start);
-const microphone=source.slice(start,end);
+const activeScripts=[...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
+  .filter(match=>!match[0].includes("application/x-thinkamigbob-retired-student-oral-reading"))
+  .map(match=>match[1]).join("\n");
 
-test("bounds a stalled Chromebook microphone request and restores Start Reading",()=>{
-  assert.match(microphone,/setTimeout\(function\(\)[\s\S]*requestSettled=true[\s\S]*requestingMicrophone=false[\s\S]*updateListeningButtons\(\)[\s\S]*},8000\)/);
-  assert.match(microphone,/if\(requestSettled\)[\s\S]*getTracks[\s\S]*track\.stop\(\)/);
+test("student oral-reading controls and active microphone ownership are retired",()=>{
+  assert.equal((source.match(/id="readToBobPracticeButton"/g)||[]).length,0);
+  assert.equal((source.match(/id="readToBobPractice"/g)||[]).length,0);
+  assert.match(source,/id="readToBobStepOneScript" type="application\/x-thinkamigbob-retired-student-oral-reading"/);
+  assert.doesNotMatch(activeScripts,/SpeechRecognition|webkitSpeechRecognition|getUserMedia|startReadToBobListening/);
 });
 
-test("reports actionable Chromebook microphone failures",()=>{
-  ["NotFoundError","NotReadableError","AbortError"].forEach(name=>assert.match(microphone,new RegExp(name)));
-  assert.match(microphone,/Microphone permission was not allowed/);
+test("Library narration remains the sole reading action",()=>{
+  assert.equal((source.match(/id="reopenLibraryFromCoach"/g)||[]).length,1);
+  assert.match(source,/id="stemCoachActionGroup"[\s\S]*id="reopenLibraryFromCoach"/);
+  assert.match(source,/#stemCoachActionGroup\{[\s\S]*grid-template-columns:minmax\(0,1fr\) !important/);
+  assert.match(source,/id="readerPlayButton" onclick="playThinkerBob\(\)"/);
+  assert.match(source,/id="readerPauseButton" onclick="pauseThinkerBob\(\)"/);
+  assert.match(source,/id="readerStopButton" onclick="stopThinkerBob\(\)"/);
+});
+
+test("mission popup retains narration and self-reading without oral practice",()=>{
+  const start=source.indexOf("function chooseMissionPopupReading(mode)");
+  const end=source.indexOf("function showMissionPopup",start+40);
+  const handler=source.slice(start,end);
+  assert.match(handler,/mode === "bob"/);
+  assert.match(handler,/stopThinkerBob\(\)/);
+  assert.doesNotMatch(handler,/mode === "student"|startReadToBobListening|toggleReadToBobPractice/);
 });

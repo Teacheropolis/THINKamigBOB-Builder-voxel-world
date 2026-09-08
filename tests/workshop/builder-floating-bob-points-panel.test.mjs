@@ -10,8 +10,8 @@ test("BOB artwork is a temporary nonblocking Builder presentation", () => {
   assert.match(css, /#thinkerBobWorkshop\{[\s\S]*position:fixed !important;[\s\S]*pointer-events:none !important;[\s\S]*opacity:0 !important/);
   assert.match(css, /builderBobFloatingVisible #thinkerBobWorkshop\{[\s\S]*opacity:1 !important/);
   assert.match(script, /entryVisibleUntil=Date\.now\(\)\+7000/);
-  assert.match(script, /readToBobPracticeActive/);
-  assert.match(script, /readToBobFeedbackActive/);
+  assert.match(script, /function studentIsReading\(\)\{\s*return false;\s*\}/);
+  assert.doesNotMatch(script, /readToBobPracticeActive/);
   assert.match(script, /speechSynthesis\.speaking/);
   assert.match(script, /speechSynthesis\.pending/);
   assert.match(script, /speechSynthesis\.paused/);
@@ -25,7 +25,7 @@ test("right panel prioritizes the existing points board and coach controls", () 
   assert.doesNotMatch(script, /cloneNode/);
 });
 
-test("Read to BOB progress is larger without changing the right rail or touch targets", () => {
+test("retired oral-reading progress stays hidden without changing the right rail or touch targets", () => {
   assert.match(css, /#readToBobStatsHeader\{[\s\S]*font-size:10\.5px !important;[\s\S]*font-weight:950 !important/);
   assert.match(css, /#readToBobStatsReadings\{[\s\S]*font-size:10\.5px !important;[\s\S]*font-weight:950 !important/);
   assert.match(css, /\.readToBobStatsProgressCard strong\{[\s\S]*font-size:9\.5px !important;[\s\S]*font-weight:950 !important/);
@@ -36,23 +36,15 @@ test("Read to BOB progress is larger without changing the right rail or touch ta
   assert.match(source, /#builderBobRightPanel\{[\s\S]*width:var\(--builder-swap-right-width\) !important;[\s\S]*bottom:0 !important/);
   assert.match(source, /#builderBobRightPanel #stemCoachActionGroup button\{min-height:44px !important;\}/);
   assert.match(source, /#reopenLibraryFromCoach\{[\s\S]*min-height:48px !important/);
-  assert.match(source, /#readToBobPracticeButton\{[\s\S]*min-height:48px !important/);
+  assert.match(source, /#readToBobStatsPanel,[\s\S]*#readToBobPracticeButton\{[\s\S]*display:none !important/);
+  assert.match(source, /#builderBobRightPanel #readToBobStatsPanel\[data-retired-student-oral-reading="true"\]\{\s*display:none !important/);
 });
 
-test("Read to BOB Stats presents four distinct dynamic progress rows", () => {
-  assert.match(source, /id="readToBobStatsHeader">🎙️ READ TO BOB STATS/);
-  assert.match(source, /id="readToBobStatsReadingsValue">0<\/strong>/);
-  assert.match(source, /⭐ STAR LEVEL <b id="readToBobStatsStarLevel">1<\/b>/);
-  assert.match(source, /🔴 SAFETY LEVEL <b id="readToBobStatsSafetyLevel">1<\/b>/);
-  assert.match(source, /readingsValue\.textContent=readingCount/);
-  assert.match(source, /starLevel\.textContent=progress\.star\.level\+1/);
-  assert.match(source, /safetyLevel\.textContent=progress\.helmet\.level\+1/);
-  assert.match(css, /#readToBobStatsPanel\{[\s\S]*display:flex !important;[\s\S]*flex-direction:column !important;[\s\S]*gap:2px !important/);
-  assert.match(css, /#readToBobStatsHeader\{[\s\S]*font-size:12\.25px !important/);
-  assert.match(css, /#readToBobStatsReadingsValue\{[\s\S]*font-size:18px !important;[\s\S]*font-weight:1000 !important/);
-  assert.match(css, /\.readToBobStatsProgressGrid\{[\s\S]*grid-template-columns:minmax\(0,1fr\) !important;[\s\S]*grid-template-rows:repeat\(2,minmax\(28px,auto\)\) !important/);
-  assert.match(css, /\.readToBobStatsProgressCard strong b\{[\s\S]*min-width:22px !important;[\s\S]*font-size:18px !important/);
-  assert.match(css, /\.readToBobStatsProgressCard > span\{[\s\S]*display:none !important/);
+test("Open Library is the sole full-width reading action", () => {
+  assert.equal((source.match(/id="reopenLibraryFromCoach"/g)||[]).length,1);
+  assert.equal((source.match(/id="readToBobPracticeButton"/g)||[]).length,0);
+  assert.match(source, /#stemCoachActionGroup\{[\s\S]*grid-template-columns:minmax\(0,1fr\) !important/);
+  assert.match(source, /#reopenLibraryFromCoach\{[\s\S]*width:100% !important/);
 });
 
 test("right panel shows one full-height titled reading passage", () => {

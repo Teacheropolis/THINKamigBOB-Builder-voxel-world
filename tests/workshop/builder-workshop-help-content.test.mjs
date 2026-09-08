@@ -25,7 +25,7 @@ test("Builder Help covers the complete current student workflow",()=>{
     "Builder Quick Start","Shapes &amp; Colors","CAD crosshair","Select","Move","Delete",
     "Foundation","Undo / Redo","Reset","Grid On / Off","Screenshot","Save","Open",
     "Return to Missions","Badges and Passport","Open Workshop","View Cube","Builder Challenge",
-    "Open Library","Read to BOB","Voice Reader","Calm Mode","Gear total",
+    "Open Library","Voice Reader","Calm Mode","Gear total",
     "Next Workshop Upgrade","Precision Driver cursor"
   ]) assert.ok(builder.includes(phrase),`Builder Help is missing ${phrase}`);
 });
@@ -52,10 +52,12 @@ test("both contexts provide the approved sections and troubleshooting topics",()
     ]) assert.match(content,new RegExp(`data-help-section="${section}"`));
     for(const phrase of [
       "A block will not place","Move or Delete does nothing","The camera moved unexpectedly",
-      "A saved project is missing","Read to BOB cannot use the microphone",
+      "A saved project is missing","BOB does not start reading",
       "A Workshop tool is locked","Controls do not fit on a Chromebook"
     ]) assert.ok(content.includes(phrase),`${context} is missing ${phrase}`);
   }
+  const studentHelp=help.slice(help.indexOf('id="builderHelpContent"'),help.indexOf('<style id="builderWorkshopExpandedHelpCSS"'));
+  assert.doesNotMatch(studentHelp,/microphone|Start Reading button|oral-reading/i);
 });
 
 test("Help remains internally scrollable with reachable native controls",()=>{

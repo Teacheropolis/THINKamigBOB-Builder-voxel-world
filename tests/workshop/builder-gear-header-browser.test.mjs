@@ -81,6 +81,7 @@ test("announces unlocks once and respects reduced motion",()=>{
   assert.match(script,/aria-live","polite/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(script,/synchronizeThinkamigbobGearTotal/);
-  assert.match(script,/authoritativeProgress=JSON\.parse[\s\S]*thinkamigbobReadToBobRewardProgress01/);
-  assert.match(script,/window\.updateReadToBobStats\(\);/);
+  assert.match(script,/createThinkamigbobGearProgress\(\{[\s\S]*storage:window\.localStorage[\s\S]*thresholds:WORKSHOP_UPGRADE_THRESHOLDS/);
+  assert.doesNotMatch(script,/thinkamigbobReadToBobRewardProgress01/);
+  assert.doesNotMatch(script,/window\.updateReadToBobStats/);
 });

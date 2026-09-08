@@ -8,7 +8,7 @@ const cameraWheel = source.match(/document\.addEventListener\('wheel',[\s\S]*?\}
 
 test("keeps exactly one global camera wheel handler", () => {
   assert.equal(wheelHandlers.length, 1);
-  assert.match(cameraWheel, /readToBobBlocksBuilderEvent\(event\)/);
+  assert.match(cameraWheel, /builderUiBlocksCanvasEvent\(event\)/);
   assert.match(cameraWheel, /event\.preventDefault\(\)/);
   assert.match(cameraWheel, /workshopBuildViewportOwnsWheel\(event\)/);
   assert.ok(cameraWheel.indexOf("#workshopMeasurementAssistant") <
