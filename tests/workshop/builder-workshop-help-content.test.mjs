@@ -26,7 +26,7 @@ test("Builder Help covers the complete current student workflow",()=>{
     "Foundation","Undo / Redo","Reset","Grid On / Off","Screenshot","Save","Open",
     "Return to Missions","Badges and Passport","Open Workshop","View Cube","Builder Challenge",
     "Open Library","Voice Reader","Calm Mode","Gear total",
-    "Next Workshop Upgrade","Precision Driver cursor"
+    "Next Workshop Upgrade","Regular cursor"
   ]) assert.ok(builder.includes(phrase),`Builder Help is missing ${phrase}`);
 });
 
@@ -37,7 +37,7 @@ test("Workshop Help covers views, editing, persistence, and engineering tools",(
     "View Cube and View Remote","Grid and rulers","Select One","Select Multiple","Select Stack",
     "Move","Rotate","Delete","Parts &amp; Objects","Tool Chest","Engineering Table","Projector",
     "Smart Board","Measurement Assistant","Save","Open","Unsaved changes","Undo / Redo",
-    "CAD crosshair","Precision Driver cursor","Workshop Upgrades","Builder project stays in Builder"
+    "CAD crosshair","Regular cursor","Workshop Upgrades","Builder project stays in Builder"
   ]) assert.ok(workshop.includes(phrase),`Workshop Help is missing ${phrase}`);
 });
 

@@ -17628,7 +17628,7 @@ Small help modal kept inline for now.
         <section data-help-section="cursor-guide">
           <h3>Cursor Guide</h3>
           <p><strong>CAD crosshair:</strong> The pointer is over an area where you can build or interact with the 3D platform.</p>
-          <p><strong>Precision Driver cursor:</strong> The pointer is over interface tools, panels, or controls. Its aqua + is the exact click point.</p>
+          <p><strong>Regular cursor:</strong> The pointer is over interface panels or other non-building areas. A hand appears over buttons and links.</p>
         </section>
         <section data-help-section="troubleshooting">
           <h3>Troubleshooting</h3>
@@ -17697,7 +17697,7 @@ Small help modal kept inline for now.
         <section data-help-section="cursor-guide">
           <h3>Cursor Guide</h3>
           <p><strong>CAD crosshair:</strong> The pointer is over an area where you can build or interact with the 3D platform.</p>
-          <p><strong>Precision Driver cursor:</strong> The pointer is over interface tools, panels, or controls. Its aqua + is the exact click point.</p>
+          <p><strong>Regular cursor:</strong> The pointer is over interface panels or other non-building areas. A hand appears over buttons and links.</p>
         </section>
         <section data-help-section="troubleshooting">
           <h3>Troubleshooting</h3>
@@ -44830,17 +44830,15 @@ body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation > butt
    canvas is the build surface; every surrounding Builder/Workshop surface is
    interface chrome. */
 :root{
-  --builder-tools-precision-driver-cursor:url("./assets/images/cursors/thinkamigbob-precision-driver-cursor-v2.png") 58 20,pointer;
   --builder-cad-crosshair-cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23072535' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%235eeaff' stroke-width='1.4'/%3E%3Cpath d='M16 1v10M16 21v10M1 16h10M21 16h10' stroke='%23072535' stroke-width='3'/%3E%3Cpath d='M16 1v10M16 21v10M1 16h10M21 16h10' stroke='%235eeaff' stroke-width='1.4'/%3E%3Ccircle cx='16' cy='16' r='1.7' fill='%23f6c744' stroke='%23072535'/%3E%3C/svg%3E") 16 16,crosshair;
 }
 
 body:not(.starterScreenActive),
 body:not(.starterScreenActive) *{
-  cursor:var(--builder-tools-precision-driver-cursor) !important;
+  cursor:default !important;
 }
 
-/* Directly actionable interface controls use the familiar hand pointer. The
-   Precision Driver remains the cursor for surrounding Builder/Workshop chrome. */
+/* Directly actionable interface controls use the familiar hand pointer. */
 body:not(.starterScreenActive) :is(
   button:not(:disabled),
   a[href],
