@@ -40,15 +40,14 @@ test("deletion Undo restores exact transaction selection and Redo removes the sa
   assert.match(source,/if\(transaction\.type==="DELETION"\) return direction==="UNDO" \? !present : present/);
 });
 
-test("native Workshop Enter and Space clicks bypass only stale compatibility suppression",()=>{
+test("native Workshop Enter and Space clicks retain native ownership without retired suppression",()=>{
   assert.match(source,/function workshopNativeControlOwnsKeyboardClick\(event\)[\s\S]*?event\.detail!==0[\s\S]*?closest\("button,input,select,textarea"\)/);
   assert.match(source,/#workshopDashboard,#viewCubeBox,#workspaceUtilityRail/);
-  assert.equal((source.match(/workshopNativeControlOwnsKeyboardClick\(event\)/g)||[]).length,3);
-  assert.match(source,/workshopNativeControlOwnsKeyboardClick\(event\)[\s\S]*?clearReadToBobPanelCompatibilitySuppression\(\)[\s\S]*?return/);
-  assert.match(source,/workshopNativeControlOwnsKeyboardClick\(event\)[\s\S]*?clearReadToBobCompatibilitySuppression\(\)[\s\S]*?resetReadToBobModalInteractionOwnership\(\)[\s\S]*?return/);
+  assert.equal((source.match(/workshopNativeControlOwnsKeyboardClick\(event\)/g)||[]).length,1);
   const helperStart=source.indexOf("function workshopNativeControlOwnsKeyboardClick(event)");
   const helperEnd=source.indexOf("document.addEventListener('click'",helperStart);
   assert.doesNotMatch(source.slice(helperStart,helperEnd),/addEventListener\("keydown"/);
+  assert.doesNotMatch(source,/clearReadToBob(?:Panel)?CompatibilitySuppression|resetReadToBobModalInteractionOwnership/);
 });
 
 test("Select Multiple, Select Stack, and transforms keep their established owners",()=>{

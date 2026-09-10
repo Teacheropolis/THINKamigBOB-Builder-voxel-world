@@ -4,14 +4,14 @@ import test from "node:test";
 
 const source=fs.readFileSync(new URL("../../index.html",import.meta.url),"utf8");
 const activeScripts=[...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
-  .filter(match=>!match[0].includes("application/x-thinkamigbob-retired-student-oral-reading"))
   .map(match=>match[1]).join("\n");
 
 test("student oral-reading controls and active microphone ownership are retired",()=>{
   assert.equal((source.match(/id="readToBobPracticeButton"/g)||[]).length,0);
   assert.equal((source.match(/id="readToBobPractice"/g)||[]).length,0);
-  assert.match(source,/id="readToBobStepOneScript" type="application\/x-thinkamigbob-retired-student-oral-reading"/);
-  assert.doesNotMatch(activeScripts,/SpeechRecognition|webkitSpeechRecognition|getUserMedia|startReadToBobListening/);
+  assert.equal((source.match(/id="readToBobStatsPanel"/g)||[]).length,0);
+  assert.doesNotMatch(source,/readToBobStepOneScript|readToBobStepOneCSS|readToBobStatsPanel205BCSS/);
+  assert.doesNotMatch(activeScripts,/SpeechRecognition|webkitSpeechRecognition|getUserMedia|startReadToBobListening|readToBobFeedbackActive|readToBobPracticeActive/);
 });
 
 test("Library narration remains the sole reading action",()=>{

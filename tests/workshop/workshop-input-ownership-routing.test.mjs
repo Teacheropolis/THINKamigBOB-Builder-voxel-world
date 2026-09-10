@@ -46,10 +46,10 @@ test("dashboard and native controls are explicitly excluded without keyboard dup
   assert.doesNotMatch(source,/workshopSelectMultipleButton[\s\S]{0,500}addEventListener\("keydown"/);
 });
 
-test("right-click deletes only a renderer-targeted object and stale reader guards yield",()=>{
+test("right-click deletes only a renderer-targeted object without retired reader guards",()=>{
   assert.match(contextRouting,/raycaster\.intersectObjects\(blocks\)[\s\S]*?intersects\[0\]\.object[\s\S]*?scene\.remove\(blockToRemove\)/);
-  assert.match(source,/window\.addEventListener\("contextmenu"[\s\S]*?workshopEventOwnsRendererCanvas\(event\)[\s\S]*?clearReadToBobPanelCompatibilitySuppression\(\)[\s\S]*?return/);
-  assert.match(source,/window\.addEventListener\("contextmenu"[\s\S]*?workshopEventOwnsRendererCanvas\(event\)[\s\S]*?resetReadToBobModalInteractionOwnership\(\)[\s\S]*?return/);
+  assert.match(contextRouting,/builderUiBlocksCanvasEvent\(event\)[\s\S]*?workshopEventOwnsRendererCanvas\(event\)[\s\S]*?return/);
+  assert.doesNotMatch(contextRouting,/readToBob(?:Feedback|Practice|Countdown|Compatibility|Modal)/);
 });
 
 test("Return to Mission is idempotent throughout canonical shutdown",()=>{

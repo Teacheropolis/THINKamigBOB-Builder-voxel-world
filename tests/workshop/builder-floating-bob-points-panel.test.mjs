@@ -17,27 +17,22 @@ test("BOB artwork is a temporary nonblocking Builder presentation", () => {
   assert.match(script, /speechSynthesis\.paused/);
 });
 
-test("right panel prioritizes the existing points board and coach controls", () => {
+test("right panel prioritizes the remaining coach controls", () => {
   assert.match(css, /#stemCoachHeader\{[\s\S]*display:none !important/);
-  assert.match(css, /#readToBobStatsPanel\{[\s\S]*order:1 !important/);
   assert.match(css, /#stemCoachActionGroup\{[\s\S]*order:2 !important/);
   assert.match(css, /#stemCoachContent\{[\s\S]*order:3 !important/);
+  assert.doesNotMatch(source, /readToBobStatsPanel/);
   assert.doesNotMatch(script, /cloneNode/);
 });
 
-test("retired oral-reading progress stays hidden without changing the right rail or touch targets", () => {
-  assert.match(css, /#readToBobStatsHeader\{[\s\S]*font-size:10\.5px !important;[\s\S]*font-weight:950 !important/);
-  assert.match(css, /#readToBobStatsReadings\{[\s\S]*font-size:10\.5px !important;[\s\S]*font-weight:950 !important/);
-  assert.match(css, /\.readToBobStatsProgressCard strong\{[\s\S]*font-size:9\.5px !important;[\s\S]*font-weight:950 !important/);
-  assert.match(css, /\.readToBobStatsProgressCard strong b\{[\s\S]*min-width:20px !important;[\s\S]*min-height:20px !important;[\s\S]*font-size:16px !important/);
-  assert.match(css, /#readToBobStatsPanel\{[\s\S]*gap:2px 6px !important;[\s\S]*padding:4px 6px !important/);
-  assert.match(css, /#stemCoachActionGroup\{[\s\S]*gap:4px !important;[\s\S]*margin:0 !important/);
-  assert.match(css, /#readerHighlightBox\{[\s\S]*font-size:15\.5px !important;[\s\S]*line-height:1\.55 !important/);
+test("retired oral-reading presentation is removed without changing the right rail or touch targets", () => {
+  assert.doesNotMatch(source, /readToBobStatsHeader|readToBobStatsReadings|readToBobStatsProgressCard/);
+  assert.doesNotMatch(source, /studentOralReadingRetirementCSS|readToBobStepOneCSS|readToBobStepOneScript/);
+  assert.match(css, /#stemCoachActionGroup\{[\s\S]*margin:0 !important/);
+  assert.match(css, /#readerHighlightBox\{[\s\S]*font-size:14px !important;[\s\S]*line-height:1\.62 !important/);
   assert.match(source, /#builderBobRightPanel\{[\s\S]*width:var\(--builder-swap-right-width\) !important;[\s\S]*bottom:0 !important/);
   assert.match(source, /#builderBobRightPanel #stemCoachActionGroup button\{min-height:44px !important;\}/);
   assert.match(source, /#reopenLibraryFromCoach\{[\s\S]*min-height:48px !important/);
-  assert.match(source, /#readToBobStatsPanel,[\s\S]*#readToBobPracticeButton\{[\s\S]*display:none !important/);
-  assert.match(source, /#builderBobRightPanel #readToBobStatsPanel\[data-retired-student-oral-reading="true"\]\{\s*display:none !important/);
 });
 
 test("Open Library is the sole full-width reading action", () => {
