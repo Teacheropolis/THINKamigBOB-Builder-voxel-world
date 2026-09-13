@@ -1,4 +1,5 @@
 const SEQUENCE_ID="builder-mission-journey";
+const CHECKPOINT_GEAR_AWARD=10;
 
 function enabledCheckpoints(doc){
   return Array.from(doc.querySelectorAll("#challengeChecklist input")).filter(input=>!input.disabled);
@@ -29,6 +30,19 @@ export function getMissionJourneyProgress(doc=globalThis.document){
   const checkpoints=enabledCheckpoints(doc);
   const complete=checkpoints.filter(input=>input.checked).length;
   return Object.freeze({complete,total:checkpoints.length});
+}
+
+export function getMissionCheckpointGearAwardId({
+  document:doc=globalThis.document,
+  input,
+  missionId="buildCastle",
+}={}){
+  if(!doc || !input || input.disabled) return "";
+  const checkpoints=Array.from(doc.querySelectorAll("#challengeChecklist input"));
+  const checkpointIndex=checkpoints.indexOf(input);
+  const stableMissionId=String(missionId||"").trim();
+  if(checkpointIndex<0 || !stableMissionId) return "";
+  return `builder-mission-journey:${stableMissionId}:checkpoint:${checkpointIndex+1}`;
 }
 
 export function revealMissionJourney(info,{section="summary"}={}){
@@ -94,6 +108,8 @@ export function installBobMissionJourneyGuidance({
   window:win=globalThis.window,
   document:doc=globalThis.document,
   guidance=win?.bobGuidance,
+  awardGears=win?.awardThinkamigbobGears,
+  getMissionId=()=>String(win?.selectedStartWorld||"buildCastle"),
 }={}){
   const button=doc?.getElementById("builderMissionJourneyButton");
   const info=doc?.getElementById("info");
@@ -108,7 +124,15 @@ export function installBobMissionJourneyGuidance({
   const open=()=>guidance.start({id:SEQUENCE_ID,steps:createMissionJourneySteps({document:doc,info})});
 
   button.addEventListener("click",open);
-  doc.addEventListener("change",event=>{if(event.target?.closest?.("#challengeChecklist")) update();});
+  doc.addEventListener("change",event=>{
+    const input=event.target;
+    if(!input?.closest?.("#challengeChecklist")) return;
+    if(!input.disabled && input.checked && typeof awardGears==="function"){
+      const id=getMissionCheckpointGearAwardId({document:doc,input,missionId:getMissionId()});
+      if(id) awardGears({id,gears:CHECKPOINT_GEAR_AWARD});
+    }
+    update();
+  });
   const observer=new win.MutationObserver(update);
   observer.observe(info,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:["disabled","checked"]});
   root.addEventListener("bobguidance:complete",event=>{

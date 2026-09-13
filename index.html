@@ -41743,6 +41743,7 @@ function render(snapshot){
 progress.subscribe(render);
 window.getThinkamigbobGearProgressSnapshot=()=>progress.getSnapshot();
 window.synchronizeThinkamigbobGearTotal=function(value){ return progress.synchronizeTotal(value); };
+window.awardThinkamigbobGears=function(award){ return progress.award(award); };
 
 </script>
 <style id="starterMissionProjectEntryFinalLayoutOwnership">
