@@ -44,14 +44,16 @@ test("Open stays fixed at the far left and reuses the validated Builder file inp
 
 test("Resume retains dynamic mission naming and canonical autosave restoration",()=>{
   assert.match(starter,/id="starterResumeTrack" class="starterResumeTrack">\s*<\/div>/);
-  assert.match(source,/var AUTOSAVE_COLLECTION_KEY="thinkamigbob-student-autosaves-v2"/);
-  assert.match(source,/savedBuilds\[state\.selectedStartWorld\]=state/);
-  assert.match(source,/Object\.keys\(savedBuilds\)\.map/);
+  assert.match(source,/var BUILDER_RECOVERY_KEY="thinkamigbob-builder-recoveries-v3"/);
+  assert.match(source,/import\("\.\/js\/persistence\/builder-recovery-controller\.mjs"\)/);
+  assert.match(source,/recoveryController\.list\(\)\.find\(function\(item\)\{ return item\.recoveryId===recoveryId; \}\)/);
+  assert.match(source,/var records=recoveryController \? recoveryController\.list\(\) : \[\]/);
   assert.match(source,/button\.className="resumeAutosaveButton"/);
-  assert.match(source,/button\.textContent="↻ Resume Saved Build — "\+label/);
-  assert.match(source,/button\.addEventListener\("click",function\(\)\{ resumeSavedBuild\(missionKey\); \}\)/);
-  assert.match(source,/function resumeSavedBuild\(missionKey\)\{[\s\S]*readAutosaves\(\)\[missionKey\][\s\S]*window\.selectedStartWorld=state\.selectedStartWorld[\s\S]*window\.startSelectedWorld\(\)/);
-  assert.match(source,/var legacy=readAutosave\(\)[\s\S]*builds\[legacy\.selectedStartWorld\]=legacy/);
+  assert.match(source,/button\.dataset\.recoveryId=record\.recoveryId/);
+  assert.match(source,/button\.textContent="↻ "\+project\+" — "\+label\+" • "\+timestamp/);
+  assert.match(source,/button\.addEventListener\("click",function\(\)\{ resumeSavedBuild\(record\.recoveryId\); \}\)/);
+  assert.match(source,/function resumeSavedBuild\(recoveryId\)\{[\s\S]*record\.state[\s\S]*window\.selectedStartWorld=state\.selectedStartWorld[\s\S]*window\.startSelectedWorld\(\)/);
+  assert.match(source,/recoveryController\.useRecovery\(recoveryId\)/);
   assert.match(source,/resumeRestorePending=true[\s\S]*restoreSavedBuild\(state\)[\s\S]*resumeRestorePending=false/);
   assert.match(polish,/\.starterResumeTrack\{[\s\S]*flex-wrap:nowrap;[\s\S]*width:max-content/);
   assert.match(polish,/\.resumeAutosaveButton\{[\s\S]*border:2px solid #8df5ff;[\s\S]*color:#eaffff;/);

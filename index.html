@@ -9728,6 +9728,9 @@ if(intersects.length > 0){
     }else{
       document.getElementById("toolMessage").innerHTML =
         "✅ Structure moved!";
+      if(typeof window.scheduleStudentAutosave === "function"){
+        window.scheduleStudentAutosave({meaningful:true});
+      }
     }
 
     checkBadge();
@@ -12487,6 +12490,9 @@ function exportBuilderWorld(name){
 
   link.click();
   builderProjectName=acceptedName;
+  if(typeof window.markBuilderManualSaveCheckpoint==="function"){
+    window.markBuilderManualSaveCheckpoint();
+  }
   if(typeof window.showThinkamigbobBuildToast==="function"){
     window.showThinkamigbobBuildToast("BUILD SAVED!");
   }
@@ -12581,6 +12587,10 @@ document.getElementById('loadFile')
     syncFavoriteStars();
     checkBadge();
     updateUndoRedoButtons();
+
+    if(typeof window.beginBuilderRecoveryProject==="function"){
+      window.beginBuilderRecoveryProject({projectName:builderProjectName,clean:true});
+    }
 
     document.getElementById("toolMessage").innerHTML =
       "💾 World and favorites loaded.";
@@ -26192,10 +26202,11 @@ body.calmMode #reopenLibraryFromCoach{
 (function(){
   var AUTOSAVE_KEY="thinkamigbob-student-autosave-v1";
   var AUTOSAVE_COLLECTION_KEY="thinkamigbob-student-autosaves-v2";
+  var BUILDER_RECOVERY_KEY="thinkamigbob-builder-recoveries-v3";
   var CALM_MODE_KEY="thinkamigbob-calm-mode";
-  var saveTimer=0;
-  var autosaveNoticeShown=false;
   var resumeRestorePending=false;
+  var recoveryController=null;
+  var recoveryPendingMeaningful=false;
 
   var MISSION_TITLES={
     buildCastle:"Castle Builder",
@@ -26212,41 +26223,6 @@ body.calmMode #reopenLibraryFromCoach{
     buildCellWorld:"Cell Builder Lab"
   };
 
-  function isAutosaveState(state){
-    return !!state && typeof state==="object" && !Array.isArray(state) &&
-      typeof state.selectedStartWorld==="string" && Array.isArray(state.blocks);
-  }
-
-  function readAutosave(){
-    try{
-      var raw=localStorage.getItem(AUTOSAVE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    }catch(error){ return null; }
-  }
-
-  function readAutosaves(){
-    var builds={};
-    try{
-      var raw=localStorage.getItem(AUTOSAVE_COLLECTION_KEY);
-      var collection=raw ? JSON.parse(raw) : null;
-      if(collection && collection.version===2 && collection.builds && typeof collection.builds==="object" && !Array.isArray(collection.builds)){
-        Object.keys(collection.builds).forEach(function(key){
-          var state=collection.builds[key];
-          if(isAutosaveState(state) && state.selectedStartWorld===key) builds[key]=state;
-        });
-      }
-    }catch(error){}
-    var legacy=readAutosave();
-    if(isAutosaveState(legacy) && !builds[legacy.selectedStartWorld]){
-      builds[legacy.selectedStartWorld]=legacy;
-    }
-    return builds;
-  }
-
-  function writeAutosaves(builds){
-    localStorage.setItem(AUTOSAVE_COLLECTION_KEY,JSON.stringify({version:2,builds:builds}));
-  }
-
   function blockRecord(block){
     var parameters=(block.geometry && block.geometry.parameters) || {};
     return {
@@ -26258,54 +26234,59 @@ body.calmMode #reopenLibraryFromCoach{
     };
   }
 
-  function showSaveStatus(){
-    var noticeKey="thinkamigbob-autosave-notice-shown-v1";
-    try{
-      if(autosaveNoticeShown || sessionStorage.getItem(noticeKey) === "true") return;
-      sessionStorage.setItem(noticeKey,"true");
-    }catch(error){
-      if(autosaveNoticeShown) return;
+  function recoveryStatusOwner(){
+    var status=document.getElementById("builderRecoveryStatus");
+    if(status) return status;
+    status=document.createElement("div");
+    status.id="builderRecoveryStatus";
+    status.setAttribute("role","status");
+    status.setAttribute("aria-live","polite");
+    status.setAttribute("aria-atomic","true");
+    status.hidden=true;
+    document.body.appendChild(status);
+    return status;
+  }
+
+  function presentRecoveryStatus(update){
+    var status=recoveryStatusOwner();
+    var timestamp=update.timestamp ? new Date(update.timestamp).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) : "";
+    status.textContent=update.kind==="saved"
+      ? "Recovery Saved • "+timestamp
+      : update.message;
+    status.dataset.state=update.kind;
+    status.hidden=false;
+    if(update.kind==="saved" && typeof window.showDashboardTickerNotice==="function"){
+      window.showDashboardTickerNotice("💾 RECOVERY SAVED • "+timestamp,4500);
     }
-    autosaveNoticeShown=true;
-    if(typeof window.showDashboardTickerNotice === "function"){
-      window.showDashboardTickerNotice("💾 AUTO-SAVED",6500);
-    }
+  }
+
+  function captureRecoveryState(){
+    var checklist=Array.prototype.map.call(document.querySelectorAll("#challengeChecklist input"),function(input){ return !!input.checked; });
+    return {
+      version:1,
+      savedAt:Date.now(),
+      selectedStartWorld:window.selectedStartWorld || "buildCastle",
+      selectedSpaceDestination:window.selectedSpaceDestination || null,
+      projectName:builderProjectName || "",
+      blocks:blocks.map(blockRecord),
+      favorites:Array.isArray(favoriteData) ? favoriteData : [],
+      checklist:checklist,
+      engineeringGridVisible:!!(engineeringGrid && engineeringGrid.visible),
+      selectedShape:(document.getElementById("blockShape") || {}).value || "cube",
+      skyVehicle:document.getElementById("skyBannerPlane")?.classList.contains("skyBannerRocket") ? "rocket" : "plane"
+    };
   }
 
   function saveNow(showFeedback){
-    if(document.body.classList.contains("starterScreenActive") || resumeRestorePending || !blocks || !scene) return;
-    try{
-      var checklist=Array.prototype.map.call(document.querySelectorAll("#challengeChecklist input"), function(input){ return !!input.checked; });
-      var state={
-        version:1,
-        savedAt:Date.now(),
-        selectedStartWorld:window.selectedStartWorld || "buildCastle",
-        selectedSpaceDestination:window.selectedSpaceDestination || null,
-        projectName:builderProjectName || "",
-        blocks:blocks.map(blockRecord),
-        favorites:Array.isArray(favoriteData) ? favoriteData : [],
-        checklist:checklist,
-        engineeringGridVisible:!!(engineeringGrid && engineeringGrid.visible),
-        selectedShape:(document.getElementById("blockShape") || {}).value || "cube",
-        skyVehicle:document.getElementById("skyBannerPlane")?.classList.contains("skyBannerRocket") ? "rocket" : "plane"
-      };
-      var savedBuilds=readAutosaves();
-      savedBuilds[state.selectedStartWorld]=state;
-      writeAutosaves(savedBuilds);
-      /* Keep the former latest-build record so existing students and older
-         releases can still resume their most recent mission. */
-      localStorage.setItem(AUTOSAVE_KEY,JSON.stringify(state));
-      if(showFeedback) showSaveStatus();
-      refreshResumeButton();
-    }catch(error){
-      console.warn("Auto-save could not store this build.", error);
-    }
+    if(document.body.classList.contains("starterScreenActive") || resumeRestorePending || !recoveryController) return false;
+    return recoveryController.flush({feedback:showFeedback!==false});
   }
 
-  function scheduleSave(){
+  function scheduleSave(options){
     if(document.body.classList.contains("starterScreenActive") || resumeRestorePending) return;
-    window.clearTimeout(saveTimer);
-    saveTimer=window.setTimeout(function(){ saveNow(true); },700);
+    var meaningful=!options || options.meaningful!==false;
+    if(!recoveryController){ recoveryPendingMeaningful=recoveryPendingMeaningful || meaningful; return; }
+    recoveryController.schedule({meaningful:meaningful});
   }
 
   function restoreSavedBuild(state){
@@ -26342,14 +26323,15 @@ body.calmMode #reopenLibraryFromCoach{
     if(typeof window.updateUndoRedoButtons === "function") window.updateUndoRedoButtons();
     var message=document.getElementById("toolMessage");
     if(message) message.textContent="↻ Saved build restored.";
-    scheduleSave();
+    scheduleSave({meaningful:false});
   }
 
-  function resumeSavedBuild(missionKey){
-    var state=readAutosaves()[missionKey];
-    if(!state) return;
+  function resumeSavedBuild(recoveryId){
+    if(!recoveryController) return;
+    var record=recoveryController.list().find(function(item){ return item.recoveryId===recoveryId; });
+    if(!record) return;
+    var state=record.state;
     resumeRestorePending=true;
-    window.clearTimeout(saveTimer);
     builderProjectName=String(state.projectName || "").trim().slice(0,60);
     window.selectedStartWorld=state.selectedStartWorld || "buildCastle";
     window.selectedSpaceDestination=state.selectedSpaceDestination || null;
@@ -26357,8 +26339,9 @@ body.calmMode #reopenLibraryFromCoach{
       window.startSelectedWorld();
       window.setTimeout(function(){
         restoreSavedBuild(state);
+        recoveryController.useRecovery(recoveryId);
         resumeRestorePending=false;
-        scheduleSave();
+        scheduleSave({meaningful:false});
       },1050);
     }else{
       resumeRestorePending=false;
@@ -26368,20 +26351,22 @@ body.calmMode #reopenLibraryFromCoach{
   function refreshResumeButton(){
     var track=document.getElementById("starterResumeTrack");
     if(!track) return;
-    var savedBuilds=readAutosaves();
-    var states=Object.keys(savedBuilds).map(function(key){ return savedBuilds[key]; });
-    states.sort(function(a,b){ return (Number(b.savedAt)||0)-(Number(a.savedAt)||0); });
+    var records=recoveryController ? recoveryController.list() : [];
     track.replaceChildren();
-    states.forEach(function(state){
-      var missionKey=state.selectedStartWorld;
+    records.forEach(function(record){
+      var state=record.state;
+      var missionKey=record.missionKey;
       var label=MISSION_TITLES[missionKey] || missionKey.replace(/^build/,"").replace(/([A-Z])/g," $1").trim();
+      var project=record.projectName || label;
+      var timestamp=new Date(record.updatedAt).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
       var button=document.createElement("button");
       button.type="button";
       button.className="resumeAutosaveButton";
       button.dataset.missionKey=missionKey;
-      button.textContent="↻ Resume Saved Build — "+label;
-      button.setAttribute("aria-label","Resume saved build — "+label);
-      button.addEventListener("click",function(){ resumeSavedBuild(missionKey); });
+      button.dataset.recoveryId=record.recoveryId;
+      button.textContent="↻ "+project+" — "+label+" • "+timestamp;
+      button.setAttribute("aria-label","Resume "+project+", "+label+", recovered "+timestamp);
+      button.addEventListener("click",function(){ resumeSavedBuild(record.recoveryId); });
       track.appendChild(button);
     });
     if(typeof window.updateStarterResumeScrollAffordance === "function"){
@@ -26389,12 +26374,12 @@ body.calmMode #reopenLibraryFromCoach{
     }
   }
 
-  function wrapForAutosave(name){
+  function wrapForAutosave(name,meaningful){
     var original=window[name];
     if(typeof original !== "function" || original.__autosaveWrapped) return;
     function wrapped(){
       var result=original.apply(this,arguments);
-      scheduleSave();
+      if(result!==false) scheduleSave({meaningful:meaningful!==false});
       return result;
     }
     wrapped.__autosaveWrapped=true;
@@ -26412,7 +26397,7 @@ body.calmMode #reopenLibraryFromCoach{
     if(message) message.textContent=isCalm ? "☁ Calm Mode is on." : "☀ Calm Mode is off.";
   };
 
-  ["addBlock","undoLast","redoLast","resetWorld","toggleEngineeringGrid","checkBadge","setSelectedStartWorld","chooseSpaceDestination","startSelectedWorld"].forEach(wrapForAutosave);
+  ["addBlock","undoLast","redoLast","resetWorld","toggleEngineeringGrid"].forEach(function(name){ wrapForAutosave(name,true); });
   /* Direct array mutation catches every builder tool, including tools that
      call addBlock through the original in-page function binding. */
   if(!blocks.__autosaveMutationWrapped){
@@ -26420,24 +26405,94 @@ body.calmMode #reopenLibraryFromCoach{
       var original=blocks[method];
       blocks[method]=function(){
         var result=original.apply(this,arguments);
-        scheduleSave();
+        scheduleSave({meaningful:true});
         return result;
       };
     });
     blocks.__autosaveMutationWrapped=true;
   }
   document.addEventListener("change",function(event){
-    if(event.target.closest("#challengeChecklist, #blockShape, #blockColor")) scheduleSave();
+    if(event.target.closest("#challengeChecklist")) scheduleSave({meaningful:true});
+    else if(event.target.closest("#blockShape, #blockColor")) scheduleSave({meaningful:false});
   });
   window.addEventListener("beforeunload",function(){ saveNow(false); });
+
+  window.flushBuilderRecovery=function(){ return saveNow(false); };
+  window.markBuilderManualSaveCheckpoint=function(){
+    return recoveryController ? recoveryController.markManualSaveCheckpoint() : false;
+  };
+  window.beginBuilderRecoveryProject=function(options){
+    if(!recoveryController) return false;
+    recoveryController.beginProject({
+      missionKey:window.selectedStartWorld || "buildCastle",
+      projectName:(options && options.projectName) || builderProjectName || ""
+    });
+    scheduleSave({meaningful:!(options && options.clean)});
+    if(options && options.clean){
+      saveNow(true);
+      recoveryController.markManualSaveCheckpoint();
+    }
+    return true;
+  };
+
+  var originalStartSelectedWorld=window.startSelectedWorld;
+  if(typeof originalStartSelectedWorld==="function" && !originalStartSelectedWorld.__recoveryWrapped){
+    window.startSelectedWorld=function(){
+      var result=originalStartSelectedWorld.apply(this,arguments);
+      if(!resumeRestorePending && recoveryController){
+        recoveryController.beginProject({missionKey:window.selectedStartWorld || "buildCastle",projectName:builderProjectName || ""});
+        scheduleSave({meaningful:true});
+      }
+      return result;
+    };
+    window.startSelectedWorld.__recoveryWrapped=true;
+  }
 
   var calmEnabled=false;
   try{ calmEnabled=localStorage.getItem(CALM_MODE_KEY) === "true"; }catch(error){}
   window.setCalmMode(calmEnabled);
-  refreshResumeButton();
   window.scheduleStudentAutosave=scheduleSave;
+
+  import("./js/persistence/builder-recovery-controller.mjs").then(function(module){
+    recoveryController=module.createBuilderRecoveryController({
+      storage:localStorage,
+      capture:captureRecoveryState,
+      restore:function(state){ restoreSavedBuild(state); return true; },
+      onStatus:presentRecoveryStatus,
+      onChange:refreshResumeButton,
+      debounceMs:700
+    });
+    recoveryController.initialize();
+    refreshResumeButton();
+    if(recoveryPendingMeaningful){ scheduleSave({meaningful:true}); recoveryPendingMeaningful=false; }
+  }).catch(function(error){
+    presentRecoveryStatus({kind:"failed",message:"Recovery Failed"});
+    console.warn("Builder recovery could not start.",error);
+  });
 })();
 </script>
+
+<style id="builderRecoveryStatusCSS">
+#builderRecoveryStatus{
+  position:fixed;
+  z-index:2147481800;
+  top:58px;
+  left:clamp(8px,2vw,24px);
+  max-width:min(280px,calc(100vw - 16px));
+  min-height:28px;
+  padding:5px 11px;
+  border:1px solid #58eaff;
+  border-radius:10px;
+  background:rgba(4,31,47,.94);
+  color:#efffff;
+  box-shadow:0 3px 12px rgba(0,0,0,.35);
+  font:800 13px/1.25 "Oxanium",Arial,sans-serif;
+  pointer-events:none;
+}
+#builderRecoveryStatus[data-state="failed"]{border-color:#ff7181;color:#fff0f2;}
+#builderRecoveryStatus[hidden],body.starterScreenActive #builderRecoveryStatus,
+body.workshopMode #builderRecoveryStatus{display:none !important;}
+</style>
 
 <style id="starterMissionProjectEntryPolishCSS">
 body.starterScreenActive .startBeforePanel{

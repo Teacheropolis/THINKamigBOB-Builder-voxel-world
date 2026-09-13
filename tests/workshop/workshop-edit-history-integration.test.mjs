@@ -65,11 +65,13 @@ test("load, reset, Mission restoration, shutdown, and faults clear ownership", (
   assert.match(source, /snapshot\.workshop==="OFF"/);
 });
 
-test("save and autosave schema remain unchanged", () => {
-  const saveBlock = source.slice(source.indexOf("function saveNow("), source.indexOf("function scheduleSave("));
-  assert.doesNotMatch(saveBlock, /workshopEditHistory|workshopSelectionMoveController|MOVE/);
-  assert.match(saveBlock, /version:1/);
-  assert.match(saveBlock, /blocks:blocks\.map\(blockRecord\)/);
+test("portable Builder save schema remains unchanged and recovery stays isolated", () => {
+  const exportBlock = source.slice(source.indexOf("function exportBuilderWorld("), source.indexOf("function validateBuilderProjectFile("));
+  assert.doesNotMatch(exportBlock, /workshopEditHistory|workshopSelectionMoveController|type:\s*["']MOVE["']/);
+  assert.match(exportBlock, /app: "THINKamigBOB Builder"/);
+  assert.match(exportBlock, /version: 3/);
+  assert.match(exportBlock, /blocks: worldData/);
+  assert.doesNotMatch(exportBlock, /BUILDER_RECOVERY_KEY|builder-recovery-controller/);
 });
 
 test("Rotate uses one native immediate control and the prepared history owner", () => {

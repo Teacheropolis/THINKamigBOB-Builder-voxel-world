@@ -34,6 +34,7 @@ test("dirty Draft protection remains ahead of file replacement",()=>{
 
 test("file workflow is isolated from cloud and Builder persistence",()=>{
   assert.doesNotMatch(source,/workshopProjectFileService[\s\S]{0,500}(Cloudflare|cloud storage|fetch\()/i);
-  assert.match(source,/var AUTOSAVE_KEY="thinkamigbob-student-autosave-v1"/);
+  assert.match(source,/var BUILDER_RECOVERY_KEY="thinkamigbob-builder-recoveries-v3"/);
+  assert.match(source,/builder-recovery-controller\.mjs/);
   assert.match(source,/app: "THINKamigBOB Builder",\s*version: 3/);
 });

@@ -59,10 +59,10 @@ test("loads isolated serializer storage and project workflow owners",()=>{
   assert.match(source,/createWorkshopProjectController\(\{/);
 });
 
-test("Builder Save Load and autosave remain unchanged and separate",()=>{
+test("Builder portable Save Load and recovery remain separate from Workshop projects",()=>{
   assert.match(source,/app: "THINKamigBOB Builder",\s*version: 3/);
-  assert.match(source,/var AUTOSAVE_KEY="thinkamigbob-student-autosave-v1"/);
-  assert.doesNotMatch(source,/AUTOSAVE_KEY="thinkamigbob-workshop-projects-v1"/);
+  assert.match(source,/var BUILDER_RECOVERY_KEY="thinkamigbob-builder-recoveries-v3"/);
+  assert.doesNotMatch(source,/BUILDER_RECOVERY_KEY="thinkamigbob-workshop-projects-v1"/);
 });
 
 test("uses one accessible contained Chromebook dialog",()=>{
