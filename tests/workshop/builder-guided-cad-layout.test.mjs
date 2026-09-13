@@ -95,12 +95,11 @@ test("side panels stay highly transparent while controls remain readable", () =>
   assert.doesNotMatch(swapCss, /backdrop-filter:blur/);
 });
 
-test("Builder Challenge becomes the contained bottom strip", () => {
-  assert.match(swapCss, /#info\{[\s\S]*right:var\(--builder-swap-center-right\) !important;[\s\S]*bottom:var\(--builder-guided-edge\) !important;[\s\S]*left:var\(--builder-swap-center-left\) !important;[\s\S]*height:var\(--builder-swap-bottom-height\) !important/);
-  assert.match(swapCss, /#challengeChecklist\{[\s\S]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\) !important;[\s\S]*grid-template-rows:repeat\(2,minmax\(0,1fr\)\) !important/);
-  assert.match(swapCss, /#challengeChecklist label\{[\s\S]*min-height:0 !important;[\s\S]*white-space:normal !important/);
-  assert.match(swapCss, /#templateIncludesPanel\{[\s\S]*display:none !important/);
-  assert.match(swapCss, /--builder-swap-bottom-height:112px/);
+test("Builder Challenge data is retained while compact Mission Journey owns the bottom edge", () => {
+  assert.match(source, /id="info"[\s\S]*id="challengeChecklist"[\s\S]*id="moreChallenge"/);
+  assert.match(source, /id="builderMissionJourneyButton"/);
+  assert.match(source, /#info:not\(\.bobGuidanceChallengeReveal\)\{display:none!important\}/);
+  assert.match(source, /#builderMissionJourneyButton\{[\s\S]*min-height:44px/);
 });
 
 test("side rails extend to the bottom and Mission shortcuts share the left rail", () => {

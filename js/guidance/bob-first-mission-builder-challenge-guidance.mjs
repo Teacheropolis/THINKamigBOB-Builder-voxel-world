@@ -1,3 +1,5 @@
+import {revealMissionJourney} from "./bob-mission-journey-guidance.mjs";
+
 const SEQUENCE_ID="builder-first-mission-challenge";
 const SETTLE_DELAY_MS=220;
 const WELCOME_POLL_MS=80;
@@ -19,11 +21,7 @@ function builderIsReady(doc,win){
 }
 
 function revealChallenge(info,{template=false}={}){
-  info.classList.add("bobGuidanceChallengeReveal");
-  if(template) info.classList.add("bobGuidanceChallengeTemplateReveal");
-  return ()=>{
-    info.classList.remove("bobGuidanceChallengeReveal","bobGuidanceChallengeTemplateReveal");
-  };
+  return revealMissionJourney(info,{section:template?"template":"checkpoints"});
 }
 
 export function installFirstMissionBuilderChallengeGuidance({
@@ -80,14 +78,14 @@ export function installFirstMissionBuilderChallengeGuidance({
     pending.id=id;
     if(guidedMissions.has(id)) return clearPending("already-guided");
     const info=doc.getElementById("info");
-    const firstCheckpoint=doc.querySelector("#challengeChecklist input");
-    if(!info || !firstCheckpoint) return clearPending("missing-challenge");
+    const journeyButton=doc.getElementById("builderMissionJourneyButton");
+    if(!info || !journeyButton) return clearPending("missing-challenge");
     pending=null;
     const result=guidance.start({
       id:SEQUENCE_ID,
       steps:[
         {
-          id:"challenge-roadmap",target:info,title:"Your Builder Challenge",
+          id:"challenge-roadmap",target:journeyButton,title:"Your Mission Journey",
           message:"Your Builder Challenge is your Mission roadmap.",
           amigCategory:"Ask it",placement:"top",back:false,showMe:false,
           reveal:()=>revealChallenge(info),
@@ -96,19 +94,19 @@ export function installFirstMissionBuilderChallengeGuidance({
           id:"starting-template",target:info,title:"Start with the Template",
           message:"This is your starting template. Use it as a starting point, then make the design your own.",
           amigCategory:"Make it happen",placement:"top",showMe:false,
-          reveal:()=>revealChallenge(info,{template:true}),
+          reveal:()=>revealMissionJourney(info,{section:"template"}),
         },
         {
           id:"mission-checkpoints",target:"#challengeChecklist",title:"Mission Checkpoints",
-          message:"Use these checkpoints to build, change, solve, and improve your design.",
+          message:"Use these checkpoints to build, change, solve, and improve your design. Return to Mission Journey and choose I DID THIS when you finish one.",
           amigCategory:"Improve it",placement:"top",showMe:false,
-          reveal:()=>revealChallenge(info),
+          reveal:()=>revealMissionJourney(info,{section:"checkpoints"}),
         },
         {
-          id:"ready-to-build",target:info,title:"Ready to Build!",
+          id:"ready-to-build",target:journeyButton,title:"Ready to Build!",
           message:"You know the plan. Start building, test your ideas, and make them even better!",
           amigCategory:"Grow what you know",placement:"top",showMe:false,
-          nextLabel:"GOT IT — LET'S BUILD",reveal:()=>revealChallenge(info),
+          nextLabel:"GOT IT — LET'S BUILD",
         },
       ],
     });
@@ -128,10 +126,10 @@ export function installFirstMissionBuilderChallengeGuidance({
     scheduleGuidance(pending.token);
   });
   root.addEventListener("bobguidance:complete",event=>{
-    if(event.detail?.sequenceId===SEQUENCE_ID) firstFocusableChallenge(doc)?.focus?.({preventScroll:true});
+    if(event.detail?.sequenceId===SEQUENCE_ID) missionJourneyButton(doc)?.focus?.({preventScroll:true});
   });
   root.addEventListener("bobguidance:cancel",event=>{
-    if(event.detail?.sequenceId===SEQUENCE_ID) firstFocusableChallenge(doc)?.focus?.({preventScroll:true});
+    if(event.detail?.sequenceId===SEQUENCE_ID) missionJourneyButton(doc)?.focus?.({preventScroll:true});
   });
   new win.MutationObserver(()=>{
     if(doc.body.classList.contains("workshopMode")) clearPending("view-change");
@@ -140,6 +138,6 @@ export function installFirstMissionBuilderChallengeGuidance({
   return Object.freeze({ok:true,cancel:clearPending});
 }
 
-function firstFocusableChallenge(doc){
-  return doc.querySelector("#challengeChecklist input") || doc.getElementById("workspaceModeSwitch");
+function missionJourneyButton(doc){
+  return doc.getElementById("builderMissionJourneyButton") || doc.getElementById("workspaceModeSwitch");
 }

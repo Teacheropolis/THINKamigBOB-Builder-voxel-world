@@ -16,11 +16,14 @@ function normalizeStep(step, index) {
   const guidanceType = TYPES.has(step.guidanceType) ? step.guidanceType : "display";
   const placement = PLACEMENTS.has(step.placement) ? step.placement : "auto";
   return freeze({
-    id:String(step.id), target:step.target, message:String(step.message),
+    id:String(step.id), target:step.target,
+    message:typeof step.message === "function" ? step.message : String(step.message),
     title:step.title ? String(step.title) : "THINKer BOB",
     amigCategory:step.amigCategory ? String(step.amigCategory) : null,
     guidanceType, placement, highlight:step.highlight !== false,
     showMe:step.showMe !== false, next:step.next !== false,
+    actionLabel:step.actionLabel ? String(step.actionLabel) : "Show me",
+    onAction:typeof step.onAction === "function" ? step.onAction : null,
     nextLabel:step.nextLabel ? String(step.nextLabel) : "Next",
     back:step.back !== false, cancel:step.cancel !== false,
     completion:step.completion === "target-activation" ? "target-activation" : "manual",
@@ -106,9 +109,13 @@ export function createBobGuidanceController({
       try { const cleanup=step.reveal({target,step,reducedMotion:reduced()}); if(typeof cleanup==="function") revealCleanup=cleanup; }
       catch (_) { cancel("reveal-failed"); return false; }
     } else target.scrollIntoView?.({block:"nearest",inline:"nearest",behavior:reduced()?"auto":"smooth"});
-    title.textContent=step.title; message.textContent=step.message;
+    title.textContent=step.title;
+    message.textContent=typeof step.message === "function"
+      ? String(step.message({step,target})||"")
+      : step.message;
     category.textContent=step.amigCategory || ""; category.hidden=!step.amigCategory;
-    showMe.hidden=!step.showMe; back.hidden=!step.back || index===0; next.hidden=!step.next;
+    showMe.hidden=!step.showMe; showMe.textContent=step.actionLabel;
+    back.hidden=!step.back || index===0; next.hidden=!step.next;
     next.textContent=step.nextLabel;
     cancelButton.hidden=!step.cancel; target.classList?.toggle("bobGuidanceTarget",step.highlight);
     root.hidden=false; root.setAttribute("aria-hidden","false");
@@ -136,7 +143,19 @@ export function createBobGuidanceController({
     return present() ? freeze({ok:true,snapshot:snapshot()}) : freeze({ok:false,code:"MISSING_TARGET"});
   }
 
-  showMe.addEventListener("click",()=>{if(!target)return; target.classList?.add("bobGuidanceTarget"); target.scrollIntoView?.({block:"nearest",inline:"nearest",behavior:reduced()?"auto":"smooth"}); if(current()?.guidanceType==="interactive") target.focus?.({preventScroll:true}); layout();});
+  showMe.addEventListener("click",()=>{
+    if(!target) return;
+    const step=current();
+    if(step?.onAction){
+      try { if(step.onAction({step,target})!==false) advance("action"); else present(); }
+      catch (_) { cancel("action-failed"); }
+      return;
+    }
+    target.classList?.add("bobGuidanceTarget");
+    target.scrollIntoView?.({block:"nearest",inline:"nearest",behavior:reduced()?"auto":"smooth"});
+    if(step?.guidanceType==="interactive") target.focus?.({preventScroll:true});
+    layout();
+  });
   back.addEventListener("click",()=>{if(sequence&&index>0){index-=1;present();}});
   next.addEventListener("click",()=>advance()); cancelButton.addEventListener("click",()=>cancel());
   doc.addEventListener("keydown",event=>{

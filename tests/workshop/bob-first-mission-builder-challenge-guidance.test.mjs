@@ -26,23 +26,22 @@ test("guidance waits for the canonical two-wave welcome to settle",()=>{
   assert.match(source,/getComputedStyle\(popup\)\.display!=="none"/);
 });
 
-test("four student-facing steps target the real Builder Challenge",()=>{
+test("four student-facing steps retarget the compact Mission Journey control",()=>{
   for(const text of [
     "Your Builder Challenge is your Mission roadmap.",
     "Use it as a starting point, then make the design your own.",
     "build, change, solve, and improve",
     "GOT IT — LET'S BUILD",
   ]) assert.ok(source.includes(text),`missing guidance copy: ${text}`);
-  assert.ok(source.includes("#challengeChecklist"));
+  assert.ok(source.includes("builderMissionJourneyButton"));
   assert.match(source,/id:"starting-template",target:info/);
   assert.match(source,/target:info/g);
 });
 
 test("temporary template reveal is contained and restored",()=>{
-  assert.match(source,/bobGuidanceChallengeTemplateReveal/);
-  assert.match(source,/classList\.remove\("bobGuidanceChallengeReveal","bobGuidanceChallengeTemplateReveal"\)/);
-  assert.match(html,/\.bobGuidanceChallengeTemplateReveal #templateIncludesPanel\[hidden\]\{display:block!important\}/);
-  assert.match(html,/\.bobGuidanceChallengeTemplateReveal #challengeChecklist\{display:none!important\}/);
+  assert.match(source,/revealMissionJourney/);
+  assert.match(source,/section:"template"/);
+  assert.match(html,/bobGuidanceChallengeReveal\[data-bob-mission-journey-section="template"\] #templateIncludesPanel/);
 });
 
 test("view changes and stale owners cancel without persistence",()=>{
@@ -58,5 +57,5 @@ test("shared controller supports a final action label and retains accessibility"
   assert.match(controller,/next\.textContent=step\.nextLabel/);
   assert.match(controller,/event\.key==="Escape"/);
   assert.match(controller,/event\.key==="Tab"/);
-  assert.match(source,/firstFocusableChallenge\(doc\)\?\.focus/);
+  assert.match(source,/missionJourneyButton\(doc\)\?\.focus/);
 });

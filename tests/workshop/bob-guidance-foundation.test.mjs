@@ -14,7 +14,7 @@ test("one shared BOB Guidance owner is bootstrapped for Builder and Workshop",()
 });
 
 test("step contract supports target resolution, AMIG, display and interactive guidance",()=>{
-  for(const token of ["id:String(step.id)","target:step.target","message:String(step.message)","amigCategory","guidanceType","display","interactive","placement","target-activation"]){
+  for(const token of ["id:String(step.id)","target:step.target","typeof step.message === \"function\"","String(step.message)","amigCategory","guidanceType","display","interactive","placement","target-activation"]){
     assert.ok(source.includes(token),`missing ${token}`);
   }
   assert.match(source,/typeof value === "function"/);
@@ -41,6 +41,14 @@ test("Show me never invokes the target and navigation changes one step",()=>{
   assert.match(showBlock,/target\.focus/);
   assert.match(source,/index\+=1; return present\(\)/);
   assert.match(source,/index-=1;present\(\)/);
+});
+
+test("guidance actions can update an existing control without synthesizing a target click",()=>{
+  assert.match(source,/actionLabel:step\.actionLabel/);
+  assert.match(source,/onAction:typeof step\.onAction === "function"/);
+  assert.match(source,/if\(step\?\.onAction\)/);
+  assert.match(source,/step\.onAction\(\{step,target\}\)/);
+  assert.doesNotMatch(source,/target\.click\(/);
 });
 
 test("only one sequence runs and duplicate starts are suppressed",()=>{

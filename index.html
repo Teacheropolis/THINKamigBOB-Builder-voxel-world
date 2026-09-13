@@ -4954,6 +4954,7 @@ HTML SECTION: LEFT CURRENT MISSION PANEL
   <button id="openPassportFromBadge" type="button" aria-label="Open Passport"><span>OPEN</span><strong>PASSPORT</strong></button>
 </div>
 </div>
+<button id="builderMissionJourneyButton" type="button" aria-haspopup="dialog" aria-controls="bobGuidanceRoot">MISSION JOURNEY — 0 OF 4</button>
 <!-- =====================================================
 JS SECTION 01: THREE.JS / MAIN BUILDER SCRIPT
 Preserved from working file. Future edits should target by section.
@@ -11664,7 +11665,7 @@ function toggleMissionCard(){
   positionRightPanels();
 }
 
-function syncChecklists(){
+function syncChecklists(source){
 
   const mainBoxes =
     document.querySelectorAll("#challengeChecklist input");
@@ -11674,7 +11675,11 @@ function syncChecklists(){
 
   mainBoxes.forEach((box, index) => {
     if(floatBoxes[index] && !box.disabled && !floatBoxes[index].disabled){
-      box.checked = floatBoxes[index].checked;
+      if(source === "main"){
+        floatBoxes[index].checked = box.checked;
+      }else{
+        box.checked = floatBoxes[index].checked;
+      }
     }
   });
 }
@@ -11687,6 +11692,8 @@ function resetChecklist(){
   boxes.forEach(box => {
     box.checked = false;
   });
+
+  syncChecklists("main");
 
   updateStarterChallengeDisplay();
   positionRightPanels();
@@ -26319,7 +26326,7 @@ body.calmMode #reopenLibraryFromCoach{
       if(typeof window.syncFavoriteStars === "function") window.syncFavoriteStars();
     }
     Array.prototype.forEach.call(document.querySelectorAll("#challengeChecklist input"), function(input,index){ input.checked=!!(state.checklist && state.checklist[index]); });
-    if(typeof window.syncChecklists === "function") window.syncChecklists();
+    if(typeof window.syncChecklists === "function") window.syncChecklists("main");
     var shapeSelect=document.getElementById("blockShape");
     if(shapeSelect) shapeSelect.value=state.selectedShape || "cube";
     if(engineeringGrid){
@@ -41987,7 +41994,40 @@ body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):act
 .bobGuidanceChallengeTemplateReveal #templateIncludesTitle{margin:0 0 4px!important;color:#8ff3ff!important;font:800 12px/1.15 system-ui,sans-serif!important;text-transform:uppercase!important}
 .bobGuidanceChallengeTemplateReveal #templateIncludesList{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:3px 10px!important;margin:0!important;padding-left:18px!important;color:#fff!important;font:700 12px/1.15 system-ui,sans-serif!important}
 .bobGuidanceChallengeTemplateReveal #challengeChecklist{display:none!important}
+.bobGuidanceChallengeReveal #challengeChecklist label{grid-template-columns:1fr!important;cursor:default!important}
+.bobGuidanceChallengeReveal #challengeChecklist input[type="checkbox"]{display:none!important}
 @media (prefers-reduced-motion:reduce){.bobGuidanceCallout,.bobGuidanceTarget{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
+<style id="builderMissionJourneyCompactCSS">
+body.starterScreenActive #builderMissionJourneyButton,
+body.workshopMode #builderMissionJourneyButton{display:none!important}
+body:not(.starterScreenActive):not(.workshopMode) #info:not(.bobGuidanceChallengeReveal){display:none!important}
+body:not(.starterScreenActive):not(.workshopMode) #builderMissionJourneyButton{
+  position:fixed;z-index:118;left:var(--builder-swap-center-left);right:var(--builder-swap-center-right);bottom:8px;
+  width:min(360px,calc(100vw - var(--builder-swap-center-left) - var(--builder-swap-center-right) - 24px));
+  min-width:220px;min-height:44px;margin-inline:auto;padding:8px 18px;box-sizing:border-box;
+  border:2px solid #55eaff;border-radius:12px;background:linear-gradient(180deg,rgba(12,58,82,.96),rgba(3,27,44,.98));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 12px rgba(69,226,255,.32);
+  color:#fff;font:900 14px/1.15 system-ui,sans-serif;letter-spacing:.07em;text-align:center;cursor:pointer;
+}
+body:not(.starterScreenActive):not(.workshopMode) #builderMissionJourneyButton:hover,
+body:not(.starterScreenActive):not(.workshopMode) #builderMissionJourneyButton:focus-visible{
+  outline:3px solid #ffd84d;outline-offset:2px;background:linear-gradient(180deg,#155b7c,#07344f);
+}
+body:not(.starterScreenActive):not(.workshopMode) #info.bobGuidanceChallengeReveal{
+  display:grid!important;height:min(190px,calc(100vh - var(--builder-guided-region-top) - 70px))!important;
+  min-height:112px!important;max-height:190px!important;overflow:auto!important;
+}
+body:not(.starterScreenActive):not(.workshopMode) #info.bobGuidanceChallengeReveal[data-bob-mission-journey-section="summary"] #missionText,
+body:not(.starterScreenActive):not(.workshopMode) #info.bobGuidanceChallengeReveal[data-bob-mission-journey-section="template"] #templateIncludesPanel,
+body:not(.starterScreenActive):not(.workshopMode) #info.bobGuidanceChallengeReveal[data-bob-mission-journey-section="checkpoints"] #challengeChecklist,
+body:not(.starterScreenActive):not(.workshopMode) #info.bobGuidanceChallengeReveal[data-bob-mission-journey-section="more"] #moreChallenge{display:block!important}
+@media(max-height:640px){
+  body:not(.starterScreenActive):not(.workshopMode) #builderMissionJourneyButton{bottom:5px;min-height:44px;padding-block:6px}
+}
+@media(max-width:1100px){
+  body:not(.starterScreenActive):not(.workshopMode) #builderMissionJourneyButton{width:min(300px,calc(100vw - var(--builder-swap-center-left) - var(--builder-swap-center-right) - 16px));font-size:12px}
+}
 </style>
 <div id="bobGuidanceRoot" hidden aria-hidden="true">
   <div class="bobGuidanceCurtain" data-bob-guidance="top"></div>
@@ -42010,6 +42050,7 @@ body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):act
 <script type="module" id="bobGuidanceFoundationBootstrap">
 import {createBobGuidanceController} from "./js/guidance/bob-guidance-controller.mjs";
 import {installFirstMissionBuilderChallengeGuidance} from "./js/guidance/bob-first-mission-builder-challenge-guidance.mjs";
+import {installBobMissionJourneyGuidance} from "./js/guidance/bob-mission-journey-guidance.mjs";
 const root=document.getElementById("bobGuidanceRoot");
 if(root){
   const controller=createBobGuidanceController({root});
@@ -42017,6 +42058,7 @@ if(root){
     Object.defineProperty(window,"bobGuidance",{value:controller,writable:false,configurable:false});
   }
   installFirstMissionBuilderChallengeGuidance({guidance:controller});
+  installBobMissionJourneyGuidance({guidance:controller});
   let guidanceViewState={
     starter:document.body.classList.contains("starterScreenActive"),
     workshop:document.body.classList.contains("workshopMode"),
