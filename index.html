@@ -41534,6 +41534,7 @@ body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation > butt
     gap:1px !important;
     margin-top:0 !important;
     padding-top:0 !important;
+    border-top:1px solid rgba(103,232,255,.28) !important;
   }
   body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation > button{
     grid-column:auto !important;
@@ -41543,6 +41544,32 @@ body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation > butt
     min-height:var(--builder-left-compact-nav-height) !important;
     max-height:var(--builder-left-compact-nav-height) !important;
     padding-block:1px !important;
+  }
+}
+
+/* The 1024x640 no-scroll target needs one final presentation-only tier.
+   Controls stay at 44px; only label chrome, the color-scroll allowance, and
+   the obsolete divider above the in-flow navigation surrender space. */
+@media(max-height:660px){
+  :root{
+    --builder-left-compact-label-height:10px;
+    --builder-left-compact-slider-space:4px;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #colorSwatchBar{
+    box-sizing:content-box !important;
+    height:var(--builder-left-compact-swatch-size) !important;
+    min-height:var(--builder-left-compact-swatch-size) !important;
+    padding-block:0 !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #colorSwatchBar::-webkit-scrollbar{
+    height:8px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #builderColorScrollAffordance{
+    height:6px !important;
+    border-width:1px !important;
+  }
+  body:not(.starterScreenActive):not(.workshopMode) #builderMajorNavigation{
+    border-top:0 !important;
   }
 }
 

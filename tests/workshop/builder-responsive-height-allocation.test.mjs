@@ -16,7 +16,8 @@ test("major navigation is the distinct final rail group and cannot cover Utiliti
   assert.match(navigation,/panel\.appendChild\(navigation\)/);
   assert.doesNotMatch(navigation,/mission\.appendChild\(navigation\)/);
   assert.match(css,/#builderMajorNavigation\{[\s\S]*?position:static !important;[\s\S]*?grid-template-columns:repeat\(2,minmax\(44px,1fr\)\) !important;[\s\S]*?grid-template-rows:44px !important;/);
-  assert.match(css,/@media\(max-height:660px\)[\s\S]*?#builderMajorNavigation\{[\s\S]*?margin-top:4px !important;[\s\S]*?border-top:1px solid/);
+  assert.match(css,/@media\(max-height:700px\)[\s\S]*?#builderMajorNavigation\{[\s\S]*?margin-top:0 !important;[\s\S]*?border-top:1px solid/);
+  assert.match(css,/@media\(max-height:660px\)[\s\S]*?#builderMajorNavigation\{[\s\S]*?border-top:0 !important;/);
 });
 
 test("short-height tiers reduce decoration before bounded control size",()=>{
@@ -59,4 +60,7 @@ test("compact tier preserves all rail groups and gives color controls bounded sp
   assert.match(css,/@media\(max-height:700px\)[\s\S]*?\.dashboard139MissionZone[\s\S]*?grid-auto-rows:var\(--builder-left-compact-control-height\) !important;/);
   assert.match(css,/@media\(max-height:700px\)[\s\S]*?#bottomBuildTools,[\s\S]*?\.dashboardUtilityButtons\{[\s\S]*?gap:0 !important;/);
   assert.match(css,/@media\(max-height:700px\)[\s\S]*?#builderMajorNavigation\{[\s\S]*?grid-template-rows:var\(--builder-left-compact-nav-height\) !important;/);
+  assert.match(css,/@media\(max-height:660px\)[\s\S]*?--builder-left-compact-label-height:10px;[\s\S]*?--builder-left-compact-slider-space:4px;/);
+  assert.match(css,/@media\(max-height:660px\)[\s\S]*?#colorSwatchBar\{[\s\S]*?height:var\(--builder-left-compact-swatch-size\) !important;[\s\S]*?padding-block:0 !important;/);
+  assert.match(css,/@media\(max-height:660px\)[\s\S]*?#builderColorScrollAffordance\{[\s\S]*?height:6px !important;/);
 });
