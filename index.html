@@ -3909,6 +3909,18 @@ Keep button IDs and onclick handlers unchanged.
 </div>
 <div id="workshopProjectToast" aria-hidden="true"></div>
 <input id="workshopProjectFileInput" type="file" accept=".json,.thinkamigbob.json,application/json" hidden aria-hidden="true">
+<div id="builderExitProtectionDialog" role="dialog" aria-modal="true" aria-labelledby="builderExitProtectionTitle" aria-describedby="builderExitProtectionDescription" hidden>
+  <div id="builderExitProtectionPanel">
+    <h2 id="builderExitProtectionTitle">PROTECT YOUR PROJECT</h2>
+    <p id="builderExitProtectionDescription">Your current project has changes. Choose how to protect them before continuing.</p>
+    <p id="builderExitProtectionStatus" role="status" aria-live="polite" aria-atomic="true">Choose how to protect your current project.</p>
+    <div id="builderExitProtectionActions">
+      <button id="builderExitProtectionCancel" type="button">CANCEL</button>
+      <button id="builderExitProtectionSave" type="button">SAVE PROJECT FILE</button>
+      <button id="builderExitProtectionContinue" type="button">CONTINUE WITH RECOVERY</button>
+    </div>
+  </div>
+</div>
 <!-- =====================================================
 HTML SECTION 02 — BUILD DASHBOARD / BOTTOM TOOLBAR
 Future extraction target: dashboard HTML/CSS/JS.
@@ -4303,7 +4315,7 @@ Nature ▶
 </div>
 </div>
     </div>
-    <button id="returnMissionsButton" aria-label="Return to Missions" onclick="showStartScreen()">Return to Missions</button>
+    <button id="returnMissionsButton" aria-label="Return to Missions" onclick="return window.requestBuilderReturnToMissions ? window.requestBuilderReturnToMissions(this) : false">Return to Missions</button>
   </section>
 
   <section class="dashboard139Zone dashboard139ShapeZone" aria-label="Shapes and colors">
@@ -4337,7 +4349,7 @@ Nature ▶
       <button id="undoButton" onclick="undoLast()" disabled>Undo</button>
       <button id="redoButton" onclick="redoLast()" disabled>Redo</button>
       <button id="builderSaveButton" onclick="saveWorld()">Save</button>
-      <button id="builderOpenButton" onclick="document.getElementById('loadFile').click()">Open</button>
+      <button id="builderOpenButton" onclick="return window.requestBuilderOpenProjectFile ? window.requestBuilderOpenProjectFile(this) : false">Open</button>
       <button onclick="resetWorld()">Reset</button>
       <button onclick="saveImage()">Screenshot</button>
       <button aria-pressed="true" id="engineeringGridToggle" onclick="toggleEngineeringGrid()">▦ Grid: On</button>
@@ -12496,6 +12508,9 @@ function exportBuilderWorld(name){
   if(typeof window.showThinkamigbobBuildToast==="function"){
     window.showThinkamigbobBuildToast("BUILD SAVED!");
   }
+  if(typeof window.notifyBuilderProjectFileSaved==="function"){
+    window.notifyBuilderProjectFileSaved();
+  }
   return true;
 }
 
@@ -12605,12 +12620,9 @@ document.getElementById('loadFile')
 }); 
 
 function openStarterSavedBuild(){
-  window.starterBuilderFileOpenPending=true;
-  const input=document.getElementById('loadFile');
-  if(input){
-    input.value='';
-    input.click();
-  }
+  return typeof window.requestBuilderOpenProjectFile==="function"
+    ? window.requestBuilderOpenProjectFile(document.getElementById("starterOpenSavedBuildButton"),true)
+    : false;
 }
 window.openStarterSavedBuild=openStarterSavedBuild;
 
@@ -26206,6 +26218,7 @@ body.calmMode #reopenLibraryFromCoach{
   var CALM_MODE_KEY="thinkamigbob-calm-mode";
   var resumeRestorePending=false;
   var recoveryController=null;
+  var exitProtectionController=null;
   var recoveryPendingMeaningful=false;
 
   var MISSION_TITLES={
@@ -26326,26 +26339,32 @@ body.calmMode #reopenLibraryFromCoach{
     scheduleSave({meaningful:false});
   }
 
-  function resumeSavedBuild(recoveryId){
+  function resumeSavedBuild(recoveryId,focusOwner){
     if(!recoveryController) return;
     var record=recoveryController.list().find(function(item){ return item.recoveryId===recoveryId; });
     if(!record) return;
-    var state=record.state;
-    resumeRestorePending=true;
-    builderProjectName=String(state.projectName || "").trim().slice(0,60);
-    window.selectedStartWorld=state.selectedStartWorld || "buildCastle";
-    window.selectedSpaceDestination=state.selectedSpaceDestination || null;
-    if(typeof window.startSelectedWorld === "function"){
-      window.startSelectedWorld();
-      window.setTimeout(function(){
-        restoreSavedBuild(state);
-        recoveryController.useRecovery(recoveryId);
+    function restoreSelectedRecovery(){
+      var state=record.state;
+      resumeRestorePending=true;
+      builderProjectName=String(state.projectName || "").trim().slice(0,60);
+      window.selectedStartWorld=state.selectedStartWorld || "buildCastle";
+      window.selectedSpaceDestination=state.selectedSpaceDestination || null;
+      if(typeof window.startSelectedWorld === "function"){
+        window.startSelectedWorld();
+        window.setTimeout(function(){
+          restoreSavedBuild(state);
+          recoveryController.useRecovery(recoveryId);
+          resumeRestorePending=false;
+          scheduleSave({meaningful:false});
+        },1050);
+      }else{
         resumeRestorePending=false;
-        scheduleSave({meaningful:false});
-      },1050);
-    }else{
-      resumeRestorePending=false;
+      }
+      return true;
     }
+    return exitProtectionController
+      ? exitProtectionController.requestReplacement(restoreSelectedRecovery,focusOwner)
+      : restoreSelectedRecovery();
   }
 
   function refreshResumeButton(){
@@ -26366,7 +26385,7 @@ body.calmMode #reopenLibraryFromCoach{
       button.dataset.recoveryId=record.recoveryId;
       button.textContent="↻ "+project+" — "+label+" • "+timestamp;
       button.setAttribute("aria-label","Resume "+project+", "+label+", recovered "+timestamp);
-      button.addEventListener("click",function(){ resumeSavedBuild(record.recoveryId); });
+      button.addEventListener("click",function(){ resumeSavedBuild(record.recoveryId,button); });
       track.appendChild(button);
     });
     if(typeof window.updateStarterResumeScrollAffordance === "function"){
@@ -26415,9 +26434,18 @@ body.calmMode #reopenLibraryFromCoach{
     if(event.target.closest("#challengeChecklist")) scheduleSave({meaningful:true});
     else if(event.target.closest("#blockShape, #blockColor")) scheduleSave({meaningful:false});
   });
-  window.addEventListener("beforeunload",function(){ saveNow(false); });
+  window.addEventListener("beforeunload",function(event){
+    if(exitProtectionController) return exitProtectionController.handleBeforeUnload(event);
+    saveNow(false);
+  });
 
   window.flushBuilderRecovery=function(){ return saveNow(false); };
+  window.notifyBuilderProjectFileSaved=function(){
+    return exitProtectionController ? exitProtectionController.confirmProjectFileSaved() : false;
+  };
+  window.cancelBuilderProtectedExitSave=function(){
+    return exitProtectionController ? exitProtectionController.resumeAfterProjectFileSaveCancelled() : false;
+  };
   window.markBuilderManualSaveCheckpoint=function(){
     return recoveryController ? recoveryController.markManualSaveCheckpoint() : false;
   };
@@ -26438,12 +26466,18 @@ body.calmMode #reopenLibraryFromCoach{
   var originalStartSelectedWorld=window.startSelectedWorld;
   if(typeof originalStartSelectedWorld==="function" && !originalStartSelectedWorld.__recoveryWrapped){
     window.startSelectedWorld=function(){
-      var result=originalStartSelectedWorld.apply(this,arguments);
-      if(!resumeRestorePending && recoveryController){
-        recoveryController.beginProject({missionKey:window.selectedStartWorld || "buildCastle",projectName:builderProjectName || ""});
-        scheduleSave({meaningful:true});
+      var owner=this;
+      var args=arguments;
+      function startAndRecover(){
+        var result=originalStartSelectedWorld.apply(owner,args);
+        if(!resumeRestorePending && recoveryController){
+          recoveryController.beginProject({missionKey:window.selectedStartWorld || "buildCastle",projectName:builderProjectName || ""});
+          scheduleSave({meaningful:true});
+        }
+        return result;
       }
-      return result;
+      if(resumeRestorePending || !exitProtectionController) return startAndRecover();
+      return exitProtectionController.requestReplacement(startAndRecover,document.activeElement);
     };
     window.startSelectedWorld.__recoveryWrapped=true;
   }
@@ -26453,8 +26487,11 @@ body.calmMode #reopenLibraryFromCoach{
   window.setCalmMode(calmEnabled);
   window.scheduleStudentAutosave=scheduleSave;
 
-  import("./js/persistence/builder-recovery-controller.mjs").then(function(module){
-    recoveryController=module.createBuilderRecoveryController({
+  Promise.all([
+    import("./js/persistence/builder-recovery-controller.mjs"),
+    import("./js/persistence/builder-exit-protection-controller.mjs")
+  ]).then(function(modules){
+    recoveryController=modules[0].createBuilderRecoveryController({
       storage:localStorage,
       capture:captureRecoveryState,
       restore:function(state){ restoreSavedBuild(state); return true; },
@@ -26463,6 +26500,36 @@ body.calmMode #reopenLibraryFromCoach{
       debounceMs:700
     });
     recoveryController.initialize();
+    exitProtectionController=modules[1].createBuilderExitProtectionController({
+      recovery:recoveryController,
+      dialog:document.getElementById("builderExitProtectionDialog"),
+      status:document.getElementById("builderExitProtectionStatus"),
+      cancelButton:document.getElementById("builderExitProtectionCancel"),
+      saveButton:document.getElementById("builderExitProtectionSave"),
+      continueButton:document.getElementById("builderExitProtectionContinue"),
+      document:document,
+      isBuilderActive:function(){ return !document.body.classList.contains("workshopMode"); },
+      announce:function(message){
+        presentRecoveryStatus({kind:"failed",message:message});
+      },
+      saveProjectFile:function(){ return saveWorld(); }
+    });
+    window.requestBuilderReturnToMissions=function(focusOwner){
+      return exitProtectionController.requestImmediate(function(){ return showStartScreen(); },focusOwner);
+    };
+    window.requestBuilderOpenWorkshop=function(focusOwner){
+      return exitProtectionController.requestImmediate(function(){ return setWorkspaceMode("workshop"); },focusOwner);
+    };
+    window.requestBuilderOpenProjectFile=function(focusOwner,fromStarter){
+      return exitProtectionController.requestReplacement(function(){
+        window.starterBuilderFileOpenPending=!!fromStarter;
+        var input=document.getElementById("loadFile");
+        if(!input) return false;
+        input.value="";
+        input.click();
+        return true;
+      },focusOwner);
+    };
     refreshResumeButton();
     if(recoveryPendingMeaningful){ scheduleSave({meaningful:true}); recoveryPendingMeaningful=false; }
   }).catch(function(error){
@@ -29809,6 +29876,72 @@ body:not(.starterScreenActive) #workshopProjectToast.isVisible{
 @media (max-width:1280px){
   #workshopProjectDialogPanel{max-height:calc(100vh - 24px);padding:14px;}
   #workshopProjectList{max-height:38vh;}
+}
+
+#builderExitProtectionDialog{
+  position:fixed;
+  inset:0;
+  z-index:1230;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  box-sizing:border-box;
+  background:rgba(2,10,18,.78);
+  overscroll-behavior:contain;
+}
+#builderExitProtectionDialog[hidden]{display:none;}
+#builderExitProtectionPanel{
+  width:min(520px,calc(100vw - 32px));
+  max-height:calc(100vh - 32px);
+  overflow:auto;
+  padding:20px;
+  box-sizing:border-box;
+  border:2px solid #caa13b;
+  border-radius:14px;
+  color:#f2fbff;
+  background:linear-gradient(180deg,#203b4b,#0b2231 58%,#06141e);
+  box-shadow:inset 0 1px rgba(255,255,255,.16),0 12px 30px rgba(0,0,0,.55);
+  font-family:"Lexend",Arial,sans-serif;
+}
+#builderExitProtectionTitle{
+  margin:0 0 10px;
+  color:#aef4ff;
+  font:900 20px/1.15 "Lexend",Arial,sans-serif;
+  text-align:center;
+}
+#builderExitProtectionDescription,
+#builderExitProtectionStatus{
+  margin:8px 0 12px;
+  font:700 14px/1.45 "Lexend",Arial,sans-serif;
+}
+#builderExitProtectionStatus{min-height:20px;color:#ffd967;}
+#builderExitProtectionActions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+#builderExitProtectionActions button{
+  min-width:44px;
+  min-height:48px;
+  padding:8px 10px;
+  border:1px solid #caa13b;
+  border-radius:8px;
+  color:#f3fbff;
+  background:linear-gradient(180deg,#294b5b,#0c2431);
+  font:900 12px/1.2 "Lexend",Arial,sans-serif;
+  cursor:pointer;
+}
+#builderExitProtectionCancel{grid-column:1/-1;grid-row:1;}
+#builderExitProtectionActions button:focus-visible{
+  outline:3px solid #8ff6ff;
+  outline-offset:2px;
+}
+body.builderExitProtectionOpen{overflow:hidden;}
+@media (max-width:600px),(max-height:520px){
+  #builderExitProtectionPanel{padding:14px;}
+  #builderExitProtectionActions{grid-template-columns:1fr;}
+  #builderExitProtectionCancel{grid-column:auto;}
 }
 
 body.workshopMode:not(.starterScreenActive) #workshopHeader{
@@ -37252,7 +37385,10 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
     }
     if(projectCancel){
       projectCancel.addEventListener("click",function(){
+        var cancelledBuilderExitSave=workshopProjectDialogMode==="BUILDER_NAME" &&
+          typeof window.cancelBuilderProtectedExitSave==="function";
         closeWorkshopProjectDialog({restoreFocus:true});
+        if(cancelledBuilderExitSave) window.cancelBuilderProtectedExitSave();
       });
     }
     if(projectList){
@@ -37361,13 +37497,17 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
     if(switcher){
       switcher.removeAttribute("onclick");
       switcher.addEventListener("click",function(){
-        setWorkspaceMode(
-          workshopCanonicalState==="SHUTTING_DOWN"
+        var targetMode=workshopCanonicalState==="SHUTTING_DOWN"
             ? "mission"
             : workshopCanonicalState==="STARTING" || currentWorkspaceMode==="workshop"
             ? "mission"
-            : "workshop"
-        );
+            : "workshop";
+        if(targetMode==="workshop" && currentWorkspaceMode!=="workshop" &&
+          typeof window.requestBuilderOpenWorkshop==="function"){
+          window.requestBuilderOpenWorkshop(switcher);
+          return;
+        }
+        setWorkspaceMode(targetMode);
       });
     }
 
@@ -37382,14 +37522,20 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
   }
 
   window.setWorkspaceMode=setWorkspaceMode;
-  window.openWorkshop=function(){ return setWorkspaceMode("workshop"); };
+  window.openWorkshop=function(){
+    return typeof window.requestBuilderOpenWorkshop==="function"
+      ? window.requestBuilderOpenWorkshop(document.getElementById("workspaceModeSwitch"))
+      : setWorkspaceMode("workshop");
+  };
   window.returnToMission=function(){ return setWorkspaceMode("mission"); };
   window.toggleWorkspaceMode=function(){
-    return setWorkspaceMode(
-      workshopCanonicalState==="SHUTTING_DOWN"
+    var targetMode=workshopCanonicalState==="SHUTTING_DOWN"
         ? "mission"
-        : currentWorkspaceMode==="workshop" ? "mission" : "workshop"
-    );
+        : currentWorkspaceMode==="workshop" ? "mission" : "workshop";
+    if(targetMode==="workshop" && typeof window.requestBuilderOpenWorkshop==="function"){
+      return window.requestBuilderOpenWorkshop(document.getElementById("workspaceModeSwitch"));
+    }
+    return setWorkspaceMode(targetMode);
   };
   window.setWorkshopMeasurementUnit=setWorkshopMeasurementUnit;
   window.setWorkshopEngineeringView=setWorkshopEngineeringView;

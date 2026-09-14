@@ -37,7 +37,8 @@ test("Open stays fixed at the far left and reuses the validated Builder file inp
   assert.match(starter,/id="starterOpenSavedBuildButton"[^>]*onclick="openStarterSavedBuild\(\)"[^>]*>OPEN A SAVED BUILD<\/button>/);
   assert.match(polish,/\.starterProjectEntryRow\{[\s\S]*grid-template-columns:184px minmax\(0,1fr\)/);
   assert.match(polish,/#starterOpenSavedBuildButton\{[\s\S]*border:2px solid #f7fbff;[\s\S]*color:#fff;/);
-  assert.match(source,/function openStarterSavedBuild\(\)\{[\s\S]*getElementById\('loadFile'\)[\s\S]*input\.click\(\)/);
+  assert.match(source,/function openStarterSavedBuild\(\)\{[\s\S]{0,300}requestBuilderOpenProjectFile/);
+  assert.match(source,/requestBuilderOpenProjectFile[\s\S]{0,500}getElementById\("loadFile"\)[\s\S]{0,120}input\.click\(\)/);
   assert.equal((source.match(/id="loadFile"/g)||[]).length,1);
   assert.match(source,/validateBuilderProjectFile\(loadedData\)/);
 });
@@ -51,8 +52,8 @@ test("Resume retains dynamic mission naming and canonical autosave restoration",
   assert.match(source,/button\.className="resumeAutosaveButton"/);
   assert.match(source,/button\.dataset\.recoveryId=record\.recoveryId/);
   assert.match(source,/button\.textContent="↻ "\+project\+" — "\+label\+" • "\+timestamp/);
-  assert.match(source,/button\.addEventListener\("click",function\(\)\{ resumeSavedBuild\(record\.recoveryId\); \}\)/);
-  assert.match(source,/function resumeSavedBuild\(recoveryId\)\{[\s\S]*record\.state[\s\S]*window\.selectedStartWorld=state\.selectedStartWorld[\s\S]*window\.startSelectedWorld\(\)/);
+  assert.match(source,/button\.addEventListener\("click",function\(\)\{ resumeSavedBuild\(record\.recoveryId,button\); \}\)/);
+  assert.match(source,/function resumeSavedBuild\(recoveryId,focusOwner\)\{[\s\S]*record\.state[\s\S]*window\.selectedStartWorld=state\.selectedStartWorld[\s\S]*window\.startSelectedWorld\(\)/);
   assert.match(source,/recoveryController\.useRecovery\(recoveryId\)/);
   assert.match(source,/resumeRestorePending=true[\s\S]*restoreSavedBuild\(state\)[\s\S]*resumeRestorePending=false/);
   assert.match(polish,/\.starterResumeTrack\{[\s\S]*flex-wrap:nowrap;[\s\S]*width:max-content/);

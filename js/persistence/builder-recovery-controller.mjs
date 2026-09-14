@@ -192,6 +192,16 @@ export function createBuilderRecoveryController(options={}){
   function snapshot(){
     return Object.freeze({activeRecoveryId,records:collection.records.map(record=>Object.freeze(structuredClone(record)))});
   }
+  function getExitState(){
+    const active=collection.records.find(record=>record.recoveryId===activeRecoveryId);
+    return Object.freeze({
+      activeRecoveryId,
+      dirty:!!(pendingMeaningful || (active && active.dirty)),
+      pendingMeaningful,
+      hasRecoverableWork:!!(activeRecoveryId && (pendingMeaningful || (active && active.dirty))),
+      writable
+    });
+  }
   function beginProject(details={}){
     const missionKey=String(details.missionKey || "buildCastle");
     const projectName=String(details.projectName || "").trim().slice(0,60);
@@ -293,5 +303,5 @@ export function createBuilderRecoveryController(options={}){
   }
   function dispose(){ if(timer) clearTimer(timer); timer=0; }
 
-  return Object.freeze({initialize,beginProject,useRecovery,schedule,flush,markManualSaveCheckpoint,restoreRecovery,list,snapshot,dispose});
+  return Object.freeze({initialize,beginProject,useRecovery,schedule,flush,markManualSaveCheckpoint,restoreRecovery,list,snapshot,getExitState,dispose});
 }

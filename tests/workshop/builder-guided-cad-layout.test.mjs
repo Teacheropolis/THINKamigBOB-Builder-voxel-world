@@ -17,11 +17,13 @@ test("defines one Builder-only project header with existing presentation owners"
   assert.doesNotMatch(script, /cloneNode|innerHTML/);
 });
 
-test("reparents the existing Save and Open controls without replacing handlers", () => {
+test("reparents the existing Save and Open controls while preserving their workflows", () => {
   assert.equal((source.match(/id="builderSaveButton"/g) ?? []).length, 1);
   assert.equal((source.match(/id="builderOpenButton"/g) ?? []).length, 1);
   assert.match(source, /id="builderSaveButton" onclick="saveWorld\(\)"/);
-  assert.match(source, /id="builderOpenButton" onclick="document\.getElementById\('loadFile'\)\.click\(\)"/);
+  assert.match(source, /id="builderOpenButton" onclick="return window\.requestBuilderOpenProjectFile \? window\.requestBuilderOpenProjectFile\(this\) : false"/);
+  assert.match(source, /window\.requestBuilderOpenProjectFile\s*=\s*function\(focusOwner/);
+  assert.match(source, /input\.click\(\)/);
   assert.match(script, /actions\.appendChild\(save\)/);
   assert.match(script, /actions\.appendChild\(open\)/);
   assert.doesNotMatch(script, /addEventListener\(["'](?:click|keydown|change)/);

@@ -21,7 +21,7 @@ test("recovery exposes debounce, immediate flush, and manual checkpoint boundari
   assert.match(source,/window\.flushBuilderRecovery=function\(\)/);
   assert.match(source,/window\.markBuilderManualSaveCheckpoint=function\(\)/);
   assert.match(source,/window\.markBuilderManualSaveCheckpoint\(\)/);
-  assert.match(source,/beforeunload[\s\S]{0,250}flushBuilderRecovery/);
+  assert.match(source,/beforeunload[\s\S]{0,250}(?:handleBeforeUnload|flushBuilderRecovery)/);
 });
 
 test("recovery status is accessible and never aliases portable save confirmation",()=>{
@@ -47,8 +47,13 @@ test("successful Builder mutation paths notify the authoritative recovery owner"
   assert.match(source,/event\.target\.closest\("#challengeChecklist"\)\) scheduleSave\(\{meaningful:true\}\)/);
 });
 
-test("recovery foundation adds no exit dialog or browser file-handle persistence",()=>{
-  const recoveryScript=source.match(/<script type="module">[\s\S]*?builder-recovery-controller\.mjs[\s\S]*?<\/script>/)?.[0] || "";
+test("recovery keeps browser file-handle persistence out of the protected-exit workflow",()=>{
+  const recoveryImport=source.indexOf('import("./js/persistence/builder-recovery-controller.mjs")');
+  const recoveryScript=recoveryImport>=0
+    ? source.slice(source.lastIndexOf("<script",recoveryImport),source.indexOf("</script>",recoveryImport)+9)
+    : "";
   assert.doesNotMatch(recoveryScript,/showSaveFilePicker|showOpenFilePicker|indexedDB/i);
-  assert.doesNotMatch(recoveryScript,/confirm\(|beforeunload[^]*returnValue/);
+  assert.doesNotMatch(recoveryScript,/confirm\(/);
+  assert.match(recoveryScript,/builder-exit-protection-controller\.mjs/);
+  assert.match(recoveryScript,/handleBeforeUnload/);
 });
