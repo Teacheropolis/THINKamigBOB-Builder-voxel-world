@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bob Reads This Slide</title>
+<style>
+:root{font-family:Arial,sans-serif;color:#241343;background:#f5f1ff}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px}main{max-width:680px;width:100%;background:#fff;border:5px solid #7442bb;border-radius:26px;padding:28px;box-shadow:0 12px 30px #28135c27}h1{font-size:clamp(27px,5vw,42px);margin:0 0 8px}.tag{font-weight:800;color:#6640a1}#script{font-size:clamp(22px,3vw,29px);line-height:1.45;background:#f6f2ff;border-radius:18px;padding:22px;margin:20px 0}button{border:0;border-radius:18px;padding:16px 24px;font-size:22px;font-weight:800;cursor:pointer}#play{background:#6132a1;color:white;min-width:170px}#stop{background:#e8def8;color:#371c65}.actions{display:flex;gap:12px;flex-wrap:wrap}#status{min-height:26px;font-weight:700;margin-top:18px}a{color:#482180}
+</style></head><body><main><div class="tag">STEM COACH · SCRATCH EMERGENCY ALERT</div><h1>Bob reads this slide</h1><div id="script"></div><div class="actions"><button id="play" type="button">▶ Play Bob</button><button id="stop" type="button">■ Stop</button></div><p id="status" role="status" aria-live="polite"></p><p><a href="https://docs.google.com/presentation/d/1pwKIAlgE_-PY5jZIZ58tPhkKgWUMIF5UKs-uvLUOm0Y/edit">↩ Back to directions</a></p></main>
+<script>
+const lines=["Hi, engineers. Bob here, your STEM coach. In this mission, create a Scratch warning that helps someone stay safe. First, think about the danger and what the person should do.", "Choose one natural disaster for your alert: tornado, flood, or earthquake. Pick just one so your warning can be clear.", "Who needs to hear your alert? Think of a student or family member. Say this sentence: My alert will help, and name that person.", "Plan two messages. First, write a short warning that names the danger. Second, write one safe action. Ask your teacher to check that action.", "Open the Scratch link from your teacher. Click Create. Find the Stage, a sprite, and the code area before you begin.", "Choose a backdrop for the Stage. Pick a simple scene that makes your alert easy to notice and your words easy to read.", "Choose who will give the alert. You can keep Scratch Cat or choose another sprite. Check that your speaker is visible on the Stage.", "Start your code with the yellow Events block: when green flag clicked. Drag it into the code area. You will connect your messages under it.", "Open Looks. Add a purple say block below the green-flag block. Type a warning such as Tornado warning, and give your audience time to read it.", "Add a second purple say block under the warning. Type one short safety action. In our tornado example, the action is: Go inside. Avoid windows.", "Now test your alert. Click the green flag. Watch for the warning first, then the safety tip. Did both appear in the right order?", "Time to improve. Bob's detective clue is to check the order of your blocks. If the safety tip appears first, move the warning block above it. Run your program again.", "Finish the core alert before adding an extra feature. Once your warning and tip work, you may try a sound, movement, or a click action.", "Capture your work for My STEM Work. Show your code and the Stage. Make sure your evidence includes the warning, safety tip, sprite, and backdrop.", "Explain your design. Who does your alert help? Why is the action useful? Tell one change you made. Then complete What I Learned Today.", "Check your finished project. Does it run? Did you name the danger and teach one safe action? Did you test, improve, and capture your evidence?", "Mission complete! Press the green flag and demonstrate your alert to a partner. Ask your partner what safety action they would take."];
+const n=Number(new URLSearchParams(location.search).get('slide'));
+const text=lines[n-1]||'';
+const scriptEl=document.getElementById('script'),statusEl=document.getElementById('status');
+scriptEl.textContent=text||'Choose a slide from the Scratch Emergency Alert directions.';
+function speak(){
+ if(!text){statusEl.textContent='This slide has no script.';return;}
+ if(!('speechSynthesis' in window)){statusEl.textContent='Voice reading is not available in this browser.';return;}
+ const voices=speechSynthesis.getVoices();
+ const english=voices.filter(v=>(v.lang||'').toLowerCase().startsWith('en-us'));
+ const saved=localStorage.getItem('thinkerBobVoice');
+ const selected=voices.find(v=>v.name===saved)||english[3];
+ if(!selected){statusEl.textContent='Bob’s Voice 4 is still loading. Tap Play again in a moment.';return;}
+ speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(text.replace(/THINKamigBOB/gi,'thinkamigbob').replace(/THINKer BOB/gi,'thinker bob'));
+ u.voice=selected;u.lang=selected.lang;u.rate=0.92;u.pitch=0.9;u.volume=1;
+ u.onstart=()=>statusEl.textContent='Bob is reading slide '+n+'.';
+ u.onend=()=>statusEl.textContent='Bob finished reading.';
+ u.onerror=()=>statusEl.textContent='Bob could not read. Tap Play again.';
+ speechSynthesis.speak(u);
+}
+document.getElementById('play').addEventListener('click',speak);
+document.getElementById('stop').addEventListener('click',()=>{speechSynthesis.cancel();statusEl.textContent='Stopped.'});
+window.addEventListener('pagehide',()=>speechSynthesis.cancel());
+</script></body></html>
