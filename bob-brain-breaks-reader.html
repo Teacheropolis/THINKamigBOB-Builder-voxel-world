@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Bob Reads Brain Breaks</title>
+  <style>
+    *{box-sizing:border-box}body{font-family:Verdana,Arial,sans-serif;background:#eaf5fb;color:#17334d;margin:0;padding:14px}main{max-width:1200px;margin:auto}header{background:#087bc1;color:#fff;padding:18px 22px;border-radius:18px 18px 0 0;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}.eyebrow{font-size:14px;font-weight:800;color:#fff0a6}.title{font-size:clamp(22px,4vw,34px);font-weight:900}.actions{display:flex;gap:10px;flex-wrap:wrap}button,.nav a{border:0;border-radius:10px;padding:12px 18px;font-size:18px;font-weight:800;cursor:pointer}#play{background:#f7cf5b;color:#17334d}#stop{background:#fff;color:#075e95}.slide-frame{position:relative;width:100%;aspect-ratio:16/9;background:#fff;border:4px solid #087bc1;border-top:0;border-radius:0 0 18px 18px;overflow:hidden}.slide-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.nav{display:flex;align-items:center;justify-content:space-between;margin:15px 0;gap:10px}.nav a{background:#087bc1;color:#fff;text-decoration:none}.nav a[aria-disabled=true]{visibility:hidden}#count{font-weight:800}.below{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}.below a{font-weight:800;color:#075e95}#status{font-weight:800;min-height:24px}.transcript{margin-top:14px;background:#fff;border-radius:14px;padding:18px;font-size:19px;line-height:1.5}.transcript strong{display:block;color:#087bc1;font-size:14px;margin-bottom:7px}@media(max-width:650px){.nav a{font-size:15px;padding:10px}}
+  </style>
+</head>
+<body>
+<main>
+  <header><div><div class="eyebrow">BOB BRAIN BREAKS</div><div class="title">Bob reads this slide</div></div><div class="actions"><button id="play">▶ Play Bob</button><button id="stop">■ Stop</button></div></header>
+  <section class="slide-frame"><iframe id="slideView" title="Animated STEM Brain Break slide" allow="autoplay; fullscreen" allowfullscreen></iframe></section>
+  <nav class="nav"><a id="prev">◀ Previous</a><strong id="count"></strong><a id="next">Next ▶</a></nav>
+  <div class="below"><span id="status" role="status" aria-live="polite"></span><a href="https://docs.google.com/presentation/d/1Bn40itCEDv0ny1HK0sFjBzGqiOuHnZgj5htrjxYp6h8/edit">↩ Back to editable Brain Breaks</a></div>
+  <div class="transcript"><strong>BOB'S WORDS</strong><span id="script"></span></div>
+</main>
+<script>
+const SLIDES=[
+ {title:'Dots & Boxes',stem:'STEM: Plan shapes and predict the next move',setup:'Make a 4 × 4 dot grid. Get two pencils.',play:'Draw one line, then switch. Close a box, claim it, and go again.',help:'No diagonals. Win by claiming the most boxes.',bob:'Look for the fourth side!'},
+ {title:'Build Bob (word guessing)',stem:'STEM: Test letters and use clues',setup:'Choose a five-letter secret word and draw five spaces.',play:'Guess one letter. Fill every match, or add one Bob part for a wrong guess.',help:'Solve the word before Bob has all six parts.',bob:'Each guess gives a clue!'},
+ {title:'Tic-Tac-Toe',stem:'STEM: Find patterns and plan ahead',setup:'Draw a 3 × 3 grid. Choose X and O.',play:'Place your mark in one empty square, then switch players.',help:'Get three in a row across, down, or diagonal. A full board is a tie.',bob:'Can you block my next move?'},
+ {title:'Ultimate Tic-Tac-Toe',stem:'STEM: Connect small decisions to a bigger system',setup:'Draw nine little tic-tac-toe boards in a 3 × 3 grid.',play:'Place X or O. Your square sends the next player to that little board.',help:'Win three small boards in a row. If the sent board is won or full, choose any open board.',bob:'Where will you send me?'},
+ {title:'Sprouts',stem:'STEM: Build networks with limits',setup:'Start with three dots.',play:'Join two dots and add a new dot on the line. Then switch.',help:'Lines cannot cross. Each dot may have at most three line ends. The last legal move wins.',bob:'Count the connections!'},
+ {title:'Sim',stem:'STEM: Predict triangle patterns',setup:'Draw six dots. Each player chooses a different color.',play:'Join two dots in your color, then switch. Use only one line per pair.',help:'If you make a triangle in your own color, you lose. Crossings are okay.',bob:'Stop! Check your color.'},
+ {title:'Battleships',stem:'STEM: Use coordinates and record data',setup:'Each player draws two 6 × 6 grids and hides ships of three, two, and one squares.',play:'Call one coordinate. Mark a hit or miss, then switch.',help:'Find every square of every ship to win. Say the column first, then the row.',bob:'Column first. Then row!'},
+ {title:'Race Track',stem:'STEM: Model velocity and acceleration',setup:'Draw a closed track with a start and finish line. Mark your starting point.',play:'Repeat your last move, or change each direction by one grid space. Take turns.',help:'Keep the whole line inside the track. The first safe lap wins.',bob:'Brake before the bend!'},
+ {title:'Snort',stem:'STEM: Map shared borders and plan space',setup:'Draw a map of touching regions. Each player chooses a color.',play:'Color one empty region, then switch. The same color may touch.',help:'Opposite colors cannot share a side. If you have no legal move, you lose.',bob:'Check the next region!'}
+];
+const params=new URLSearchParams(location.search);const slide=Math.min(SLIDES.length,Math.max(1,parseInt(params.get('slide')||'1',10)||1));const record=SLIDES[slide-1];
+const slideIds=['p1','p2','p3','p4','p5','p6','p7','p8','p9'];const deckId='1Bn40itCEDv0ny1HK0sFjBzGqiOuHnZgj5htrjxYp6h8';document.getElementById('slideView').src=`https://docs.google.com/presentation/d/${deckId}/embed?start=false&loop=true&delayms=3000&rm=minimal&slide=id.${slideIds[slide-1]}`;
+const script=`${record.title}. Question: How do I play? Answer: ${record.play} ${record.help} My hint is that ${record.bob}`;document.getElementById('script').textContent=script;document.getElementById('count').textContent=`Brain Break ${slide} of ${SLIDES.length}`;document.title=`Bob Reads · ${record.title}`;
+function setNav(id,target){const el=document.getElementById(id);if(target<1||target>SLIDES.length){el.setAttribute('aria-disabled','true');return}el.href=`?slide=${target}`;el.addEventListener('click',()=>speechSynthesis.cancel())}setNav('prev',slide-1);setNav('next',slide+1);
+const status=document.getElementById('status');function speak(){if(!('speechSynthesis'in window)){status.textContent='Voice reading is unavailable in this browser.';return}const voices=speechSynthesis.getVoices();const english=voices.filter(v=>(v.lang||'').toLowerCase().startsWith('en-us'));const saved=localStorage.getItem('thinkerBobVoice');const voice=voices.find(v=>v.name===saved)||english[3];if(!voice){status.textContent='Bob’s Voice 4 is loading. Tap Play again in a moment.';return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(script);u.voice=voice;u.lang=voice.lang;u.rate=.92;u.pitch=.9;u.onstart=()=>status.textContent=`Bob is reading ${record.title}.`;u.onend=()=>status.textContent='Bob finished reading.';u.onerror=()=>status.textContent='Bob could not read. Tap Play again.';speechSynthesis.speak(u)}
+document.getElementById('play').onclick=speak;document.getElementById('stop').onclick=()=>{speechSynthesis.cancel();status.textContent='Stopped.'};window.addEventListener('pagehide',()=>speechSynthesis.cancel());
+</script>
+</body>
+</html>
