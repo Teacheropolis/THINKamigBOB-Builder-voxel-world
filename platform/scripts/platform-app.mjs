@@ -1265,6 +1265,38 @@ function classTimerScheduleMarkup(classId = "class-preview-1", { showBackToToday
   </section>`;
 }
 
+function saveQuickClassTimerSchedule(form) {
+  if (!form) return { ok: false };
+  const data = new FormData(form);
+  const existing = classTimerSchedule.read();
+  const phaseNames = data.getAll("phaseName");
+  const phaseStarts = data.getAll("phaseStart");
+  const result = classTimerSchedule.save({
+    ...existing,
+    enabled: data.get("enabled") === "yes",
+    weekdays: data.getAll("weekdays"),
+    startTime: String(data.get("startTime") ?? existing.startTime),
+    durationMinutes: Number(data.get("durationMinutes")),
+    timeZone: String(data.get("timeZone") ?? existing.timeZone),
+    yellowSound: String(data.get("yellowSound") ?? existing.yellowSound),
+    redSound: String(data.get("redSound") ?? existing.redSound),
+    endSound: String(data.get("endSound") ?? existing.endSound),
+    pomodoroEnabled: data.get("pomodoroEnabled") === "yes",
+    phases: existing.phases.map((phase, index) => ({ ...phase, name: String(phaseNames[index] ?? phase.name), startMinute: Number(phaseStarts[index] ?? phase.startMinute) })),
+  });
+  const status = form.querySelector("[data-class-timer-schedule-status]");
+  const error = form.querySelector("[data-class-timer-schedule-error]");
+  if (result.ok) {
+    preserveCurrentClassSetup(currentTeacherClass(session.read().teacherId)?.id);
+    if (status) status.textContent = `${result.schedule.pomodoroEnabled ? "Pomodoro timer" : "Standard timer"} saved automatically at ${result.schedule.durationMinutes} minutes.`;
+    if (error) { error.textContent = ""; error.hidden = true; }
+  } else if (error) {
+    error.textContent = result.reason === "invalid-phases" ? "Choose increasing Pomodoro phase times that occur before the class ends." : "Finish this schedule setting to save it.";
+    error.hidden = false;
+  }
+  return result;
+}
+
 function applyScheduledClassTimer(classId = "class-preview-1") {
   const occurrence = classTimerSchedule.activeOccurrence();
   if (!occurrence.active || classTimerSchedule.wasApplied(occurrence.occurrence)) return occurrence;
@@ -6648,6 +6680,13 @@ root.addEventListener("drop", (event) => {
 });
 
 root.addEventListener("change", (event) => {
+  const quickScheduleSetting = event.target.closest('form[data-form="class-timer-schedule"] [name="enabled"], form[data-form="class-timer-schedule"] [name="weekdays"], form[data-form="class-timer-schedule"] [name="startTime"], form[data-form="class-timer-schedule"] [name="timeZone"], form[data-form="class-timer-schedule"] [name="pomodoroEnabled"], form[data-form="class-timer-schedule"] [name="phaseName"], form[data-form="class-timer-schedule"] [name="phaseStart"], form[data-form="class-timer-schedule"] [name="yellowSound"], form[data-form="class-timer-schedule"] [name="redSound"], form[data-form="class-timer-schedule"] [name="endSound"]');
+  if (quickScheduleSetting) {
+    const result = saveQuickClassTimerSchedule(quickScheduleSetting.closest("form"));
+    if (result.ok && lessonTimer.read().status === LESSON_TIMER_STATES.READY) lessonTimer.setDuration(result.schedule.durationMinutes);
+    syncLessonTimerPresentation();
+    return;
+  }
   const pixelProjectFile = event.target.closest("[data-pixel-project-file]");
   if (pixelProjectFile) { const file = pixelProjectFile.files?.[0]; pixelStudio.sourceFrames = []; if (file) void openPixelProjectFile(file); pixelProjectFile.value = ""; return; }
   const pixelGif = event.target.closest("[data-pixel-gif]");
