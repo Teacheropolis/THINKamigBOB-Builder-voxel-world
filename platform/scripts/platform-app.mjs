@@ -1228,8 +1228,11 @@ function classTimerScheduleMarkup(classId = "class-preview-1", { showBackToToday
       <label>Class start time<input type="time" name="startTime" value="${schedule.startTime}" required></label>
       <label>Class duration in minutes<input type="number" name="durationMinutes" min="${MIN_LESSON_MINUTES}" max="${MAX_LESSON_MINUTES}" step="1" value="${schedule.durationMinutes}" required></label>
       <label>Time zone<select name="timeZone">${timeZones.map((zone) => `<option value="${zone}"${schedule.timeZone === zone ? " selected" : ""}>${zone.replaceAll("_", " ")}</option>`).join("")}</select></label>
-      <label class="platform-evidence-drive-confirmation"><input type="checkbox" name="pomodoroEnabled" value="yes"${schedule.pomodoroEnabled ? " checked" : ""}> Use three color-coded activity phases.</label>
-      <fieldset class="platform-class-timer-phases"><legend>Activity phases</legend>
+      <div class="platform-pomodoro-choice">
+        <label class="platform-evidence-drive-confirmation"><input type="checkbox" name="pomodoroEnabled" value="yes"${schedule.pomodoroEnabled ? " checked" : ""}> <strong>Use a color-coded Pomodoro class timer</strong></label>
+        <p>Break the class into four visible stages: <strong>Purple</strong> for the opening, <strong>green</strong> for work time, <strong>yellow</strong> for the warning, and <strong>red</strong> for wrap-up. The colors and stage names appear on the Teacher Command Center, floating timer, and Classroom Display.</p>
+      </div>
+      <fieldset class="platform-class-timer-phases"><legend>Pomodoro stages and start times</legend>
         ${schedule.phases.map((phase, index) => `<div data-phase-color="${phase.color}"><span>${phase.color}</span><label>Phase name<input name="phaseName" maxlength="40" value="${escapeHtml(phase.name)}" required></label><label>Starts at minute<input type="number" name="phaseStart" data-phase-start="${phase.key}" min="0" max="${Math.max(0, schedule.durationMinutes - 1)}" step="1" value="${phase.startMinute}"${index === 0 ? " readonly" : ""} required></label></div>`).join("")}
       </fieldset>
       <button class="platform-button platform-button-secondary" type="button" data-action="timer-recommend-phases">Use Recommended Phase Times</button>
