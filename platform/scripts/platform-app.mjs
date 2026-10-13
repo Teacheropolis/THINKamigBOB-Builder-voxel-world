@@ -7182,6 +7182,15 @@ root.addEventListener("input", (event) => {
       const input = form?.querySelector(`[data-phase-start="${phase.key}"]`);
       if (input) { input.value = String(phase.startMinute); input.max = String(Math.max(0, duration - 1)); }
     });
+    if (Number.isInteger(duration) && duration >= MIN_LESSON_MINUTES && duration <= MAX_LESSON_MINUTES) {
+      const currentSchedule = classTimerSchedule.read();
+      const saved = classTimerSchedule.save({ ...currentSchedule, durationMinutes: duration, phases: recommendedTimerPhases(duration) });
+      if (saved.ok) {
+        preserveCurrentClassSetup(currentTeacherClass(session.read().teacherId)?.id);
+        const status = form?.querySelector("[data-class-timer-schedule-status]");
+        if (status) status.textContent = `Class duration saved automatically at ${duration} minutes.`;
+      }
+    }
     if (Number.isInteger(duration) && duration >= MIN_LESSON_MINUTES && duration <= MAX_LESSON_MINUTES && lessonTimer.read().status === LESSON_TIMER_STATES.READY) {
       lessonTimer.setDuration(duration);
       syncLessonTimerPresentation();

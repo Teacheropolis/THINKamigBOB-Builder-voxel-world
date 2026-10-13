@@ -171,6 +171,8 @@ test("Run Today’s Class shows a live read-only current plan", () => {
   assert.match(app, /function currentScheduledLessonTimerState\(\)/);
   assert.match(app, /state\.status === LESSON_TIMER_STATES\.READY && state\.durationSeconds !== schedule\.durationMinutes \* 60/);
   assert.ok((app.match(/currentScheduledLessonTimerState\(\)/g) || []).length >= 5);
+  assert.match(app, /Class duration saved automatically at \$\{duration\} minutes/);
+  assert.match(app, /classTimerSchedule\.save\(\{ \.\.\.currentSchedule, durationMinutes: duration, phases: recommendedTimerPhases\(duration\) \}\)/);
   assert.match(app, /lessonTimer\.setDuration\(duration\);\s*syncLessonTimerPresentation\(\)/);
   assert.match(app, /"Edit Schedule"[\s\S]*?"open-class-schedule-quick"/);
   assert.match(app, /panel\.scrollIntoView\(\{ behavior: "smooth", block: "start" \}\)/);
