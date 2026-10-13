@@ -667,8 +667,16 @@ summary:focus-visible {
 .platform-live-lesson-tools { display: grid; grid-template-columns: minmax(12rem, 0.7fr) minmax(20rem, 1.3fr); gap: 0.75rem 1rem; align-items: center; padding: 0.8rem; border: 2px solid #756986; border-radius: 0.7rem; color: var(--platform-ink); background: linear-gradient(145deg, #faf9fb, var(--platform-violet-soft)); }
 .platform-live-lesson-tools h4, .platform-live-lesson-tools p { margin: 0.12rem 0; }
 .platform-live-lesson-tool-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; }
-.platform-live-lesson-tool-buttons button { min-height: 2.75rem; padding: 0.45rem; border: 2px solid var(--platform-blue); border-radius: 0.5rem; color: var(--platform-blue-dark); background: #fff; font-weight: 850; cursor: pointer; }
-.platform-live-lesson-tool-buttons button:hover, .platform-live-lesson-tool-buttons button:focus-visible { border-color: var(--platform-blue-dark); color: var(--platform-navy); background: var(--platform-blueprint); box-shadow: 0 0 0 3px rgba(23, 105, 142, 0.14); }
+.platform-live-lesson-tool-buttons button { min-height: 2.75rem; padding: 0.45rem; border: 2px solid transparent; border-radius: 0.5rem; color: #fff; background: var(--platform-blue); font-weight: 850; cursor: pointer; box-shadow: 0 0.22rem 0.55rem rgba(16, 47, 69, 0.14); }
+.platform-live-lesson-tool-buttons button[data-action="open-timer-display"] { background: #17698e; }
+.platform-live-lesson-tool-buttons button[data-action="open-classroom-presentation-window"] { background: #274e70; }
+.platform-live-lesson-tool-buttons button[data-action="open-name-picker-display"] { background: #68499a; }
+.platform-live-lesson-tool-buttons button[data-action="open-timer-popout"] { border-color: #9a6b08; color: #2f250f; background: #e6b541; }
+.platform-live-lesson-tool-buttons button[data-action="open-message-board-quick"] { background: #2d7d5b; }
+.platform-live-lesson-tool-buttons button[data-action="open-whiteboard"] { background: #167a7c; }
+.platform-live-lesson-tool-buttons button[data-action="open-voice-meter-display"] { background: #a94c5b; }
+.platform-live-lesson-tool-buttons button:hover, .platform-live-lesson-tool-buttons button:focus-visible { border-color: #fff; color: #fff; filter: brightness(1.12); box-shadow: 0 0 0 3px rgba(23, 105, 142, 0.2), 0 0.32rem 0.7rem rgba(16, 47, 69, 0.2); }
+.platform-live-lesson-tool-buttons button[data-action="open-timer-popout"]:hover, .platform-live-lesson-tool-buttons button[data-action="open-timer-popout"]:focus-visible { border-color: #6e4b04; color: #201806; }
 .platform-live-lesson-tools > [data-classroom-window-status] { grid-column: 1 / -1; min-height: 0; }
 .platform-live-lesson-tool-help { grid-column: 1 / -1; color: var(--platform-muted); font-size: 0.75rem; }
 .platform-today-primary-grid > #teacher-classroom-tools,
