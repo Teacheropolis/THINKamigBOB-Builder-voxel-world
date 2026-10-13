@@ -667,14 +667,14 @@ summary:focus-visible {
 .platform-live-lesson-tools { display: grid; grid-template-columns: minmax(12rem, 0.7fr) minmax(20rem, 1.3fr); gap: 0.75rem 1rem; align-items: center; padding: 0.8rem; border: 2px solid #756986; border-radius: 0.7rem; color: var(--platform-ink); background: linear-gradient(145deg, #faf9fb, var(--platform-violet-soft)); }
 .platform-live-lesson-tools h4, .platform-live-lesson-tools p { margin: 0.12rem 0; }
 .platform-live-lesson-tool-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; }
-.platform-live-lesson-tool-buttons button { min-height: 2.75rem; padding: 0.45rem; border: 2px solid var(--tool-border, var(--platform-blue)); border-radius: 0.5rem; color: var(--platform-navy); background: var(--tool-tint, var(--platform-blueprint)); font-weight: 800; cursor: pointer; box-shadow: 0 0.15rem 0.4rem rgba(16, 47, 69, 0.09); }
-.platform-live-lesson-tool-buttons button[data-action="open-timer-display"] { border-color: #5a9bb8; background: #d9edf4; }
-.platform-live-lesson-tool-buttons button[data-action="open-classroom-presentation-window"] { border-color: #718da5; background: #dfe8ef; }
-.platform-live-lesson-tool-buttons button[data-action="open-name-picker-display"] { border-color: #9a83bc; background: #e8e0f2; }
-.platform-live-lesson-tool-buttons button[data-action="open-timer-popout"] { border-color: #c29b42; background: #ffedbd; }
-.platform-live-lesson-tool-buttons button[data-action="open-message-board-quick"] { border-color: #72a88f; background: #dceee4; }
-.platform-live-lesson-tool-buttons button[data-action="open-whiteboard"] { border-color: #65a7a8; background: #d7eeee; }
-.platform-live-lesson-tool-buttons button[data-action="open-voice-meter-display"] { border-color: #bd7c86; background: #f2dce1; }
+.platform-live-lesson-tool-buttons button { min-height: 2.75rem; padding: 0.45rem; border: 1px solid #c5d2d8; border-top: 6px solid var(--tool-accent, var(--platform-blue)); border-radius: 0.55rem; color: var(--tool-accent, var(--platform-blue-dark)); background: linear-gradient(180deg, #fff 0%, #fff 58%, #f2f5f6 100%); font-weight: 800; cursor: pointer; box-shadow: inset 0 1px 0 #fff, 0 0.28rem 0.5rem rgba(16, 47, 69, 0.15); }
+.platform-live-lesson-tool-buttons button[data-action="open-timer-display"] { --tool-accent: #17698e; border-top-color: #17698e; color: #145d7d; background: linear-gradient(180deg, #fff 0%, #fff 58%, #eef5f8 100%); }
+.platform-live-lesson-tool-buttons button[data-action="open-classroom-presentation-window"] { --tool-accent: #496f8d; border-top-color: #496f8d; color: #3f627d; background: linear-gradient(180deg, #fff 0%, #fff 58%, #f0f4f7 100%); }
+.platform-live-lesson-tool-buttons button[data-action="open-name-picker-display"] { --tool-accent: #7651a8; border-top-color: #7651a8; color: #684692; background: linear-gradient(180deg, #fff 0%, #fff 58%, #f3eff8 100%); }
+.platform-live-lesson-tool-buttons button[data-action="open-timer-popout"] { --tool-accent: #a66f00; border-top-color: #b47a05; color: #845900; background: linear-gradient(180deg, #fff 0%, #fff 58%, #fff7df 100%); }
+.platform-live-lesson-tool-buttons button[data-action="open-message-board-quick"] { --tool-accent: #2d7d5b; border-top-color: #2d7d5b; color: #276d50; background: linear-gradient(180deg, #fff 0%, #fff 58%, #eff8f3 100%); }
+.platform-live-lesson-tool-buttons button[data-action="open-whiteboard"] { --tool-accent: #167a7c; border-top-color: #167a7c; color: #126d6f; background: linear-gradient(180deg, #fff 0%, #fff 58%, #edf8f8 100%); }
+.platform-live-lesson-tool-buttons button[data-action="open-voice-meter-display"] { --tool-accent: #a94c5b; border-top-color: #a94c5b; color: #93424f; background: linear-gradient(180deg, #fff 0%, #fff 58%, #fbf0f2 100%); }
 .platform-live-lesson-tool-buttons button:hover, .platform-live-lesson-tool-buttons button:focus-visible { border-color: var(--platform-blue-dark); color: var(--platform-navy); filter: brightness(0.98); box-shadow: 0 0 0 3px rgba(23, 105, 142, 0.14), 0 0.25rem 0.55rem rgba(16, 47, 69, 0.13); }
 .platform-live-lesson-tools > [data-classroom-window-status] { grid-column: 1 / -1; min-height: 0; }
 .platform-live-lesson-tool-help { grid-column: 1 / -1; color: var(--platform-muted); font-size: 0.75rem; }

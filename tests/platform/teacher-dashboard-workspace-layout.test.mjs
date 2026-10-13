@@ -206,9 +206,9 @@ test("Run Today’s Class shows a live read-only current plan", () => {
   assert.match(css, /\.platform-current-plan-grid \{[^}]*grid-template-columns: repeat\(auto-fit/);
   assert.match(app, /platform-current-plan-textured/);
   assert.match(css, /\.platform-current-plan-grid \.platform-current-plan-textured \{[^}]*background-image:/);
-  assert.match(css, /\.platform-live-lesson-tool-buttons button \{[^}]*color: var\(--platform-navy\);[^}]*background: var\(--tool-tint/);
+  assert.match(css, /\.platform-live-lesson-tool-buttons button \{[^}]*border-top: 6px solid var\(--tool-accent[^}]*background: linear-gradient\(180deg, #fff/);
   for (const action of ["open-timer-display", "open-classroom-presentation-window", "open-name-picker-display", "open-timer-popout", "open-message-board-quick", "open-whiteboard", "open-voice-meter-display"]) {
-    assert.match(css, new RegExp(`\\.platform-live-lesson-tool-buttons button\\[data-action="${action}"\\] \\{[^}]*border-color:[^}]*background: (?!#fff)`));
+    assert.match(css, new RegExp(`\\.platform-live-lesson-tool-buttons button\\[data-action="${action}"\\] \\{[^}]*--tool-accent:[^}]*border-top-color:[^}]*color:[^}]*background: linear-gradient`));
   }
   assert.match(app, /data-plan-card=/);
   assert.match(app, /data-live="true"/);
