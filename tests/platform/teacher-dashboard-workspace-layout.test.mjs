@@ -168,6 +168,8 @@ test("Run Today’s Class shows a live read-only current plan", () => {
   assert.match(app, /readVoiceMeterHistory/);
   assert.match(app, /recordVoiceMeterUse/);
   assert.match(app, /data-current-plan-timer/);
+  assert.match(app, /timer\.status === LESSON_TIMER_STATES\.READY && timer\.durationSeconds !== effectiveTimerSchedule\.durationMinutes \* 60/);
+  assert.match(app, /lessonTimer\.setDuration\(effectiveTimerSchedule\.durationMinutes\)/);
   assert.match(app, /"Edit Schedule"[\s\S]*?"open-class-schedule-quick"/);
   assert.match(app, /panel\.scrollIntoView\(\{ behavior: "smooth", block: "start" \}\)/);
   assert.match(app, /schedule\.querySelector\('\[name="durationMinutes"\]'\)\?\.focus/);
