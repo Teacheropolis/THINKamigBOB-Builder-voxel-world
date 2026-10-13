@@ -193,11 +193,12 @@ test("Teacher-Assigned Research saves approved links and gives students restrict
   assert.match(app, /readTeacherAssignedResearch\(state\.classId\)\.links\.find/);
   assert.match(app, /researchWindow\.closed/);
   assert.match(css, /\.platform-assigned-research/);
+  assert.match(css, /\.platform-assigned-research-student \{[^}]*grid-column: 1 \/ -1/);
 });
 
 test("teacher dashboard opens a clearly labeled no-code student preview in a separate tab", () => {
   for (const label of ["Preview Student View — No Code", "Student Preview — No Sign-In Code", "fictional student Ada Rivera", "only preview data in this browser", "Exit Student Preview"]) assert.match(app, new RegExp(label));
   assert.match(app, /href="#\$\{ROUTES\.PREVIEW_STUDENT\}" target="_blank"/);
   assert.match(app, /state\.studentId === "student-preview-1"/);
-  assert.match(css, /\.platform-student-preview-banner/);
+  assert.match(css, /\.platform-student-preview-banner \{[^}]*grid-column: 1 \/ -1/);
 });
