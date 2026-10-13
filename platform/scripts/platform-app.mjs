@@ -142,6 +142,7 @@ const WHITEBOARD_PAGES_SESSION_KEY = "thinkamigbob.classroom-whiteboard-pages.v1
 const WHITEBOARD_VIEW_SESSION_KEY = "thinkamigbob.classroom-whiteboard-view.v1";
 const WHITEBOARD_LIBRARY_KEY = "thinkamigbob.classroom-whiteboard-library.v1";
 const WHITEBOARD_BOB_MEASUREMENT_COACH_KEY = "thinkamigbob.whiteboard-bob-measurement-coach.v1";
+const TEACHER_ASSIGNED_RESEARCH_KEY = "thinkamigbob.teacher-assigned-research.v1";
 const VOICE_METER_HISTORY_KEY = "thinkamigbob.voice-meter-history.v1";
 const VOICE_METER_ACTIVITY_KEY = "thinkamigbob.voice-meter-activity.v1";
 const VOICE_METER_STAR_GOAL_KEY = "thinkamigbob.voice-meter-star-goal.v1";
@@ -531,6 +532,27 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function readTeacherAssignedResearch(classId) {
+  try { const all = JSON.parse(window.localStorage.getItem(TEACHER_ASSIGNED_RESEARCH_KEY) || "{}"); const saved = all[classId] || {}; return { topic: String(saved.topic || ""), links: Array.isArray(saved.links) ? saved.links.slice(0, 6) : [] }; }
+  catch { return { topic: "", links: [] }; }
+}
+
+function writeTeacherAssignedResearch(classId, research) {
+  const all = (() => { try { return JSON.parse(window.localStorage.getItem(TEACHER_ASSIGNED_RESEARCH_KEY) || "{}"); } catch { return {}; } })();
+  all[classId] = research;
+  window.localStorage.setItem(TEACHER_ASSIGNED_RESEARCH_KEY, JSON.stringify(all));
+}
+
+function teacherAssignedResearchLinksText(research) { return research.links.map((link) => `${link.title} | ${link.url}`).join("\n"); }
+function parseTeacherAssignedResearchLinks(value) {
+  const links = [];
+  for (const line of String(value || "").split(/\r?\n/).map((item) => item.trim()).filter(Boolean).slice(0, 6)) {
+    const separator = line.indexOf("|"), title = separator >= 0 ? line.slice(0, separator).trim() : "Approved research resource", rawUrl = (separator >= 0 ? line.slice(separator + 1) : line).trim();
+    try { const url = new URL(rawUrl); if (url.protocol !== "https:") throw new Error(); links.push({ title: title.slice(0, 80) || "Approved research resource", url: url.href }); } catch { return { ok: false, reason: `Check this link: ${rawUrl}` }; }
+  }
+  return { ok: true, links };
 }
 
 function memoSegmentsMarkup(state) {
@@ -1408,6 +1430,7 @@ function teacherDashboardView(state) {
   const selectedVoiceSensitivity = voiceMeter.readSensitivity();
   const savedWhiteboards = readWhiteboardLibrary();
   const floatingWhiteboard = savedWhiteboards[0];
+  const assignedResearch = readTeacherAssignedResearch(classRecord?.id);
   return shell(`
     <div class="platform-command-layout platform-command-layout-no-sidebar">
       ${classroomDemoModeIsEnabled() ? `<aside class="platform-classroom-demo-banner"><div><p class="platform-command-label">Populated mock view</p><strong>Fictional classroom-use data is active</strong><span>Explore the dashboard as if this class has been using the platform.</span></div><a class="platform-button platform-button-secondary" href="#${ROUTES.PREVIEW_TEACHER}">Return to Regular Preview</a></aside>` : ""}
@@ -1620,6 +1643,17 @@ function teacherDashboardView(state) {
           </section>
           </section>
         </div>
+      </section>
+      <section class="platform-assigned-research platform-assigned-research-teacher" aria-labelledby="assigned-research-teacher-title">
+        <div><p class="platform-command-label">Controlled pilot research</p><h2 id="assigned-research-teacher-title">Teacher-Assigned Research</h2><p>Enter a topic, preview a Google search yourself, then give students only the approved links you save. Students do not receive a Google search box from the platform.</p></div>
+        <form data-form="teacher-assigned-research" novalidate>
+          <label>Research topic<input name="topic" maxlength="140" value="${escapeHtml(assignedResearch.topic)}" placeholder="Example: how bridges support weight for kids"></label>
+          <button type="button" data-action="preview-assigned-google-search">Preview This Topic in Google</button>
+          <label>Approved links—one per line<textarea name="links" rows="5" placeholder="Bridge article | https://example.org/bridge-article">${escapeHtml(teacherAssignedResearchLinksText(assignedResearch))}</textarea><small>Use: Resource title | https://website-address</small></label>
+          <div class="platform-actions"><button type="submit">Save Approved Student Research</button><button type="button" data-action="clear-assigned-research">Clear</button></div>
+          <p data-assigned-research-status role="status">${assignedResearch.links.length ? `${assignedResearch.links.length} approved link${assignedResearch.links.length === 1 ? "" : "s"} saved in this browser for ${escapeHtml(className)}.` : "No approved student research links are saved for this class."}</p>
+          <p class="platform-assigned-research-boundary">Pilot limitation: these settings currently remain in this browser. Secure cross-Chromebook delivery will require the pilot cloud service.</p>
+        </form>
       </section>
     </div>
     <section id="platform-student-timer-display" class="platform-student-timer-display ${studentDisplayClass}" role="dialog" aria-modal="true" aria-labelledby="${showStudentTimer ? "student-timer-title" : "student-message-title"}" tabindex="-1" hidden>
@@ -1900,6 +1934,7 @@ function studentDashboardView(state) {
   const classRecord = getClassById(state.classId);
   const classResourceState = classResourceSharing.read(state.classId);
   const activeClassResources = classResourceState.activeResources;
+  const assignedResearch = readTeacherAssignedResearch(state.classId);
   const reflectionStatus = weeklyReflections.status(state.classId, state.studentId);
   const activityWindowStart = reflectionActivityWindowStart(new Date());
   const sharedResourceActivities = (classResourceState.history ?? [])
@@ -1938,6 +1973,13 @@ function studentDashboardView(state) {
       </section>
 
       ${classResourceStudentMarkup(state.classId, state.studentId)}
+
+      <section class="platform-assigned-research platform-assigned-research-student" aria-labelledby="assigned-research-student-title">
+        <p class="platform-student-section-label">Teacher-approved resources</p>
+        <h2 id="assigned-research-student-title">Teacher-Assigned Research</h2>
+        ${assignedResearch.topic ? `<p><strong>Research topic:</strong> ${escapeHtml(assignedResearch.topic)}</p>` : `<p class="platform-student-empty-state">Your teacher has not assigned a research topic yet.</p>`}
+        ${assignedResearch.links.length ? `<div class="platform-assigned-research-links">${assignedResearch.links.map((link) => `<button type="button" data-action="open-assigned-research" data-research-url="${escapeHtml(link.url)}">${escapeHtml(link.title)}</button>`).join("")}</div><p data-assigned-research-student-status role="status">Choose an approved resource to open it beside the platform.</p>` : `<p>No approved research links are available right now.</p>`}
+      </section>
 
       <section class="platform-school-start-launcher" aria-labelledby="school-start-launcher-title"${activeClassResources.length ? " hidden" : ""}>
         <p class="platform-student-section-label">Start here</p>
@@ -2654,6 +2696,15 @@ async function handleSubmit(event) {
   if (!form) return;
   event.preventDefault();
   const data = new FormData(form);
+  if (form.dataset.form === "teacher-assigned-research") {
+    const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id, topic = String(data.get("topic") || "").trim(), parsed = parseTeacherAssignedResearchLinks(data.get("links")), status = form.querySelector("[data-assigned-research-status]");
+    if (!classId || !topic) { if (status) status.textContent = "Enter a research topic before saving."; return; }
+    if (!parsed.ok) { if (status) status.textContent = `${parsed.reason}. Use a complete secure address beginning with https://.`; return; }
+    if (!parsed.links.length) { if (status) status.textContent = "Add at least one approved link before saving."; return; }
+    writeTeacherAssignedResearch(classId, { topic: topic.slice(0, 140), links: parsed.links });
+    if (status) status.textContent = `${parsed.links.length} approved link${parsed.links.length === 1 ? "" : "s"} saved in this browser for the current class.`;
+    return;
+  }
   if (form.dataset.form === "weekly-reflection-requirement") {
     const state = session.read();
     const classId = currentTeacherClass(state.teacherId)?.id;
@@ -4861,6 +4912,9 @@ function handleClick(event) {
   const action = event.target.closest("[data-action]");
   if (!action) return;
   if (handleNamePickerAction(action, document)) return;
+  if (action.dataset.action === "preview-assigned-google-search") { const topic = action.closest("form")?.elements.topic?.value.trim(); if (!topic) { action.closest("form")?.elements.topic?.focus(); return; } window.open(`https://www.google.com/search?q=${encodeURIComponent(topic)}`, "_blank", "noopener"); return; }
+  if (action.dataset.action === "clear-assigned-research") { const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id, form = action.closest("form"); if (!classId || !form) return; writeTeacherAssignedResearch(classId, { topic: "", links: [] }); form.reset(); form.querySelector("[data-assigned-research-status]").textContent = "Teacher-Assigned Research was cleared for this class in this browser."; return; }
+  if (action.dataset.action === "open-assigned-research") { const state = session.read(), approved = readTeacherAssignedResearch(state.classId).links.find((link) => link.url === action.dataset.researchUrl), status = action.closest(".platform-assigned-research")?.querySelector("[data-assigned-research-student-status]"); if (!approved) { if (status) status.textContent = "This resource is not currently approved by your teacher."; return; } const width = Math.max(480, Math.floor(screen.availWidth / 2)), height = screen.availHeight, researchWindow = window.open(approved.url, "thinkamigbob-assigned-research", `popup=yes,width=${width},height=${height},left=${width},top=0,resizable=yes`); if (!researchWindow) { if (status) status.textContent = "The browser blocked the research window. Allow pop-ups for this platform, then try again."; return; } try { window.moveTo(0, 0); window.resizeTo(width, height); } catch {} if (status) status.textContent = `${approved.title} opened. Your browser may ask you to place the windows side by side.`; const closedCheck = window.setInterval(() => { if (!researchWindow.closed) return; window.clearInterval(closedCheck); try { window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); } catch {} if (status?.isConnected) status.textContent = "The research resource closed. The platform is ready to use full screen again."; }, 1000); return; }
   if (action.dataset.action === "whiteboard-activate-text") { activateWhiteboardTextTool(); return; }
   if (action.dataset.action === "whiteboard-format-text") {
     if (!formatSelectedWhiteboardText(action.dataset.textCommand)) action.setAttribute("aria-pressed", String(action.getAttribute("aria-pressed") !== "true"));
