@@ -430,11 +430,7 @@ function currentClassPlanMarkup(classId, teacherId) {
   const uniqueResources = [...new Map(resources.map((item) => [item.id || `${item.type}-${item.title}`, item])).values()];
   const access = [...new Set(uniqueResources.map((item) => item.type))];
   const effectiveTimerSchedule = classTimerSchedule.readEffective();
-  let timer = lessonTimer.read();
-  if (timer.status === LESSON_TIMER_STATES.READY && timer.durationSeconds !== effectiveTimerSchedule.durationMinutes * 60) {
-    lessonTimer.setDuration(effectiveTimerSchedule.durationMinutes);
-    timer = lessonTimer.read();
-  }
+  const timer = currentScheduledLessonTimerState();
   const memo = teacherMemo.read();
   const latestBoard = readWhiteboardLibrary().filter((board) => board.classId === classId || board.classId === "all").sort((a, b) => Number(b.savedAt || 0) - Number(a.savedAt || 0))[0];
   const history = readVoiceMeterHistory();
@@ -1289,6 +1285,16 @@ function applyScheduledClassTimer(classId = "class-preview-1") {
     classTimerSchedule.markApplied(occurrence.occurrence);
   }
   return occurrence;
+}
+
+function currentScheduledLessonTimerState() {
+  const schedule = classTimerSchedule.readEffective();
+  let state = lessonTimer.read();
+  if (state.status === LESSON_TIMER_STATES.READY && state.durationSeconds !== schedule.durationMinutes * 60) {
+    lessonTimer.setDuration(schedule.durationMinutes);
+    state = lessonTimer.read();
+  }
+  return state;
 }
 
 function timerRingStyle(scheduleState) {
@@ -2323,7 +2329,7 @@ function openStudentTimerPopout() {
 
 function syncStudentTimerPopout() {
   if (!studentTimerPopout || studentTimerPopout.closed) return;
-  const state = lessonTimer.read();
+  const state = currentScheduledLessonTimerState();
   const scheduled = classTimerSchedule.readEffective().pomodoroEnabled ? presentationTimerVisualState(state) : currentTimerVisualState(state);
   const phase = scheduled.active ? scheduled.phase : null;
   const documentRef = studentTimerPopout.document;
@@ -2346,7 +2352,7 @@ function syncStudentTimerPopout() {
 function syncClassroomPresentationWindow() {
   if (!classroomPresentationWindow || classroomPresentationWindow.closed) return;
   const documentRef = classroomPresentationWindow.document;
-  const timer = lessonTimer.read();
+  const timer = currentScheduledLessonTimerState();
   const visual = presentationTimerVisualState(timer);
   documentRef.querySelectorAll("[data-timer-remaining]").forEach((output) => { output.textContent = formatLessonTime(timer.remainingSeconds); });
   documentRef.querySelectorAll("[data-timer-phase-name]").forEach((label) => { label.textContent = visual.phase?.name ?? "Today's Engineering Time"; });
@@ -2467,7 +2473,7 @@ function openClassroomPresentationWindow() {
 }
 
 function syncLessonTimerPresentation() {
-  const state = lessonTimer.read();
+  const state = currentScheduledLessonTimerState();
   const scheduled = classTimerSchedule.readEffective().pomodoroEnabled ? presentationTimerVisualState(state) : currentTimerVisualState(state);
   const phase = scheduled.active ? scheduled.phase : null;
   const presentationScheduled = presentationTimerVisualState(state);
@@ -3015,6 +3021,7 @@ async function handleSubmit(event) {
       lessonTimer.setDuration(result.schedule.durationMinutes);
     }
     preserveCurrentClassSetup(currentTeacherClass(session.read().teacherId)?.id);
+    syncLessonTimerPresentation();
     return render();
   }
 
@@ -7175,6 +7182,10 @@ root.addEventListener("input", (event) => {
       const input = form?.querySelector(`[data-phase-start="${phase.key}"]`);
       if (input) { input.value = String(phase.startMinute); input.max = String(Math.max(0, duration - 1)); }
     });
+    if (Number.isInteger(duration) && duration >= MIN_LESSON_MINUTES && duration <= MAX_LESSON_MINUTES && lessonTimer.read().status === LESSON_TIMER_STATES.READY) {
+      lessonTimer.setDuration(duration);
+      syncLessonTimerPresentation();
+    }
     return;
   }
   const reflection = event.target.closest("[data-evidence-reflection]");
