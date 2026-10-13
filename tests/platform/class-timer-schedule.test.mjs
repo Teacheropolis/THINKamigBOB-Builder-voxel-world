@@ -106,6 +106,18 @@ test("today-only override changes effective timing without replacing the weekly 
   assert.equal(schedule.readEffective().durationMinutes, 60);
 });
 
+test("saving the class schedule clears an older today-only timer override", () => {
+  const schedule = createClassTimerSchedule({ storage: memoryStorage(), sessionStorage: memoryStorage() });
+  schedule.save({ enabled: false, durationMinutes: 45, pomodoroEnabled: true, phases: recommendedTimerPhases(45) });
+  schedule.saveTodayOverride({ durationMinutes: 60, phases: recommendedTimerPhases(60), pomodoroEnabled: true });
+  assert.equal(schedule.readEffective().durationMinutes, 60);
+
+  const result = schedule.save({ enabled: false, durationMinutes: 35, pomodoroEnabled: true, phases: recommendedTimerPhases(35) });
+  assert.equal(result.ok, true);
+  assert.equal(schedule.readTodayOverride(), null);
+  assert.equal(schedule.readEffective().durationMinutes, 35);
+});
+
 test("schedule saves independent yellow, red, and end sound choices", () => {
   const schedule = createClassTimerSchedule({ storage: memoryStorage(), sessionStorage: memoryStorage() });
   const saved = schedule.save({ enabled: false, yellowSound: "Bird Chirping", redSound: "Cardinal", endSound: "Choir — Heavenly Transition" });

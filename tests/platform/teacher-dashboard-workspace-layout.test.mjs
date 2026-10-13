@@ -168,10 +168,13 @@ test("Run Today’s Class shows a live read-only current plan", () => {
   assert.match(app, /readVoiceMeterHistory/);
   assert.match(app, /recordVoiceMeterUse/);
   assert.match(app, /data-current-plan-timer/);
+  assert.match(app, /"Edit Schedule"[\s\S]*?"open-class-schedule-quick"/);
+  assert.match(app, /panel\.scrollIntoView\(\{ behavior: "smooth", block: "start" \}\)/);
+  assert.match(app, /schedule\.querySelector\('\[name="durationMinutes"\]'\)\?\.focus/);
   assert.match(app, /platform-current-plan-timer-widget/);
   assert.match(app, /platform-current-plan-timer-wheel/);
   for (const action of ["timer-subtract-minute", "timer-add-minute", "timer-start-or-resume", "timer-pause", "timer-end", "timer-reset"]) assert.match(app, new RegExp(`data-action="${action}"`));
-  assert.match(app, /data-action="open-current-plan-editor"/);
+  assert.match(app, /editAction = "open-current-plan-editor"/);
   assert.match(app, /data-action="save-current-plan-message"/);
   assert.match(app, /data-action="return-current-plan"/);
   assert.ok((app.match(/data-action="return-to-current-class-plan"/g) || []).length >= 8);

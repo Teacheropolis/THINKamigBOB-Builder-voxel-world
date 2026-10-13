@@ -180,6 +180,7 @@ export function createClassTimerSchedule({ storage, sessionStorage, now = () => 
       } catch {
         return { ok: false, reason: "storage-error", schedule: read() };
       }
+      try { sessionStorage?.removeItem(CLASS_TIMER_TODAY_KEY); } catch { /* The saved class schedule still remains authoritative. */ }
       try { sessionStorage?.removeItem(CLASS_TIMER_OCCURRENCE_KEY); } catch { /* A new page session can still apply the saved schedule. */ }
       return { ok: true, schedule: next };
     },
