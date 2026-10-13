@@ -39,6 +39,10 @@ test("teacher and student workspaces use consistent visual zones for quick scann
   assert.match(css, /#teacher-live-lesson-dashboard \.platform-current-class-plan/);
 });
 
+test("form placeholders are visibly stronger without matching entered text", () => {
+  assert.match(css, /input::placeholder, \.platform-main textarea::placeholder \{[^}]*font-weight: 700[^}]*opacity: 1/);
+});
+
 test("a separate classroom demo preview supplies realistic fictional usage data", () => {
   assert.match(app, /PREVIEW_CLASSROOM_DEMO: "\/preview\/classroom-demo"/);
   assert.match(app, /function seedClassroomDemo\(\)/);
