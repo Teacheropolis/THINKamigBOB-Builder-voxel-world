@@ -54,6 +54,17 @@ test("pomodoro phases require minute zero and increasing starts before class end
   assert.equal(schedule.save({ ...base, phases: [{ name: "Start", startMinute: 0 }, { name: "Main", startMinute: 10 }, { name: "Warning", startMinute: 40 }, { name: "End", startMinute: 40 }] }).reason, "invalid-phases");
 });
 
+test("stored Pomodoro phase times are repaired so none exceed the class duration", () => {
+  const storage = memoryStorage();
+  storage.setItem("thinkamigbob.class-timer-schedule.v1", JSON.stringify({ enabled: false, weekdays: WEEKDAYS, startTime: "09:00", durationMinutes: 30, timeZone: "America/New_York", pomodoroEnabled: true, phases: [
+    { name: "Start", startMinute: 0 }, { name: "Work", startMinute: 35 }, { name: "Warning", startMinute: 40 }, { name: "End", startMinute: 44 },
+  ] }));
+  const schedule = createClassTimerSchedule({ storage, sessionStorage: memoryStorage() }).read();
+  assert.equal(schedule.durationMinutes, 30);
+  assert.deepEqual(schedule.phases.map((phase) => phase.startMinute), [0, 5, 20, 25]);
+  assert.ok(schedule.phases.every((phase) => phase.startMinute < schedule.durationMinutes));
+});
+
 test("recommended transitions use first five purple, last ten yellow, and last five red", () => {
   assert.deepEqual(recommendedTimerPhases(60).map((phase) => phase.startMinute), [0, 5, 50, 55]);
   assert.deepEqual(recommendedTimerPhases(45).map((phase) => phase.startMinute), [0, 5, 35, 40]);
@@ -113,6 +124,9 @@ test("teacher UI keeps schedule setup in Manage Classes and preserves manual con
   assert.match(app, /lessonTimer\.startScheduled\(occurrence\.durationMinutes, occurrence\.remainingSeconds\)/);
   assert.match(app, /lessonTimer\.startScheduled\(activeSchedule\.durationMinutes, activeSchedule\.remainingSeconds\)/);
   assert.match(app, /lessonTimer\.setDuration\(result\.schedule\.durationMinutes\)/);
+  assert.match(app, /preserveCurrentClassSetup\(currentTeacherClass\(session\.read\(\)\.teacherId\)\?\.id\)/);
+  assert.match(app, /previewIgnoresScheduleClock/);
+  assert.match(app, /lessonTimer\.setDuration\(classTimerSchedule\.readEffective\(\)\.durationMinutes\)/);
   assert.match(app, /Apply for Today Only/);
   assert.match(app, /Change Schedule — Pomodoro intervals and timer sounds/);
   assert.match(app, /<button type="submit">Save Class Schedule<\/button>\s*\$\{showBackToToday \? `<a class="platform-button platform-button-secondary" href="#\$\{ROUTES\.TEACHER_DASHBOARD\}">Back to Today<\/a>` : ""\}/);

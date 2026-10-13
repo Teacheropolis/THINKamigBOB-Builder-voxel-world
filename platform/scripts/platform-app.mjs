@@ -1459,10 +1459,13 @@ function teacherDashboardView(state) {
   const teacherName = teacher?.displayName ?? "Preview Teacher";
   const className = classRecord?.displayName ?? "Class not selected";
   const periodLabel = classRecord?.periodLabel ?? "Period not selected";
-  const scheduledTimer = applyScheduledClassTimer(classRecord?.id);
-  const timerState = lessonTimer.read();
-  const timerVisualState = currentTimerVisualState(timerState, scheduledTimer);
+  const previewIgnoresScheduleClock = state.teacherId === "teacher-preview-1" && !classroomDemoModeIsEnabled();
+  const scheduledTimer = previewIgnoresScheduleClock ? { active: false, reason: "teacher-preview" } : applyScheduledClassTimer(classRecord?.id);
   const effectiveTimerSchedule = classTimerSchedule.readEffective();
+  const storedTimerState = lessonTimer.read();
+  if (previewIgnoresScheduleClock && storedTimerState.status !== LESSON_TIMER_STATES.RUNNING && storedTimerState.status !== LESSON_TIMER_STATES.PAUSED && storedTimerState.durationSeconds !== effectiveTimerSchedule.durationMinutes * 60) lessonTimer.setDuration(effectiveTimerSchedule.durationMinutes);
+  const timerState = lessonTimer.read();
+  const timerVisualState = effectiveTimerSchedule.pomodoroEnabled ? presentationTimerVisualState(timerState) : currentTimerVisualState(timerState, scheduledTimer);
   const timerMinutes = Math.max(1, Math.round(timerState.durationSeconds / 60));
   const memoState = teacherMemo.read();
   const savedMessages = messageLibrary.read().messages;
@@ -2316,7 +2319,7 @@ function openStudentTimerPopout() {
 function syncStudentTimerPopout() {
   if (!studentTimerPopout || studentTimerPopout.closed) return;
   const state = lessonTimer.read();
-  const scheduled = currentTimerVisualState(state);
+  const scheduled = classTimerSchedule.readEffective().pomodoroEnabled ? presentationTimerVisualState(state) : currentTimerVisualState(state);
   const phase = scheduled.active ? scheduled.phase : null;
   const documentRef = studentTimerPopout.document;
   const phaseName = documentRef.querySelector(".phase");
@@ -2460,7 +2463,7 @@ function openClassroomPresentationWindow() {
 
 function syncLessonTimerPresentation() {
   const state = lessonTimer.read();
-  const scheduled = currentTimerVisualState(state);
+  const scheduled = classTimerSchedule.readEffective().pomodoroEnabled ? presentationTimerVisualState(state) : currentTimerVisualState(state);
   const phase = scheduled.active ? scheduled.phase : null;
   const presentationScheduled = presentationTimerVisualState(state);
   const presentationPhase = presentationScheduled.active ? presentationScheduled.phase : null;
@@ -2999,15 +3002,14 @@ async function handleSubmit(event) {
       return;
     }
     const activeSchedule = classTimerSchedule.activeOccurrence();
-    if (activeSchedule.active) {
+    const previewIgnoresScheduleClock = session.read().teacherId === "teacher-preview-1" && !classroomDemoModeIsEnabled();
+    if (activeSchedule.active && !previewIgnoresScheduleClock) {
       const timerResult = lessonTimer.startScheduled(activeSchedule.durationMinutes, activeSchedule.remainingSeconds);
       if (timerResult.ok) classTimerSchedule.markApplied(activeSchedule.occurrence);
     } else {
-      const currentTimer = lessonTimer.read();
-      if (currentTimer.status !== LESSON_TIMER_STATES.RUNNING && currentTimer.status !== LESSON_TIMER_STATES.PAUSED) {
-        lessonTimer.setDuration(result.schedule.durationMinutes);
-      }
+      lessonTimer.setDuration(result.schedule.durationMinutes);
     }
+    preserveCurrentClassSetup(currentTeacherClass(session.read().teacherId)?.id);
     return render();
   }
 
@@ -6291,6 +6293,7 @@ function render() {
   if (requestedRoute === ROUTES.PREVIEW_TEACHER) {
     setClassroomDemoMode(false);
     session.signInTeacher("teacher-preview-1");
+    lessonTimer.setDuration(classTimerSchedule.readEffective().durationMinutes);
     return navigate(ROUTES.TEACHER_DASHBOARD, { replace: true });
   }
   if (requestedRoute === ROUTES.PREVIEW_STUDENT) {
@@ -7160,9 +7163,10 @@ root.addEventListener("input", (event) => {
   const scheduleDuration = event.target.closest('form[data-form="class-timer-schedule"] [name="durationMinutes"]');
   if (scheduleDuration) {
     const form = scheduleDuration.closest("form");
-    recommendedTimerPhases(Number(scheduleDuration.value)).forEach((phase) => {
+    const duration = Number(scheduleDuration.value);
+    recommendedTimerPhases(duration).forEach((phase) => {
       const input = form?.querySelector(`[data-phase-start="${phase.key}"]`);
-      if (input) input.value = String(phase.startMinute);
+      if (input) { input.value = String(phase.startMinute); input.max = String(Math.max(0, duration - 1)); }
     });
     return;
   }

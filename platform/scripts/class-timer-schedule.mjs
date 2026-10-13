@@ -51,7 +51,11 @@ function sanitize(value) {
     const startMinute = Number.isInteger(Number(supplied.startMinute)) ? Number(supplied.startMinute) : fallback.startMinute;
     return { ...fallback, name, startMinute };
   });
-  return { enabled: value.enabled === true, weekdays, startTime, durationMinutes, timeZone, yellowSound: sound("yellowSound"), redSound: sound("redSound"), endSound: sound("endSound"), yellowCustomAudio: customAudio("yellowCustomAudio"), redCustomAudio: customAudio("redCustomAudio"), endCustomAudio: customAudio("endCustomAudio"), pomodoroEnabled: value.pomodoroEnabled === true, phases };
+  const pomodoroEnabled = value.pomodoroEnabled === true;
+  const safePhases = pomodoroEnabled && !validPhases({ pomodoroEnabled, phases }, durationMinutes)
+    ? recommendedTimerPhases(durationMinutes, phases.map((phase) => phase.name))
+    : phases;
+  return { enabled: value.enabled === true, weekdays, startTime, durationMinutes, timeZone, yellowSound: sound("yellowSound"), redSound: sound("redSound"), endSound: sound("endSound"), yellowCustomAudio: customAudio("yellowCustomAudio"), redCustomAudio: customAudio("redCustomAudio"), endCustomAudio: customAudio("endCustomAudio"), pomodoroEnabled, phases: safePhases };
 }
 
 function validPhases(value, durationMinutes) {
