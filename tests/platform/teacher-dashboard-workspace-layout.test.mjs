@@ -133,6 +133,17 @@ test("Presentation Tools provide instant, stopwatch, and countdown timing", () =
   assert.match(css, /\.platform-timer-display-settings/);
 });
 
+test("scheduled Pomodoro classes use a Pomodoro class timer and an independent activity side timer", () => {
+  for (const label of ["Class Pomodoro Timer", "Activity Side Timer", "Independent timer — the class timer keeps running.", "Set Custom Time"]) assert.match(app, new RegExp(label));
+  assert.match(app, /if \(classTimerSchedule\.readEffective\(\)\.pomodoroEnabled\) return "pomodoro"/);
+  assert.match(app, /data-class-timer-kind=/);
+  assert.match(app, /data-smartboard-tool="activity-timer"/);
+  assert.match(app, /function handleActivitySideTimerAction/);
+  assert.match(app, /activitySideTimer\.endsAt/);
+  assert.match(css, /\.platform-activity-side-timer \{/);
+  assert.match(css, /background: #fff4c7/);
+});
+
 test("Run Today’s Class shows a live read-only current plan", () => {
   for (const label of ["Live Lesson Dashboard", "Classroom Presentation Tools", "Assigned activities", "Students can work in", "Current message", "Latest whiteboard", "Classroom Sound Goals", "Live Voice Meter", "Compare with"]) assert.match(app, new RegExp(label));
   for (const label of ["Classroom View", "Open Classroom Display", "Floating Timer", "Quick Message", "Whiteboard", "Voice Meter"]) assert.match(app, new RegExp(label));

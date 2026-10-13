@@ -849,8 +849,17 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-smartboard-tool[data-timer-view="pomodoro"] .platform-floating-timer-face { background: conic-gradient(from -90deg, #454f55 0 var(--timer-elapsed), transparent var(--timer-elapsed) 100%), conic-gradient(from -90deg, #7651a8 0 var(--timer-main-start), #2d7d5b var(--timer-main-start) var(--timer-warning-start), #d4a017 var(--timer-warning-start) var(--timer-red-start), #b94a45 var(--timer-red-start) 100%); }
 .platform-student-timer-display .platform-smartboard-tool[data-smartboard-tool="timer"] .platform-smartboard-timer { color: #fff; font-size: clamp(2rem, 17cqw, 5rem); }
 .platform-floating-timer-controls { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.platform-floating-tool-switcher { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.3rem; padding-top: 0.55rem; border-top: 2px solid currentColor; }
+.platform-floating-tool-switcher { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.3rem; padding-top: 0.55rem; border-top: 2px solid currentColor; }
 .platform-floating-tool-switcher button { min-width: 0; padding: 0.35rem 0.2rem; color: var(--platform-navy); border-color: #8eb5c4; background: #fff; font-size: clamp(0.68rem, 3.2cqw, 0.84rem); }
+.platform-activity-side-timer { color: #4d3200 !important; border-color: #d28a00 !important; background: #fff4c7 !important; }
+.platform-activity-side-timer > header { color: #fff !important; background: #9a6200 !important; }
+.platform-activity-side-timer > output { display: block; padding: .45rem; border: .25rem solid #9a6200; border-radius: .65rem; color: #4d3200; background: #fff; font-size: clamp(2.4rem, 17cqw, 5rem); font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
+.platform-activity-side-timer-note, .platform-activity-side-timer [data-activity-side-timer-status] { margin: 0; font-weight: 850; }
+.platform-activity-side-timer label { display: grid; grid-template-columns: 1fr 6rem; align-items: center; gap: .5rem; font-weight: 850; }
+.platform-activity-side-timer input { width: 100%; min-height: 2.5rem; padding: .4rem; border: 2px solid #9a6200; border-radius: .4rem; font: inherit; }
+.platform-activity-side-timer-presets, .platform-activity-side-timer-controls { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; }
+.platform-activity-side-timer-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.platform-activity-side-timer button { border-color: #9a6200; }
 .platform-floating-whiteboard-board { display: grid !important; min-height: 12rem; overflow: hidden; place-items: center; border: 3px solid var(--platform-navy); border-radius: 0.55rem; background: #fff; }
 .platform-floating-whiteboard-board img { width: 100%; height: 100%; object-fit: contain; }
 .platform-floating-whiteboard-board p { padding: 1rem; text-align: center; }
