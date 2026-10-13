@@ -196,6 +196,16 @@ test("Teacher-Assigned Research saves approved links and gives students restrict
   assert.match(css, /\.platform-assigned-research-student \{[^}]*grid-column: 1 \/ -1/);
 });
 
+test("teacher can organize reusable approved links into titled topic groups", () => {
+  for (const label of ["Approved Link Bank", "Create a New Link Group", "Save Group to Link Bank", "Assign to This Class", "Delete Group"]) assert.match(app, new RegExp(label));
+  assert.match(app, /TEACHER_RESEARCH_LINK_BANK_KEY/);
+  assert.match(app, /data-form="teacher-research-link-bank"/);
+  assert.match(app, /data-action="assign-research-bank-group"/);
+  assert.match(app, /data-action="delete-research-bank-group"/);
+  assert.match(css, /\.platform-research-bank-grid/);
+  assert.match(css, /\.platform-research-bank-card/);
+});
+
 test("teacher dashboard opens a clearly labeled no-code student preview in a separate tab", () => {
   for (const label of ["Preview Student View — No Code", "Student Preview — No Sign-In Code", "fictional student Ada Rivera", "only preview data in this browser", "Exit Student Preview"]) assert.match(app, new RegExp(label));
   assert.match(app, /href="#\$\{ROUTES\.PREVIEW_STUDENT\}" target="_blank"/);

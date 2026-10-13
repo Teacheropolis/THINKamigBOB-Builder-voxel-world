@@ -1432,6 +1432,18 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-assigned-research textarea { width: 100%; resize: vertical; }
 .platform-assigned-research-boundary { padding: .65rem; border-radius: .5rem; background: #fff3cd; }
 .platform-assigned-research-links { display: flex; flex-wrap: wrap; gap: .6rem; }
+.platform-research-link-bank { display: grid; gap: .8rem; padding-top: 1rem; border-top: 2px solid var(--platform-border); }
+.platform-research-link-bank h3, .platform-research-link-bank h4, .platform-research-link-bank p { margin: 0; }
+.platform-research-bank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: .75rem; }
+.platform-research-bank-card { display: grid; align-content: start; gap: .65rem; min-width: 0; padding: .85rem; border: 2px solid #9bb7c5; border-radius: .75rem; background: #fff; }
+.platform-research-bank-card ul { display: grid; gap: .35rem; margin: 0; padding-left: 1.25rem; }
+.platform-research-bank-card a { overflow-wrap: anywhere; }
+.platform-research-bank-card small { color: var(--platform-muted); font-weight: 700; }
+.platform-research-bank-card .platform-actions { align-self: end; }
+.platform-research-bank-create { padding: .75rem; border: 2px solid var(--platform-blue); border-radius: .75rem; background: #fff; }
+.platform-research-bank-create summary { color: var(--platform-navy); font-weight: 800; cursor: pointer; }
+.platform-research-bank-create form { margin-top: .75rem; }
+.platform-research-bank-empty { padding: .75rem; border-radius: .6rem; background: #eaf3f7; }
 .platform-assigned-research-student { grid-column: 1 / -1; min-width: 0; margin: 0; border-color: var(--platform-green); }
 .platform-preview-student-view { display: inline-flex; justify-content: center; text-align: center; }
 .platform-student-preview-banner { display: flex; grid-column: 1 / -1; justify-content: space-between; align-items: center; min-width: 0; gap: 1rem; padding: 1rem; border: 3px solid var(--platform-purple); border-radius: 1rem; background: #f3edff; }

@@ -143,6 +143,7 @@ const WHITEBOARD_VIEW_SESSION_KEY = "thinkamigbob.classroom-whiteboard-view.v1";
 const WHITEBOARD_LIBRARY_KEY = "thinkamigbob.classroom-whiteboard-library.v1";
 const WHITEBOARD_BOB_MEASUREMENT_COACH_KEY = "thinkamigbob.whiteboard-bob-measurement-coach.v1";
 const TEACHER_ASSIGNED_RESEARCH_KEY = "thinkamigbob.teacher-assigned-research.v1";
+const TEACHER_RESEARCH_LINK_BANK_KEY = "thinkamigbob.teacher-research-link-bank.v1";
 const VOICE_METER_HISTORY_KEY = "thinkamigbob.voice-meter-history.v1";
 const VOICE_METER_ACTIVITY_KEY = "thinkamigbob.voice-meter-activity.v1";
 const VOICE_METER_STAR_GOAL_KEY = "thinkamigbob.voice-meter-star-goal.v1";
@@ -553,6 +554,29 @@ function parseTeacherAssignedResearchLinks(value) {
     try { const url = new URL(rawUrl); if (url.protocol !== "https:") throw new Error(); links.push({ title: title.slice(0, 80) || "Approved research resource", url: url.href }); } catch { return { ok: false, reason: `Check this link: ${rawUrl}` }; }
   }
   return { ok: true, links };
+}
+
+function readTeacherResearchLinkBank() {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(TEACHER_RESEARCH_LINK_BANK_KEY) || "[]");
+    return Array.isArray(saved) ? saved.filter((group) => group?.id && group?.title && Array.isArray(group.links)).slice(0, 24) : [];
+  } catch { return []; }
+}
+
+function writeTeacherResearchLinkBank(groups) {
+  window.localStorage.setItem(TEACHER_RESEARCH_LINK_BANK_KEY, JSON.stringify(groups.slice(0, 24)));
+}
+
+function teacherResearchLinkBankMarkup(groups, assignedResearch) {
+  if (!groups.length) return `<p class="platform-research-bank-empty">No saved link groups yet. Create one below for a topic you expect to use again.</p>`;
+  return groups.map((group) => {
+    const isAssigned = group.title === assignedResearch.topic && group.links.length === assignedResearch.links.length && group.links.every((link, index) => link.url === assignedResearch.links[index]?.url);
+    return `<article class="platform-research-bank-card">
+      <div><h4>${escapeHtml(group.title)}</h4>${group.topic ? `<p>${escapeHtml(group.topic)}</p>` : ""}<small>${group.links.length} approved link${group.links.length === 1 ? "" : "s"}</small></div>
+      <ul>${group.links.map((link) => `<li><a href="${escapeHtml(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.title)}</a></li>`).join("")}</ul>
+      <div class="platform-actions"><button type="button" data-action="assign-research-bank-group" data-research-group-id="${escapeHtml(group.id)}"${isAssigned ? " disabled" : ""}>${isAssigned ? "Assigned to This Class" : "Assign to This Class"}</button><button type="button" data-action="delete-research-bank-group" data-research-group-id="${escapeHtml(group.id)}">Delete Group</button></div>
+    </article>`;
+  }).join("");
 }
 
 function memoSegmentsMarkup(state) {
@@ -1431,6 +1455,7 @@ function teacherDashboardView(state) {
   const savedWhiteboards = readWhiteboardLibrary();
   const floatingWhiteboard = savedWhiteboards[0];
   const assignedResearch = readTeacherAssignedResearch(classRecord?.id);
+  const researchLinkBank = readTeacherResearchLinkBank();
   return shell(`
     <div class="platform-command-layout platform-command-layout-no-sidebar">
       ${classroomDemoModeIsEnabled() ? `<aside class="platform-classroom-demo-banner"><div><p class="platform-command-label">Populated mock view</p><strong>Fictional classroom-use data is active</strong><span>Explore the dashboard as if this class has been using the platform.</span></div><a class="platform-button platform-button-secondary" href="#${ROUTES.PREVIEW_TEACHER}">Return to Regular Preview</a></aside>` : ""}
@@ -1655,6 +1680,20 @@ function teacherDashboardView(state) {
           <p data-assigned-research-status role="status">${assignedResearch.links.length ? `${assignedResearch.links.length} approved link${assignedResearch.links.length === 1 ? "" : "s"} saved in this browser for ${escapeHtml(className)}.` : "No approved student research links are saved for this class."}</p>
           <p class="platform-assigned-research-boundary">Pilot limitation: these settings currently remain in this browser. Secure cross-Chromebook delivery will require the pilot cloud service.</p>
         </form>
+        <section class="platform-research-link-bank" aria-labelledby="research-link-bank-title">
+          <div><p class="platform-command-label">Reusable teacher library</p><h3 id="research-link-bank-title">Approved Link Bank</h3><p>Organize trusted resources into groups by topic or title, then assign a whole group to the current class.</p></div>
+          <div class="platform-research-bank-grid">${teacherResearchLinkBankMarkup(researchLinkBank, assignedResearch)}</div>
+          <details class="platform-research-bank-create">
+            <summary>Create a New Link Group</summary>
+            <form data-form="teacher-research-link-bank" novalidate>
+              <label>Group title<input name="title" maxlength="80" placeholder="Example: Bridges and Structures" required></label>
+              <label>Topic or description<input name="topic" maxlength="140" placeholder="Example: How bridges support weight"></label>
+              <label>Approved links—one per line<textarea name="links" rows="5" placeholder="Bridge article | https://example.org/bridge-article" required></textarea><small>Use: Resource title | https://website-address</small></label>
+              <div class="platform-actions"><button type="submit">Save Group to Link Bank</button></div>
+              <p data-research-bank-status role="status">You can save up to 24 groups in this browser.</p>
+            </form>
+          </details>
+        </section>
       </section>
     </div>
     <section id="platform-student-timer-display" class="platform-student-timer-display ${studentDisplayClass}" role="dialog" aria-modal="true" aria-labelledby="${showStudentTimer ? "student-timer-title" : "student-message-title"}" tabindex="-1" hidden>
@@ -2698,6 +2737,18 @@ async function handleSubmit(event) {
   if (!form) return;
   event.preventDefault();
   const data = new FormData(form);
+  if (form.dataset.form === "teacher-research-link-bank") {
+    const title = String(data.get("title") || "").trim(), topic = String(data.get("topic") || "").trim(), parsed = parseTeacherAssignedResearchLinks(data.get("links")), status = form.querySelector("[data-research-bank-status]");
+    if (!title) { if (status) status.textContent = "Enter a title for this link group."; return; }
+    if (!parsed.ok) { if (status) status.textContent = `${parsed.reason}. Use a complete secure address beginning with https://.`; return; }
+    if (!parsed.links.length) { if (status) status.textContent = "Add at least one approved link to this group."; return; }
+    const groups = readTeacherResearchLinkBank();
+    if (groups.length >= 24) { if (status) status.textContent = "The link bank is full. Delete an older group before adding another."; return; }
+    groups.unshift({ id: `research-${Date.now()}`, title: title.slice(0, 80), topic: topic.slice(0, 140), links: parsed.links });
+    writeTeacherResearchLinkBank(groups);
+    render();
+    return;
+  }
   if (form.dataset.form === "teacher-assigned-research") {
     const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id, topic = String(data.get("topic") || "").trim(), parsed = parseTeacherAssignedResearchLinks(data.get("links")), status = form.querySelector("[data-assigned-research-status]");
     if (!classId || !topic) { if (status) status.textContent = "Enter a research topic before saving."; return; }
@@ -4914,6 +4965,8 @@ function handleClick(event) {
   const action = event.target.closest("[data-action]");
   if (!action) return;
   if (handleNamePickerAction(action, document)) return;
+  if (action.dataset.action === "assign-research-bank-group") { const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id, group = readTeacherResearchLinkBank().find((item) => item.id === action.dataset.researchGroupId); if (!classId || !group) return; writeTeacherAssignedResearch(classId, { topic: group.title, links: group.links }); render(); return; }
+  if (action.dataset.action === "delete-research-bank-group") { const group = readTeacherResearchLinkBank().find((item) => item.id === action.dataset.researchGroupId); if (!group || !window.confirm(`Delete the link group “${group.title}”?`)) return; writeTeacherResearchLinkBank(readTeacherResearchLinkBank().filter((item) => item.id !== group.id)); render(); return; }
   if (action.dataset.action === "preview-assigned-google-search") { const topic = action.closest("form")?.elements.topic?.value.trim(); if (!topic) { action.closest("form")?.elements.topic?.focus(); return; } window.open(`https://www.google.com/search?q=${encodeURIComponent(topic)}`, "_blank", "noopener"); return; }
   if (action.dataset.action === "clear-assigned-research") { const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id, form = action.closest("form"); if (!classId || !form) return; writeTeacherAssignedResearch(classId, { topic: "", links: [] }); form.reset(); form.querySelector("[data-assigned-research-status]").textContent = "Teacher-Assigned Research was cleared for this class in this browser."; return; }
   if (action.dataset.action === "open-assigned-research") { const state = session.read(), approved = readTeacherAssignedResearch(state.classId).links.find((link) => link.url === action.dataset.researchUrl), status = action.closest(".platform-assigned-research")?.querySelector("[data-assigned-research-student-status]"); if (!approved) { if (status) status.textContent = "This resource is not currently approved by your teacher."; return; } const width = Math.max(480, Math.floor(screen.availWidth / 2)), height = screen.availHeight, researchWindow = window.open(approved.url, "thinkamigbob-assigned-research", `popup=yes,width=${width},height=${height},left=${width},top=0,resizable=yes`); if (!researchWindow) { if (status) status.textContent = "The browser blocked the research window. Allow pop-ups for this platform, then try again."; return; } try { window.moveTo(0, 0); window.resizeTo(width, height); } catch {} if (status) status.textContent = `${approved.title} opened. Your browser may ask you to place the windows side by side.`; const closedCheck = window.setInterval(() => { if (!researchWindow.closed) return; window.clearInterval(closedCheck); try { window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); } catch {} if (status?.isConnected) status.textContent = "The research resource closed. The platform is ready to use full screen again."; }, 1000); return; }
