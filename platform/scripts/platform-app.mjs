@@ -1449,6 +1449,7 @@ function teacherDashboardView(state) {
               ${timerReady ? `<span data-ready="true"><i aria-hidden="true">✓</i> Timer ready</span>` : `<button type="button" data-action="open-class-schedule-quick"><i aria-hidden="true">!</i> Set the timer</button>`}
             </div>
             <button class="platform-start-classroom-display" type="button" data-action="open-classroom-presentation-window" aria-describedby="classroom-display-help">Start Classroom Display</button>
+            <a class="platform-button platform-button-secondary platform-preview-student-view" href="#${ROUTES.PREVIEW_STUDENT}" target="_blank" rel="noopener">Preview Student View — No Code</a>
           </div>
           <form class="platform-class-readiness-panel" data-form="class-readiness" hidden>
             <div><p class="platform-command-label">Quick class setup</p><h3>Settings for ${escapeHtml(className)}</h3><p>These choices stay with this class when you move to another period and return later.</p></div>
@@ -1951,6 +1952,7 @@ function studentDashboardView(state) {
   const className = escapeHtml(classRecord?.displayName ?? "Class not selected");
   return shell(`
     <div class="platform-student-home">
+      ${state.studentId === "student-preview-1" ? `<aside class="platform-student-preview-banner"><div><strong>Student Preview — No Sign-In Code</strong><p>You are viewing fictional student Ada Rivera in Preview STEM Class. Work completed here is only preview data in this browser.</p></div><a class="platform-button platform-button-secondary" href="#${ROUTES.WELCOME}">Exit Student Preview</a></aside>` : ""}
       <section class="platform-student-orientation" aria-labelledby="student-orientation-title">
         <p class="platform-eyebrow">Private student dashboard</p>
         <h2 id="student-orientation-title">${studentName}</h2>

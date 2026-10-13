@@ -1433,8 +1433,11 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-assigned-research-boundary { padding: .65rem; border-radius: .5rem; background: #fff3cd; }
 .platform-assigned-research-links { display: flex; flex-wrap: wrap; gap: .6rem; }
 .platform-assigned-research-student { border-color: var(--platform-green); }
+.platform-preview-student-view { display: inline-flex; justify-content: center; text-align: center; }
+.platform-student-preview-banner { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; padding: 1rem; border: 3px solid var(--platform-purple); border-radius: 1rem; background: #f3edff; }
+.platform-student-preview-banner p { margin: .3rem 0 0; }
 @media (max-width: 720px) { .platform-pixel-levels, .platform-pixel-studio-workspace { grid-template-columns: 1fr; } .platform-pixel-studio-workspace > canvas { width: 100%; } }
-@media (max-width: 720px) { .platform-assigned-research form { grid-template-columns: 1fr; } .platform-assigned-research form > * { grid-column: 1 !important; } }
+@media (max-width: 720px) { .platform-assigned-research form { grid-template-columns: 1fr; } .platform-assigned-research form > * { grid-column: 1 !important; } .platform-student-preview-banner { align-items: stretch; flex-direction: column; } }
 .platform-whiteboard-question { position: fixed; z-index: 272; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(7, 27, 39, 0.76); }
 .platform-whiteboard-question[hidden], .platform-whiteboard-question label[hidden] { display: none !important; }
 .platform-whiteboard-question > div { display: grid; width: min(34rem, 94vw); gap: 0.75rem; padding: 1.35rem; border: 3px solid var(--platform-blue); border-radius: 0.9rem; background: #fff; box-shadow: 0 1rem 3rem rgba(0,0,0,0.35); }
