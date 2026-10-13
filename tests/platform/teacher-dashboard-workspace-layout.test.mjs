@@ -31,6 +31,14 @@ test("teacher workspace uses layered surfaces to emphasize functions", () => {
   assert.match(css, /button:not\(:disabled\):active/);
 });
 
+test("teacher and student workspaces use consistent visual zones for quick scanning", () => {
+  for (const zone of ["platform-zone-today", "platform-zone-present", "platform-zone-create", "platform-zone-review", "platform-zone-settings"]) assert.match(css + app, new RegExp(zone));
+  for (const label of ["What I’m Doing Now", "My Tools", "My Work", "Review"]) assert.match(app, new RegExp(label));
+  for (const zone of ["platform-student-zone-now", "platform-student-zone-tools", "platform-student-zone-work", "platform-student-zone-review", "platform-student-zone-history"]) assert.match(app, new RegExp(zone));
+  assert.match(css, /\.platform-student-area-map \{[^}]*grid-template-columns: repeat\(4/);
+  assert.match(css, /#teacher-live-lesson-dashboard \.platform-current-class-plan/);
+});
+
 test("a separate classroom demo preview supplies realistic fictional usage data", () => {
   assert.match(app, /PREVIEW_CLASSROOM_DEMO: "\/preview\/classroom-demo"/);
   assert.match(app, /function seedClassroomDemo\(\)/);

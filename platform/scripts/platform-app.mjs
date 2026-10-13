@@ -686,7 +686,7 @@ function classResourceTeacherMarkup(classId) {
   const usesGroups = ["teacher-group", "random-group"].includes(state.assignmentMode) || groupRows.length > 0;
   const groupTools = usesGroups ? `<section class="platform-resource-group-builder"><p class="platform-command-label">Group setup</p><h4>Create or Reuse Groups</h4><p>This area creates group rows. Student membership and resources are managed in the rows below.</p><div class="platform-random-group-controls"><label>Students per random group<input type="number" min="1" max="${Math.max(1, roster.length)}" value="3" data-random-group-size></label><button type="button" data-action="build-random-groups">Create Random Groups</button><button type="button" data-action="add-teacher-group">+ Create a Teacher-Chosen Group</button></div>${groupRows.length ? `<div class="platform-unassigned-students" data-group-drop-row-id="unassigned"><strong>Not assigned to a group</strong>${roster.filter((student) => !groupedStudentIds.has(student.id)).map((student) => `<span draggable="true" data-group-student-id="${escapeHtml(student.id)}">${escapeHtml(student.displayName)}</span>`).join("") || `<span>Everyone is assigned.</span>`}</div>` : ""}<div class="platform-group-preset-controls"><label>Name these group settings<input data-group-set-name maxlength="60" placeholder="Example: Workshop Teams"></label><button type="button" data-action="save-group-set">Save Group Settings</button>${state.savedGroupSets.length ? `<label>Reuse past group settings<select data-saved-group-set><option value="">Choose saved groups</option>${state.savedGroupSets.map((set) => `<option value="${escapeHtml(set.id)}">${escapeHtml(set.name)}</option>`).join("")}</select></label><button type="button" data-action="apply-group-set">Use Saved Groups</button>` : ""}</div></section>` : "";
   const assignmentChooser = `<section class="platform-resource-assignment-chooser"><h4>How do you want today’s resources assigned?</h4><label>Main assignment method<select data-resource-plan-mode><option value="whole-class"${state.assignmentMode === "whole-class" ? " selected" : ""}>Whole class</option><option value="students"${state.assignmentMode === "students" ? " selected" : ""}>Individual students</option><option value="teacher-group"${state.assignmentMode === "teacher-group" ? " selected" : ""}>Teacher-chosen groups</option><option value="random-group"${state.assignmentMode === "random-group" ? " selected" : ""}>Random groups</option></select></label><label>Will any students need resources assigned a different way?<select data-resource-exceptions-enabled><option value="no"${state.exceptionsEnabled ? "" : " selected"}>No</option><option value="yes"${state.exceptionsEnabled ? " selected" : ""}>Yes</option></select></label>${state.exceptionsEnabled ? `<div class="platform-resource-exception-controls"><label>Different assignment method<select data-resource-exception-type>${[["whole-class", "Whole class"], ["students", "Individual students"], ["teacher-group", "Teacher-chosen group"], ["random-group", "Random group"]].filter(([value]) => value !== state.assignmentMode).map(([value, label]) => `<option value="${value}">${label}</option>`).join("")}</select></label><button type="button" data-action="add-resource-exception">+ Add Different Assignment</button></div>` : ""}</section>`;
-  return `<section id="teacher-todays-resources" class="platform-command-card platform-class-resource-sharing" data-class-resource-teacher aria-labelledby="class-resource-title">
+  return `<section id="teacher-todays-resources" class="platform-command-card platform-class-resource-sharing platform-visual-zone platform-zone-create" data-class-resource-teacher aria-labelledby="class-resource-title">
     <p class="platform-command-label">Today’s plan resources</p>
     <h2 id="class-resource-title">Plan Today’s Resources</h2>
     ${assignmentChooser}
@@ -745,7 +745,7 @@ function classResourceTeacherMarkup(classId) {
 
 function classResourceStudentMarkup(classId, studentId) {
   const activeResources = classResourceSharing.resourcesForStudent(classId, studentId);
-  return `<section class="platform-student-shared-resource" aria-labelledby="student-shared-resource-title" data-class-resource-student>
+  return `<section id="student-todays-activities" class="platform-student-shared-resource platform-student-zone platform-student-zone-now" aria-labelledby="student-shared-resource-title" data-class-resource-student>
     <p class="platform-student-section-label">Teacher shared</p>
     <h2 id="student-shared-resource-title">Today’s Activities</h2>
     ${activeResources.length ? `<div class="platform-student-activity-tray">${activeResources.map((active) => { const automaticVisual = matchAutomaticVisual({ title: active.title, type: active.type }); return `<article><img class="platform-automatic-resource-visual" src="${escapeHtml(automaticVisual.src)}" alt="${escapeHtml(automaticVisual.alt)}"><p><strong>${escapeHtml(active.title)}</strong><small>${escapeHtml(active.type)}</small></p><a class="platform-button platform-button-primary" href="${escapeHtml(active.url)}" target="_blank" rel="noopener noreferrer"><span class="platform-rainbow-button-text">Open ${escapeHtml(active.title)}</span></a></article>`; }).join("")}</div><p>Choose the activity your teacher directed you to open.</p>` : `<p class="platform-student-empty-state">Your teacher has not shared an activity yet.</p><p>Keep Student Home open; activities pushed from a teacher tab on this same platform address will appear automatically.</p>`}
@@ -1545,7 +1545,7 @@ function teacherDashboardView(state) {
     <div class="platform-command-layout platform-command-layout-no-sidebar">
       ${classroomDemoModeIsEnabled() ? `<aside class="platform-classroom-demo-banner"><div><p class="platform-command-label">Populated mock view</p><strong>Fictional classroom-use data is active</strong><span>Explore the dashboard as if this class has been using the platform.</span></div><a class="platform-button platform-button-secondary" href="#${ROUTES.PREVIEW_TEACHER}">Return to Regular Preview</a></aside>` : ""}
       <section class="platform-today-board" aria-label="Today">
-        <section class="platform-teacher-overview" aria-labelledby="teacher-overview-title">
+        <section class="platform-teacher-overview platform-visual-zone platform-zone-today" aria-labelledby="teacher-overview-title">
           <div>
             <p class="platform-command-label">Teacher workspace</p>
             <h2 id="teacher-overview-title">Run today’s class</h2>
@@ -1729,7 +1729,7 @@ function teacherDashboardView(state) {
             <button class="platform-return-current-plan" type="button" data-action="return-to-current-class-plan">Return to Today’s Class Plan</button>
           </section>
           </div>
-          <section id="teacher-evidence-tools" class="platform-optional-dashboard-section" data-optional-dashboard-section hidden>
+          <section id="teacher-evidence-tools" class="platform-optional-dashboard-section platform-visual-zone platform-zone-review" data-optional-dashboard-section hidden>
           <div class="platform-workspace-heading">
             <p class="platform-command-label">Student work</p>
             <h2>Launch and review evidence</h2>
@@ -1755,7 +1755,7 @@ function teacherDashboardView(state) {
           </section>
         </div>
       </section>
-      <section class="platform-assigned-research platform-assigned-research-teacher" aria-labelledby="assigned-research-teacher-title">
+      <section class="platform-assigned-research platform-assigned-research-teacher platform-visual-zone platform-zone-create" aria-labelledby="assigned-research-teacher-title">
         <div><p class="platform-command-label">Controlled pilot research</p><h2 id="assigned-research-teacher-title">Teacher-Assigned Research</h2><p>Enter a topic, preview a Google search yourself, then give students only the approved links you save. Students do not receive a Google search box from the platform.</p></div>
         <form data-form="teacher-assigned-research" novalidate>
           <label>Research topic<input name="topic" maxlength="140" value="${escapeHtml(assignedResearch.topic)}" placeholder="Example: how bridges support weight for kids"></label>
@@ -2026,7 +2026,7 @@ function teacherClassesView(state) {
   return shell(`
     <div class="platform-command-layout platform-command-layout-no-sidebar platform-class-management-layout">
       <main class="platform-class-management" aria-labelledby="class-management-title">
-        <section class="platform-teacher-overview platform-class-management-intro">
+        <section class="platform-teacher-overview platform-class-management-intro platform-visual-zone platform-zone-settings">
           <div>
             <p class="platform-command-label">Classroom access</p>
             <h2 id="class-management-title">Manage Classes</h2>
@@ -2085,13 +2085,20 @@ function studentDashboardView(state) {
         <p>Your private place to see what matters and choose what comes next.</p>
       </section>
 
-      <section class="platform-bob-welcome" aria-labelledby="bob-welcome-title">
+      <nav class="platform-student-area-map" aria-label="Student Home areas">
+        <a href="#student-todays-activities" data-student-map="now"><span aria-hidden="true">★</span><strong>What I’m Doing Now</strong><small>Goal and activities</small></a>
+        <a href="#assigned-research-student-title" data-student-map="tools"><span aria-hidden="true">↗</span><strong>My Tools</strong><small>Teacher-approved resources</small></a>
+        <a href="#stem-work-title" data-student-map="work"><span aria-hidden="true">▤</span><strong>My Work</strong><small>Projects and evidence</small></a>
+        <a href="#reflection-check-title" data-student-map="review"><span aria-hidden="true">✓</span><strong>Review</strong><small>Reflection and progress</small></a>
+      </nav>
+
+      <section class="platform-bob-welcome platform-student-zone platform-student-zone-now" aria-labelledby="bob-welcome-title">
         <p class="platform-student-section-label">Getting started</p>
         <h2 id="bob-welcome-title">BOB Welcome</h2>
         <p>Welcome, ${studentName}. Your goals and paths will appear here when they are ready. Start by checking Current Goal, then review Choose Your Path.</p>
       </section>
 
-      <section class="platform-student-goal" aria-labelledby="current-goal-title">
+      <section class="platform-student-goal platform-student-zone platform-student-zone-now" aria-labelledby="current-goal-title">
         <p class="platform-student-section-label">Today</p>
         <h2 id="current-goal-title">Current Goal</h2>
         <div data-pb002j-current-goal>
@@ -2101,7 +2108,7 @@ function studentDashboardView(state) {
 
       ${classResourceStudentMarkup(state.classId, state.studentId)}
 
-      <section class="platform-assigned-research platform-assigned-research-student" aria-labelledby="assigned-research-student-title">
+      <section class="platform-assigned-research platform-assigned-research-student platform-student-zone platform-student-zone-tools" aria-labelledby="assigned-research-student-title">
         <p class="platform-student-section-label">Teacher-approved resources</p>
         <h2 id="assigned-research-student-title">Teacher-Assigned Research</h2>
         ${assignedResearch.topic ? `<p><strong>Research topic:</strong> ${escapeHtml(assignedResearch.topic)}</p>` : `<p class="platform-student-empty-state">Your teacher has not assigned a research topic yet.</p>`}
@@ -2118,7 +2125,7 @@ function studentDashboardView(state) {
         </div>
       </section>
 
-      <section class="platform-yesterday" aria-labelledby="yesterday-title">
+      <section class="platform-yesterday platform-student-zone platform-student-zone-history" aria-labelledby="yesterday-title">
         <div class="platform-student-section-heading">
           <p class="platform-student-section-label">Looking back</p>
           <h2 id="yesterday-title">Yesterday</h2>
@@ -2137,7 +2144,7 @@ function studentDashboardView(state) {
         </div>
       </section>
 
-      <section class="platform-student-reflection" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title">
+      <section class="platform-student-reflection platform-student-zone platform-student-zone-review" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title">
         <p class="platform-student-section-label">Reflection</p>
         <h2 id="reflection-check-title">What I Learned Today</h2>
         <p class="platform-student-status" data-weekly-reflection-status>${reflectionStatus.remaining === 0 ? `Complete — ${reflectionStatus.completed} of ${reflectionStatus.required} finished this week.` : `${reflectionStatus.remaining} response${reflectionStatus.remaining === 1 ? "" : "s"} still needed this week.`}</p>
@@ -2166,7 +2173,7 @@ function studentDashboardView(state) {
         </form>
       </section>
 
-      <section class="platform-student-paths" aria-labelledby="choose-path-title">
+      <section class="platform-student-paths platform-student-zone platform-student-zone-tools" aria-labelledby="choose-path-title">
         <div class="platform-student-section-heading">
           <p class="platform-student-section-label">Next actions</p>
           <h2 id="choose-path-title">Choose Your Path</h2>
@@ -2198,7 +2205,7 @@ function studentDashboardView(state) {
         </div>
       </section>
 
-      <section class="platform-stem-work" aria-labelledby="stem-work-title">
+      <section class="platform-stem-work platform-student-zone platform-student-zone-work" aria-labelledby="stem-work-title">
         <div class="platform-student-section-heading">
           <p class="platform-student-section-label">Your engineering journey</p>
           <h2 id="stem-work-title">My STEM Work</h2>
