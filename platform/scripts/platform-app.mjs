@@ -190,8 +190,9 @@ let voiceMeterDisplayTrigger = null;
 let voiceMeterUsage = null;
 let voiceBobState = "green";
 let voiceBobStateChangedAt = 0;
-const floatingBobCorners = ["bottom-right", "top-right", "top-left", "bottom-left"];
+const floatingBobCorners = ["bottom-right", "top-left"];
 let floatingBobCornerIndex = 0;
+let floatingBobIdleSet = 1;
 let floatingBobRoamingInterval = null;
 let teacherComparisonClassId = "";
 let whiteboardDisplayTrigger = null;
@@ -1824,7 +1825,7 @@ function teacherDashboardView(state) {
       <aside class="platform-smartboard-tool platform-floating-whiteboard" data-smartboard-tool="whiteboard" hidden style="left: 8%; top: 8%; width: min(46rem, 82vw); height: min(34rem, 72vh);"><header data-smartboard-drag-handle><strong>Whiteboard</strong><button type="button" data-action="close-smartboard-tool" aria-label="Close Whiteboard window">×</button></header><div class="platform-floating-whiteboard-board">${floatingWhiteboard ? `<img src="${escapeHtml(floatingWhiteboard.displayImage || floatingWhiteboard.image)}" alt="Latest whiteboard: ${escapeHtml(floatingWhiteboard.title)}">` : `<p>Your whiteboard will appear here. Open the full board to draw.</p>`}</div><div class="platform-floating-whiteboard-functions"><button type="button" data-action="open-whiteboard">Open Full Whiteboard and Tools</button></div>${smartboardToolSwitcherMarkup()}<span class="platform-smartboard-resize-handle" data-smartboard-resize-handle aria-label="Resize Whiteboard window"></span></aside>
       <nav class="platform-smartboard-tool-tray" aria-label="Smartboard presentation tools"><strong>Tools</strong><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="timer">Class Timer</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="activity-timer">Activity Side Timer</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="stopwatch">Stopwatch</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="message">Message</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="voice">Voice Meter</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="names">Name Picker</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="whiteboard">Whiteboard</button><button type="button" class="platform-smartboard-reset-tools" data-action="reset-smartboard-tools">Reset Positions</button></nav>
     </section>
-    <aside class="platform-floating-voice-bob" data-voice-bob data-meter-state="green" data-corner="${floatingBobCorners[floatingBobCornerIndex]}" role="img" aria-label="Bob is calm and happy."><span data-voice-bob-message>Bob is calm and happy.</span></aside>
+    <aside class="platform-floating-voice-bob" data-voice-bob data-meter-state="green" data-corner="${floatingBobCorners[floatingBobCornerIndex]}" data-idle-set="${floatingBobIdleSet}" role="img" aria-label="Bob is calm and happy."><span data-voice-bob-message>Bob is calm and happy.</span></aside>
     <section id="platform-large-voice-meter-display" class="platform-large-voice-meter-display" data-voice-display-mode="${readVoiceMeterDisplayMode()}" role="dialog" aria-modal="true" aria-labelledby="large-voice-meter-title" tabindex="-1" hidden>
       <p class="platform-student-display-brand">THINKamigBOB</p>
       <h2 id="large-voice-meter-title">Classroom Voice Meter</h2>
@@ -3308,9 +3309,11 @@ function relocateFloatingBob() {
   window.setTimeout(() => {
     if (!bob.isConnected || bob.dataset.meterState !== "green") { bob.classList.remove("is-relocating"); return; }
     floatingBobCornerIndex = (floatingBobCornerIndex + 1) % floatingBobCorners.length;
+    floatingBobIdleSet = floatingBobIdleSet === 1 ? 2 : 1;
     bob.dataset.corner = floatingBobCorners[floatingBobCornerIndex];
+    bob.dataset.idleSet = String(floatingBobIdleSet);
     window.requestAnimationFrame(() => bob.classList.remove("is-relocating"));
-  }, 900);
+  }, 2300);
 }
 
 function whiteboardCanvas() {
@@ -7428,7 +7431,7 @@ async function startPlatform() {
     else if (result.ok) session.signOut();
   }
   render();
-  if (floatingBobRoamingInterval === null) floatingBobRoamingInterval = window.setInterval(relocateFloatingBob, 18000);
+  if (floatingBobRoamingInterval === null) floatingBobRoamingInterval = window.setInterval(relocateFloatingBob, 26000);
 }
 
 void startPlatform();
