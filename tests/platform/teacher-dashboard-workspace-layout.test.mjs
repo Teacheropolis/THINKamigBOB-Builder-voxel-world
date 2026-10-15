@@ -48,6 +48,11 @@ test("text entry and selection fields use a calm cream surface", () => {
   assert.match(css, /\.platform-main textarea \{[^}]*background-color: var\(--platform-input-cream\)/);
 });
 
+test("dropdown fields are visibly color coded", () => {
+  assert.match(css, /\.platform-main select \{[^}]*border-color: #75a3b6[^}]*background-color: #e5f2f7/);
+  assert.match(css, /\.platform-main select:hover \{[^}]*background-color: #dceff5/);
+});
+
 test("a separate classroom demo preview supplies realistic fictional usage data", () => {
   assert.match(app, /PREVIEW_CLASSROOM_DEMO: "\/preview\/classroom-demo"/);
   assert.match(app, /function seedClassroomDemo\(\)/);
