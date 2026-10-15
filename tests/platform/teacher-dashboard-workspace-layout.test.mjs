@@ -43,6 +43,11 @@ test("form placeholders are visibly stronger without matching entered text", () 
   assert.match(css, /input::placeholder, \.platform-main textarea::placeholder \{[^}]*font-weight: 700[^}]*opacity: 1/);
 });
 
+test("text entry and selection fields use a calm cream surface", () => {
+  assert.match(css, /--platform-input-cream: #fffaf0/);
+  assert.match(css, /\.platform-main textarea \{[^}]*background-color: var\(--platform-input-cream\)/);
+});
+
 test("a separate classroom demo preview supplies realistic fictional usage data", () => {
   assert.match(app, /PREVIEW_CLASSROOM_DEMO: "\/preview\/classroom-demo"/);
   assert.match(app, /function seedClassroomDemo\(\)/);
