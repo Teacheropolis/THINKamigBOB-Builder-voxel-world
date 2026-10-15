@@ -1828,8 +1828,8 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
 .platform-main select,
 .platform-main textarea { border-color: #d5cba8; background-color: var(--platform-input-cream); box-shadow: inset 0 1px 3px rgba(89, 70, 24, 0.08), 0 1px 0 #fff; }
-.platform-main select { border-color: #75a3b6; color: var(--platform-navy); background-color: #e5f2f7; box-shadow: inset 0 1px 3px rgba(23, 105, 142, 0.09), 0 1px 0 #fff; }
-.platform-main select:hover { border-color: var(--platform-blue); background-color: #dceff5; }
+.platform-main select { border-color: #639b80; color: var(--platform-navy); background-color: #dff1e7; box-shadow: inset 0 1px 3px rgba(45, 125, 91, 0.1), 0 1px 0 #fff; }
+.platform-main select:hover { border-color: var(--platform-green); background-color: #d2eadc; }
 .platform-main input::placeholder, .platform-main textarea::placeholder { color: #5b6d76; font-weight: 700; opacity: 1; }
 .platform-main button:not(:disabled) { box-shadow: 0 0.22rem 0.45rem rgba(7, 27, 39, 0.11); }
 .platform-main button:not(:disabled):active { transform: translateY(1px); box-shadow: inset 0 1px 2px rgba(7, 27, 39, 0.16); }
