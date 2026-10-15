@@ -192,6 +192,7 @@ let voiceBobState = "green";
 let voiceBobCandidateState = "green";
 let voiceBobCandidateSince = 0;
 let voiceBobStateChangedAt = 0;
+let voiceBobSmoothedLevel = null;
 let teacherComparisonClassId = "";
 let whiteboardDisplayTrigger = null;
 let whiteboardUndoStack = [];
@@ -3280,10 +3281,12 @@ async function saveEvidenceDraft() {
 function updateVoiceMeterPresentation(value) {
   const threshold = readVoiceMeterActivity().target;
   const state = voiceMeterState(value, threshold);
+  voiceBobSmoothedLevel = voiceBobSmoothedLevel === null ? value : (voiceBobSmoothedLevel * 0.94) + (value * 0.06);
+  const bobCandidate = voiceMeterState(voiceBobSmoothedLevel, threshold);
   const now = Date.now();
-  if (state !== voiceBobCandidateState) { voiceBobCandidateState = state; voiceBobCandidateSince = now; }
-  const requiredStableTime = state === "red" ? 1400 : (state === "yellow" ? 2000 : 2800);
-  if (voiceBobCandidateState !== voiceBobState && now - voiceBobCandidateSince >= requiredStableTime && now - voiceBobStateChangedAt >= 3200) {
+  if (bobCandidate !== voiceBobCandidateState) { voiceBobCandidateState = bobCandidate; voiceBobCandidateSince = now; }
+  const requiredStableTime = bobCandidate === "green" ? 1600 : 900;
+  if (voiceBobCandidateState !== voiceBobState && now - voiceBobCandidateSince >= requiredStableTime && now - voiceBobStateChangedAt >= 2200) {
     voiceBobState = voiceBobCandidateState;
     voiceBobStateChangedAt = now;
   }
@@ -4928,7 +4931,7 @@ function stopVoiceMeter(message = "Voice Meter stopped. No audio was saved.") {
   const status = document.querySelector("[data-voice-meter-status]");
   if (status) status.textContent = message;
   document.querySelectorAll("[data-live-voice-status]").forEach((label) => { label.dataset.state = "off"; label.innerHTML = `<span aria-hidden="true"></span> Voice Meter is off`; });
-  voiceBobState = "green"; voiceBobCandidateState = "green"; voiceBobCandidateSince = 0; voiceBobStateChangedAt = Date.now();
+  voiceBobState = "green"; voiceBobCandidateState = "green"; voiceBobCandidateSince = 0; voiceBobStateChangedAt = 0; voiceBobSmoothedLevel = null;
   updateVoiceMeterPresentation(0);
   refreshCurrentClassPlan();
 }
@@ -4942,6 +4945,7 @@ async function startVoiceMeter() {
   if (status) status.textContent = "Requesting microphone permission…";
   try {
     voiceMeterStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    voiceBobSmoothedLevel = null; voiceBobCandidateSince = Date.now(); voiceBobStateChangedAt = 0;
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     voiceMeterAudioContext = new AudioContextClass();
     const analyser = voiceMeterAudioContext.createAnalyser();
