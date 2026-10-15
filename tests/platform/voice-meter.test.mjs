@@ -66,7 +66,8 @@ test("teacher and student display expose a private browser-only voice meter", ()
   assert.match(app, /floatingBobCorners = \["bottom-right", "top-left"\]/);
   assert.match(app, /setInterval\(relocateFloatingBob, 26000\)/);
   assert.match(app, /floatingBobIdleSet === 1 \? 2 : 1/);
-  assert.match(css, /bob-walk-cycle\.png/);
+  assert.match(css, /bob-walk-right\.png/);
+  assert.match(css, /bob-walk-left\.png/);
   assert.match(css, /\.platform-floating-voice-bob\.is-walking-out/);
   assert.match(css, /\.platform-floating-voice-bob\.is-walking-in/);
   assert.match(css, /platform-bob-walk-out-right 2\.8s linear forwards/);
