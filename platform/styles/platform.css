@@ -1840,6 +1840,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-zone-today { --zone-color: #2d7d5b; --zone-soft: #e8f6ee; }
 .platform-zone-present, #teacher-live-lesson-dashboard .platform-current-class-plan { --zone-color: #17698e; --zone-soft: #e8f5fa; }
 .platform-zone-create { --zone-color: #16749b; --zone-soft: #e8f5fa; }
+#teacher-todays-resources { --zone-color: #2d7d5b; --zone-soft: #e8f6ee; }
 .platform-zone-review { --zone-color: #b57a09; --zone-soft: #fff6dc; }
 .platform-zone-settings { --zone-color: #657780; --zone-soft: #eef2f4; }
 .platform-visual-zone, #teacher-live-lesson-dashboard .platform-current-class-plan {
