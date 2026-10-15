@@ -668,7 +668,7 @@ function classResourceTeacherMarkup(classId) {
   const roster = getRosterForClass(classId);
   const prepared = state.prepared ?? { title: "", type: "Mission Activity", url: "", release: "manual" };
   const pickerOpen = ["Mission Activity", "Side Path", "Webpage"].includes(prepared.type);
-  const releaseLabels = { manual: "Push manually", "class-start": "At class start", purple: "Purple starter phase", green: "Green main activity", yellow: "Yellow five-minute warning", red: "Red cleanup or exit" };
+  const releaseLabels = { manual: "Push manually", "class-start": "At class start", purple: "Blue starter phase", green: "Green main activity", yellow: "Gold five-minute warning", red: "Red cleanup or exit" };
   const groupRows = state.audienceRows.filter((row) => ["teacher-group", "random-group"].includes(row.audienceType));
   const groupedStudentIds = new Set(groupRows.flatMap((row) => row.audienceIds));
   const groupStudentList = (row, assignedOnly = false) => roster.filter((student) => !assignedOnly || row.audienceIds.includes(student.id)).map((student) => `<label class="platform-group-student${row.audienceIds.includes(student.id) ? " is-assigned" : ""}" draggable="true" data-group-student-id="${escapeHtml(student.id)}"><input type="checkbox" data-resource-audience-student data-resource-row-id="${escapeHtml(row.id)}" value="${escapeHtml(student.id)}"${row.audienceIds.includes(student.id) ? " checked" : ""}> ${escapeHtml(student.displayName)}</label>`).join("");
@@ -1230,10 +1230,10 @@ function classTimerScheduleMarkup(classId = "class-preview-1", { showBackToToday
       <label>Time zone<select name="timeZone">${timeZones.map((zone) => `<option value="${zone}"${schedule.timeZone === zone ? " selected" : ""}>${zone.replaceAll("_", " ")}</option>`).join("")}</select></label>
       <div class="platform-pomodoro-choice">
         <label class="platform-evidence-drive-confirmation"><input type="checkbox" name="pomodoroEnabled" value="yes"${schedule.pomodoroEnabled ? " checked" : ""}> <strong>Use a color-coded Pomodoro class timer</strong></label>
-        <p>Break the class into four visible stages: <strong>Purple</strong> for the opening, <strong>green</strong> for work time, <strong>yellow</strong> for the warning, and <strong>red</strong> for wrap-up. The colors and stage names appear on the Teacher Command Center, floating timer, and Classroom Display.</p>
+        <p>Break the class into four visible stages: <strong>Blue</strong> for the opening, <strong>green</strong> for work time, <strong>gold</strong> for the warning, and <strong>red</strong> for wrap-up. The colors and stage names appear on the Teacher Command Center, floating timer, and Classroom Display.</p>
       </div>
       <fieldset class="platform-class-timer-phases"><legend>Pomodoro stages and start times</legend>
-        ${schedule.phases.map((phase, index) => `<div data-phase-color="${phase.color}"><span>${phase.color}</span><label>Phase name<input name="phaseName" maxlength="40" value="${escapeHtml(phase.name)}" required></label><label>Starts at minute<input type="number" name="phaseStart" data-phase-start="${phase.key}" min="0" max="${Math.max(0, schedule.durationMinutes - 1)}" step="1" value="${phase.startMinute}"${index === 0 ? " readonly" : ""} required></label></div>`).join("")}
+        ${schedule.phases.map((phase, index) => `<div data-phase-color="${phase.color}"><span>${phase.color === "purple" ? "blue" : phase.color === "yellow" ? "gold" : phase.color}</span><label>Phase name<input name="phaseName" maxlength="40" value="${escapeHtml(phase.name)}" required></label><label>Starts at minute<input type="number" name="phaseStart" data-phase-start="${phase.key}" min="0" max="${Math.max(0, schedule.durationMinutes - 1)}" step="1" value="${phase.startMinute}"${index === 0 ? " readonly" : ""} required></label></div>`).join("")}
       </fieldset>
       <button class="platform-button platform-button-secondary" type="button" data-action="timer-recommend-phases">Use Recommended Phase Times</button>
       <fieldset class="platform-timer-sound-settings"><legend>Timer sounds</legend>
@@ -2362,7 +2362,7 @@ function openStudentTimerPopout() {
     *{box-sizing:border-box}html{color-scheme:dark;background:#142936}body{min-height:100vh;margin:0;display:grid;place-items:center;padding:clamp(8px,2.5vmin,18px);color:#fff;background:radial-gradient(circle at 50% 40%,#1f5268 0,#142936 68%);font-family:Arial,sans-serif;text-align:center;overflow:hidden}
     main{display:grid;justify-items:center;gap:clamp(5px,2vmin,14px);width:100%}p,h1{margin:0}.brand{color:#b9dce8;font-size:clamp(.72rem,2vmin,.9rem);font-weight:800;letter-spacing:.08em}.phase{font-size:clamp(1rem,4.5vmin,2.2rem)}
     .ring{position:relative;display:grid;width:min(84vw,66vh);aspect-ratio:1;place-items:center;border-radius:50%;background:#24779a;box-shadow:0 1rem 3rem #0008}
-    .ring[data-active-phases="true"]{background:conic-gradient(from -90deg,#454f55 0 var(--timer-elapsed),transparent var(--timer-elapsed) 100%),conic-gradient(from -90deg,#7651a8 0 var(--timer-main-start),#2d7d5b var(--timer-main-start) var(--timer-warning-start),#d4a017 var(--timer-warning-start) var(--timer-red-start),#b94a45 var(--timer-red-start) 100%)}
+    .ring[data-active-phases="true"]{background:conic-gradient(from -90deg,#454f55 0 var(--timer-elapsed),transparent var(--timer-elapsed) 100%),conic-gradient(from -90deg,#17698e 0 var(--timer-main-start),#2d7d5b var(--timer-main-start) var(--timer-warning-start),#d4a017 var(--timer-warning-start) var(--timer-red-start),#b94a45 var(--timer-red-start) 100%)}
     .ring:before{position:absolute;inset:12%;border:2px solid #ffffff40;border-radius:50%;background:#142936;content:""}.time{position:relative;z-index:1;color:#fff;font-size:clamp(3rem,14vmin,8rem);font-weight:800;font-variant-numeric:tabular-nums}.warning{padding:.5rem .7rem;border:2px solid #c28b12;border-radius:.55rem;background:#704500d1;font-size:clamp(.75rem,2.5vmin,1rem);font-weight:800}.warning[hidden]{display:none}.resize-hint{color:#b9dce8;font-size:clamp(.65rem,1.8vmin,.8rem);font-weight:700}
   </style></head><body><main><p class="brand">THINKamigBOB</p><h1 class="phase">Today's Engineering Time</h1><div class="ring" data-active-phases="false"><output class="time">00:00</output></div><p class="warning" hidden>Five minutes until cleanup or the ending activity.</p><p class="resize-hint">Drag any corner of this window to resize the timer.</p></main></body></html>`);
   studentTimerPopout.document.close();
@@ -3048,7 +3048,7 @@ async function handleSubmit(event) {
         error.textContent = result.reason === "weekdays-required"
           ? "Choose at least one weekday when automatic timing is on."
           : result.reason === "invalid-time-zone" ? "Choose a valid time zone."
-            : result.reason === "invalid-phases" ? "Use minute 0 for purple, choose green before the final five-minute yellow warning, and start red before class ends."
+            : result.reason === "invalid-phases" ? "Use minute 0 for blue, choose green before the final five-minute gold warning, and start red before class ends."
               : "The schedule could not be saved.";
         error.hidden = false;
       }

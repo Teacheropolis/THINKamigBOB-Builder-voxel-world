@@ -144,7 +144,7 @@ test("teacher UI keeps schedule setup in Manage Classes and preserves manual con
   assert.match(app, /<button type="submit">Save Class Schedule<\/button>\s*\$\{showBackToToday \? `<a class="platform-button platform-button-secondary" href="#\$\{ROUTES\.TEACHER_DASHBOARD\}">Back to Today<\/a>` : ""\}/);
   assert.match(app, /Use Recommended Phase Times/);
   assert.match(app, /Use a color-coded Pomodoro class timer/);
-  for (const explanation of ["Purple", "opening", "green", "work time", "yellow", "warning", "red", "wrap-up", "Teacher Command Center", "floating timer", "Classroom Display"]) assert.match(app, new RegExp(explanation));
+  for (const explanation of ["Blue", "opening", "green", "work time", "gold", "warning", "red", "wrap-up", "Teacher Command Center", "floating timer", "Classroom Display"]) assert.match(app, new RegExp(explanation));
   assert.match(app, /Pomodoro stages and start times/);
   assert.match(app, /When yellow begins/);
   assert.match(app, /When red begins/);
