@@ -1540,6 +1540,9 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-large-voice-controls [data-action="voice-meter-stop"] { border-color: #9a6800; color: #fff; background: #8a5e00; }
 .platform-floating-voice-bob { --bob-exit-x: 155%; position: fixed; z-index: 500; right: clamp(0.35rem, 1.5vw, 1.5rem); bottom: clamp(0.6rem, 1.5vh, 1.25rem); width: clamp(7rem, 12vw, 11rem); aspect-ratio: 1; pointer-events: none; background: url("../../assets/images/characters/bob-idle-poses.png") left center / 400% 100% no-repeat; filter: drop-shadow(0 0.6rem 0.65rem rgba(7, 41, 61, 0.35)); animation: platform-bob-idle-poses 48s step-end infinite; transition: background-position 180ms ease, transform 2200ms ease-in, opacity 1500ms ease; }
 .platform-floating-voice-bob[data-idle-set="2"] { background-image: url("../../assets/images/characters/bob-idle-poses-2.png"); }
+.platform-floating-voice-bob[data-idle-set="3"] { background-image: url("../../assets/images/characters/bob-active-poses-1.png"); }
+.platform-floating-voice-bob[data-idle-set="4"] { background-image: url("../../assets/images/characters/bob-active-poses-2.png"); }
+.platform-floating-voice-bob[data-idle-set="3"], .platform-floating-voice-bob[data-idle-set="4"] { background-size: 300% 100%; animation-name: platform-bob-active-poses; animation-duration: 36s; }
 .platform-floating-voice-bob[data-corner="top-left"] { --bob-exit-x: -135%; top: clamp(4.5rem, 9vh, 7rem); right: auto; bottom: auto; left: clamp(0.35rem, 1.5vw, 1.5rem); }
 .platform-floating-voice-bob.is-walking-out, .platform-floating-voice-bob.is-walking-in { background-size: 400% 100%; }
 .platform-floating-voice-bob.is-walking-out { background-image: url("../../assets/images/characters/bob-walk-right.png"); }
@@ -1558,6 +1561,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-floating-voice-bob[data-meter-state="yellow"] span, .platform-floating-voice-bob[data-meter-state="red"] span { opacity: 1; }
 @keyframes platform-bob-too-loud { 50% { transform: translateY(-5%) scale(1.12); } }
 @keyframes platform-bob-idle-poses { 0%, 24.99% { background-position: left center; } 25%, 49.99% { background-position: 33.333% center; } 50%, 74.99% { background-position: 66.667% center; } 75%, 100% { background-position: right center; } }
+@keyframes platform-bob-active-poses { 0%, 33.32% { background-position: left center; } 33.33%, 66.65% { background-position: center center; } 66.66%, 100% { background-position: right center; } }
 @keyframes platform-bob-walk-frames { 0%, 24.99% { background-position: left center; } 25%, 49.99% { background-position: 33.333% center; } 50%, 74.99% { background-position: 66.667% center; } 75%, 100% { background-position: right center; } }
 @keyframes platform-bob-walk-out-right { 0% { transform: translate(0, 0); } 25% { transform: translate(38%, -4%); } 50% { transform: translate(78%, 0); } 75% { transform: translate(118%, -4%); } 100% { transform: translate(165%, 0); } }
 @keyframes platform-bob-walk-out-left { 0% { transform: translate(0, 0); } 25% { transform: translate(-38%, -4%); } 50% { transform: translate(-78%, 0); } 75% { transform: translate(-118%, -4%); } 100% { transform: translate(-165%, 0); } }

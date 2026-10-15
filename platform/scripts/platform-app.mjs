@@ -3309,7 +3309,7 @@ function relocateFloatingBob() {
   window.setTimeout(() => {
     if (!bob.isConnected || bob.dataset.meterState !== "green") { bob.classList.remove("is-walking-out", "is-walking-in"); return; }
     floatingBobCornerIndex = (floatingBobCornerIndex + 1) % floatingBobCorners.length;
-    floatingBobIdleSet = floatingBobIdleSet === 1 ? 2 : 1;
+    floatingBobIdleSet = (floatingBobIdleSet % 4) + 1;
     bob.dataset.corner = floatingBobCorners[floatingBobCornerIndex];
     bob.dataset.idleSet = String(floatingBobIdleSet);
     bob.classList.remove("is-walking-out");
