@@ -3295,7 +3295,7 @@ function updateVoiceMeterPresentation(value) {
     if (output) output.textContent = String(value);
   });
   document.querySelectorAll("[data-voice-bob-message]").forEach((label) => { label.textContent = bobMessages[voiceBobState]; });
-  document.querySelectorAll("[data-voice-bob]").forEach((bob) => { bob.dataset.meterState = voiceBobState; bob.setAttribute("aria-label", bobMessages[voiceBobState]); if (voiceBobState !== "green") bob.classList.remove("is-relocating"); });
+  document.querySelectorAll("[data-voice-bob]").forEach((bob) => { bob.dataset.meterState = voiceBobState; bob.setAttribute("aria-label", bobMessages[voiceBobState]); if (voiceBobState !== "green") bob.classList.remove("is-walking-out", "is-walking-in"); });
   if (voiceBobState === "green") delete document.body.dataset.voiceFrame;
   else document.body.dataset.voiceFrame = voiceBobState;
   const prediction = predictedLearningType(value);
@@ -3304,16 +3304,18 @@ function updateVoiceMeterPresentation(value) {
 
 function relocateFloatingBob() {
   const bob = document.querySelector(".platform-floating-voice-bob");
-  if (!bob || bob.dataset.meterState !== "green" || bob.classList.contains("is-relocating")) return;
-  bob.classList.add("is-relocating");
+  if (!bob || bob.dataset.meterState !== "green" || bob.classList.contains("is-walking-out") || bob.classList.contains("is-walking-in")) return;
+  bob.classList.add("is-walking-out");
   window.setTimeout(() => {
-    if (!bob.isConnected || bob.dataset.meterState !== "green") { bob.classList.remove("is-relocating"); return; }
+    if (!bob.isConnected || bob.dataset.meterState !== "green") { bob.classList.remove("is-walking-out", "is-walking-in"); return; }
     floatingBobCornerIndex = (floatingBobCornerIndex + 1) % floatingBobCorners.length;
     floatingBobIdleSet = floatingBobIdleSet === 1 ? 2 : 1;
     bob.dataset.corner = floatingBobCorners[floatingBobCornerIndex];
     bob.dataset.idleSet = String(floatingBobIdleSet);
-    window.requestAnimationFrame(() => bob.classList.remove("is-relocating"));
-  }, 2300);
+    bob.classList.remove("is-walking-out");
+    bob.classList.add("is-walking-in");
+    window.setTimeout(() => bob.classList.remove("is-walking-in"), 2800);
+  }, 2800);
 }
 
 function whiteboardCanvas() {
