@@ -49,8 +49,8 @@ test("text entry and selection fields use a calm cream surface", () => {
 });
 
 test("dropdown fields are visibly color coded", () => {
-  assert.match(css, /\.platform-main select \{[^}]*border-color: #639b80[^}]*background-color: #dff1e7/);
-  assert.match(css, /\.platform-main select:hover \{[^}]*background-color: #d2eadc/);
+  assert.match(css, /\.platform-main select \{[^}]*border-color: #b88412[^}]*background-color: #fff3d6/);
+  assert.match(css, /\.platform-main select:hover \{[^}]*background-color: #ffebbd/);
 });
 
 test("a separate classroom demo preview supplies realistic fictional usage data", () => {
