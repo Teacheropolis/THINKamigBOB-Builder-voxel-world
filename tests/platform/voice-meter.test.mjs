@@ -52,6 +52,10 @@ test("teacher and student display expose a private browser-only voice meter", ()
   assert.match(css, /\.platform-large-voice-controls \{[^}]*grid-template-columns: repeat\(3/);
   assert.match(css, /data-meter-state="red"/);
   assert.match(css, /bob-voice-meter-states\.png/);
+  assert.match(css, /bob-idle-poses\.png/);
+  assert.match(css, /platform-bob-idle-poses 48s step-end infinite/);
   assert.match(css, /\.platform-floating-voice-bob\[data-meter-state="yellow"\]/);
   assert.match(css, /\.platform-floating-voice-bob\[data-meter-state="red"\]/);
+  assert.match(app, /requiredStableTime = state === "red" \? 1400 : \(state === "yellow" \? 2000 : 2800\)/);
+  assert.match(app, /now - voiceBobStateChangedAt >= 3200/);
 });

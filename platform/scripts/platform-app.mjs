@@ -188,6 +188,10 @@ let voiceMeterStream = null;
 let voiceMeterAnimationFrame = null;
 let voiceMeterDisplayTrigger = null;
 let voiceMeterUsage = null;
+let voiceBobState = "green";
+let voiceBobCandidateState = "green";
+let voiceBobCandidateSince = 0;
+let voiceBobStateChangedAt = 0;
 let teacherComparisonClassId = "";
 let whiteboardDisplayTrigger = null;
 let whiteboardUndoStack = [];
@@ -3276,6 +3280,13 @@ async function saveEvidenceDraft() {
 function updateVoiceMeterPresentation(value) {
   const threshold = readVoiceMeterActivity().target;
   const state = voiceMeterState(value, threshold);
+  const now = Date.now();
+  if (state !== voiceBobCandidateState) { voiceBobCandidateState = state; voiceBobCandidateSince = now; }
+  const requiredStableTime = state === "red" ? 1400 : (state === "yellow" ? 2000 : 2800);
+  if (voiceBobCandidateState !== voiceBobState && now - voiceBobCandidateSince >= requiredStableTime && now - voiceBobStateChangedAt >= 3200) {
+    voiceBobState = voiceBobCandidateState;
+    voiceBobStateChangedAt = now;
+  }
   const bobMessages = { green: "Bob is calm and happy.", yellow: "Bob is asking the class to quiet down.", red: "Bob is uncomfortable because the room is too loud." };
   document.querySelectorAll("[data-voice-meter]").forEach((meter) => {
     meter.style.setProperty("--voice-meter-level", `${value}%`);
@@ -3283,8 +3294,8 @@ function updateVoiceMeterPresentation(value) {
     const output = meter.querySelector("[data-voice-meter-output]");
     if (output) output.textContent = String(value);
   });
-  document.querySelectorAll("[data-voice-bob-message]").forEach((label) => { label.textContent = bobMessages[state]; });
-  document.querySelectorAll("[data-voice-bob]").forEach((bob) => { bob.dataset.meterState = state; bob.setAttribute("aria-label", bobMessages[state]); });
+  document.querySelectorAll("[data-voice-bob-message]").forEach((label) => { label.textContent = bobMessages[voiceBobState]; });
+  document.querySelectorAll("[data-voice-bob]").forEach((bob) => { bob.dataset.meterState = voiceBobState; bob.setAttribute("aria-label", bobMessages[voiceBobState]); });
   const prediction = predictedLearningType(value);
   document.querySelectorAll("[data-voice-prediction]").forEach((label) => { label.textContent = `${prediction.icon} ${prediction.label}`; });
 }
@@ -4917,6 +4928,7 @@ function stopVoiceMeter(message = "Voice Meter stopped. No audio was saved.") {
   const status = document.querySelector("[data-voice-meter-status]");
   if (status) status.textContent = message;
   document.querySelectorAll("[data-live-voice-status]").forEach((label) => { label.dataset.state = "off"; label.innerHTML = `<span aria-hidden="true"></span> Voice Meter is off`; });
+  voiceBobState = "green"; voiceBobCandidateState = "green"; voiceBobCandidateSince = 0; voiceBobStateChangedAt = Date.now();
   updateVoiceMeterPresentation(0);
   refreshCurrentClassPlan();
 }
