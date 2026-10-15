@@ -3292,6 +3292,8 @@ function updateVoiceMeterPresentation(value) {
   });
   document.querySelectorAll("[data-voice-bob-message]").forEach((label) => { label.textContent = bobMessages[voiceBobState]; });
   document.querySelectorAll("[data-voice-bob]").forEach((bob) => { bob.dataset.meterState = voiceBobState; bob.setAttribute("aria-label", bobMessages[voiceBobState]); });
+  if (voiceBobState === "green") delete document.body.dataset.voiceFrame;
+  else document.body.dataset.voiceFrame = voiceBobState;
   const prediction = predictedLearningType(value);
   document.querySelectorAll("[data-voice-prediction]").forEach((label) => { label.textContent = `${prediction.icon} ${prediction.label}`; });
 }

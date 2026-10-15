@@ -57,4 +57,9 @@ test("teacher and student display expose a private browser-only voice meter", ()
   assert.match(css, /\.platform-floating-voice-bob\[data-meter-state="yellow"\]/);
   assert.match(css, /\.platform-floating-voice-bob\[data-meter-state="red"\]/);
   assert.match(app, /state !== voiceBobState && now - voiceBobStateChangedAt >= 2400/);
+  assert.match(app, /document\.body\.dataset\.voiceFrame = voiceBobState/);
+  assert.match(css, /data-voice-frame="yellow"/);
+  assert.match(css, /data-voice-frame="red"/);
+  assert.match(css, /platform-volume-frame-yellow/);
+  assert.match(css, /platform-volume-frame-red/);
 });
