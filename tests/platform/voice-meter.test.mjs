@@ -39,6 +39,10 @@ test("teacher and student display expose a private browser-only voice meter", ()
   assert.match(app, /studentDisplayVoiceMeterIsEnabled\(\) && !voiceMeterStream/);
   assert.match(app, /document\.querySelectorAll\("\[data-voice-meter-target\]"\)/);
   assert.match(app, /data-voice-sensitivity/);
+  assert.match(app, /class="platform-floating-voice-bob"/);
+  assert.match(app, /Bob is calm and happy/);
+  assert.match(app, /Bob is asking the class to quiet down/);
+  assert.match(app, /Bob is uncomfortable because the room is too loud/);
   assert.match(app, /voiceMeter\.readSensitivity\(\)/);
   assert.match(app, /voiceMeter\.setSensitivity/);
   assert.match(css, /\.platform-voice-meter-fill/);
@@ -47,4 +51,7 @@ test("teacher and student display expose a private browser-only voice meter", ()
   assert.match(css, /\.platform-large-voice-meter \{[^}]*width: min\(88vw, 75rem\)/);
   assert.match(css, /\.platform-large-voice-controls \{[^}]*grid-template-columns: repeat\(3/);
   assert.match(css, /data-meter-state="red"/);
+  assert.match(css, /bob-voice-meter-states\.png/);
+  assert.match(css, /\.platform-floating-voice-bob\[data-meter-state="yellow"\]/);
+  assert.match(css, /\.platform-floating-voice-bob\[data-meter-state="red"\]/);
 });

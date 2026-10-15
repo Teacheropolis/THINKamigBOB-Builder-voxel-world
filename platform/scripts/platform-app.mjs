@@ -1819,6 +1819,7 @@ function teacherDashboardView(state) {
       <aside class="platform-smartboard-tool platform-floating-whiteboard" data-smartboard-tool="whiteboard" hidden style="left: 8%; top: 8%; width: min(46rem, 82vw); height: min(34rem, 72vh);"><header data-smartboard-drag-handle><strong>Whiteboard</strong><button type="button" data-action="close-smartboard-tool" aria-label="Close Whiteboard window">×</button></header><div class="platform-floating-whiteboard-board">${floatingWhiteboard ? `<img src="${escapeHtml(floatingWhiteboard.displayImage || floatingWhiteboard.image)}" alt="Latest whiteboard: ${escapeHtml(floatingWhiteboard.title)}">` : `<p>Your whiteboard will appear here. Open the full board to draw.</p>`}</div><div class="platform-floating-whiteboard-functions"><button type="button" data-action="open-whiteboard">Open Full Whiteboard and Tools</button></div>${smartboardToolSwitcherMarkup()}<span class="platform-smartboard-resize-handle" data-smartboard-resize-handle aria-label="Resize Whiteboard window"></span></aside>
       <nav class="platform-smartboard-tool-tray" aria-label="Smartboard presentation tools"><strong>Tools</strong><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="timer">Class Timer</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="activity-timer">Activity Side Timer</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="stopwatch">Stopwatch</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="message">Message</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="voice">Voice Meter</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="names">Name Picker</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="whiteboard">Whiteboard</button><button type="button" class="platform-smartboard-reset-tools" data-action="reset-smartboard-tools">Reset Positions</button></nav>
     </section>
+    <aside class="platform-floating-voice-bob" data-voice-bob data-meter-state="green" role="img" aria-label="Bob is calm and happy."><span data-voice-bob-message>Bob is calm and happy.</span></aside>
     <section id="platform-large-voice-meter-display" class="platform-large-voice-meter-display" data-voice-display-mode="${readVoiceMeterDisplayMode()}" role="dialog" aria-modal="true" aria-labelledby="large-voice-meter-title" tabindex="-1" hidden>
       <p class="platform-student-display-brand">THINKamigBOB</p>
       <h2 id="large-voice-meter-title">Classroom Voice Meter</h2>
@@ -1832,9 +1833,8 @@ function teacherDashboardView(state) {
       </label>
       <label class="platform-large-voice-selector platform-voice-sensitivity">Microphone sensitivity <output data-voice-sensitivity-value>${selectedVoiceSensitivity}%</output><input type="range" min="50" max="150" step="5" value="${selectedVoiceSensitivity}" data-voice-sensitivity><span><small>Less reactive</small><small>More reactive</small></span></label>
       <div class="platform-large-voice-meter" data-voice-meter data-meter-state="green" style="--voice-meter-level: 0%; --voice-threshold: ${selectedVoiceActivity.target}%">
-        <div class="platform-large-voice-scale" aria-hidden="true"><span>Ready</span><span>Getting loud</span><span>Too loud</span></div>
-        <div class="platform-voice-meter-track"><span class="platform-voice-meter-fill"></span><i class="platform-voice-threshold-marker" title="Expected threshold"></i></div>
-        <output data-voice-meter-output aria-label="Current classroom voice level">0</output>
+        <div class="platform-large-voice-bob-panel"><div class="platform-large-voice-bob" data-voice-bob data-meter-state="green" role="img" aria-label="Bob is calm and happy."></div><strong data-voice-bob-message>Bob is calm and happy.</strong></div>
+        <div class="platform-large-voice-reading"><div class="platform-large-voice-scale" aria-hidden="true"><span>Ready</span><span>Getting loud</span><span>Too loud</span></div><div class="platform-voice-meter-track"><span class="platform-voice-meter-fill"></span><i class="platform-voice-threshold-marker" title="Expected threshold"></i></div><output data-voice-meter-output aria-label="Current classroom voice level">0</output></div>
       </div>
       <div class="platform-large-voice-controls" aria-label="Large Voice Meter controls">
         <button type="button" data-action="voice-meter-start">Start Voice Meter</button>
@@ -3276,12 +3276,15 @@ async function saveEvidenceDraft() {
 function updateVoiceMeterPresentation(value) {
   const threshold = readVoiceMeterActivity().target;
   const state = voiceMeterState(value, threshold);
+  const bobMessages = { green: "Bob is calm and happy.", yellow: "Bob is asking the class to quiet down.", red: "Bob is uncomfortable because the room is too loud." };
   document.querySelectorAll("[data-voice-meter]").forEach((meter) => {
     meter.style.setProperty("--voice-meter-level", `${value}%`);
     meter.dataset.meterState = state;
     const output = meter.querySelector("[data-voice-meter-output]");
     if (output) output.textContent = String(value);
   });
+  document.querySelectorAll("[data-voice-bob-message]").forEach((label) => { label.textContent = bobMessages[state]; });
+  document.querySelectorAll("[data-voice-bob]").forEach((bob) => { bob.dataset.meterState = state; bob.setAttribute("aria-label", bobMessages[state]); });
   const prediction = predictedLearningType(value);
   document.querySelectorAll("[data-voice-prediction]").forEach((label) => { label.textContent = `${prediction.icon} ${prediction.label}`; });
 }

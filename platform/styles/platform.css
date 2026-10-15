@@ -1518,20 +1518,37 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-student-voice-meter p { margin: 0 0 0.45rem; font-weight: 900; }
 .platform-student-voice-meter output { display: block; margin-top: 0.35rem; font-size: 1.2rem; font-weight: 900; text-align: center; }
 .platform-large-voice-meter-display[hidden] { display: none !important; }
-.platform-large-voice-meter-display { position: fixed; z-index: 240; inset: 0; display: grid; grid-template-rows: auto auto auto 1fr auto; justify-items: center; gap: clamp(0.75rem, 2vh, 1.5rem); padding: clamp(1rem, 3vw, 2.5rem); color: #fff; background: radial-gradient(circle at 50% 35%, rgba(107, 63, 160, 0.5), transparent 38rem), var(--platform-navy); text-align: center; }
+.platform-large-voice-meter-display { position: fixed; z-index: 240; inset: 0; display: grid; grid-template-rows: auto auto auto 1fr auto; justify-items: center; gap: clamp(0.75rem, 2vh, 1.5rem); padding: clamp(1rem, 3vw, 2.5rem); color: #fff; background: radial-gradient(circle at 50% 35%, rgba(23, 105, 142, 0.48), transparent 38rem), var(--platform-navy); text-align: center; }
 .platform-large-voice-meter-display h2 { margin: 0; font-size: clamp(2rem, 6vw, 5rem); }
 .platform-large-voice-target { margin: 0; font-size: clamp(1.4rem, 3.5vw, 3rem); font-weight: 900; }
 .platform-large-voice-selector { display: grid; width: min(32rem, 88vw); gap: 0.4rem; font-size: clamp(1rem, 1.8vw, 1.3rem); font-weight: 850; text-align: left; }
 .platform-large-voice-selector select { width: 100%; min-height: 3.25rem; padding: 0.65rem 0.8rem; border: 3px solid #b9dce8; border-radius: 0.65rem; color: var(--platform-navy); background: #fff; font: inherit; font-weight: 800; }
-.platform-large-voice-meter { display: grid; align-self: center; width: min(88vw, 75rem); gap: clamp(0.75rem, 2vh, 1.5rem); padding: clamp(1rem, 3vw, 2.5rem); border: clamp(0.35rem, 0.8vw, 0.75rem) solid #2d7d5b; border-radius: 2rem; background: rgba(231, 245, 237, 0.97); color: var(--platform-navy); box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.35); }
+.platform-large-voice-meter { display: grid; align-self: center; width: min(88vw, 75rem); grid-template-columns: minmax(13rem, 0.65fr) minmax(18rem, 1fr); align-items: center; gap: clamp(0.75rem, 2vh, 1.5rem); padding: clamp(1rem, 3vw, 2.5rem); border: clamp(0.35rem, 0.8vw, 0.75rem) solid #2d7d5b; border-radius: 2rem; background: rgba(231, 245, 237, 0.97); color: var(--platform-navy); box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.35); }
 .platform-large-voice-meter[data-meter-state="yellow"] { border-color: #d99b00; background: #ffe27a; }
 .platform-large-voice-meter[data-meter-state="red"] { border-color: #c33f38; background: #f69a94; }
 .platform-large-voice-meter .platform-voice-meter-track { height: clamp(4rem, 10vh, 8rem); border-width: 0.35rem; }
+.platform-large-voice-bob-panel, .platform-large-voice-reading { display: grid; justify-items: center; gap: clamp(0.6rem, 1.5vh, 1rem); }
+.platform-large-voice-bob { width: min(24rem, 32vw); aspect-ratio: 1; background: url("../../assets/images/characters/bob-voice-meter-states.png") left center / 300% 100% no-repeat; filter: drop-shadow(0 0.8rem 0.8rem rgba(0, 0, 0, 0.24)); transition: background-position 180ms ease; }
+.platform-large-voice-bob[data-meter-state="yellow"] { background-position: center center; }
+.platform-large-voice-bob[data-meter-state="red"] { background-position: right center; }
+.platform-large-voice-bob-panel strong { max-width: 26rem; font-size: clamp(1rem, 2vw, 1.5rem); }
+.platform-large-voice-reading { width: 100%; }
 .platform-large-voice-scale { display: flex; justify-content: space-between; gap: 1rem; font-size: clamp(1rem, 2.4vw, 2rem); font-weight: 900; }
 .platform-large-voice-meter output { color: var(--platform-navy); font-size: clamp(4rem, 13vw, 10rem); font-weight: 900; line-height: 0.9; }
 .platform-large-voice-controls { display: grid; width: min(48rem, 92vw); grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
 .platform-large-voice-controls button { min-height: 3.25rem; font-size: clamp(1rem, 1.8vw, 1.3rem); }
 .platform-large-voice-controls [data-action="voice-meter-stop"] { border-color: #9a6800; color: #fff; background: #8a5e00; }
+.platform-floating-voice-bob { position: fixed; z-index: 500; right: clamp(0.35rem, 1.5vw, 1.5rem); bottom: 0; width: clamp(7rem, 12vw, 11rem); aspect-ratio: 1; pointer-events: none; background: url("../../assets/images/characters/bob-voice-meter-states.png") left center / 300% 100% no-repeat; filter: drop-shadow(0 0.6rem 0.65rem rgba(7, 41, 61, 0.35)); transform: translateY(62%); transition: background-position 180ms ease, transform 650ms cubic-bezier(.22, .9, .32, 1.2); }
+.platform-floating-voice-bob[data-meter-state="yellow"] { background-position: center center; transform: translateY(8%); }
+.platform-floating-voice-bob[data-meter-state="red"] { background-position: right center; transform: translateY(0) scale(1.08); animation: platform-bob-too-loud 700ms ease-in-out 2; }
+.platform-floating-voice-bob span { position: absolute; right: 86%; bottom: 52%; width: max-content; max-width: min(17rem, 64vw); padding: 0.5rem 0.7rem; border: 3px solid var(--platform-blue-dark); border-radius: 0.8rem 0.8rem 0 0.8rem; color: var(--platform-navy); background: #fff8e8; box-shadow: 0 0.5rem 1rem rgba(7, 41, 61, 0.2); font-size: clamp(0.78rem, 1.2vw, 1rem); font-weight: 850; opacity: 0; transition: opacity 180ms ease; }
+.platform-floating-voice-bob[data-meter-state="yellow"] span, .platform-floating-voice-bob[data-meter-state="red"] span { opacity: 1; }
+@keyframes platform-bob-too-loud { 50% { transform: translateY(-5%) scale(1.12); } }
+@media (max-width: 700px) {
+  .platform-large-voice-meter { grid-template-columns: 1fr; }
+  .platform-large-voice-bob { width: min(14rem, 52vw); }
+  .platform-floating-voice-bob { width: 7rem; }
+}
 .platform-student-engineering-time { display: grid; justify-items: center; gap: clamp(0.35rem, 1.2vh, 0.75rem); min-width: 0; }
 .platform-student-timer-display h2 { margin: 0; font-size: clamp(1.75rem, 5vw, 4rem); line-height: 1.1; }
 .platform-student-timer-display output { color: var(--platform-focus); font-size: clamp(4.5rem, 18vw, 13rem); font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: 0.03em; line-height: 0.95; }
