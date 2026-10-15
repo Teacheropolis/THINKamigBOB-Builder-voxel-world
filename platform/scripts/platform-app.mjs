@@ -190,6 +190,9 @@ let voiceMeterDisplayTrigger = null;
 let voiceMeterUsage = null;
 let voiceBobState = "green";
 let voiceBobStateChangedAt = 0;
+const floatingBobCorners = ["bottom-right", "top-right", "top-left", "bottom-left"];
+let floatingBobCornerIndex = 0;
+let floatingBobRoamingInterval = null;
 let teacherComparisonClassId = "";
 let whiteboardDisplayTrigger = null;
 let whiteboardUndoStack = [];
@@ -1821,7 +1824,7 @@ function teacherDashboardView(state) {
       <aside class="platform-smartboard-tool platform-floating-whiteboard" data-smartboard-tool="whiteboard" hidden style="left: 8%; top: 8%; width: min(46rem, 82vw); height: min(34rem, 72vh);"><header data-smartboard-drag-handle><strong>Whiteboard</strong><button type="button" data-action="close-smartboard-tool" aria-label="Close Whiteboard window">×</button></header><div class="platform-floating-whiteboard-board">${floatingWhiteboard ? `<img src="${escapeHtml(floatingWhiteboard.displayImage || floatingWhiteboard.image)}" alt="Latest whiteboard: ${escapeHtml(floatingWhiteboard.title)}">` : `<p>Your whiteboard will appear here. Open the full board to draw.</p>`}</div><div class="platform-floating-whiteboard-functions"><button type="button" data-action="open-whiteboard">Open Full Whiteboard and Tools</button></div>${smartboardToolSwitcherMarkup()}<span class="platform-smartboard-resize-handle" data-smartboard-resize-handle aria-label="Resize Whiteboard window"></span></aside>
       <nav class="platform-smartboard-tool-tray" aria-label="Smartboard presentation tools"><strong>Tools</strong><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="timer">Class Timer</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="activity-timer">Activity Side Timer</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="stopwatch">Stopwatch</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="message">Message</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="voice">Voice Meter</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="names">Name Picker</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="whiteboard">Whiteboard</button><button type="button" class="platform-smartboard-reset-tools" data-action="reset-smartboard-tools">Reset Positions</button></nav>
     </section>
-    <aside class="platform-floating-voice-bob" data-voice-bob data-meter-state="green" role="img" aria-label="Bob is calm and happy."><span data-voice-bob-message>Bob is calm and happy.</span></aside>
+    <aside class="platform-floating-voice-bob" data-voice-bob data-meter-state="green" data-corner="${floatingBobCorners[floatingBobCornerIndex]}" role="img" aria-label="Bob is calm and happy."><span data-voice-bob-message>Bob is calm and happy.</span></aside>
     <section id="platform-large-voice-meter-display" class="platform-large-voice-meter-display" data-voice-display-mode="${readVoiceMeterDisplayMode()}" role="dialog" aria-modal="true" aria-labelledby="large-voice-meter-title" tabindex="-1" hidden>
       <p class="platform-student-display-brand">THINKamigBOB</p>
       <h2 id="large-voice-meter-title">Classroom Voice Meter</h2>
@@ -3291,11 +3294,23 @@ function updateVoiceMeterPresentation(value) {
     if (output) output.textContent = String(value);
   });
   document.querySelectorAll("[data-voice-bob-message]").forEach((label) => { label.textContent = bobMessages[voiceBobState]; });
-  document.querySelectorAll("[data-voice-bob]").forEach((bob) => { bob.dataset.meterState = voiceBobState; bob.setAttribute("aria-label", bobMessages[voiceBobState]); });
+  document.querySelectorAll("[data-voice-bob]").forEach((bob) => { bob.dataset.meterState = voiceBobState; bob.setAttribute("aria-label", bobMessages[voiceBobState]); if (voiceBobState !== "green") bob.classList.remove("is-relocating"); });
   if (voiceBobState === "green") delete document.body.dataset.voiceFrame;
   else document.body.dataset.voiceFrame = voiceBobState;
   const prediction = predictedLearningType(value);
   document.querySelectorAll("[data-voice-prediction]").forEach((label) => { label.textContent = `${prediction.icon} ${prediction.label}`; });
+}
+
+function relocateFloatingBob() {
+  const bob = document.querySelector(".platform-floating-voice-bob");
+  if (!bob || bob.dataset.meterState !== "green" || bob.classList.contains("is-relocating")) return;
+  bob.classList.add("is-relocating");
+  window.setTimeout(() => {
+    if (!bob.isConnected || bob.dataset.meterState !== "green") { bob.classList.remove("is-relocating"); return; }
+    floatingBobCornerIndex = (floatingBobCornerIndex + 1) % floatingBobCorners.length;
+    bob.dataset.corner = floatingBobCorners[floatingBobCornerIndex];
+    window.requestAnimationFrame(() => bob.classList.remove("is-relocating"));
+  }, 900);
 }
 
 function whiteboardCanvas() {
@@ -7413,6 +7428,7 @@ async function startPlatform() {
     else if (result.ok) session.signOut();
   }
   render();
+  if (floatingBobRoamingInterval === null) floatingBobRoamingInterval = window.setInterval(relocateFloatingBob, 18000);
 }
 
 void startPlatform();

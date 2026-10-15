@@ -62,4 +62,7 @@ test("teacher and student display expose a private browser-only voice meter", ()
   assert.match(css, /data-voice-frame="red"/);
   assert.match(css, /platform-volume-frame-yellow/);
   assert.match(css, /platform-volume-frame-red/);
+  assert.match(app, /floatingBobCorners = \["bottom-right", "top-right", "top-left", "bottom-left"\]/);
+  assert.match(app, /setInterval\(relocateFloatingBob, 18000\)/);
+  assert.match(css, /\.platform-floating-voice-bob\.is-relocating/);
 });
