@@ -176,6 +176,8 @@ test("Run Today’s Class shows a live read-only current plan", () => {
   assert.match(app, /data-voice-star-goal/);
   assert.match(app, /VOICE_METER_STAR_GOAL_KEY/);
   for (const label of ["Adjust Sound Goals", "Activity minutes and sound patterns", "goal days", "Excellent sound balance"]) assert.match(app, new RegExp(label));
+  assert.match(css, /\.platform-voice-activity-details \{[^}]*border-top: 7px solid #176b4b[^}]*box-shadow:/);
+  assert.match(css, /\.platform-voice-activity-details summary \{[^}]*color: #176b4b[^}]*background: linear-gradient/);
   assert.match(app, /data-voice-weekly-star-goal/);
   assert.match(app, /data-voice-meter-display-mode/);
   assert.match(app, /platform-voice-threshold-marker/);
