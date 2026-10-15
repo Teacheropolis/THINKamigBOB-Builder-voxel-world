@@ -144,6 +144,8 @@ const WHITEBOARD_LIBRARY_KEY = "thinkamigbob.classroom-whiteboard-library.v1";
 const WHITEBOARD_BOB_MEASUREMENT_COACH_KEY = "thinkamigbob.whiteboard-bob-measurement-coach.v1";
 const TEACHER_ASSIGNED_RESEARCH_KEY = "thinkamigbob.teacher-assigned-research.v1";
 const TEACHER_RESEARCH_LINK_BANK_KEY = "thinkamigbob.teacher-research-link-bank.v1";
+const DO_NOW_POSTS_KEY = "thinkamigbob.do-now-posts.v1";
+const DO_NOW_LIVE_KEY = "thinkamigbob.do-now-live.v1";
 const VOICE_METER_HISTORY_KEY = "thinkamigbob.voice-meter-history.v1";
 const VOICE_METER_ACTIVITY_KEY = "thinkamigbob.voice-meter-activity.v1";
 const VOICE_METER_STAR_GOAL_KEY = "thinkamigbob.voice-meter-star-goal.v1";
@@ -176,6 +178,7 @@ let lastTimerPhaseKey = null;
 let lastTimerStatus = null;
 let studentTimerPopout = null;
 let classroomPresentationWindow = null;
+let doNowDraft = null;
 const smartboardToolPopouts = new Map();
 let memoFormatRevision = Date.now();
 let memoSelectionRange = null;
@@ -430,6 +433,99 @@ function segmentActiveVoiceMeter(activity) {
   beginVoiceMeterUsage(activity);
 }
 
+function readDoNowPosts() {
+  try { return JSON.parse(window.localStorage.getItem(DO_NOW_POSTS_KEY) || "[]"); } catch { return []; }
+}
+
+function writeDoNowPosts(posts) {
+  window.localStorage.setItem(DO_NOW_POSTS_KEY, JSON.stringify(posts.slice(0, 40)));
+}
+
+function blankDoNowPost(classId = "") {
+  return {
+    id: `do-now-${Date.now()}`, classId, title: "Today’s Do Now", schedule: "class-start", weekday: new Date().getDay(), date: "",
+    backgroundType: "gradient", background1: "#fff4cf", background2: "#dceff4", image: "",
+    boxes: [
+      { id: "box-1", text: "Welcome! Read the prompt and get started.", color: "#12384d", size: 42, font: "Arial", bold: true, italic: false, underline: false, backgroundType: "gradient", background1: "#ffffff", background2: "#fff4cf" },
+      { id: "box-2", text: "Write or sketch your first idea.", color: "#176b55", size: 30, font: "Verdana", bold: false, italic: false, underline: false, backgroundType: "solid", background1: "#ffffff", background2: "#ffffff" },
+    ], savedAt: Date.now(), live: false,
+  };
+}
+
+function currentDoNowClassId() {
+  const state = session.read();
+  return currentTeacherClass(state.teacherId)?.id || state.classId || "class-preview-1";
+}
+
+function doNowCardMarkup(box, index) {
+  const background = box.backgroundType === "gradient" ? `linear-gradient(135deg, ${box.background1}, ${box.background2})` : box.background1;
+  return `<article class="platform-do-now-card" style="--do-now-index:${index};--do-now-card-background:${escapeHtml(background)};--do-now-text:${escapeHtml(box.color)};--do-now-size:${Number(box.size)}px;--do-now-font:${escapeHtml(box.font)};--do-now-weight:${box.bold ? "700" : "400"};--do-now-style:${box.italic ? "italic" : "normal"};--do-now-decoration:${box.underline ? "underline" : "none"}">${escapeHtml(box.text).replaceAll("\n", "<br>")}</article>`;
+}
+
+function doNowPresentationMarkup(post, { controls = true } = {}) {
+  const background = post.backgroundType === "gradient" ? `linear-gradient(135deg, ${post.background1}, ${post.background2})` : post.background1;
+  return `<section class="platform-do-now-presentation" data-do-now-presentation style="--do-now-background:${escapeHtml(background)}" role="dialog" aria-label="Do Now Post"><header><p>DO NOW</p><h2>${escapeHtml(post.title)}</h2>${controls ? `<div><button type="button" data-action="edit-do-now">Edit</button><button type="button" data-action="hide-do-now">Hide</button></div>` : ""}</header><div class="platform-do-now-stage">${post.boxes.map(doNowCardMarkup).join("")}${post.image ? `<img src="${escapeHtml(post.image)}" alt="Do Now visual">` : ""}</div></section>`;
+}
+
+function readLiveDoNow() {
+  try { return JSON.parse(window.sessionStorage.getItem(DO_NOW_LIVE_KEY) || "null"); } catch { return null; }
+}
+
+function syncDoNowPresentation(post = readLiveDoNow()) {
+  for (const documentRef of [document, classroomPresentationWindow?.document].filter(Boolean)) {
+    documentRef.querySelectorAll("#platform-student-timer-display > [data-do-now-presentation], #platform-second-window-display > [data-do-now-presentation], body > [data-do-now-presentation]").forEach((node) => node.remove());
+    if (!post) continue;
+    const host = documentRef.querySelector("#platform-student-timer-display") || documentRef.body;
+    host.insertAdjacentHTML("beforeend", doNowPresentationMarkup(post, { controls: documentRef === document }));
+    if (host.hidden) host.hidden = false;
+  }
+}
+
+function showDoNow(post) {
+  const live = { ...post, live: true };
+  window.sessionStorage.setItem(DO_NOW_LIVE_KEY, JSON.stringify(live));
+  syncDoNowPresentation(live);
+}
+
+function scheduledDoNowForClass(classId) {
+  const now = new Date();
+  return readDoNowPosts().filter((post) => post.classId === classId && post.schedule !== "manual").find((post) => post.schedule === "class-start" || (post.schedule === "weekday" && Number(post.weekday) === now.getDay()) || (post.schedule === "date" && post.date === now.toISOString().slice(0, 10))) || null;
+}
+
+function doNowEditorMarkup(post) {
+  const posts = readDoNowPosts().filter((item) => item.classId === currentDoNowClassId());
+  const boxEditors = post.boxes.map((box, index) => `<fieldset class="platform-do-now-box-editor" data-do-now-box="${index}"><legend>Text box ${index + 1}</legend><textarea rows="3" data-do-now-field="text">${escapeHtml(box.text)}</textarea><div class="platform-do-now-format-row"><label>Text color<input type="color" data-do-now-field="color" value="${escapeHtml(box.color)}"></label><label>Size<input type="range" min="18" max="72" data-do-now-field="size" value="${Number(box.size)}"><output>${Number(box.size)} px</output></label><label>Font<select data-do-now-field="font">${["Arial", "Verdana", "Courier New", "Comic Sans MS"].map((font) => `<option${font === box.font ? " selected" : ""}>${font}</option>`).join("")}</select></label><button type="button" data-action="do-now-toggle-format" data-format="bold" aria-pressed="${box.bold}"><b>B</b></button><button type="button" data-action="do-now-toggle-format" data-format="italic" aria-pressed="${box.italic}"><i>I</i></button><button type="button" data-action="do-now-toggle-format" data-format="underline" aria-pressed="${box.underline}"><u>U</u></button></div><div class="platform-do-now-format-row"><label>Text box background<select data-do-now-field="backgroundType"><option value="solid"${box.backgroundType === "solid" ? " selected" : ""}>Solid color</option><option value="gradient"${box.backgroundType === "gradient" ? " selected" : ""}>Gradient</option></select></label><label>Color 1<input type="color" data-do-now-field="background1" value="${box.background1}"></label><label>Color 2<input type="color" data-do-now-field="background2" value="${box.background2}"></label><button type="button" data-action="remove-do-now-box"${post.boxes.length < 2 ? " disabled" : ""}>Remove</button></div></fieldset>`).join("");
+  return `<div class="platform-do-now-editor" data-do-now-editor role="dialog" aria-modal="true" aria-labelledby="do-now-editor-title"><div class="platform-do-now-editor-panel"><header><div><p class="platform-command-label">Start-of-class display</p><h2 id="do-now-editor-title">Do Now Post</h2></div><button type="button" data-action="close-do-now-editor">×</button></header><div class="platform-do-now-editor-grid"><section class="platform-do-now-controls"><label>Post title<input data-do-now-root-field="title" value="${escapeHtml(post.title)}"></label><div class="platform-do-now-format-row"><label>Post background<select data-do-now-root-field="backgroundType"><option value="solid"${post.backgroundType === "solid" ? " selected" : ""}>Solid color</option><option value="gradient"${post.backgroundType === "gradient" ? " selected" : ""}>Gradient</option></select></label><label>Color 1<input type="color" data-do-now-root-field="background1" value="${post.background1}"></label><label>Color 2<input type="color" data-do-now-root-field="background2" value="${post.background2}"></label></div>${boxEditors}<button type="button" data-action="add-do-now-box">+ Add Text Box</button><div class="platform-do-now-image-drop" tabindex="0">Paste an image here (Ctrl/Command + V), or <label>choose an image<input type="file" accept="image/*" data-do-now-image hidden></label>${post.image ? `<img src="${escapeHtml(post.image)}" alt="Pasted Do Now visual"><button type="button" data-action="remove-do-now-image">Remove image</button>` : ""}</div><fieldset><legend>When should it appear?</legend><label><input type="radio" name="doNowSchedule" value="class-start"${post.schedule === "class-start" ? " checked" : ""}> At the beginning of every class</label><label><input type="radio" name="doNowSchedule" value="weekday"${post.schedule === "weekday" ? " checked" : ""}> On weekday <select data-do-now-root-field="weekday">${["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].map((day, index) => `<option value="${index}"${Number(post.weekday) === index ? " selected" : ""}>${day}</option>`).join("")}</select></label><label><input type="radio" name="doNowSchedule" value="date"${post.schedule === "date" ? " checked" : ""}> On date <input type="date" data-do-now-root-field="date" value="${post.date || ""}"></label><label><input type="radio" name="doNowSchedule" value="manual"${post.schedule === "manual" ? " checked" : ""}> Show only when I choose</label></fieldset><div class="platform-do-now-actions"><button type="button" data-action="save-do-now">Save Post</button><button type="button" data-action="show-do-now">Save & Show Now</button><button type="button" data-action="hide-do-now">Hide from Class</button></div><label>Saved posts<select data-do-now-saved><option value="">Choose a saved post</option>${posts.map((item) => `<option value="${item.id}"${item.id === post.id ? " selected" : ""}>${escapeHtml(item.title)}</option>`).join("")}</select></label><button type="button" data-action="load-do-now">Open Saved Post</button><button type="button" data-action="delete-do-now">Delete Saved Post</button><p data-do-now-status role="status">Changes appear in the preview immediately.</p></section><section class="platform-do-now-preview"><h3>Live preview</h3>${doNowPresentationMarkup(post, { controls: false })}</section></div></div></div>`;
+}
+
+function openDoNowEditor(post = null) {
+  doNowDraft = structuredClone(post || blankDoNowPost(currentDoNowClassId()));
+  document.querySelector("[data-do-now-editor]")?.remove();
+  root.insertAdjacentHTML("beforeend", doNowEditorMarkup(doNowDraft));
+}
+
+function updateDoNowDraftFromEditor(editor) {
+  if (!doNowDraft || !editor) return;
+  editor.querySelectorAll("[data-do-now-root-field]").forEach((field) => { doNowDraft[field.dataset.doNowRootField] = field.type === "range" ? Number(field.value) : field.value; });
+  doNowDraft.schedule = editor.querySelector('[name="doNowSchedule"]:checked')?.value || "manual";
+  editor.querySelectorAll("[data-do-now-box]").forEach((fieldset) => {
+    const box = doNowDraft.boxes[Number(fieldset.dataset.doNowBox)];
+    fieldset.querySelectorAll("[data-do-now-field]").forEach((field) => { box[field.dataset.doNowField] = field.type === "range" ? Number(field.value) : field.value; });
+  });
+  const preview = editor.querySelector(".platform-do-now-preview");
+  if (preview) preview.innerHTML = `<h3>Live preview</h3>${doNowPresentationMarkup(doNowDraft, { controls: false })}`;
+  if (readLiveDoNow()) showDoNow(doNowDraft);
+}
+
+function saveDoNowDraft(show = false) {
+  const editor = document.querySelector("[data-do-now-editor]");
+  updateDoNowDraftFromEditor(editor);
+  doNowDraft.classId = currentDoNowClassId(); doNowDraft.savedAt = Date.now();
+  const posts = readDoNowPosts().filter((item) => item.id !== doNowDraft.id); posts.unshift(structuredClone(doNowDraft)); writeDoNowPosts(posts);
+  if (show) showDoNow(doNowDraft);
+  const status = editor?.querySelector("[data-do-now-status]"); if (status) status.textContent = show ? "Saved and showing on the classroom display now." : "Do Now Post saved for this class.";
+}
+
 function currentClassPlanMarkup(classId, teacherId) {
   const resourceState = classResourceSharing.read(classId);
   const resources = resourceState.audienceRows.flatMap((row) => row.resources).filter(Boolean);
@@ -448,7 +544,7 @@ function currentClassPlanMarkup(classId, teacherId) {
   const voiceIsOn = Boolean(voiceMeterStream);
   const liveVoiceBody = `<div class="platform-current-plan-live-voice" data-voice-display-mode="${voiceDisplayMode}"><div class="platform-live-voice-heading"><strong data-voice-prediction>${predictedLearningType(0).icon} ${predictedLearningType(0).label}</strong><small>Goal: ${escapeHtml(voiceActivity.label)}</small></div><p class="platform-live-voice-status" data-live-voice-status data-state="${voiceIsOn ? "on" : "off"}"><span aria-hidden="true"></span> Voice Meter is ${voiceIsOn ? "on and listening" : "off"}</p><div class="platform-voice-meter" data-voice-meter data-meter-state="green" style="--voice-meter-level: 0%; --voice-threshold: ${voiceActivity.target}%"><div class="platform-voice-meter-scale" aria-hidden="true"><span>Ready</span><span>Close</span><span>Too loud</span></div><div class="platform-voice-meter-track"><span class="platform-voice-meter-fill"></span><i class="platform-voice-threshold-marker" title="Expected threshold"></i></div><p><strong data-voice-meter-output>0</strong><span aria-hidden="true"> / 100</span></p></div><label>Meter view<select data-voice-meter-display-mode><option value="basic"${voiceDisplayMode === "basic" ? " selected" : ""}>Basic volume</option><option value="prediction"${voiceDisplayMode === "prediction" ? " selected" : ""}>Predicted learning type + threshold</option></select></label><div class="platform-live-voice-actions"><button type="button" data-action="voice-meter-start"${voiceIsOn ? " disabled" : ""}>Turn Voice Meter On</button><button type="button" data-action="voice-meter-stop"${voiceIsOn ? "" : " disabled"}>Turn Off</button><button type="button" data-action="open-voice-meter-display">Open Class View</button></div></div>`;
   const soundGoalsReport = `<section class="platform-sound-goals-report" aria-labelledby="sound-goals-report-title"><div class="platform-sound-goals-report-heading"><div><p class="platform-command-label">Progress over time</p><h3 id="sound-goals-report-title">Classroom Sound Goals</h3><p>Review past sound-goal progress and celebrate improvement.</p></div><label>Compare with<select data-class-plan-comparison><option value="">Choose another class</option>${classes.filter((item) => item.id !== classId).map((item) => `<option value="${item.id}"${item.id === compareId ? " selected" : ""}>${escapeHtml(item.periodLabel)} — ${escapeHtml(item.displayName)}</option>`).join("")}</select></label></div>${voiceActivitySummary(history, classId)}${compareClass ? `<hr><strong>${escapeHtml(compareClass.displayName)}</strong>${voiceActivitySummary(history, compareId, { editable: false })}` : ""}</section>`;
-  const presentationToolControls = `<section class="platform-live-lesson-tools" aria-labelledby="live-lesson-tools-title"><div><p class="platform-command-label">Present and interact</p><h4 id="live-lesson-tools-title">Classroom Presentation Tools</h4><p>Open a tool without leaving the live lesson dashboard.</p></div><div class="platform-live-lesson-tool-buttons"><button type="button" data-action="open-timer-display">Classroom View</button><button type="button" data-action="open-classroom-presentation-window" aria-describedby="classroom-display-help">Open Classroom Display</button><button type="button" data-action="open-name-picker-display">Name Picker</button><button type="button" data-action="open-timer-popout">Floating Timer</button><button type="button" data-action="open-message-board-quick">Quick Message</button><button type="button" data-action="open-whiteboard">Whiteboard</button><button type="button" data-action="open-voice-meter-display">Voice Meter</button></div><p id="classroom-display-help" class="platform-live-lesson-tool-help">Classroom Display opens a separate student-facing window for a projector or smartboard.</p><p data-classroom-window-status role="status"></p></section>`;
+  const presentationToolControls = `<section class="platform-live-lesson-tools" aria-labelledby="live-lesson-tools-title"><div><p class="platform-command-label">Present and interact</p><h4 id="live-lesson-tools-title">Classroom Presentation Tools</h4><p>Open a tool without leaving the live lesson dashboard.</p></div><div class="platform-live-lesson-tool-buttons"><button type="button" data-action="open-timer-display">Classroom View</button><button type="button" data-action="open-classroom-presentation-window" aria-describedby="classroom-display-help">Open Classroom Display</button><button type="button" data-action="open-do-now-editor">Do Now Post</button><button type="button" data-action="open-name-picker-display">Name Picker</button><button type="button" data-action="open-timer-popout">Floating Timer</button><button type="button" data-action="open-message-board-quick">Quick Message</button><button type="button" data-action="open-whiteboard">Whiteboard</button><button type="button" data-action="open-voice-meter-display">Voice Meter</button></div><p id="classroom-display-help" class="platform-live-lesson-tool-help">Classroom Display opens a separate student-facing window for a projector or smartboard.</p><p data-classroom-window-status role="status"></p></section>`;
   const timerVisual = effectiveTimerSchedule.pomodoroEnabled ? presentationTimerVisualState(timer) : currentTimerVisualState(timer);
   const timerPhase = timerVisual.active ? timerVisual.phase : null;
   const timerBody = `<div class="platform-current-plan-timer-widget" data-class-timer-kind="${effectiveTimerSchedule.pomodoroEnabled ? "pomodoro" : "standard"}"><div class="platform-current-plan-timer-wheel" data-timer-ring data-active-phases="${timerPhase ? "true" : "false"}" style="${timerRingStyle(timerVisual)}"><output data-timer-remaining data-timer-phase-color="${timerPhase?.color ?? "default"}">${formatLessonTime(timer.remainingSeconds)}</output></div><div class="platform-current-plan-timer-details"><strong data-timer-phase-name>${escapeHtml(timerPhase?.name ?? "Class Timer")}</strong><span data-current-plan-timer>${escapeHtml(timer.status)} · ${formatLessonTime(timer.remainingSeconds)}</span><small data-current-plan-timer-mode>${effectiveTimerSchedule.pomodoroEnabled ? "Class Pomodoro Timer · phases are active." : "Standard class timer."}</small></div><div class="platform-current-plan-timer-controls" aria-label="Live timer controls"><button type="button" data-action="timer-subtract-minute">− 1 min</button><button type="button" data-action="timer-add-minute">+ 1 min</button><button type="button" data-action="timer-start-or-resume">Start</button><button type="button" data-action="timer-pause">Pause</button><button type="button" data-action="timer-end">End</button><button type="button" data-action="timer-reset">Reset</button></div></div>`;
@@ -2516,6 +2612,9 @@ function openClassroomPresentationWindow() {
     if (status) status.textContent = "Classroom Display closed.";
   });
   syncClassroomPresentationWindow();
+  const scheduledPost = scheduledDoNowForClass(currentDoNowClassId());
+  if (scheduledPost) showDoNow(scheduledPost);
+  else if (readLiveDoNow()) syncDoNowPresentation();
   classroomPresentationWindow.focus();
   if (status) status.textContent = "Classroom Display opened in a separate window.";
 }
@@ -5093,6 +5192,17 @@ function closeQuickClassSchedule() {
 function handleClick(event) {
   const action = event.target.closest("[data-action]");
   if (!action) return;
+  if (action.dataset.action === "open-do-now-editor" || action.dataset.action === "edit-do-now") { openDoNowEditor(readLiveDoNow() || readDoNowPosts().find((item) => item.classId === currentDoNowClassId()) || null); return; }
+  if (action.dataset.action === "close-do-now-editor") { action.closest("[data-do-now-editor]")?.remove(); return; }
+  if (action.dataset.action === "save-do-now") { saveDoNowDraft(false); return; }
+  if (action.dataset.action === "show-do-now") { saveDoNowDraft(true); return; }
+  if (action.dataset.action === "hide-do-now") { window.sessionStorage.removeItem(DO_NOW_LIVE_KEY); syncDoNowPresentation(null); return; }
+  if (action.dataset.action === "add-do-now-box") { updateDoNowDraftFromEditor(action.closest("[data-do-now-editor]")); doNowDraft.boxes.push({ id: `box-${Date.now()}`, text: "Add your next direction.", color: "#12384d", size: 28, font: "Arial", bold: false, italic: false, underline: false, backgroundType: "solid", background1: "#ffffff", background2: "#ffffff" }); openDoNowEditor(doNowDraft); return; }
+  if (action.dataset.action === "remove-do-now-box") { updateDoNowDraftFromEditor(action.closest("[data-do-now-editor]")); doNowDraft.boxes.splice(Number(action.closest("[data-do-now-box]")?.dataset.doNowBox), 1); openDoNowEditor(doNowDraft); return; }
+  if (action.dataset.action === "do-now-toggle-format") { const box = doNowDraft?.boxes[Number(action.closest("[data-do-now-box]")?.dataset.doNowBox)]; if (box) { box[action.dataset.format] = !box[action.dataset.format]; action.setAttribute("aria-pressed", String(box[action.dataset.format])); updateDoNowDraftFromEditor(action.closest("[data-do-now-editor]")); } return; }
+  if (action.dataset.action === "remove-do-now-image") { if (doNowDraft) doNowDraft.image = ""; openDoNowEditor(doNowDraft); return; }
+  if (action.dataset.action === "load-do-now") { const id = action.closest("[data-do-now-editor]")?.querySelector("[data-do-now-saved]")?.value; const post = readDoNowPosts().find((item) => item.id === id); if (post) openDoNowEditor(post); return; }
+  if (action.dataset.action === "delete-do-now") { const editor = action.closest("[data-do-now-editor]"), id = editor?.querySelector("[data-do-now-saved]")?.value; if (id && window.confirm("Delete this saved Do Now Post?")) { writeDoNowPosts(readDoNowPosts().filter((item) => item.id !== id)); openDoNowEditor(); } return; }
   if (handleNamePickerAction(action, document)) return;
   if (handleActivitySideTimerAction(action)) return;
   if (action.dataset.action === "assign-research-bank-group") { const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id, group = readTeacherResearchLinkBank().find((item) => item.id === action.dataset.researchGroupId); if (!classId || !group) return; writeTeacherAssignedResearch(classId, { topic: group.title, links: group.links }); render(); return; }
@@ -6724,6 +6834,9 @@ root.addEventListener("drop", (event) => {
 });
 
 root.addEventListener("change", (event) => {
+  const doNowImage = event.target.closest?.("[data-do-now-image]");
+  if (doNowImage) { const file = doNowImage.files?.[0]; if (file?.type.startsWith("image/") && file.size <= 6 * 1024 * 1024) { const reader = new FileReader(); reader.addEventListener("load", () => { doNowDraft.image = String(reader.result); openDoNowEditor(doNowDraft); }, { once: true }); reader.readAsDataURL(file); } return; }
+  if (event.target.closest?.("[data-do-now-editor]")) { updateDoNowDraftFromEditor(event.target.closest("[data-do-now-editor]")); return; }
   const quickScheduleSetting = event.target.closest('form[data-form="class-timer-schedule"] [name="enabled"], form[data-form="class-timer-schedule"] [name="weekdays"], form[data-form="class-timer-schedule"] [name="startTime"], form[data-form="class-timer-schedule"] [name="timeZone"], form[data-form="class-timer-schedule"] [name="pomodoroEnabled"], form[data-form="class-timer-schedule"] [name="phaseName"], form[data-form="class-timer-schedule"] [name="phaseStart"], form[data-form="class-timer-schedule"] [name="yellowSound"], form[data-form="class-timer-schedule"] [name="redSound"], form[data-form="class-timer-schedule"] [name="endSound"]');
   if (quickScheduleSetting) {
     const result = saveQuickClassTimerSchedule(quickScheduleSetting.closest("form"));
@@ -7174,6 +7287,7 @@ root.addEventListener("beforeinput", (event) => {
 });
 
 root.addEventListener("input", (event) => {
+  if (event.target.closest?.("[data-do-now-editor]")) { const editor = event.target.closest("[data-do-now-editor]"); const range = event.target.matches('input[type="range"]') ? event.target : null; if (range) range.nextElementSibling && (range.nextElementSibling.textContent = `${range.value} px`); updateDoNowDraftFromEditor(editor); return; }
   const pixelSpeed = event.target.closest("[data-pixel-speed]");
   if (pixelSpeed) { const output = document.querySelector("[data-pixel-speed-output]"); if (output) output.textContent = `${(Number(pixelSpeed.value) / 1000).toFixed(1)} sec`; startPixelStudioPreview(); return; }
   const pixelColor = event.target.closest("[data-pixel-color]");
@@ -7407,6 +7521,12 @@ document.addEventListener("keydown", (event) => {
   focusTarget?.focus();
 });
 document.addEventListener("paste", (event) => {
+  const doNowEditor = document.querySelector("[data-do-now-editor]");
+  if (doNowEditor && !(event.target instanceof Element && event.target.closest("textarea, input, [contenteditable='true']"))) {
+    const imageItem = [...(event.clipboardData?.items || [])].find((item) => item.type.startsWith("image/"));
+    const imageFile = imageItem?.getAsFile();
+    if (imageFile) { event.preventDefault(); const reader = new FileReader(); reader.addEventListener("load", () => { doNowDraft.image = String(reader.result); openDoNowEditor(doNowDraft); }, { once: true }); reader.readAsDataURL(imageFile); return; }
+  }
   const openWhiteboard = document.querySelector("#platform-classroom-whiteboard:not([hidden])");
   const openPixelStudio = document.querySelector("[data-pixel-studio]:not([hidden])");
   if (openPixelStudio) {
