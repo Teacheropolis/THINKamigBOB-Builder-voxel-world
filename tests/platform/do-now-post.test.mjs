@@ -32,5 +32,6 @@ test("Do Now posts can be copied, assigned to several classes, or shown without 
   assert.match(app, /Choose at least one class/);
   assert.match(app, /No animation/);
   assert.match(css, /data-do-now-animation="none"/);
-  assert.match(css, /do-now-fade-reverse/);
+  assert.match(app, /option\[value="bottom-right"\]/);
+  assert.match(app, /doNowDraft\.animation === "bottom-right"/);
 });

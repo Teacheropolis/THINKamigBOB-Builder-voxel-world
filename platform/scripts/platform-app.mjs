@@ -505,8 +505,10 @@ function doNowEditorMarkup(post) {
 
 function openDoNowEditor(post = null) {
   doNowDraft = structuredClone(post || blankDoNowPost(currentDoNowClassId()));
+  if (doNowDraft.animation === "bottom-right") doNowDraft.animation = "top-left";
   document.querySelector("[data-do-now-editor]")?.remove();
   root.insertAdjacentHTML("beforeend", doNowEditorMarkup(doNowDraft));
+  document.querySelector('[data-do-now-root-field="animation"] option[value="bottom-right"]')?.remove();
 }
 
 function updateDoNowDraftFromEditor(editor) {
