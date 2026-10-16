@@ -504,8 +504,15 @@ function nextUnlockedBobPose() {
 }
 
 function applyUnlockedBobPose(bobs, requestedPose = null) {
-  const pose = requestedPose ?? nextUnlockedBobPose(), originalPoseSet = (pose % 4) + 1;
-  bobs.forEach((bob) => { bob.classList.remove("is-unlocked-pose"); bob.dataset.idleSet = String(originalPoseSet); bob.style.removeProperty("--bob-pose-sheet"); bob.style.removeProperty("--bob-pose-x"); bob.style.removeProperty("--bob-pose-y"); });
+  const pose = requestedPose ?? nextUnlockedBobPose(), sheet = Math.floor(pose / 25) + 1, cell = pose % 25;
+  const column = cell % 5, row = Math.floor(cell / 5);
+  const imageUrl = new URL(`../../assets/images/characters/bob-unlocks-${String(sheet).padStart(2, "0")}.webp?v=232`, import.meta.url).href;
+  bobs.forEach((bob) => {
+    bob.classList.add("is-unlocked-pose");
+    bob.style.setProperty("--bob-pose-sheet", `url("${imageUrl}")`);
+    bob.style.setProperty("--bob-pose-x", `${column * 25}%`);
+    bob.style.setProperty("--bob-pose-y", `${row * 25}%`);
+  });
 }
 
 function updateBobUnlockProgress(meterState) {
