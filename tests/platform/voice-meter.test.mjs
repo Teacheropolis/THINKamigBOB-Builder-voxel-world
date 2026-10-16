@@ -63,7 +63,9 @@ test("teacher and student display expose a private browser-only voice meter", ()
   assert.match(css, /data-voice-frame="red"/);
   assert.match(css, /platform-volume-frame-yellow/);
   assert.match(css, /platform-volume-frame-red/);
-  assert.match(app, /floatingBobCorners = \["bottom-right", "top-left"\]/);
+  assert.match(app, /if \(placement === "top"\) return \["top-left", "top-right"\]/);
+  assert.match(app, /if \(placement === "bottom"\) return \["bottom-left", "bottom-right"\]/);
+  assert.match(app, /data-classroom-bob-enabled/);
   assert.match(app, /setInterval\(relocateFloatingBob, 26000\)/);
   assert.match(app, /floatingBobIdleSet = \(floatingBobIdleSet % 4\) \+ 1/);
   assert.match(css, /bob-active-poses-1\.png/);
@@ -73,6 +75,8 @@ test("teacher and student display expose a private browser-only voice meter", ()
   assert.match(css, /bob-walk-left\.png/);
   assert.match(css, /\.platform-floating-voice-bob\.is-walking-out/);
   assert.match(css, /\.platform-floating-voice-bob\.is-walking-in/);
+  assert.match(css, /data-corner="top-right"/);
+  assert.match(css, /data-corner="bottom-left"/);
   assert.match(css, /platform-bob-walk-out-right 2\.8s linear forwards/);
   assert.match(css, /transform 2200ms ease-in/);
 });

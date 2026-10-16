@@ -1544,15 +1544,17 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-floating-voice-bob[data-idle-set="4"] { background-image: url("../../assets/images/characters/bob-active-poses-2.png"); }
 .platform-floating-voice-bob[data-idle-set="3"], .platform-floating-voice-bob[data-idle-set="4"] { background-size: 300% 100%; animation-name: platform-bob-active-poses; animation-duration: 36s; }
 .platform-floating-voice-bob[data-corner="top-left"] { --bob-exit-x: -135%; top: clamp(4.5rem, 9vh, 7rem); right: auto; bottom: auto; left: clamp(0.35rem, 1.5vw, 1.5rem); }
+.platform-floating-voice-bob[data-corner="top-right"] { top: clamp(4.5rem, 9vh, 7rem); right: clamp(0.35rem, 1.5vw, 1.5rem); bottom: auto; left: auto; }
+.platform-floating-voice-bob[data-corner="bottom-left"] { --bob-exit-x: -135%; right: auto; bottom: clamp(0.6rem, 1.5vh, 1.25rem); left: clamp(0.35rem, 1.5vw, 1.5rem); }
 .platform-floating-voice-bob.is-walking-out, .platform-floating-voice-bob.is-walking-in { background-size: 400% 100%; }
 .platform-floating-voice-bob.is-walking-out { background-image: url("../../assets/images/characters/bob-walk-right.png"); }
-.platform-floating-voice-bob[data-corner="top-left"].is-walking-out { background-image: url("../../assets/images/characters/bob-walk-left.png"); }
+.platform-floating-voice-bob[data-corner$="left"].is-walking-out { background-image: url("../../assets/images/characters/bob-walk-left.png"); }
 .platform-floating-voice-bob.is-walking-in { background-image: url("../../assets/images/characters/bob-walk-left.png"); }
-.platform-floating-voice-bob[data-corner="top-left"].is-walking-in { background-image: url("../../assets/images/characters/bob-walk-right.png"); }
+.platform-floating-voice-bob[data-corner$="left"].is-walking-in { background-image: url("../../assets/images/characters/bob-walk-right.png"); }
 .platform-floating-voice-bob.is-walking-out { animation: platform-bob-walk-frames 0.8s step-end infinite, platform-bob-walk-out-right 2.8s linear forwards; }
-.platform-floating-voice-bob[data-corner="top-left"].is-walking-out { animation-name: platform-bob-walk-frames, platform-bob-walk-out-left; }
+.platform-floating-voice-bob[data-corner$="left"].is-walking-out { animation-name: platform-bob-walk-frames, platform-bob-walk-out-left; }
 .platform-floating-voice-bob.is-walking-in { animation: platform-bob-walk-frames 0.8s step-end infinite, platform-bob-walk-in-right 2.8s linear forwards; }
-.platform-floating-voice-bob[data-corner="top-left"].is-walking-in { animation-name: platform-bob-walk-frames, platform-bob-walk-in-left; }
+.platform-floating-voice-bob[data-corner$="left"].is-walking-in { animation-name: platform-bob-walk-frames, platform-bob-walk-in-left; }
 .platform-floating-voice-bob[data-meter-state="yellow"], .platform-floating-voice-bob[data-meter-state="red"] { background-image: url("../../assets/images/characters/bob-voice-meter-states.png"); background-size: 300% 100%; animation: none; }
 .platform-floating-voice-bob[data-meter-state="yellow"] { background-position: center center; transform: translateY(2%); }
 .platform-floating-voice-bob[data-meter-state="red"] { background-position: right center; transform: translateY(0) scale(1.08); animation: platform-bob-too-loud 900ms ease-in-out 1; }
@@ -1943,6 +1945,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
 /* Do Now Post builder and animated classroom display */
+.platform-classroom-bob-controls{display:flex;flex-wrap:wrap;align-items:center;gap:.7rem 1rem;margin:.7rem 0 0;padding:.65rem .8rem;border:2px solid #91b7c6;border-radius:.9rem;background:#fff8e8}.platform-classroom-bob-controls legend{padding:0 .35rem;color:#176b55;font-weight:800}.platform-classroom-bob-controls label{display:flex;align-items:center;gap:.45rem;font-weight:700}.platform-classroom-bob-controls select{min-width:15rem}
 .platform-do-now-editor{position:fixed;inset:0;z-index:900;display:grid;place-items:center;padding:1rem;background:#102f40cc;backdrop-filter:blur(5px)}
 .platform-do-now-editor-panel{width:min(1180px,96vw);max-height:94vh;overflow:auto;border:4px solid #176b55;border-radius:1.4rem;background:#fffaf0;box-shadow:0 2rem 5rem #061c29aa}
 .platform-do-now-editor-panel>header{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:3px solid #d0a328;background:#fffaf0}

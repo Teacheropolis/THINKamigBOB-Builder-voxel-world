@@ -146,6 +146,7 @@ const TEACHER_ASSIGNED_RESEARCH_KEY = "thinkamigbob.teacher-assigned-research.v1
 const TEACHER_RESEARCH_LINK_BANK_KEY = "thinkamigbob.teacher-research-link-bank.v1";
 const DO_NOW_POSTS_KEY = "thinkamigbob.do-now-posts.v1";
 const DO_NOW_LIVE_KEY = "thinkamigbob.do-now-live.v1";
+const CLASSROOM_BOB_DISPLAY_KEY = "thinkamigbob.classroom-bob-display.v1";
 const VOICE_METER_HISTORY_KEY = "thinkamigbob.voice-meter-history.v1";
 const VOICE_METER_ACTIVITY_KEY = "thinkamigbob.voice-meter-activity.v1";
 const VOICE_METER_STAR_GOAL_KEY = "thinkamigbob.voice-meter-star-goal.v1";
@@ -193,7 +194,6 @@ let voiceMeterDisplayTrigger = null;
 let voiceMeterUsage = null;
 let voiceBobState = "green";
 let voiceBobStateChangedAt = 0;
-const floatingBobCorners = ["bottom-right", "top-left"];
 let floatingBobCornerIndex = 0;
 let floatingBobIdleSet = 1;
 let floatingBobRoamingInterval = null;
@@ -431,6 +431,38 @@ function segmentActiveVoiceMeter(activity) {
   if (!voiceMeterStream) return;
   recordVoiceMeterUse();
   beginVoiceMeterUsage(activity);
+}
+
+function readClassroomBobDisplay() {
+  try { return { enabled: true, placement: "move", ...JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_DISPLAY_KEY) || "{}") }; } catch { return { enabled: true, placement: "move" }; }
+}
+
+function classroomBobCorners(placement = readClassroomBobDisplay().placement) {
+  if (placement === "top") return ["top-left", "top-right"];
+  if (placement === "bottom") return ["bottom-left", "bottom-right"];
+  return ["bottom-right", "top-left"];
+}
+
+function applyClassroomBobDisplay() {
+  const setting = readClassroomBobDisplay();
+  const corners = classroomBobCorners(setting.placement);
+  floatingBobCornerIndex %= corners.length;
+  for (const documentRef of [document, classroomPresentationWindow?.document].filter(Boolean)) {
+    documentRef.querySelectorAll(".platform-floating-voice-bob").forEach((bob) => { bob.hidden = !setting.enabled; bob.dataset.corner = corners[floatingBobCornerIndex]; });
+  }
+}
+
+function installClassroomDisplayChoices() {
+  const tools = document.querySelector(".platform-live-lesson-tools");
+  if (!tools) return;
+  const thisScreen = tools.querySelector('[data-action="open-timer-display"]');
+  const separateScreen = tools.querySelector('[data-action="open-classroom-presentation-window"]');
+  if (thisScreen) thisScreen.textContent = "Present on This Screen";
+  if (separateScreen) separateScreen.textContent = "Open Separate Classroom Screen";
+  if (!tools.querySelector(".platform-classroom-bob-controls")) {
+    const setting = readClassroomBobDisplay();
+    tools.querySelector("#classroom-display-help")?.insertAdjacentHTML("beforebegin", `<fieldset class="platform-classroom-bob-controls"><legend>Bob on the classroom display</legend><label><input type="checkbox" data-classroom-bob-enabled${setting.enabled ? " checked" : ""}> Show Bob</label><label>Where Bob moves<select data-classroom-bob-placement><option value="move"${setting.placement === "move" ? " selected" : ""}>Between a bottom and top corner</option><option value="top"${setting.placement === "top" ? " selected" : ""}>Top corners only</option><option value="bottom"${setting.placement === "bottom" ? " selected" : ""}>Bottom corners only</option></select></label></fieldset>`);
+  }
 }
 
 function readDoNowPosts() {
@@ -1702,7 +1734,7 @@ function teacherDashboardView(state) {
               <div class="platform-workspace-heading-actions">
                 <button type="button" data-action="open-message-board-quick">Quick Message Board</button>
                 <button type="button" data-action="open-whiteboard">Open Whiteboard</button>
-                <button type="button" data-action="open-classroom-presentation-window">Open Classroom Display</button>
+                <button type="button" data-action="open-classroom-presentation-window">Open Separate Classroom Screen</button>
               </div>
               <p data-classroom-window-status role="status"></p>
             </div>
@@ -1930,7 +1962,7 @@ function teacherDashboardView(state) {
       <aside class="platform-smartboard-tool platform-floating-whiteboard" data-smartboard-tool="whiteboard" hidden style="left: 8%; top: 8%; width: min(46rem, 82vw); height: min(34rem, 72vh);"><header data-smartboard-drag-handle><strong>Whiteboard</strong><button type="button" data-action="close-smartboard-tool" aria-label="Close Whiteboard window">×</button></header><div class="platform-floating-whiteboard-board">${floatingWhiteboard ? `<img src="${escapeHtml(floatingWhiteboard.displayImage || floatingWhiteboard.image)}" alt="Latest whiteboard: ${escapeHtml(floatingWhiteboard.title)}">` : `<p>Your whiteboard will appear here. Open the full board to draw.</p>`}</div><div class="platform-floating-whiteboard-functions"><button type="button" data-action="open-whiteboard">Open Full Whiteboard and Tools</button></div>${smartboardToolSwitcherMarkup()}<span class="platform-smartboard-resize-handle" data-smartboard-resize-handle aria-label="Resize Whiteboard window"></span></aside>
       <nav class="platform-smartboard-tool-tray" aria-label="Smartboard presentation tools"><strong>Tools</strong><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="timer">Class Timer</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="activity-timer">Activity Side Timer</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="stopwatch">Stopwatch</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="message">Message</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="voice">Voice Meter</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="names">Name Picker</button><button type="button" data-action="toggle-smartboard-tool" data-smartboard-tool-name="whiteboard">Whiteboard</button><button type="button" class="platform-smartboard-reset-tools" data-action="reset-smartboard-tools">Reset Positions</button></nav>
     </section>
-    <aside class="platform-floating-voice-bob" data-voice-bob data-meter-state="green" data-corner="${floatingBobCorners[floatingBobCornerIndex]}" data-idle-set="${floatingBobIdleSet}" role="img" aria-label="Bob is calm and happy."><span data-voice-bob-message>Bob is calm and happy.</span></aside>
+    <aside class="platform-floating-voice-bob" data-voice-bob data-meter-state="green" data-corner="${classroomBobCorners()[floatingBobCornerIndex % classroomBobCorners().length]}" data-idle-set="${floatingBobIdleSet}" role="img" aria-label="Bob is calm and happy."${readClassroomBobDisplay().enabled ? "" : " hidden"}><span data-voice-bob-message>Bob is calm and happy.</span></aside>
     <section id="platform-large-voice-meter-display" class="platform-large-voice-meter-display" data-voice-display-mode="${readVoiceMeterDisplayMode()}" role="dialog" aria-modal="true" aria-labelledby="large-voice-meter-title" tabindex="-1" hidden>
       <p class="platform-student-display-brand">THINKamigBOB</p>
       <h2 id="large-voice-meter-title">Classroom Voice Meter</h2>
@@ -2621,6 +2653,7 @@ function openClassroomPresentationWindow() {
     if (status) status.textContent = "Classroom Display closed.";
   });
   syncClassroomPresentationWindow();
+  applyClassroomBobDisplay();
   const scheduledPost = scheduledDoNowForClass(currentDoNowClassId());
   if (scheduledPost) showDoNow(scheduledPost);
   else if (readLiveDoNow()) syncDoNowPresentation();
@@ -3411,18 +3444,18 @@ function updateVoiceMeterPresentation(value) {
 }
 
 function relocateFloatingBob() {
-  const bob = document.querySelector(".platform-floating-voice-bob");
-  if (!bob || bob.dataset.meterState !== "green" || bob.classList.contains("is-walking-out") || bob.classList.contains("is-walking-in")) return;
-  bob.classList.add("is-walking-out");
+  const setting = readClassroomBobDisplay();
+  const corners = classroomBobCorners(setting.placement);
+  const bobs = [document, classroomPresentationWindow?.document].filter(Boolean).flatMap((documentRef) => [...documentRef.querySelectorAll(".platform-floating-voice-bob")]);
+  if (!setting.enabled || !bobs.length || bobs.some((bob) => bob.dataset.meterState !== "green" || bob.classList.contains("is-walking-out") || bob.classList.contains("is-walking-in"))) return;
+  bobs.forEach((bob) => bob.classList.add("is-walking-out"));
   window.setTimeout(() => {
-    if (!bob.isConnected || bob.dataset.meterState !== "green") { bob.classList.remove("is-walking-out", "is-walking-in"); return; }
-    floatingBobCornerIndex = (floatingBobCornerIndex + 1) % floatingBobCorners.length;
+    const connectedBobs = bobs.filter((bob) => bob.isConnected && bob.dataset.meterState === "green");
+    if (!connectedBobs.length) return;
+    floatingBobCornerIndex = (floatingBobCornerIndex + 1) % corners.length;
     floatingBobIdleSet = (floatingBobIdleSet % 4) + 1;
-    bob.dataset.corner = floatingBobCorners[floatingBobCornerIndex];
-    bob.dataset.idleSet = String(floatingBobIdleSet);
-    bob.classList.remove("is-walking-out");
-    bob.classList.add("is-walking-in");
-    window.setTimeout(() => bob.classList.remove("is-walking-in"), 2800);
+    connectedBobs.forEach((bob) => { bob.dataset.corner = corners[floatingBobCornerIndex]; bob.dataset.idleSet = String(floatingBobIdleSet); bob.classList.remove("is-walking-out"); bob.classList.add("is-walking-in"); });
+    window.setTimeout(() => connectedBobs.forEach((bob) => bob.classList.remove("is-walking-in")), 2800);
   }, 2800);
 }
 
@@ -6514,6 +6547,7 @@ function render() {
   const allowedRoute = guardRoute(requestedRoute, state);
   if (allowedRoute !== requestedRoute) return navigate(allowedRoute, { replace: true });
   root.innerHTML = viewForRoute(allowedRoute, state);
+  if (allowedRoute === ROUTES.TEACHER_DASHBOARD) installClassroomDisplayChoices();
   if (allowedRoute === ROUTES.TEACHER_LOGIN) mountProductionGoogleSignIn();
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) pb002jClasswide.mount(root, "teacher");
   if (allowedRoute === ROUTES.STUDENT_DASHBOARD) pb002jClasswide.mount(root, "student");
@@ -6844,6 +6878,7 @@ root.addEventListener("drop", (event) => {
 });
 
 root.addEventListener("change", (event) => {
+  if (event.target.matches?.("[data-classroom-bob-enabled], [data-classroom-bob-placement]")) { const enabled = document.querySelector("[data-classroom-bob-enabled]")?.checked ?? true, placement = document.querySelector("[data-classroom-bob-placement]")?.value || "move"; window.localStorage.setItem(CLASSROOM_BOB_DISPLAY_KEY, JSON.stringify({ enabled, placement })); floatingBobCornerIndex = 0; applyClassroomBobDisplay(); return; }
   const doNowImage = event.target.closest?.("[data-do-now-image]");
   if (doNowImage) { const file = doNowImage.files?.[0]; if (file?.type.startsWith("image/") && file.size <= 6 * 1024 * 1024) { const reader = new FileReader(); reader.addEventListener("load", () => { doNowDraft.image = String(reader.result); openDoNowEditor(doNowDraft); }, { once: true }); reader.readAsDataURL(file); } return; }
   if (event.target.closest?.("[data-do-now-editor]")) { updateDoNowDraftFromEditor(event.target.closest("[data-do-now-editor]")); return; }

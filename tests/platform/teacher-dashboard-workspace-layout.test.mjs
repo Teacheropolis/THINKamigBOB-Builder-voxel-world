@@ -99,7 +99,7 @@ test("Presentation Tools provide instant, stopwatch, and countdown timing", () =
   assert.match(app, /data-action="stopwatch-pause"/);
   assert.match(app, /data-action="stopwatch-reset"/);
   for (const label of ["Quick Message Board", "Full-screen Presentation", "Voice Meter Only — Full Screen"]) assert.match(app, new RegExp(label));
-  assert.match(app, /Open Classroom Display/);
+  assert.match(app, /Open Separate Classroom Screen/);
   assert.match(app, /data-action="open-classroom-presentation-window"/);
   assert.match(app, /function openClassroomPresentationWindow\(\)/);
   assert.match(app, /data-smartboard-tool="timer"/);
@@ -168,7 +168,7 @@ test("scheduled Pomodoro classes use a Pomodoro class timer and an independent a
 
 test("Run Today’s Class shows a live read-only current plan", () => {
   for (const label of ["Present and monitor", "Live Lesson Dashboard", "Classroom Presentation Tools", "Assigned activities", "Students can work in", "Current message", "Latest whiteboard", "Classroom Sound Goals", "Live Voice Meter", "Compare with"]) assert.match(app, new RegExp(label));
-  for (const label of ["Classroom View", "Open Classroom Display", "Floating Timer", "Quick Message", "Whiteboard", "Voice Meter"]) assert.match(app, new RegExp(label));
+  for (const label of ["Present on This Screen", "Open Separate Classroom Screen", "Floating Timer", "Quick Message", "Whiteboard", "Voice Meter"]) assert.match(app, new RegExp(label));
   for (const label of ["Teacher-led instruction", "Independent seat work", "Collaborative activity", "Sound goal achieved", "Almost there"]) assert.match(app, new RegExp(label));
   assert.match(app, /data-voice-meter-activity/);
   assert.match(app, /detectedSeconds/);
