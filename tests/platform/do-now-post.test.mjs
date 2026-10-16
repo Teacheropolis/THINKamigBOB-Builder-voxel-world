@@ -25,3 +25,12 @@ test("Do Now cards animate in two reading directions", () => {
   assert.match(css, /animation-delay:calc\(var\(--do-now-index\)/);
   assert.match(css, /prefers-reduced-motion/);
 });
+
+test("Do Now posts can be copied, assigned to several classes, or shown without animation", () => {
+  assert.match(app, /data-do-now-class/);
+  assert.match(app, /data-action="copy-do-now"/);
+  assert.match(app, /Choose at least one class/);
+  assert.match(app, /No animation/);
+  assert.match(css, /data-do-now-animation="none"/);
+  assert.match(css, /do-now-fade-reverse/);
+});
