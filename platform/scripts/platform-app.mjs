@@ -147,6 +147,8 @@ const TEACHER_RESEARCH_LINK_BANK_KEY = "thinkamigbob.teacher-research-link-bank.
 const DO_NOW_POSTS_KEY = "thinkamigbob.do-now-posts.v1";
 const DO_NOW_LIVE_KEY = "thinkamigbob.do-now-live.v1";
 const CLASSROOM_BOB_DISPLAY_KEY = "thinkamigbob.classroom-bob-display.v1";
+const CLASSROOM_BOB_UNLOCK_KEY = "thinkamigbob.classroom-bob-unlocks.v1";
+const BOB_POSE_COUNT = 200;
 const VOICE_METER_HISTORY_KEY = "thinkamigbob.voice-meter-history.v1";
 const VOICE_METER_ACTIVITY_KEY = "thinkamigbob.voice-meter-activity.v1";
 const VOICE_METER_STAR_GOAL_KEY = "thinkamigbob.voice-meter-star-goal.v1";
@@ -197,6 +199,11 @@ let voiceBobStateChangedAt = 0;
 let floatingBobCornerIndex = 0;
 let floatingBobIdleSet = 1;
 let floatingBobRoamingInterval = null;
+let floatingBobGreenSince = Date.now();
+let floatingBobPoseBag = [];
+let floatingBobLastPose = -1;
+let floatingBobUnlockMessageUntil = 0;
+let floatingBobUnlockMessage = "";
 let teacherComparisonClassId = "";
 let whiteboardDisplayTrigger = null;
 let whiteboardUndoStack = [];
@@ -434,7 +441,54 @@ function segmentActiveVoiceMeter(activity) {
 }
 
 function readClassroomBobDisplay() {
-  try { return { enabled: true, placement: "move", ...JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_DISPLAY_KEY) || "{}") }; } catch { return { enabled: true, placement: "move" }; }
+  try { return { enabled: true, placement: "move", earnMinutes: 5, ...JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_DISPLAY_KEY) || "{}") }; } catch { return { enabled: true, placement: "move", earnMinutes: 5 }; }
+}
+
+function readClassroomBobUnlocks() {
+  const classId = currentDoNowClassId();
+  try { const all = JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_UNLOCK_KEY) || "{}"); return Math.min(BOB_POSE_COUNT, Math.max(2, Number(all[classId]) || 2)); } catch { return 2; }
+}
+
+function writeClassroomBobUnlocks(count) {
+  const classId = currentDoNowClassId();
+  let all = {}; try { all = JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_UNLOCK_KEY) || "{}"); } catch {}
+  all[classId] = Math.min(BOB_POSE_COUNT, Math.max(2, count)); window.localStorage.setItem(CLASSROOM_BOB_UNLOCK_KEY, JSON.stringify(all));
+}
+
+function shuffledBobPoses(count) {
+  const values = Array.from({ length: count }, (_, index) => index);
+  for (let index = values.length - 1; index > 0; index -= 1) { const target = Math.floor(Math.random() * (index + 1)); [values[index], values[target]] = [values[target], values[index]]; }
+  if (values.length > 1 && values[0] === floatingBobLastPose) [values[0], values[1]] = [values[1], values[0]];
+  return values;
+}
+
+function nextUnlockedBobPose() {
+  const unlocked = readClassroomBobUnlocks();
+  floatingBobPoseBag = floatingBobPoseBag.filter((pose) => pose < unlocked && pose !== floatingBobLastPose);
+  if (!floatingBobPoseBag.length) floatingBobPoseBag = shuffledBobPoses(unlocked);
+  const pose = floatingBobPoseBag.shift() ?? 0; floatingBobLastPose = pose; return pose;
+}
+
+function applyUnlockedBobPose(bobs, requestedPose = null) {
+  const pose = requestedPose ?? nextUnlockedBobPose(), sheet = Math.floor(pose / 25) + 1, cell = pose % 25, column = cell % 5, row = Math.floor(cell / 5);
+  const imageUrl = new URL(`../assets/images/characters/bob-unlocks-${String(sheet).padStart(2, "0")}.webp`, window.location.href).href;
+  bobs.forEach((bob) => { bob.classList.add("is-unlocked-pose"); bob.style.setProperty("--bob-pose-sheet", `url("${imageUrl}")`); bob.style.setProperty("--bob-pose-x", `${column * 25}%`); bob.style.setProperty("--bob-pose-y", `${row * 25}%`); });
+}
+
+function updateBobUnlockProgress(meterState) {
+  const now = Date.now();
+  if (meterState !== "green") { floatingBobGreenSince = now; return; }
+  const setting = readClassroomBobDisplay(), current = readClassroomBobUnlocks(), required = Math.max(1, Number(setting.earnMinutes) || 5) * 60000;
+  if (current >= BOB_POSE_COUNT || now - floatingBobGreenSince < required) return;
+  writeClassroomBobUnlocks(current + 1); floatingBobGreenSince = now; floatingBobPoseBag.push(current);
+  floatingBobUnlockMessage = `New Bob pose unlocked! ${current + 1} of ${BOB_POSE_COUNT}.`; floatingBobUnlockMessageUntil = now + 6000;
+  document.querySelectorAll("[data-bob-unlock-count]").forEach((output) => { output.textContent = String(current + 1); });
+}
+
+function scheduleNextBobMove() {
+  if (floatingBobRoamingInterval !== null) window.clearTimeout(floatingBobRoamingInterval);
+  const delay = Math.max(6000, 28000 - readClassroomBobUnlocks() * 110);
+  floatingBobRoamingInterval = window.setTimeout(() => { relocateFloatingBob(); scheduleNextBobMove(); }, delay);
 }
 
 function classroomBobCorners(placement = readClassroomBobDisplay().placement) {
@@ -447,9 +501,11 @@ function applyClassroomBobDisplay() {
   const setting = readClassroomBobDisplay();
   const corners = classroomBobCorners(setting.placement);
   floatingBobCornerIndex %= corners.length;
+  const activeBobs = [];
   for (const documentRef of [document, classroomPresentationWindow?.document].filter(Boolean)) {
-    documentRef.querySelectorAll(".platform-floating-voice-bob").forEach((bob) => { bob.hidden = !setting.enabled; bob.dataset.corner = corners[floatingBobCornerIndex]; });
+    documentRef.querySelectorAll(".platform-floating-voice-bob").forEach((bob) => { bob.hidden = !setting.enabled; bob.dataset.corner = corners[floatingBobCornerIndex]; if (setting.enabled && bob.dataset.meterState === "green") activeBobs.push(bob); });
   }
+  if (activeBobs.length) applyUnlockedBobPose(activeBobs);
 }
 
 function installClassroomDisplayChoices() {
@@ -461,7 +517,7 @@ function installClassroomDisplayChoices() {
   if (separateScreen) separateScreen.textContent = "Open Separate Classroom Screen";
   if (!tools.querySelector(".platform-classroom-bob-controls")) {
     const setting = readClassroomBobDisplay();
-    tools.querySelector("#classroom-display-help")?.insertAdjacentHTML("beforebegin", `<fieldset class="platform-classroom-bob-controls"><legend>Bob on the classroom display</legend><label><input type="checkbox" data-classroom-bob-enabled${setting.enabled ? " checked" : ""}> Show Bob</label><label>Where Bob moves<select data-classroom-bob-placement><option value="move"${setting.placement === "move" ? " selected" : ""}>Between a bottom and top corner</option><option value="top"${setting.placement === "top" ? " selected" : ""}>Top corners only</option><option value="bottom"${setting.placement === "bottom" ? " selected" : ""}>Bottom corners only</option></select></label></fieldset>`);
+    tools.querySelector("#classroom-display-help")?.insertAdjacentHTML("beforebegin", `<fieldset class="platform-classroom-bob-controls"><legend>Bob on the classroom display</legend><label><input type="checkbox" data-classroom-bob-enabled${setting.enabled ? " checked" : ""}> Show Bob</label><label>Where Bob moves<select data-classroom-bob-placement><option value="move"${setting.placement === "move" ? " selected" : ""}>Between a bottom and top corner</option><option value="top"${setting.placement === "top" ? " selected" : ""}>Top corners only</option><option value="bottom"${setting.placement === "bottom" ? " selected" : ""}>Bottom corners only</option></select></label><label>Earn a new pose after <input type="number" min="1" max="30" value="${Number(setting.earnMinutes) || 5}" data-classroom-bob-earn-minutes> quiet minutes</label><p><strong><output data-bob-unlock-count>${readClassroomBobUnlocks()}</output> of ${BOB_POSE_COUNT}</strong> poses unlocked. Bob begins with 2.</p></fieldset>`);
   }
 }
 
@@ -3424,10 +3480,12 @@ function updateVoiceMeterPresentation(value) {
   const threshold = readVoiceMeterActivity().target;
   const state = voiceMeterState(value, threshold);
   const now = Date.now();
+  const previousBobState = voiceBobState;
   if (state !== voiceBobState && now - voiceBobStateChangedAt >= 2400) {
     voiceBobState = state;
     voiceBobStateChangedAt = now;
   }
+  updateBobUnlockProgress(voiceBobState);
   const bobMessages = { green: "Bob is calm and happy.", yellow: "Bob is asking the class to quiet down.", red: "Bob is uncomfortable because the room is too loud." };
   document.querySelectorAll("[data-voice-meter]").forEach((meter) => {
     meter.style.setProperty("--voice-meter-level", `${value}%`);
@@ -3435,8 +3493,9 @@ function updateVoiceMeterPresentation(value) {
     const output = meter.querySelector("[data-voice-meter-output]");
     if (output) output.textContent = String(value);
   });
-  document.querySelectorAll("[data-voice-bob-message]").forEach((label) => { label.textContent = bobMessages[voiceBobState]; });
-  document.querySelectorAll("[data-voice-bob]").forEach((bob) => { bob.dataset.meterState = voiceBobState; bob.setAttribute("aria-label", bobMessages[voiceBobState]); if (voiceBobState !== "green") bob.classList.remove("is-walking-out", "is-walking-in"); });
+  document.querySelectorAll("[data-voice-bob-message]").forEach((label) => { label.textContent = voiceBobState === "green" && now < floatingBobUnlockMessageUntil ? floatingBobUnlockMessage : bobMessages[voiceBobState]; });
+  document.querySelectorAll("[data-voice-bob]").forEach((bob) => { bob.dataset.meterState = voiceBobState; bob.dataset.poseUnlocked = String(voiceBobState === "green" && now < floatingBobUnlockMessageUntil); bob.setAttribute("aria-label", bobMessages[voiceBobState]); if (voiceBobState !== "green") bob.classList.remove("is-walking-out", "is-walking-in", "is-unlocked-pose"); });
+  if (previousBobState !== voiceBobState && voiceBobState === "green") applyUnlockedBobPose([...document.querySelectorAll(".platform-floating-voice-bob")], Math.max(0, floatingBobLastPose));
   if (voiceBobState === "green") delete document.body.dataset.voiceFrame;
   else document.body.dataset.voiceFrame = voiceBobState;
   const prediction = predictedLearningType(value);
@@ -3448,14 +3507,14 @@ function relocateFloatingBob() {
   const corners = classroomBobCorners(setting.placement);
   const bobs = [document, classroomPresentationWindow?.document].filter(Boolean).flatMap((documentRef) => [...documentRef.querySelectorAll(".platform-floating-voice-bob")]);
   if (!setting.enabled || !bobs.length || bobs.some((bob) => bob.dataset.meterState !== "green" || bob.classList.contains("is-walking-out") || bob.classList.contains("is-walking-in"))) return;
-  bobs.forEach((bob) => bob.classList.add("is-walking-out"));
+  bobs.forEach((bob) => { bob.classList.remove("is-unlocked-pose"); bob.classList.add("is-walking-out"); });
   window.setTimeout(() => {
     const connectedBobs = bobs.filter((bob) => bob.isConnected && bob.dataset.meterState === "green");
     if (!connectedBobs.length) return;
     floatingBobCornerIndex = (floatingBobCornerIndex + 1) % corners.length;
     floatingBobIdleSet = (floatingBobIdleSet % 4) + 1;
     connectedBobs.forEach((bob) => { bob.dataset.corner = corners[floatingBobCornerIndex]; bob.dataset.idleSet = String(floatingBobIdleSet); bob.classList.remove("is-walking-out"); bob.classList.add("is-walking-in"); });
-    window.setTimeout(() => connectedBobs.forEach((bob) => bob.classList.remove("is-walking-in")), 2800);
+    window.setTimeout(() => { connectedBobs.forEach((bob) => bob.classList.remove("is-walking-in")); applyUnlockedBobPose(connectedBobs); }, 2800);
   }, 2800);
 }
 
@@ -5087,7 +5146,7 @@ function stopVoiceMeter(message = "Voice Meter stopped. No audio was saved.") {
   const status = document.querySelector("[data-voice-meter-status]");
   if (status) status.textContent = message;
   document.querySelectorAll("[data-live-voice-status]").forEach((label) => { label.dataset.state = "off"; label.innerHTML = `<span aria-hidden="true"></span> Voice Meter is off`; });
-  voiceBobState = "green"; voiceBobStateChangedAt = 0;
+  voiceBobState = "green"; voiceBobStateChangedAt = 0; floatingBobGreenSince = Date.now();
   updateVoiceMeterPresentation(0);
   refreshCurrentClassPlan();
 }
@@ -5101,7 +5160,7 @@ async function startVoiceMeter() {
   if (status) status.textContent = "Requesting microphone permission…";
   try {
     voiceMeterStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    voiceBobStateChangedAt = 0;
+    voiceBobStateChangedAt = 0; floatingBobGreenSince = Date.now();
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     voiceMeterAudioContext = new AudioContextClass();
     const analyser = voiceMeterAudioContext.createAnalyser();
@@ -6547,7 +6606,7 @@ function render() {
   const allowedRoute = guardRoute(requestedRoute, state);
   if (allowedRoute !== requestedRoute) return navigate(allowedRoute, { replace: true });
   root.innerHTML = viewForRoute(allowedRoute, state);
-  if (allowedRoute === ROUTES.TEACHER_DASHBOARD) installClassroomDisplayChoices();
+  if (allowedRoute === ROUTES.TEACHER_DASHBOARD) { installClassroomDisplayChoices(); applyClassroomBobDisplay(); }
   if (allowedRoute === ROUTES.TEACHER_LOGIN) mountProductionGoogleSignIn();
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) pb002jClasswide.mount(root, "teacher");
   if (allowedRoute === ROUTES.STUDENT_DASHBOARD) pb002jClasswide.mount(root, "student");
@@ -6878,7 +6937,7 @@ root.addEventListener("drop", (event) => {
 });
 
 root.addEventListener("change", (event) => {
-  if (event.target.matches?.("[data-classroom-bob-enabled], [data-classroom-bob-placement]")) { const enabled = document.querySelector("[data-classroom-bob-enabled]")?.checked ?? true, placement = document.querySelector("[data-classroom-bob-placement]")?.value || "move"; window.localStorage.setItem(CLASSROOM_BOB_DISPLAY_KEY, JSON.stringify({ enabled, placement })); floatingBobCornerIndex = 0; applyClassroomBobDisplay(); return; }
+  if (event.target.matches?.("[data-classroom-bob-enabled], [data-classroom-bob-placement], [data-classroom-bob-earn-minutes]")) { const enabled = document.querySelector("[data-classroom-bob-enabled]")?.checked ?? true, placement = document.querySelector("[data-classroom-bob-placement]")?.value || "move", earnMinutes = Math.min(30, Math.max(1, Number(document.querySelector("[data-classroom-bob-earn-minutes]")?.value) || 5)); window.localStorage.setItem(CLASSROOM_BOB_DISPLAY_KEY, JSON.stringify({ enabled, placement, earnMinutes })); floatingBobCornerIndex = 0; floatingBobGreenSince = Date.now(); applyClassroomBobDisplay(); scheduleNextBobMove(); return; }
   const doNowImage = event.target.closest?.("[data-do-now-image]");
   if (doNowImage) { const file = doNowImage.files?.[0]; if (file?.type.startsWith("image/") && file.size <= 6 * 1024 * 1024) { const reader = new FileReader(); reader.addEventListener("load", () => { doNowDraft.image = String(reader.result); openDoNowEditor(doNowDraft); }, { once: true }); reader.readAsDataURL(file); } return; }
   if (event.target.closest?.("[data-do-now-editor]")) { updateDoNowDraftFromEditor(event.target.closest("[data-do-now-editor]")); return; }
@@ -7598,7 +7657,7 @@ async function startPlatform() {
     else if (result.ok) session.signOut();
   }
   render();
-  if (floatingBobRoamingInterval === null) floatingBobRoamingInterval = window.setInterval(relocateFloatingBob, 26000);
+  if (floatingBobRoamingInterval === null) scheduleNextBobMove();
 }
 
 void startPlatform();

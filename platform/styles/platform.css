@@ -1558,9 +1558,11 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-floating-voice-bob[data-meter-state="yellow"], .platform-floating-voice-bob[data-meter-state="red"] { background-image: url("../../assets/images/characters/bob-voice-meter-states.png"); background-size: 300% 100%; animation: none; }
 .platform-floating-voice-bob[data-meter-state="yellow"] { background-position: center center; transform: translateY(2%); }
 .platform-floating-voice-bob[data-meter-state="red"] { background-position: right center; transform: translateY(0) scale(1.08); animation: platform-bob-too-loud 900ms ease-in-out 1; }
+.platform-floating-voice-bob[data-meter-state="green"].is-unlocked-pose { background-image: var(--bob-pose-sheet); background-size: 500% 500%; background-position: var(--bob-pose-x) var(--bob-pose-y); animation: none; }
 .platform-floating-voice-bob span { position: absolute; right: 86%; bottom: 52%; width: max-content; max-width: min(17rem, 64vw); padding: 0.5rem 0.7rem; border: 3px solid var(--platform-blue-dark); border-radius: 0.8rem 0.8rem 0 0.8rem; color: var(--platform-navy); background: #fff8e8; box-shadow: 0 0.5rem 1rem rgba(7, 41, 61, 0.2); font-size: clamp(0.78rem, 1.2vw, 1rem); font-weight: 850; opacity: 0; transition: opacity 180ms ease; }
 .platform-floating-voice-bob[data-corner$="left"] span { right: auto; left: 86%; border-radius: 0.8rem 0.8rem 0.8rem 0; }
 .platform-floating-voice-bob[data-meter-state="yellow"] span, .platform-floating-voice-bob[data-meter-state="red"] span { opacity: 1; }
+.platform-floating-voice-bob[data-pose-unlocked="true"] span { opacity: 1; }
 @keyframes platform-bob-too-loud { 50% { transform: translateY(-5%) scale(1.12); } }
 @keyframes platform-bob-idle-poses { 0%, 24.99% { background-position: left center; } 25%, 49.99% { background-position: 33.333% center; } 50%, 74.99% { background-position: 66.667% center; } 75%, 100% { background-position: right center; } }
 @keyframes platform-bob-active-poses { 0%, 33.32% { background-position: left center; } 33.33%, 66.65% { background-position: center center; } 66.66%, 100% { background-position: right center; } }

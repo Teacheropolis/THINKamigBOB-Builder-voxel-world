@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createVoiceMeterStore, rmsToVoiceLevel, voiceMeterState, VOICE_METER_LEVELS } from "../../platform/scripts/voice-meter.mjs";
 
 function memoryStorage() { const values = new Map(); return { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) }; }
@@ -66,7 +66,12 @@ test("teacher and student display expose a private browser-only voice meter", ()
   assert.match(app, /if \(placement === "top"\) return \["top-left", "top-right"\]/);
   assert.match(app, /if \(placement === "bottom"\) return \["bottom-left", "bottom-right"\]/);
   assert.match(app, /data-classroom-bob-enabled/);
-  assert.match(app, /setInterval\(relocateFloatingBob, 26000\)/);
+  assert.match(app, /scheduleNextBobMove\(\)/);
+  assert.match(app, /BOB_POSE_COUNT = 200/);
+  assert.match(app, /earnMinutes: 5/);
+  assert.match(app, /floatingBobPoseBag/);
+  assert.match(css, /background-size: 500% 500%/);
+  for (let sheet = 1; sheet <= 8; sheet += 1) assert.equal(existsSync(new URL(`../../assets/images/characters/bob-unlocks-${String(sheet).padStart(2, "0")}.webp`, import.meta.url)), true);
   assert.match(app, /floatingBobIdleSet = \(floatingBobIdleSet % 4\) \+ 1/);
   assert.match(css, /bob-active-poses-1\.png/);
   assert.match(css, /bob-active-poses-2\.png/);
