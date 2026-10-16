@@ -88,5 +88,6 @@ test("teacher and student display expose a private browser-only voice meter", ()
   assert.match(css, /data-corner="top-right"/);
   assert.match(css, /data-corner="bottom-left"/);
   assert.match(css, /platform-bob-walk-out-right 2\.8s linear forwards/);
+  assert.match(css, /scaleX\(0\.9\)/);
   assert.match(css, /transform 2200ms ease-in/);
 });
