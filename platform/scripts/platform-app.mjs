@@ -505,7 +505,7 @@ function nextUnlockedBobPose() {
 
 function applyUnlockedBobPose(bobs, requestedPose = null) {
   const pose = requestedPose ?? nextUnlockedBobPose(), sheet = Math.floor(pose / 25) + 1, cell = pose % 25, column = cell % 5, row = Math.floor(cell / 5);
-  const imageUrl = new URL(`../assets/images/characters/bob-unlocks-${String(sheet).padStart(2, "0")}.webp`, window.location.href).href;
+  const imageUrl = new URL(`../assets/images/characters/bob-unlocks-${String(sheet).padStart(2, "0")}.webp?v=230`, window.location.href).href;
   bobs.forEach((bob) => { bob.classList.add("is-unlocked-pose"); bob.style.setProperty("--bob-pose-sheet", `url("${imageUrl}")`); bob.style.setProperty("--bob-pose-x", `${column * 25}%`); bob.style.setProperty("--bob-pose-y", `${row * 25}%`); });
 }
 
