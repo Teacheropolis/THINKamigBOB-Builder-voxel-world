@@ -82,7 +82,7 @@ test("teacher and student views expose the browser-local push workflow", () => {
   assert.match(app, /classResourceSharing\.release\(classId, "class-start"\)/);
   assert.match(app, /classResourceSharing\.release\(classId, phase\.color\)/);
   assert.match(app, /storage: window\.localStorage/);
-  assert.match(app, /\[CLASS_RESOURCE_STORAGE_KEY, WEEKLY_REFLECTION_STORAGE_KEY\]\.includes\(event\.key\)/);
+  assert.match(app, /\[CLASS_RESOURCE_STORAGE_KEY, ACTIVITY_DIRECTIONS_STORAGE_KEY, WEEKLY_REFLECTION_STORAGE_KEY\]\.includes\(event\.key\)/);
   assert.match(app, /const classResourceState = classResourceSharing\.read\(state\.classId\)/);
   assert.match(app, /const activeClassResources = classResourceState\.activeResources/);
   assert.match(app, /classResourceState\.history/);

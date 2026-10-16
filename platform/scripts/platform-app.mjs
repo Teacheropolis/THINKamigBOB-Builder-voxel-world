@@ -52,6 +52,7 @@ import { createProductionIdentityClient, parseStudentLabels, productionIdentityC
 import { createBrowserMessageLibrary } from "./message-library.mjs";
 import { createBrowserClassSetupProfiles } from "./class-setup-profiles.mjs";
 import { CLASS_RESOURCE_STORAGE_KEY, createClassResourceSharing, RESOURCE_RELEASES, RESOURCE_TYPES } from "./class-resource-sharing.mjs?v=preview-20261004-7";
+import { ACTIVITY_DIRECTIONS_STORAGE_KEY, createActivityDirections, DIRECTION_MEDIA_TYPES } from "./activity-directions.mjs?v=preview-20261016-1";
 import {
   createWeeklyReflections,
   REFLECTION_ACTIVITY_RATING_OPTIONS,
@@ -99,6 +100,7 @@ const messageLibrary = createBrowserMessageLibrary(window);
 const pilotTeacherClasses = getClassesForTeacher("teacher-preview-1");
 const classSetupProfiles = createBrowserClassSetupProfiles(window, pilotTeacherClasses.map((item) => item.id));
 const classResourceSharing = createClassResourceSharing({ storage: window.localStorage });
+const activityDirections = createActivityDirections({ storage: window.localStorage });
 const weeklyReflections = createWeeklyReflections({ storage: window.localStorage });
 const voiceMeter = createVoiceMeterStore({ storage: window.sessionStorage });
 const todaysMission = createTodaysMissionStore({ storage: window.sessionStorage });
@@ -993,6 +995,54 @@ function classResourceStudentMarkup(classId, studentId) {
   </section>`;
 }
 
+function directionMediaMarkup(card) {
+  if (!card.url || card.mediaType === "none") return "";
+  if (card.mediaType === "image") return `<img class="platform-direction-image" src="${escapeHtml(card.url)}" alt="Visual for ${escapeHtml(card.title)}">`;
+  if (card.mediaType === "google-slides") {
+    const previewUrl = card.url.replace(/\/edit(?:\?.*)?$/i, "/preview").replace(/\/view(?:\?.*)?$/i, "/preview");
+    return `<iframe class="platform-direction-embed" src="${escapeHtml(previewUrl)}" title="${escapeHtml(card.title)} slides" loading="lazy" allowfullscreen></iframe>`;
+  }
+  if (card.mediaType === "youtube") {
+    const match = card.url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([A-Za-z0-9_-]{6,})/i);
+    if (match) return `<iframe class="platform-direction-embed" src="https://www.youtube-nocookie.com/embed/${escapeHtml(match[1])}" title="${escapeHtml(card.title)} video" loading="lazy" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+  }
+  return `<a class="platform-button platform-button-secondary" href="${escapeHtml(card.url)}" target="_blank" rel="noopener noreferrer">Open ${escapeHtml(card.mediaType === "pdf" ? "PDF" : card.mediaType === "youtube" ? "video" : "resource")}</a>`;
+}
+
+function activityDirectionsTeacherMarkup(classId) {
+  const state = activityDirections.read(classId);
+  const cards = state.cards.map((card, index) => `<article class="platform-direction-card" data-direction-card-id="${escapeHtml(card.id)}" data-status="${card.status}">
+    <div><span class="platform-direction-number">${index + 1}</span><span class="platform-direction-status">${card.status === "released" ? "Visible to students" : "Draft — teacher only"}</span></div>
+    <h4>${escapeHtml(card.title)}</h4><p>${escapeHtml(card.directions)}</p>${directionMediaMarkup(card)}
+    <div class="platform-direction-actions"><button type="button" data-action="edit-direction-card" data-direction-id="${escapeHtml(card.id)}">Edit</button>${card.status === "released" ? `<button type="button" data-action="withdraw-direction-card" data-direction-id="${escapeHtml(card.id)}">Withdraw</button>` : `<button type="button" data-action="release-direction-card" data-direction-id="${escapeHtml(card.id)}">Release to Students</button>`}<button type="button" data-action="duplicate-direction-card" data-direction-id="${escapeHtml(card.id)}">Duplicate</button><button type="button" data-action="move-direction-card" data-direction-id="${escapeHtml(card.id)}" data-direction-offset="-1"${index === 0 ? " disabled" : ""}>Move Up</button><button type="button" data-action="move-direction-card" data-direction-id="${escapeHtml(card.id)}" data-direction-offset="1"${index === state.cards.length - 1 ? " disabled" : ""}>Move Down</button><button type="button" data-action="remove-direction-card" data-direction-id="${escapeHtml(card.id)}">Delete</button></div>
+  </article>`).join("");
+  const mediaLabels = { none: "No media", image: "Image address", "google-slides": "Google Slides", youtube: "YouTube video", pdf: "PDF", webpage: "Webpage" };
+  return `<section class="platform-command-card platform-activity-directions platform-visual-zone platform-zone-create" data-activity-directions-teacher aria-labelledby="activity-directions-title">
+    <p class="platform-command-label">Build as the lesson develops</p><h2 id="activity-directions-title">Live Activity Directions</h2>
+    <p>Add direction cards whenever they are needed. Draft cards stay private until you release them.</p>
+    <label class="platform-activity-title">Activity title<input data-activity-directions-title maxlength="100" value="${escapeHtml(state.title)}"></label>
+    <div class="platform-direction-list">${cards || `<p class="platform-student-empty-state">No direction cards yet. Add the first card below.</p>`}</div>
+    <details class="platform-direction-editor" open><summary>Add Direction Card</summary>
+      <form data-form="activity-direction" novalidate><input type="hidden" name="id">
+        <label>Card title<input name="title" maxlength="100" placeholder="Example: Step 1 — Investigate" required></label>
+        <label>Directions<textarea name="directions" maxlength="2000" rows="4" placeholder="Tell students exactly what to do next." required></textarea></label>
+        <label>Optional visual or resource<select name="mediaType">${DIRECTION_MEDIA_TYPES.map((type) => `<option value="${type}">${mediaLabels[type]}</option>`).join("")}</select></label>
+        <label data-direction-url-label hidden>Secure link<input name="url" type="url" placeholder="https://…"></label>
+        <div class="platform-direction-actions"><button type="button" data-action="save-direction-card">Save Draft</button><button type="button" data-action="save-release-direction-card">Save and Release</button><button type="reset" data-action="cancel-direction-edit">Clear</button></div>
+        <p data-activity-direction-status role="status">New cards are private drafts unless you choose Save and Release.</p>
+      </form>
+    </details>
+  </section>`;
+}
+
+function activityDirectionsStudentMarkup(classId) {
+  const state = activityDirections.read(classId), cards = activityDirections.releasedForStudents(classId);
+  return `<section class="platform-activity-directions platform-activity-directions-student platform-student-zone platform-student-zone-now" aria-labelledby="student-directions-title">
+    <p class="platform-student-section-label">Teacher directions</p><h2 id="student-directions-title">${escapeHtml(state.title)}</h2>
+    ${cards.length ? `<ol class="platform-student-direction-list">${cards.map((card) => `<li><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.directions)}</p>${directionMediaMarkup(card)}</li>`).join("")}</ol>` : `<p class="platform-student-empty-state">Your teacher has not released any directions yet.</p>`}
+  </section>`;
+}
+
 function weeklyReflectionTeacherMarkup(classId) {
   const required = weeklyReflections.requirement(classId);
   return `<section class="platform-classroom-setup platform-weekly-reflection-setup" aria-labelledby="weekly-reflection-setup-title">
@@ -1837,6 +1887,7 @@ function teacherDashboardView(state) {
               <p data-classroom-window-status role="status"></p>
             </div>
           </div>
+          ${activityDirectionsTeacherMarkup(classRecord?.id)}
           ${classResourceTeacherMarkup(classRecord?.id)}
           <section id="teacher-timer-card" class="platform-command-card platform-command-card-timer" hidden>
             <p class="platform-command-label">Class timing</p>
@@ -2347,6 +2398,7 @@ function studentDashboardView(state) {
         </div>
       </section>
 
+      ${activityDirectionsStudentMarkup(state.classId)}
       ${classResourceStudentMarkup(state.classId, state.studentId)}
 
       <section class="platform-assigned-research platform-assigned-research-student platform-student-zone platform-student-zone-tools" aria-labelledby="assigned-research-student-title">
@@ -6225,6 +6277,32 @@ function handleClick(event) {
     navigate(ROUTES.TEACHER_DASHBOARD);
     return;
   }
+  if (["save-direction-card", "save-release-direction-card", "edit-direction-card", "release-direction-card", "withdraw-direction-card", "duplicate-direction-card", "move-direction-card", "remove-direction-card", "cancel-direction-edit"].includes(action.dataset.action)) {
+    const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id;
+    const region = action.closest("[data-activity-directions-teacher]") ?? document.querySelector("[data-activity-directions-teacher]");
+    const form = region?.querySelector('[data-form="activity-direction"]');
+    if (!classId || !region || !form) return;
+    const id = action.dataset.directionId;
+    if (["save-direction-card", "save-release-direction-card"].includes(action.dataset.action)) {
+      const result = activityDirections.saveCard(classId, { id: form.elements.id.value, title: form.elements.title.value, directions: form.elements.directions.value, mediaType: form.elements.mediaType.value, url: form.elements.url.value });
+      if (!result.ok) { const output = form.querySelector("[data-activity-direction-status]"); if (output) output.textContent = result.reason === "missing-media" ? "Add a secure https link for the selected media." : "Add both a card title and student directions."; return; }
+      if (action.dataset.action === "save-release-direction-card") activityDirections.release(classId, result.card.id);
+    }
+    if (action.dataset.action === "edit-direction-card") {
+      const card = activityDirections.read(classId).cards.find((item) => item.id === id);
+      if (!card) return;
+      form.elements.id.value = card.id; form.elements.title.value = card.title; form.elements.directions.value = card.directions; form.elements.mediaType.value = card.mediaType; form.elements.url.value = card.url;
+      const urlLabel = form.querySelector("[data-direction-url-label]"); if (urlLabel) urlLabel.hidden = card.mediaType === "none";
+      form.closest("details").open = true; form.elements.title.focus(); return;
+    }
+    if (action.dataset.action === "release-direction-card") activityDirections.release(classId, id);
+    if (action.dataset.action === "withdraw-direction-card") activityDirections.withdraw(classId, id);
+    if (action.dataset.action === "duplicate-direction-card") activityDirections.duplicate(classId, id);
+    if (action.dataset.action === "move-direction-card") activityDirections.move(classId, id, Number(action.dataset.directionOffset));
+    if (action.dataset.action === "remove-direction-card") activityDirections.remove(classId, id);
+    region.outerHTML = activityDirectionsTeacherMarkup(classId);
+    return;
+  }
   if (action.dataset.action === "close-optional-dashboard-section") {
     const section = action.closest("[data-optional-dashboard-section]");
     if (section) section.hidden = true;
@@ -6979,6 +7057,10 @@ root.addEventListener("drop", (event) => {
 });
 
 root.addEventListener("change", (event) => {
+  const directionMediaType = event.target.closest?.('[data-form="activity-direction"] [name="mediaType"]');
+  if (directionMediaType) { const label = directionMediaType.form?.querySelector("[data-direction-url-label]"); if (label) label.hidden = directionMediaType.value === "none"; return; }
+  const activityTitle = event.target.closest?.("[data-activity-directions-title]");
+  if (activityTitle) { const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id; if (classId) activityDirections.setTitle(classId, activityTitle.value); return; }
   if (event.target.matches?.("[data-classroom-bob-enabled], [data-classroom-bob-placement], [data-classroom-bob-earn-minutes], [data-classroom-bob-daily-limit]")) { const enabled = document.querySelector("[data-classroom-bob-enabled]")?.checked ?? true, placement = document.querySelector("[data-classroom-bob-placement]")?.value || "move", earnMinutes = Math.min(30, Math.max(1, Number(document.querySelector("[data-classroom-bob-earn-minutes]")?.value) || 5)), dailyUnlockLimit = Math.min(10, Math.max(1, Number(document.querySelector("[data-classroom-bob-daily-limit]")?.value) || 6)); window.localStorage.setItem(CLASSROOM_BOB_DISPLAY_KEY, JSON.stringify({ enabled, placement, earnMinutes, dailyUnlockLimit })); floatingBobCornerIndex = 0; floatingBobGreenSince = Date.now(); updateBobRewardOutputs(); applyClassroomBobDisplay(); scheduleNextBobMove(); return; }
   const doNowImage = event.target.closest?.("[data-do-now-image]");
   if (doNowImage) { const file = doNowImage.files?.[0]; if (file?.type.startsWith("image/") && file.size <= 6 * 1024 * 1024) { const reader = new FileReader(); reader.addEventListener("load", () => { doNowDraft.image = String(reader.result); openDoNowEditor(doNowDraft); }, { once: true }); reader.readAsDataURL(file); } return; }
@@ -7574,13 +7656,15 @@ window.addEventListener("hashchange", () => {
   render();
 });
 window.addEventListener("storage", (event) => {
-  if (![CLASS_RESOURCE_STORAGE_KEY, WEEKLY_REFLECTION_STORAGE_KEY].includes(event.key)) return;
+  if (![CLASS_RESOURCE_STORAGE_KEY, ACTIVITY_DIRECTIONS_STORAGE_KEY, WEEKLY_REFLECTION_STORAGE_KEY].includes(event.key)) return;
   const state = session.read();
   if (currentRoute() === ROUTES.STUDENT_DASHBOARD && state.role === PLATFORM_ROLES.STUDENT) render();
   if (currentRoute() === ROUTES.TEACHER_DASHBOARD && state.role === PLATFORM_ROLES.TEACHER) {
     const classId = currentTeacherClass(state.teacherId)?.id;
     const region = document.querySelector("[data-class-resource-teacher]");
     if (classId && region) region.outerHTML = classResourceTeacherMarkup(classId);
+    const directionsRegion = document.querySelector("[data-activity-directions-teacher]");
+    if (classId && directionsRegion) directionsRegion.outerHTML = activityDirectionsTeacherMarkup(classId);
   }
 });
 window.addEventListener("resize", () => window.requestAnimationFrame(fitStudentMemoPresentation));
