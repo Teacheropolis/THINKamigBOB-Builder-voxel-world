@@ -4,14 +4,21 @@ export const DIRECTION_MEDIA_TYPES = Object.freeze(["none", "image", "google-sli
 function emptyState() { return { classes: {} }; }
 function cleanText(value, limit) { return String(value ?? "").trim().slice(0, limit); }
 function safeUrl(value) { return !value || (/^https:\/\//i.test(value) && !/[\u0000-\u001f]/.test(value)); }
+function normalizeResource(value = {}) {
+  const mediaType = DIRECTION_MEDIA_TYPES.includes(value.mediaType) && value.mediaType !== "none" ? value.mediaType : "webpage";
+  return { mediaType, url: cleanText(value.url, 1500) };
+}
 function normalizeCard(value = {}) {
   const mediaType = DIRECTION_MEDIA_TYPES.includes(value.mediaType) ? value.mediaType : "none";
+  const legacyResources = mediaType !== "none" && value.url ? [{ mediaType, url: value.url }] : [];
+  const resources = (Array.isArray(value.resources) ? value.resources : legacyResources).map(normalizeResource).filter((item) => item.url);
   return {
     id: cleanText(value.id, 100),
     title: cleanText(value.title, 100),
     directions: cleanText(value.directions, 2000),
     mediaType,
     url: cleanText(value.url, 1500),
+    resources,
     status: value.status === "released" ? "released" : "draft",
     createdAt: Number(value.createdAt) || 0,
     updatedAt: Number(value.updatedAt) || 0,
@@ -40,7 +47,7 @@ export function createActivityDirections({ storage, now = () => Date.now() }) {
     const current = read(classId);
     const card = normalizeCard({ ...input, id: input.id || `direction-${now()}`, createdAt: input.createdAt || now(), updatedAt: now() });
     if (!classId || !card.title || !card.directions) return { ok: false, reason: "missing-directions" };
-    if (card.mediaType !== "none" && (!card.url || !safeUrl(card.url))) return { ok: false, reason: "missing-media" };
+    if (card.resources.some((item) => !safeUrl(item.url))) return { ok: false, reason: "missing-media" };
     const index = current.cards.findIndex((item) => item.id === card.id);
     const cards = [...current.cards];
     if (index >= 0) cards[index] = { ...cards[index], ...card, status: cards[index].status, releasedAt: cards[index].releasedAt };

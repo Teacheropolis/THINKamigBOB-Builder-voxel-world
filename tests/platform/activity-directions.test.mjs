@@ -35,14 +35,20 @@ test("direction cards can be copied, reordered, edited, and removed", () => {
 
 test("unsafe or incomplete media is rejected", () => {
   const store = createActivityDirections({ storage: memoryStorage() });
-  assert.equal(store.saveCard("a", { title: "Missing", directions: "Text", mediaType: "image" }).ok, false);
-  assert.equal(store.saveCard("a", { title: "Unsafe", directions: "Text", mediaType: "image", url: "javascript:alert(1)" }).ok, false);
+  assert.equal(store.saveCard("a", { title: "Unsafe", directions: "Text", resources: [{ mediaType: "image", url: "javascript:alert(1)" }] }).ok, false);
+});
+
+test("a direction card can contain multiple mixed resources", () => {
+  const store = createActivityDirections({ storage: memoryStorage() });
+  const saved = store.saveCard("a", { title: "Explore", directions: "Use both resources.", resources: [{ mediaType: "image", url: "https://example.com/model.png" }, { mediaType: "youtube", url: "https://www.youtube.com/watch?v=abcdef123" }] });
+  assert.equal(saved.ok, true);
+  assert.deepEqual(store.read("a").cards[0].resources.map((item) => item.mediaType), ["image", "youtube"]);
 });
 
 test("teacher and student views expose the live directions timeline", () => {
   const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
   const css = readFileSync(new URL("../../platform/styles/platform.css", import.meta.url), "utf8");
-  for (const text of ["Live Activity Directions", "Add Direction Card", "Release to Students", "Withdraw", "Duplicate", "Move Up", "Move Down"]) assert.match(app, new RegExp(text));
+  for (const text of ["Live Activity Directions", "Add Direction Card", "Add another resource", "Release to Students", "Withdraw", "Duplicate", "Move Up", "Move Down"]) assert.match(app, new RegExp(text));
   assert.match(app, /activityDirections\.releasedForStudents/);
   assert.match(app, /ACTIVITY_DIRECTIONS_STORAGE_KEY/);
   assert.match(css, /platform-activity-directions/);

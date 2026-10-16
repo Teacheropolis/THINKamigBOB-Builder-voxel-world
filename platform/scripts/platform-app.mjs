@@ -52,7 +52,7 @@ import { createProductionIdentityClient, parseStudentLabels, productionIdentityC
 import { createBrowserMessageLibrary } from "./message-library.mjs";
 import { createBrowserClassSetupProfiles } from "./class-setup-profiles.mjs";
 import { CLASS_RESOURCE_STORAGE_KEY, createClassResourceSharing, RESOURCE_RELEASES, RESOURCE_TYPES } from "./class-resource-sharing.mjs?v=preview-20261004-7";
-import { ACTIVITY_DIRECTIONS_STORAGE_KEY, createActivityDirections, DIRECTION_MEDIA_TYPES } from "./activity-directions.mjs?v=preview-20261016-1";
+import { ACTIVITY_DIRECTIONS_STORAGE_KEY, createActivityDirections } from "./activity-directions.mjs?v=preview-20261016-2";
 import {
   createWeeklyReflections,
   REFLECTION_ACTIVITY_RATING_OPTIONS,
@@ -995,18 +995,25 @@ function classResourceStudentMarkup(classId, studentId) {
   </section>`;
 }
 
+function directionResourceMarkup(resource, title) {
+  if (resource.mediaType === "image") return `<img class="platform-direction-image" src="${escapeHtml(resource.url)}" alt="Visual for ${escapeHtml(title)}">`;
+  if (resource.mediaType === "google-slides") {
+    const previewUrl = resource.url.replace(/\/edit(?:\?.*)?$/i, "/preview").replace(/\/view(?:\?.*)?$/i, "/preview");
+    return `<iframe class="platform-direction-embed" src="${escapeHtml(previewUrl)}" title="${escapeHtml(title)} slides" loading="lazy" allowfullscreen></iframe>`;
+  }
+  if (resource.mediaType === "youtube") {
+    const match = resource.url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([A-Za-z0-9_-]{6,})/i);
+    if (match) return `<iframe class="platform-direction-embed" src="https://www.youtube-nocookie.com/embed/${escapeHtml(match[1])}" title="${escapeHtml(title)} video" loading="lazy" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+  }
+  return `<a class="platform-button platform-button-secondary" href="${escapeHtml(resource.url)}" target="_blank" rel="noopener noreferrer">Open ${escapeHtml(resource.mediaType === "pdf" ? "PDF" : resource.mediaType === "youtube" ? "video" : "resource")}</a>`;
+}
 function directionMediaMarkup(card) {
-  if (!card.url || card.mediaType === "none") return "";
-  if (card.mediaType === "image") return `<img class="platform-direction-image" src="${escapeHtml(card.url)}" alt="Visual for ${escapeHtml(card.title)}">`;
-  if (card.mediaType === "google-slides") {
-    const previewUrl = card.url.replace(/\/edit(?:\?.*)?$/i, "/preview").replace(/\/view(?:\?.*)?$/i, "/preview");
-    return `<iframe class="platform-direction-embed" src="${escapeHtml(previewUrl)}" title="${escapeHtml(card.title)} slides" loading="lazy" allowfullscreen></iframe>`;
-  }
-  if (card.mediaType === "youtube") {
-    const match = card.url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([A-Za-z0-9_-]{6,})/i);
-    if (match) return `<iframe class="platform-direction-embed" src="https://www.youtube-nocookie.com/embed/${escapeHtml(match[1])}" title="${escapeHtml(card.title)} video" loading="lazy" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-  }
-  return `<a class="platform-button platform-button-secondary" href="${escapeHtml(card.url)}" target="_blank" rel="noopener noreferrer">Open ${escapeHtml(card.mediaType === "pdf" ? "PDF" : card.mediaType === "youtube" ? "video" : "resource")}</a>`;
+  const resources = card.resources?.length ? card.resources : card.url && card.mediaType !== "none" ? [{ mediaType: card.mediaType, url: card.url }] : [];
+  return resources.length ? `<div class="platform-direction-resources">${resources.map((resource) => directionResourceMarkup(resource, card.title)).join("")}</div>` : "";
+}
+function directionResourceEditorRow(resource = { mediaType: "image", url: "" }) {
+  const labels = { image: "Image", "google-slides": "Google Slides", youtube: "YouTube video", pdf: "PDF", webpage: "Webpage" };
+  return `<div class="platform-direction-resource-row"><label>Type<select name="resourceType">${Object.entries(labels).map(([value, label]) => `<option value="${value}"${resource.mediaType === value ? " selected" : ""}>${label}</option>`).join("")}</select></label><label>Secure link<input name="resourceUrl" type="url" placeholder="https://…" value="${escapeHtml(resource.url || "")}"></label><div class="platform-direction-actions"><button type="button" data-action="move-direction-resource" data-offset="-1" aria-label="Move resource up">↑</button><button type="button" data-action="move-direction-resource" data-offset="1" aria-label="Move resource down">↓</button><button type="button" data-action="remove-direction-resource">Remove</button></div></div>`;
 }
 
 function activityDirectionsTeacherMarkup(classId) {
@@ -1016,7 +1023,6 @@ function activityDirectionsTeacherMarkup(classId) {
     <h4>${escapeHtml(card.title)}</h4><p>${escapeHtml(card.directions)}</p>${directionMediaMarkup(card)}
     <div class="platform-direction-actions"><button type="button" data-action="edit-direction-card" data-direction-id="${escapeHtml(card.id)}">Edit</button>${card.status === "released" ? `<button type="button" data-action="withdraw-direction-card" data-direction-id="${escapeHtml(card.id)}">Withdraw</button>` : `<button type="button" data-action="release-direction-card" data-direction-id="${escapeHtml(card.id)}">Release to Students</button>`}<button type="button" data-action="duplicate-direction-card" data-direction-id="${escapeHtml(card.id)}">Duplicate</button><button type="button" data-action="move-direction-card" data-direction-id="${escapeHtml(card.id)}" data-direction-offset="-1"${index === 0 ? " disabled" : ""}>Move Up</button><button type="button" data-action="move-direction-card" data-direction-id="${escapeHtml(card.id)}" data-direction-offset="1"${index === state.cards.length - 1 ? " disabled" : ""}>Move Down</button><button type="button" data-action="remove-direction-card" data-direction-id="${escapeHtml(card.id)}">Delete</button></div>
   </article>`).join("");
-  const mediaLabels = { none: "No media", image: "Image address", "google-slides": "Google Slides", youtube: "YouTube video", pdf: "PDF", webpage: "Webpage" };
   return `<section class="platform-command-card platform-activity-directions platform-visual-zone platform-zone-create" data-activity-directions-teacher aria-labelledby="activity-directions-title">
     <p class="platform-command-label">Build as the lesson develops</p><h2 id="activity-directions-title">Live Activity Directions</h2>
     <p>Add direction cards whenever they are needed. Draft cards stay private until you release them.</p>
@@ -1026,8 +1032,7 @@ function activityDirectionsTeacherMarkup(classId) {
       <form data-form="activity-direction" novalidate><input type="hidden" name="id">
         <label>Card title<input name="title" maxlength="100" placeholder="Example: Step 1 — Investigate" required></label>
         <label>Directions<textarea name="directions" maxlength="2000" rows="4" placeholder="Tell students exactly what to do next." required></textarea></label>
-        <label>Optional visual or resource<select name="mediaType">${DIRECTION_MEDIA_TYPES.map((type) => `<option value="${type}">${mediaLabels[type]}</option>`).join("")}</select></label>
-        <label data-direction-url-label hidden>Secure link<input name="url" type="url" placeholder="https://…"></label>
+        <fieldset class="platform-direction-resource-editor"><legend>Optional visuals and resources</legend><div data-direction-resource-list></div><button type="button" data-action="add-direction-resource">+ Add another resource</button></fieldset>
         <div class="platform-direction-actions"><button type="button" data-action="save-direction-card">Save Draft</button><button type="button" data-action="save-release-direction-card">Save and Release</button><button type="reset" data-action="cancel-direction-edit">Clear</button></div>
         <p data-activity-direction-status role="status">New cards are private drafts unless you choose Save and Release.</p>
       </form>
@@ -6284,15 +6289,16 @@ function handleClick(event) {
     if (!classId || !region || !form) return;
     const id = action.dataset.directionId;
     if (["save-direction-card", "save-release-direction-card"].includes(action.dataset.action)) {
-      const result = activityDirections.saveCard(classId, { id: form.elements.id.value, title: form.elements.title.value, directions: form.elements.directions.value, mediaType: form.elements.mediaType.value, url: form.elements.url.value });
+      const resources = [...form.querySelectorAll("[data-direction-resource-list] .platform-direction-resource-row")].map((row) => ({ mediaType: row.querySelector('[name="resourceType"]').value, url: row.querySelector('[name="resourceUrl"]').value.trim() })).filter((item) => item.url);
+      const result = activityDirections.saveCard(classId, { id: form.elements.id.value, title: form.elements.title.value, directions: form.elements.directions.value, resources });
       if (!result.ok) { const output = form.querySelector("[data-activity-direction-status]"); if (output) output.textContent = result.reason === "missing-media" ? "Add a secure https link for the selected media." : "Add both a card title and student directions."; return; }
       if (action.dataset.action === "save-release-direction-card") activityDirections.release(classId, result.card.id);
     }
     if (action.dataset.action === "edit-direction-card") {
       const card = activityDirections.read(classId).cards.find((item) => item.id === id);
       if (!card) return;
-      form.elements.id.value = card.id; form.elements.title.value = card.title; form.elements.directions.value = card.directions; form.elements.mediaType.value = card.mediaType; form.elements.url.value = card.url;
-      const urlLabel = form.querySelector("[data-direction-url-label]"); if (urlLabel) urlLabel.hidden = card.mediaType === "none";
+      form.elements.id.value = card.id; form.elements.title.value = card.title; form.elements.directions.value = card.directions;
+      const resourceList = form.querySelector("[data-direction-resource-list]"); if (resourceList) resourceList.innerHTML = (card.resources || []).map(directionResourceEditorRow).join("");
       form.closest("details").open = true; form.elements.title.focus(); return;
     }
     if (action.dataset.action === "release-direction-card") activityDirections.release(classId, id);
@@ -6301,6 +6307,13 @@ function handleClick(event) {
     if (action.dataset.action === "move-direction-card") activityDirections.move(classId, id, Number(action.dataset.directionOffset));
     if (action.dataset.action === "remove-direction-card") activityDirections.remove(classId, id);
     region.outerHTML = activityDirectionsTeacherMarkup(classId);
+    return;
+  }
+  if (["add-direction-resource", "remove-direction-resource", "move-direction-resource"].includes(action.dataset.action)) {
+    const list = action.closest('[data-form="activity-direction"]')?.querySelector("[data-direction-resource-list]"); if (!list) return;
+    if (action.dataset.action === "add-direction-resource") list.insertAdjacentHTML("beforeend", directionResourceEditorRow());
+    if (action.dataset.action === "remove-direction-resource") action.closest(".platform-direction-resource-row")?.remove();
+    if (action.dataset.action === "move-direction-resource") { const row = action.closest(".platform-direction-resource-row"), offset = Number(action.dataset.offset), sibling = offset < 0 ? row?.previousElementSibling : row?.nextElementSibling; if (row && sibling) offset < 0 ? list.insertBefore(row, sibling) : list.insertBefore(sibling, row); }
     return;
   }
   if (action.dataset.action === "close-optional-dashboard-section") {
@@ -7057,8 +7070,6 @@ root.addEventListener("drop", (event) => {
 });
 
 root.addEventListener("change", (event) => {
-  const directionMediaType = event.target.closest?.('[data-form="activity-direction"] [name="mediaType"]');
-  if (directionMediaType) { const label = directionMediaType.form?.querySelector("[data-direction-url-label]"); if (label) label.hidden = directionMediaType.value === "none"; return; }
   const activityTitle = event.target.closest?.("[data-activity-directions-title]");
   if (activityTitle) { const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id; if (classId) activityDirections.setTitle(classId, activityTitle.value); return; }
   if (event.target.matches?.("[data-classroom-bob-enabled], [data-classroom-bob-placement], [data-classroom-bob-earn-minutes], [data-classroom-bob-daily-limit]")) { const enabled = document.querySelector("[data-classroom-bob-enabled]")?.checked ?? true, placement = document.querySelector("[data-classroom-bob-placement]")?.value || "move", earnMinutes = Math.min(30, Math.max(1, Number(document.querySelector("[data-classroom-bob-earn-minutes]")?.value) || 5)), dailyUnlockLimit = Math.min(10, Math.max(1, Number(document.querySelector("[data-classroom-bob-daily-limit]")?.value) || 6)); window.localStorage.setItem(CLASSROOM_BOB_DISPLAY_KEY, JSON.stringify({ enabled, placement, earnMinutes, dailyUnlockLimit })); floatingBobCornerIndex = 0; floatingBobGreenSince = Date.now(); updateBobRewardOutputs(); applyClassroomBobDisplay(); scheduleNextBobMove(); return; }

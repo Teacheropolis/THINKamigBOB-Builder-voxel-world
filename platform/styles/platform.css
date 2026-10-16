@@ -1131,6 +1131,10 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-direction-editor label { display: grid; gap: 0.3rem; font-weight: 800; }
 .platform-direction-editor [hidden] { display: none; }
 .platform-direction-editor textarea { resize: vertical; }
+.platform-direction-resource-editor { display: grid; gap: 0.7rem; padding: 0.8rem; border: 2px solid var(--platform-border); border-radius: 0.65rem; }
+.platform-direction-resource-row { display: grid; grid-template-columns: minmax(9rem, 0.45fr) minmax(14rem, 1fr) auto; gap: 0.55rem; align-items: end; padding: 0.7rem; border-radius: 0.55rem; background: #fffaf0; }
+.platform-direction-resources { display: grid; gap: 0.75rem; }
+@media (max-width: 760px) { .platform-direction-resource-row { grid-template-columns: 1fr; } }
 .platform-direction-image { display: block; width: auto; max-width: 100%; max-height: 28rem; margin-inline: auto; border-radius: 0.65rem; object-fit: contain; }
 .platform-direction-embed { display: block; width: 100%; min-height: clamp(18rem, 48vw, 38rem); border: 0; border-radius: 0.65rem; background: #fff; }
 .platform-activity-directions-student { grid-column: 1 / -1; }
