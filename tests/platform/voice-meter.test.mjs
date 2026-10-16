@@ -69,6 +69,10 @@ test("teacher and student display expose a private browser-only voice meter", ()
   assert.match(app, /scheduleNextBobMove\(\)/);
   assert.match(app, /BOB_POSE_COUNT = 200/);
   assert.match(app, /earnMinutes: 5/);
+  assert.match(app, /dailyUnlockLimit: 6/);
+  assert.match(app, /data-classroom-bob-daily-limit/);
+  assert.match(app, /CLASSROOM_BOB_DAILY_KEY/);
+  assert.match(app, /localBobRewardDate/);
   assert.match(app, /floatingBobPoseBag/);
   assert.match(css, /background-size: 500% 500%/);
   for (let sheet = 1; sheet <= 8; sheet += 1) assert.equal(existsSync(new URL(`../../assets/images/characters/bob-unlocks-${String(sheet).padStart(2, "0")}.webp`, import.meta.url)), true);

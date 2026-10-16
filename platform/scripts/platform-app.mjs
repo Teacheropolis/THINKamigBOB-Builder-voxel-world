@@ -148,6 +148,7 @@ const DO_NOW_POSTS_KEY = "thinkamigbob.do-now-posts.v1";
 const DO_NOW_LIVE_KEY = "thinkamigbob.do-now-live.v1";
 const CLASSROOM_BOB_DISPLAY_KEY = "thinkamigbob.classroom-bob-display.v1";
 const CLASSROOM_BOB_UNLOCK_KEY = "thinkamigbob.classroom-bob-unlocks.v1";
+const CLASSROOM_BOB_DAILY_KEY = "thinkamigbob.classroom-bob-daily.v1";
 const BOB_POSE_COUNT = 200;
 const VOICE_METER_HISTORY_KEY = "thinkamigbob.voice-meter-history.v1";
 const VOICE_METER_ACTIVITY_KEY = "thinkamigbob.voice-meter-activity.v1";
@@ -441,7 +442,12 @@ function segmentActiveVoiceMeter(activity) {
 }
 
 function readClassroomBobDisplay() {
-  try { return { enabled: true, placement: "move", earnMinutes: 5, ...JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_DISPLAY_KEY) || "{}") }; } catch { return { enabled: true, placement: "move", earnMinutes: 5 }; }
+  try {
+    const setting = { enabled: true, placement: "move", earnMinutes: 5, dailyUnlockLimit: 6, ...JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_DISPLAY_KEY) || "{}") };
+    setting.earnMinutes = Math.min(30, Math.max(1, Number(setting.earnMinutes) || 5));
+    setting.dailyUnlockLimit = Math.min(10, Math.max(1, Number(setting.dailyUnlockLimit) || 6));
+    return setting;
+  } catch { return { enabled: true, placement: "move", earnMinutes: 5, dailyUnlockLimit: 6 }; }
 }
 
 function readClassroomBobUnlocks() {
@@ -453,6 +459,34 @@ function writeClassroomBobUnlocks(count) {
   const classId = currentDoNowClassId();
   let all = {}; try { all = JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_UNLOCK_KEY) || "{}"); } catch {}
   all[classId] = Math.min(BOB_POSE_COUNT, Math.max(2, count)); window.localStorage.setItem(CLASSROOM_BOB_UNLOCK_KEY, JSON.stringify(all));
+}
+
+function localBobRewardDate() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function readClassroomBobDailyProgress() {
+  const classId = currentDoNowClassId(), today = localBobRewardDate();
+  try {
+    const all = JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_DAILY_KEY) || "{}");
+    const saved = all[classId];
+    return saved?.date === today ? { date: today, earned: Math.max(0, Number(saved.earned) || 0) } : { date: today, earned: 0 };
+  } catch { return { date: today, earned: 0 }; }
+}
+
+function writeClassroomBobDailyProgress(progress) {
+  const classId = currentDoNowClassId();
+  let all = {}; try { all = JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_DAILY_KEY) || "{}"); } catch {}
+  all[classId] = { date: localBobRewardDate(), earned: Math.max(0, Number(progress.earned) || 0) };
+  window.localStorage.setItem(CLASSROOM_BOB_DAILY_KEY, JSON.stringify(all));
+}
+
+function updateBobRewardOutputs() {
+  const setting = readClassroomBobDisplay(), progress = readClassroomBobDailyProgress();
+  document.querySelectorAll("[data-bob-unlock-count]").forEach((output) => { output.textContent = String(readClassroomBobUnlocks()); });
+  document.querySelectorAll("[data-bob-daily-earned]").forEach((output) => { output.textContent = String(Math.min(progress.earned, setting.dailyUnlockLimit)); });
+  document.querySelectorAll("[data-bob-daily-limit-output]").forEach((output) => { output.textContent = String(setting.dailyUnlockLimit); });
 }
 
 function shuffledBobPoses(count) {
@@ -478,11 +512,12 @@ function applyUnlockedBobPose(bobs, requestedPose = null) {
 function updateBobUnlockProgress(meterState) {
   const now = Date.now();
   if (meterState !== "green") { floatingBobGreenSince = now; return; }
-  const setting = readClassroomBobDisplay(), current = readClassroomBobUnlocks(), required = Math.max(1, Number(setting.earnMinutes) || 5) * 60000;
+  const setting = readClassroomBobDisplay(), current = readClassroomBobUnlocks(), progress = readClassroomBobDailyProgress(), dailyLimit = Math.min(10, Math.max(1, Number(setting.dailyUnlockLimit) || 6)), required = Math.max(1, Number(setting.earnMinutes) || 5) * 60000;
+  if (progress.earned >= dailyLimit) { floatingBobGreenSince = now; return; }
   if (current >= BOB_POSE_COUNT || now - floatingBobGreenSince < required) return;
-  writeClassroomBobUnlocks(current + 1); floatingBobGreenSince = now; floatingBobPoseBag.push(current);
-  floatingBobUnlockMessage = `New Bob pose unlocked! ${current + 1} of ${BOB_POSE_COUNT}.`; floatingBobUnlockMessageUntil = now + 6000;
-  document.querySelectorAll("[data-bob-unlock-count]").forEach((output) => { output.textContent = String(current + 1); });
+  writeClassroomBobUnlocks(current + 1); writeClassroomBobDailyProgress({ earned: progress.earned + 1 }); floatingBobGreenSince = now; floatingBobPoseBag.push(current);
+  floatingBobUnlockMessage = progress.earned + 1 >= dailyLimit ? `New Bob pose unlocked! Today’s goal is complete: ${dailyLimit} of ${dailyLimit}.` : `New Bob pose unlocked! ${current + 1} of ${BOB_POSE_COUNT}.`;
+  floatingBobUnlockMessageUntil = now + 6000; updateBobRewardOutputs();
 }
 
 function scheduleNextBobMove() {
@@ -517,7 +552,8 @@ function installClassroomDisplayChoices() {
   if (separateScreen) separateScreen.textContent = "Open Separate Classroom Screen";
   if (!tools.querySelector(".platform-classroom-bob-controls")) {
     const setting = readClassroomBobDisplay();
-    tools.querySelector("#classroom-display-help")?.insertAdjacentHTML("beforebegin", `<fieldset class="platform-classroom-bob-controls"><legend>Bob on the classroom display</legend><label><input type="checkbox" data-classroom-bob-enabled${setting.enabled ? " checked" : ""}> Show Bob</label><label>Where Bob moves<select data-classroom-bob-placement><option value="move"${setting.placement === "move" ? " selected" : ""}>Between a bottom and top corner</option><option value="top"${setting.placement === "top" ? " selected" : ""}>Top corners only</option><option value="bottom"${setting.placement === "bottom" ? " selected" : ""}>Bottom corners only</option></select></label><label>Earn a new pose after <input type="number" min="1" max="30" value="${Number(setting.earnMinutes) || 5}" data-classroom-bob-earn-minutes> quiet minutes</label><p><strong><output data-bob-unlock-count>${readClassroomBobUnlocks()}</output> of ${BOB_POSE_COUNT}</strong> poses unlocked. Bob begins with 2.</p></fieldset>`);
+    const daily = readClassroomBobDailyProgress();
+    tools.querySelector("#classroom-display-help")?.insertAdjacentHTML("beforebegin", `<fieldset class="platform-classroom-bob-controls"><legend>Bob on the classroom display</legend><label><input type="checkbox" data-classroom-bob-enabled${setting.enabled ? " checked" : ""}> Show Bob</label><label>Where Bob moves<select data-classroom-bob-placement><option value="move"${setting.placement === "move" ? " selected" : ""}>Between a bottom and top corner</option><option value="top"${setting.placement === "top" ? " selected" : ""}>Top corners only</option><option value="bottom"${setting.placement === "bottom" ? " selected" : ""}>Bottom corners only</option></select></label><label>Earn a new pose after <input type="number" min="1" max="30" value="${Number(setting.earnMinutes) || 5}" data-classroom-bob-earn-minutes> quiet minutes</label><label>Daily pose limit <input type="number" min="1" max="10" value="${Math.min(10, Math.max(1, Number(setting.dailyUnlockLimit) || 6))}" data-classroom-bob-daily-limit> per class</label><p><strong>Today: <output data-bob-daily-earned>${Math.min(daily.earned, setting.dailyUnlockLimit)}</output> of <output data-bob-daily-limit-output>${setting.dailyUnlockLimit}</output></strong> new poses earned. The count resets each day.</p><p><strong><output data-bob-unlock-count>${readClassroomBobUnlocks()}</output> of ${BOB_POSE_COUNT}</strong> total poses unlocked. Bob begins with 2.</p></fieldset>`);
   }
 }
 
@@ -6937,7 +6973,7 @@ root.addEventListener("drop", (event) => {
 });
 
 root.addEventListener("change", (event) => {
-  if (event.target.matches?.("[data-classroom-bob-enabled], [data-classroom-bob-placement], [data-classroom-bob-earn-minutes]")) { const enabled = document.querySelector("[data-classroom-bob-enabled]")?.checked ?? true, placement = document.querySelector("[data-classroom-bob-placement]")?.value || "move", earnMinutes = Math.min(30, Math.max(1, Number(document.querySelector("[data-classroom-bob-earn-minutes]")?.value) || 5)); window.localStorage.setItem(CLASSROOM_BOB_DISPLAY_KEY, JSON.stringify({ enabled, placement, earnMinutes })); floatingBobCornerIndex = 0; floatingBobGreenSince = Date.now(); applyClassroomBobDisplay(); scheduleNextBobMove(); return; }
+  if (event.target.matches?.("[data-classroom-bob-enabled], [data-classroom-bob-placement], [data-classroom-bob-earn-minutes], [data-classroom-bob-daily-limit]")) { const enabled = document.querySelector("[data-classroom-bob-enabled]")?.checked ?? true, placement = document.querySelector("[data-classroom-bob-placement]")?.value || "move", earnMinutes = Math.min(30, Math.max(1, Number(document.querySelector("[data-classroom-bob-earn-minutes]")?.value) || 5)), dailyUnlockLimit = Math.min(10, Math.max(1, Number(document.querySelector("[data-classroom-bob-daily-limit]")?.value) || 6)); window.localStorage.setItem(CLASSROOM_BOB_DISPLAY_KEY, JSON.stringify({ enabled, placement, earnMinutes, dailyUnlockLimit })); floatingBobCornerIndex = 0; floatingBobGreenSince = Date.now(); updateBobRewardOutputs(); applyClassroomBobDisplay(); scheduleNextBobMove(); return; }
   const doNowImage = event.target.closest?.("[data-do-now-image]");
   if (doNowImage) { const file = doNowImage.files?.[0]; if (file?.type.startsWith("image/") && file.size <= 6 * 1024 * 1024) { const reader = new FileReader(); reader.addEventListener("load", () => { doNowDraft.image = String(reader.result); openDoNowEditor(doNowDraft); }, { once: true }); reader.readAsDataURL(file); } return; }
   if (event.target.closest?.("[data-do-now-editor]")) { updateDoNowDraftFromEditor(event.target.closest("[data-do-now-editor]")); return; }
