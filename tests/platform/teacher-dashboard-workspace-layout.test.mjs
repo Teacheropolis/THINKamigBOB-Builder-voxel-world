@@ -179,6 +179,13 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(css, /platform-current-plan-details > summary \{ min-height: 2\.35rem/);
   assert.match(css, /platform-more-classroom-tools-standalone > summary \{ color: var\(--platform-muted\)/);
   assert.match(css, /platform-current-plan-grid article \{[^}]+min-height: 6\.25rem; height: auto/);
+  assert.match(app, /Today’s “I Can” Goals/);
+  assert.match(app, /Suggested timeline:/);
+  assert.match(app, /Minimize Quick Setup/);
+  assert.match(app, /missionChoice === "previous"\) \{ form\.hidden = true; return; \}/);
+  assert.match(app, /data-readiness-no-mission-confirmation/);
+  assert.match(app, /The selected mission is <strong data-readiness-current-mission>/);
+  assert.match(app, /pendingScrollTarget = "teacher-todays-resources"/);
   assert.match(app, /platform-current-plan-featured/);
   assert.match(css, /platform-current-class-plan-compact \.platform-current-plan-timer-widget \{ grid-template-columns: 4rem/);
   assert.match(css, /platform-today-board > \.platform-teacher-overview \{ grid-template-columns:[^}]+padding: 0\.65rem 0\.8rem/);

@@ -875,11 +875,27 @@ function automaticGoalsForClass(classId) {
   return [...new Set(goals)].slice(0, 6);
 }
 
+function iCanGoal(goal) {
+  const text = String(goal || "").trim().replace(/[.]+$/, "");
+  if (!text) return "";
+  if (/^I can\b/i.test(text)) return `${text}.`;
+  return `I can ${text.charAt(0).toLowerCase()}${text.slice(1)}.`;
+}
+
+function suggestedClassTimeline(classId) {
+  const profile = classSetupProfiles.profile(classId) ?? {};
+  const duration = Math.max(15, Number(profile.schedule?.durationMinutes || classTimerSchedule.read().durationMinutes) || 45);
+  const launch = Math.max(3, Math.round(duration * 0.15));
+  const reflect = Math.max(5, Math.round(duration * 0.2));
+  const work = Math.max(5, duration - launch - reflect);
+  return `${launch} min launch · ${work} min work time · ${reflect} min reflection`;
+}
+
 function todaysGoalInputsMarkup(classId) {
   const profile = classSetupProfiles.profile(classId) ?? {};
   const automatic = automaticGoalsForClass(classId);
-  const goals = profile.todayGoalsMode === "custom" ? (profile.todayGoals ?? []) : automatic;
-  return `<div class="platform-quick-goals" data-quick-goals data-goals-mode="${profile.todayGoalsMode === "custom" ? "custom" : "automatic"}"><div><h4>Today’s Goals</h4><p>${profile.todayGoalsMode === "custom" ? "Teacher-edited goals" : "Suggested automatically from the class grade, mission goal, and selected activities"}</p></div><div data-quick-goal-list>${goals.length ? goals.map((goal, index) => `<label>Goal ${index + 1}<span><input name="todayGoal" maxlength="80" value="${escapeHtml(goal)}"><button type="button" data-action="delete-quick-goal" aria-label="Delete goal ${index + 1}">Delete</button></span></label>`).join("") : `<p data-no-quick-goals>No goal is currently assigned.</p>`}</div><button type="button" data-action="add-quick-goal">+ Add a Goal</button></div>`;
+  const goals = (profile.todayGoalsMode === "custom" ? (profile.todayGoals ?? []) : automatic).map(iCanGoal).filter(Boolean);
+  return `<div class="platform-quick-goals" data-quick-goals data-goals-mode="${profile.todayGoalsMode === "custom" ? "custom" : "automatic"}"><div><h4>Today’s “I Can” Goals</h4><p>${profile.todayGoalsMode === "custom" ? "Teacher-edited student goals" : "Suggested automatically from the class grade, mission goal, and selected activities"}</p><p class="platform-quick-goals-timeline"><strong>Suggested timeline:</strong> ${escapeHtml(suggestedClassTimeline(classId))}</p></div><div data-quick-goal-list>${goals.length ? goals.map((goal, index) => `<label>I Can Goal ${index + 1}<span><input name="todayGoal" maxlength="90" value="${escapeHtml(goal)}"><button type="button" data-action="delete-quick-goal" aria-label="Delete I Can goal ${index + 1}">Delete</button></span></label>`).join("") : `<p data-no-quick-goals>No goal is currently assigned.</p>`}</div><button type="button" data-action="add-quick-goal">+ Add an I Can Goal</button></div>`;
 }
 
 function blankClassSchedule() {
@@ -1894,10 +1910,11 @@ function teacherDashboardView(state) {
             <a class="platform-button platform-button-secondary platform-preview-student-view" href="#${ROUTES.PREVIEW_STUDENT}" target="_blank" rel="noopener">Preview Student View — No Code</a>
           </div>
           <form class="platform-class-readiness-panel" data-form="class-readiness" hidden>
-            <div><p class="platform-command-label">Quick class setup</p><h3>Settings for ${escapeHtml(className)}</h3><p>These choices stay with this class when you move to another period and return later.</p></div>
+            <div class="platform-class-readiness-heading"><div><p class="platform-command-label">Quick class setup</p><h3>Settings for ${escapeHtml(className)}</h3><p>These choices stay with this class when you move to another period and return later.</p></div><button type="button" data-action="close-class-readiness">Minimize Quick Setup</button></div>
             <label>Today’s plan<select name="mission" data-readiness-setting="mission"><option value="previous"${readiness.mission === "previous" ? " selected" : ""}>Continue current settings</option><option value="new"${readiness.mission === "new" ? " selected" : ""}>Start a new mission</option><option value="none"${readiness.mission === "none" ? " selected" : ""}>No mission needed today</option></select></label>
             ${todaysGoalInputsMarkup(classRecord?.id)}
-            <div class="platform-actions"><button type="button" data-action="save-class-readiness">Save Today’s Plan Setting</button><button type="button" data-action="close-class-readiness">Cancel</button></div>
+            <div class="platform-actions"><button type="button" data-action="save-class-readiness">Apply Today’s Plan</button><button type="button" data-action="close-class-readiness">Minimize</button></div>
+            <div class="platform-todays-mission-confirmation" data-readiness-no-mission-confirmation hidden role="dialog" aria-modal="true" aria-labelledby="readiness-no-mission-title"><div class="platform-todays-mission-confirmation-panel"><h4 id="readiness-no-mission-title">Remove today’s mission?</h4><p>The selected mission is <strong data-readiness-current-mission>${escapeHtml(missionState.title || "No mission selected")}</strong>. Are you sure you want no mission for this class today?</p><div class="platform-todays-mission-confirmation-actions"><button type="button" data-action="keep-readiness-mission">Keep Selected Mission</button><button type="button" data-action="confirm-readiness-no-mission">Use No Mission Today</button></div></div></div>
             <button class="platform-return-current-plan" type="button" data-action="return-to-current-class-plan">Return to Today’s Class Plan</button>
           </form>
           <section class="platform-message-board-quick-panel" data-message-board-quick-panel hidden>
@@ -5602,7 +5619,7 @@ function handleClick(event) {
     goals.dataset.goalsMode = "custom";
     list.querySelector("[data-no-quick-goals]")?.remove();
     const index = list.querySelectorAll('[name="todayGoal"]').length;
-    list.insertAdjacentHTML("beforeend", `<label>Goal ${index + 1}<span><input name="todayGoal" maxlength="80" value=""><button type="button" data-action="delete-quick-goal" aria-label="Delete goal ${index + 1}">Delete</button></span></label>`);
+    list.insertAdjacentHTML("beforeend", `<label>I Can Goal ${index + 1}<span><input name="todayGoal" maxlength="90" value="I can "><button type="button" data-action="delete-quick-goal" aria-label="Delete I Can goal ${index + 1}">Delete</button></span></label>`);
     list.querySelectorAll('[name="todayGoal"]')[index]?.focus();
     return;
   }
@@ -5614,15 +5631,42 @@ function handleClick(event) {
     if (list && !list.querySelector('[name="todayGoal"]')) list.innerHTML = `<p data-no-quick-goals>No goal is currently assigned.</p>`;
     return;
   }
+  if (action.dataset.action === "keep-readiness-mission") {
+    const form = action.closest("[data-form='class-readiness']");
+    const confirmation = form?.querySelector("[data-readiness-no-mission-confirmation]");
+    if (confirmation) confirmation.hidden = true;
+    if (form?.elements.mission) form.elements.mission.value = "previous";
+    form?.elements.mission?.focus();
+    return;
+  }
+  if (action.dataset.action === "confirm-readiness-no-mission") {
+    const form = action.closest("[data-form='class-readiness']");
+    const confirmation = form?.querySelector("[data-readiness-no-mission-confirmation]");
+    if (confirmation) confirmation.hidden = true;
+    if (form) form.dataset.noMissionConfirmed = "true";
+    form?.querySelector('[data-action="save-class-readiness"]')?.click();
+    return;
+  }
   if (action.dataset.action === "save-class-readiness") {
     const form = action.closest("[data-form='class-readiness']");
     const state = session.read();
     const classId = currentTeacherClass(state.teacherId)?.id;
     if (!form || !classId) return;
-    const readiness = { ...classReadiness(classId), mission: form.elements.mission.value };
+    const missionChoice = form.elements.mission.value;
+    if (missionChoice === "previous") { form.hidden = true; return; }
+    const currentMission = todaysMission.read();
+    if (missionChoice === "none" && currentMission.title && form.dataset.noMissionConfirmed !== "true") {
+      const confirmation = form.querySelector("[data-readiness-no-mission-confirmation]");
+      const missionName = confirmation?.querySelector("[data-readiness-current-mission]");
+      if (missionName) missionName.textContent = currentMission.title;
+      if (confirmation) { confirmation.hidden = false; confirmation.querySelector('[data-action="keep-readiness-mission"]')?.focus(); }
+      return;
+    }
+    delete form.dataset.noMissionConfirmed;
+    const readiness = { ...classReadiness(classId), mission: missionChoice };
     const profile = classSetupProfiles.profile(classId) ?? {};
     const goalsRegion = form.querySelector("[data-quick-goals]");
-    const todayGoals = [...form.querySelectorAll('[name="todayGoal"]')].map((input) => input.value.trim()).filter(Boolean).slice(0, 6);
+    const todayGoals = [...form.querySelectorAll('[name="todayGoal"]')].map((input) => iCanGoal(input.value)).filter(Boolean).slice(0, 6);
     const todayGoalsMode = goalsRegion?.dataset.goalsMode === "custom" ? "custom" : "automatic";
     classSetupProfiles.save(classId, { ...profile, readiness, todayGoals, todayGoalsMode });
     if (readiness.mission === "none" || !todayGoals.length) todaysMission.clear();
