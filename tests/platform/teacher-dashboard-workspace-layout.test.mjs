@@ -34,6 +34,7 @@ test("teacher workspace uses layered surfaces to emphasize functions", () => {
 test("teacher and student workspaces use consistent visual zones for quick scanning", () => {
   for (const zone of ["platform-zone-today", "platform-zone-present", "platform-zone-create", "platform-zone-review", "platform-zone-settings"]) assert.match(css + app, new RegExp(zone));
   for (const label of ["Mission Route", "Mission Briefing", "Inventor’s Workshop", "Evidence Vault", "Captain’s Log", "Archive Room"]) assert.match(app, new RegExp(label));
+  for (const badge of ["mission-briefing-brass-badge.png", "inventors-workshop-brass-badge.png", "evidence-vault-brass-badge.png", "captains-log-brass-badge.png"]) assert.match(app, new RegExp(badge.replace(".", "\\.")));
   assert.doesNotMatch(app, /What I’m Doing Now/);
   assert.doesNotMatch(app, /<strong>Today<\/strong><small>Current goal and activity<\/small>/);
   for (const zone of ["platform-student-zone-now", "platform-student-zone-work", "platform-student-zone-review", "platform-student-zone-history"]) assert.match(app, new RegExp(zone));
