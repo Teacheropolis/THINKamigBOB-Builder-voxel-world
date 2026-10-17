@@ -681,12 +681,13 @@ summary:focus-visible {
 .platform-live-lesson-tool-help { grid-column: 1 / -1; color: var(--platform-muted); font-size: 0.75rem; }
 .platform-current-class-plan-compact { gap: 0.65rem; padding: 0.8rem; }
 .platform-live-lesson-status { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.55rem; border: 1px solid #a8c5b7; border-radius: 0.65rem; background: #fff; }
-.platform-live-lesson-status button { min-height: 2.25rem; flex: 1 1 9.5rem; padding: 0.35rem 0.55rem; border: 1px solid #c6d7cf; border-radius: 0.45rem; color: var(--platform-muted); background: #f4faf7; font: inherit; font-size: 0.72rem; cursor: pointer; }
+.platform-live-lesson-status button { display: grid; min-height: 2.25rem; flex: 1 1 9.5rem; gap: 0.1rem; padding: 0.35rem 0.55rem; border: 1px solid #c6d7cf; border-radius: 0.45rem; color: var(--platform-muted); background: #f4faf7; font: inherit; font-size: 0.72rem; cursor: pointer; }
 .platform-live-lesson-status button strong { color: var(--platform-navy); }
 .platform-live-lesson-tools-compact { display: block; padding: 0.6rem; }
 .platform-live-lesson-primary-tools { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.65rem; align-items: center; }
 .platform-live-lesson-primary-tools h4 { white-space: nowrap; }
-.platform-live-lesson-primary-tools .platform-live-lesson-tool-buttons { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.platform-live-lesson-primary-tools .platform-live-lesson-tool-buttons { display: flex; justify-content: flex-end; }
+.platform-live-lesson-primary-tools .platform-live-lesson-tool-buttons button { min-width: min(100%, 16rem); }
 .platform-more-classroom-tools { margin-top: 0.55rem; border-top: 1px solid #c8d8de; }
 .platform-more-classroom-tools > summary, .platform-current-plan-details > summary { padding: 0.55rem; color: var(--platform-blue-dark); font-weight: 850; cursor: pointer; }
 .platform-more-classroom-tools > .platform-live-lesson-tool-buttons { grid-template-columns: repeat(4, minmax(0, 1fr)); padding-top: 0.45rem; }
