@@ -180,6 +180,8 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /CLASSROOM_BOB_DAILY_MENU_KEY/);
   assert.match(app, /saved\?\.date === today[\s\S]*enabled: false, menuHidden: true/);
   assert.match(app, /menuLabel\.textContent = menuHidden \? "Show menu" : "Hide menu"/);
+  assert.match(app, /if \(menuInput\) menuInput\.checked = false/);
+  assert.match(app, /controls\.dataset\.menuHidden = String\(menuHidden\)/);
   assert.match(css, /platform-classroom-bob-hide-menu, \.platform-classroom-bob-settings \{ display: none/);
   assert.match(css, /platform-classroom-bob-controls:has\(input\[data-classroom-bob-enabled\]:checked\)/);
   assert.match(css, /platform-classroom-bob-settings \{ display: grid; flex: 1 1 42rem; grid-template-columns:/);
