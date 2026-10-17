@@ -694,6 +694,15 @@ summary:focus-visible {
 .platform-current-plan-featured .platform-current-plan-timer-card { padding: 0.65rem; border: 1px solid #c6d7cf; border-radius: 0.65rem; background: #fff; }
 .platform-current-plan-details { border: 1px solid #b8cdc3; border-radius: 0.65rem; background: #f8fcfa; }
 .platform-current-plan-details > .platform-current-plan-grid { padding: 0.65rem; border-top: 1px solid #c8d8d0; }
+.platform-more-classroom-tools-standalone { margin: 0; border: 1px solid #b8cdc3; border-radius: 0.55rem; background: #f8fcfa; }
+.platform-more-classroom-tools-standalone > .platform-live-lesson-tools { margin: 0; padding: 0.55rem; border: 0; border-top: 1px solid #c8d8d0; border-radius: 0; background: transparent; }
+.platform-run-class-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
+.platform-run-class-actions .platform-lesson-readiness-items { margin-right: auto; }
+.platform-run-class-actions .platform-start-classroom-display, .platform-run-class-actions .platform-preview-student-view { min-height: 2.65rem; }
+.platform-current-class-plan-compact .platform-current-plan-timer-widget { grid-template-columns: 4.75rem minmax(9rem, 1fr) minmax(22rem, 1.6fr); }
+.platform-current-class-plan-compact .platform-current-plan-timer-wheel { width: 4.75rem; }
+.platform-current-class-plan-compact .platform-current-plan-timer-controls { grid-column: auto; align-self: center; }
+@media (max-width: 850px) { .platform-current-class-plan-compact .platform-current-plan-timer-widget { grid-template-columns: 4.5rem 1fr; } .platform-current-class-plan-compact .platform-current-plan-timer-controls { grid-column: 1 / -1; } }
 @media (max-width: 780px) { .platform-live-lesson-primary-tools { grid-template-columns: 1fr; } .platform-live-lesson-primary-tools .platform-live-lesson-tool-buttons, .platform-more-classroom-tools > .platform-live-lesson-tool-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .platform-today-primary-grid > #teacher-classroom-tools,
 .platform-today-primary-grid > .platform-command-card-timer,

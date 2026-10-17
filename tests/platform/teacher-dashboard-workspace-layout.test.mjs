@@ -79,12 +79,12 @@ test("teacher dashboard provides a responsive categorized teacher menu and statu
   for (const label of ["Today", "Classes", "Evidence", "Account", "Manage Classes"]) assert.match(app, new RegExp(`>${label}<`));
   for (const removed of ["Run Class", "Classroom", "Setup"]) assert.doesNotMatch(app, new RegExp(`>${removed}<`));
   assert.match(app, /platform-command-layout-no-sidebar/);
-  assert.match(app, /class="platform-teacher-overview-status"/);
+  assert.match(app, /class="platform-teacher-overview-status[^\"]*"/);
   assert.match(css, /\.platform-workspace-heading \{[^}]*grid-column:\s*1 \/ -1/);
   assert.match(css, /\.platform-evidence-launch-card \{ grid-column: 1 \/ -1; \}/);
   assert.match(css, /@media \(max-width: 800px\)[\s\S]*\.platform-teacher-overview \{ grid-template-columns: 1fr; \}/);
   assert.match(css, /@media \(max-width: 520px\)[\s\S]*\.platform-teacher-overview-status \{ width: 100%; \}/);
-  for (const label of ["Lesson readiness", "Plan ready", "Message ready", "Timer ready", "Start Classroom Display"]) assert.match(app, new RegExp(label));
+  for (const label of ["Plan ready", "Start Classroom Display", "Preview Student View — No Code"]) assert.match(app, new RegExp(label));
   assert.match(css, /\.platform-teacher-menu \{[^}]*display: flex/);
   assert.match(css, /\.platform-teacher-menu-category:hover > \.platform-teacher-menu-panel/);
   assert.match(css, /\.platform-teacher-menu-category\.is-active > summary/);
@@ -167,12 +167,13 @@ test("scheduled Pomodoro classes use a Pomodoro class timer and an independent a
 });
 
 test("Run Today’s Class shows a compact live current plan", () => {
-  for (const label of ["Classroom Display", "More Classroom Tools", "View Lesson Details and Live Status", "Assigned activities", "Students can work in", "Current message", "Latest whiteboard", "Live Voice Meter", "Compare with"]) assert.match(app, new RegExp(label));
+  for (const label of ["Start Classroom Display", "Preview Student View", "More Classroom Tools", "View Lesson Details and Live Status", "Assigned activities", "Students can work in", "Current message", "Latest whiteboard", "Live Voice Meter", "Compare with"]) assert.match(app, new RegExp(label));
   const compactTools = app.slice(app.indexOf('const presentationToolControls ='), app.indexOf('const timerVisual ='));
   assert.doesNotMatch(compactTools, />Quick Message<|>Whiteboard<|>Voice Meter</);
   assert.doesNotMatch(app, /<h3 id="current-class-plan-title">Live Lesson Dashboard<\/h3>/);
   assert.match(app, /platform-live-lesson-status/);
   assert.match(app, /platform-current-plan-featured/);
+  assert.match(css, /platform-current-class-plan-compact \.platform-current-plan-timer-widget \{ grid-template-columns: 4\.75rem/);
   assert.doesNotMatch(app, /Classroom Sound Goals/);
   for (const label of ["Present on This Screen", "Open Separate Classroom Screen", "Floating Timer", "Quick Message", "Whiteboard", "Voice Meter"]) assert.match(app, new RegExp(label));
   for (const label of ["Teacher-led instruction", "Independent seat work", "Collaborative activity", "Sound goal achieved", "Almost there"]) assert.match(app, new RegExp(label));
