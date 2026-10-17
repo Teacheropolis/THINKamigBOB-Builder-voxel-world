@@ -176,7 +176,10 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(css, /platform-current-class-plan-compact \.platform-current-plan-timer-widget \{ grid-template-columns: 4rem/);
   assert.match(css, /platform-today-board > \.platform-teacher-overview \{ grid-template-columns:[^}]+padding: 0\.65rem 0\.8rem/);
   assert.match(css, /platform-main:has\(> \.platform-command-layout\) > \.platform-page-heading \{[^}]+margin-bottom: 0\.65rem/);
-  assert.match(app, /data-classroom-bob-menu-hidden> Hide menu/);
+  assert.match(app, /data-classroom-bob-menu-hidden[^>]*> <span data-classroom-bob-menu-label>/);
+  assert.match(app, /CLASSROOM_BOB_DAILY_MENU_KEY/);
+  assert.match(app, /saved\?\.date === today[\s\S]*enabled: false, menuHidden: true/);
+  assert.match(app, /menuLabel\.textContent = menuHidden \? "Show menu" : "Hide menu"/);
   assert.match(css, /platform-classroom-bob-hide-menu, \.platform-classroom-bob-settings \{ display: none/);
   assert.match(css, /platform-classroom-bob-controls:has\(input\[data-classroom-bob-enabled\]:checked\)/);
   assert.match(css, /platform-classroom-bob-settings \{ display: grid; flex: 1 1 42rem; grid-template-columns:/);

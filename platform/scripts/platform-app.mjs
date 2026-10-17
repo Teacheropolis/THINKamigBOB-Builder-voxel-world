@@ -149,6 +149,7 @@ const TEACHER_RESEARCH_LINK_BANK_KEY = "thinkamigbob.teacher-research-link-bank.
 const DO_NOW_POSTS_KEY = "thinkamigbob.do-now-posts.v1";
 const DO_NOW_LIVE_KEY = "thinkamigbob.do-now-live.v1";
 const CLASSROOM_BOB_DISPLAY_KEY = "thinkamigbob.classroom-bob-display.v1";
+const CLASSROOM_BOB_DAILY_MENU_KEY = "thinkamigbob.classroom-bob-daily-menu.v1";
 const CLASSROOM_BOB_UNLOCK_KEY = "thinkamigbob.classroom-bob-unlocks.v1";
 const CLASSROOM_BOB_DAILY_KEY = "thinkamigbob.classroom-bob-daily.v1";
 const BOB_POSE_COUNT = 200;
@@ -445,11 +446,27 @@ function segmentActiveVoiceMeter(activity) {
 
 function readClassroomBobDisplay() {
   try {
-    const setting = { enabled: true, placement: "move", earnMinutes: 5, dailyUnlockLimit: 6, ...JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_DISPLAY_KEY) || "{}") };
+    const setting = { placement: "move", earnMinutes: 5, dailyUnlockLimit: 6, ...JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_DISPLAY_KEY) || "{}"), enabled: readClassroomBobDailyMenu().enabled };
     setting.earnMinutes = Math.min(30, Math.max(1, Number(setting.earnMinutes) || 5));
     setting.dailyUnlockLimit = Math.min(10, Math.max(1, Number(setting.dailyUnlockLimit) || 6));
     return setting;
-  } catch { return { enabled: true, placement: "move", earnMinutes: 5, dailyUnlockLimit: 6 }; }
+  } catch { return { enabled: false, placement: "move", earnMinutes: 5, dailyUnlockLimit: 6 }; }
+}
+
+function readClassroomBobDailyMenu() {
+  const classId = currentDoNowClassId(), today = localBobRewardDate();
+  try {
+    const all = JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_DAILY_MENU_KEY) || "{}");
+    const saved = all[classId];
+    return saved?.date === today ? { enabled: Boolean(saved.enabled), menuHidden: Boolean(saved.menuHidden) } : { enabled: false, menuHidden: true };
+  } catch { return { enabled: false, menuHidden: true }; }
+}
+
+function writeClassroomBobDailyMenu(state) {
+  const classId = currentDoNowClassId();
+  let all = {}; try { all = JSON.parse(window.localStorage.getItem(CLASSROOM_BOB_DAILY_MENU_KEY) || "{}"); } catch {}
+  all[classId] = { date: localBobRewardDate(), enabled: Boolean(state.enabled), menuHidden: Boolean(state.menuHidden) };
+  window.localStorage.setItem(CLASSROOM_BOB_DAILY_MENU_KEY, JSON.stringify(all));
 }
 
 function readClassroomBobUnlocks() {
@@ -560,8 +577,9 @@ function installClassroomDisplayChoices() {
   if (separateScreen) separateScreen.textContent = "Open Separate Classroom Screen";
   if (!tools.querySelector(".platform-classroom-bob-controls")) {
     const setting = readClassroomBobDisplay();
+    const dailyMenu = readClassroomBobDailyMenu();
     const daily = readClassroomBobDailyProgress();
-    tools.querySelector("#classroom-display-help")?.insertAdjacentHTML("beforebegin", `<fieldset class="platform-classroom-bob-controls"><legend>Bob on the classroom display</legend><label class="platform-classroom-bob-toggle"><input type="checkbox" data-classroom-bob-enabled${setting.enabled ? " checked" : ""}> Show Bob</label><label class="platform-classroom-bob-hide-menu"><input type="checkbox" data-classroom-bob-menu-hidden> Hide menu</label><div class="platform-classroom-bob-settings"><label>Movement<select data-classroom-bob-placement><option value="move"${setting.placement === "move" ? " selected" : ""}>Bottom to top corner</option><option value="top"${setting.placement === "top" ? " selected" : ""}>Top corners only</option><option value="bottom"${setting.placement === "bottom" ? " selected" : ""}>Bottom corners only</option></select></label><label>Earn pose every <input type="number" min="1" max="30" value="${Number(setting.earnMinutes) || 5}" data-classroom-bob-earn-minutes> min</label><label>Daily limit <input type="number" min="1" max="10" value="${Math.min(10, Math.max(1, Number(setting.dailyUnlockLimit) || 6))}" data-classroom-bob-daily-limit></label><p><strong>Today: <output data-bob-daily-earned>${Math.min(daily.earned, setting.dailyUnlockLimit)}</output>/<output data-bob-daily-limit-output>${setting.dailyUnlockLimit}</output></strong></p><p><strong><output data-bob-unlock-count>${readClassroomBobUnlocks()}</output>/${BOB_POSE_COUNT}</strong> unlocked</p></div></fieldset>`);
+    tools.querySelector("#classroom-display-help")?.insertAdjacentHTML("beforebegin", `<fieldset class="platform-classroom-bob-controls"><legend>Bob on the classroom display</legend><label class="platform-classroom-bob-toggle"><input type="checkbox" data-classroom-bob-enabled${setting.enabled ? " checked" : ""}> Show Bob</label><label class="platform-classroom-bob-hide-menu"><input type="checkbox" data-classroom-bob-menu-hidden${dailyMenu.menuHidden ? " checked" : ""}> <span data-classroom-bob-menu-label>${dailyMenu.menuHidden ? "Show menu" : "Hide menu"}</span></label><div class="platform-classroom-bob-settings"><label>Movement<select data-classroom-bob-placement><option value="move"${setting.placement === "move" ? " selected" : ""}>Bottom to top corner</option><option value="top"${setting.placement === "top" ? " selected" : ""}>Top corners only</option><option value="bottom"${setting.placement === "bottom" ? " selected" : ""}>Bottom corners only</option></select></label><label>Earn pose every <input type="number" min="1" max="30" value="${Number(setting.earnMinutes) || 5}" data-classroom-bob-earn-minutes> min</label><label>Daily limit <input type="number" min="1" max="10" value="${Math.min(10, Math.max(1, Number(setting.dailyUnlockLimit) || 6))}" data-classroom-bob-daily-limit></label><p><strong>Today: <output data-bob-daily-earned>${Math.min(daily.earned, setting.dailyUnlockLimit)}</output>/<output data-bob-daily-limit-output>${setting.dailyUnlockLimit}</output></strong></p><p><strong><output data-bob-unlock-count>${readClassroomBobUnlocks()}</output>/${BOB_POSE_COUNT}</strong> unlocked</p></div></fieldset>`);
   }
 }
 
@@ -7066,7 +7084,7 @@ root.addEventListener("drop", (event) => {
 root.addEventListener("change", (event) => {
   const activityTitle = event.target.closest?.("[data-activity-directions-title]");
   if (activityTitle) { const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id; if (classId) activityDirections.setTitle(classId, activityTitle.value); return; }
-  if (event.target.matches?.("[data-classroom-bob-enabled], [data-classroom-bob-placement], [data-classroom-bob-earn-minutes], [data-classroom-bob-daily-limit]")) { const enabled = document.querySelector("[data-classroom-bob-enabled]")?.checked ?? true, placement = document.querySelector("[data-classroom-bob-placement]")?.value || "move", earnMinutes = Math.min(30, Math.max(1, Number(document.querySelector("[data-classroom-bob-earn-minutes]")?.value) || 5)), dailyUnlockLimit = Math.min(10, Math.max(1, Number(document.querySelector("[data-classroom-bob-daily-limit]")?.value) || 6)); window.localStorage.setItem(CLASSROOM_BOB_DISPLAY_KEY, JSON.stringify({ enabled, placement, earnMinutes, dailyUnlockLimit })); floatingBobCornerIndex = 0; floatingBobGreenSince = Date.now(); updateBobRewardOutputs(); applyClassroomBobDisplay(); scheduleNextBobMove(); return; }
+  if (event.target.matches?.("[data-classroom-bob-enabled], [data-classroom-bob-menu-hidden], [data-classroom-bob-placement], [data-classroom-bob-earn-minutes], [data-classroom-bob-daily-limit]")) { const enabledInput = document.querySelector("[data-classroom-bob-enabled]"), menuInput = document.querySelector("[data-classroom-bob-menu-hidden]"); const enabled = enabledInput?.checked ?? false; if (event.target.matches("[data-classroom-bob-enabled]")) menuInput.checked = !enabled; const menuHidden = !enabled || Boolean(menuInput?.checked); const placement = document.querySelector("[data-classroom-bob-placement]")?.value || "move", earnMinutes = Math.min(30, Math.max(1, Number(document.querySelector("[data-classroom-bob-earn-minutes]")?.value) || 5)), dailyUnlockLimit = Math.min(10, Math.max(1, Number(document.querySelector("[data-classroom-bob-daily-limit]")?.value) || 6)); window.localStorage.setItem(CLASSROOM_BOB_DISPLAY_KEY, JSON.stringify({ placement, earnMinutes, dailyUnlockLimit })); writeClassroomBobDailyMenu({ enabled, menuHidden }); const menuLabel = document.querySelector("[data-classroom-bob-menu-label]"); if (menuLabel) menuLabel.textContent = menuHidden ? "Show menu" : "Hide menu"; floatingBobCornerIndex = 0; floatingBobGreenSince = Date.now(); updateBobRewardOutputs(); applyClassroomBobDisplay(); scheduleNextBobMove(); return; }
   const doNowImage = event.target.closest?.("[data-do-now-image]");
   if (doNowImage) { const file = doNowImage.files?.[0]; if (file?.type.startsWith("image/") && file.size <= 6 * 1024 * 1024) { const reader = new FileReader(); reader.addEventListener("load", () => { doNowDraft.image = String(reader.result); openDoNowEditor(doNowDraft); }, { once: true }); reader.readAsDataURL(file); } return; }
   if (event.target.closest?.("[data-do-now-editor]")) { updateDoNowDraftFromEditor(event.target.closest("[data-do-now-editor]")); return; }
