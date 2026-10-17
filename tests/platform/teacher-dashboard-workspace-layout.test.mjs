@@ -55,6 +55,7 @@ test("teacher and student workspaces use consistent visual zones for quick scann
 test("student dashboard uses an antique sign and students can customize their nameplate", () => {
   assert.match(css, /industrial-dashboard-nameplate\.png/);
   assert.match(css, /\.platform-page-heading \{[^}]*justify-items: center;[^}]*text-align: center;/s);
+  assert.match(css, /\.platform-page-heading h1 \{[^}]*font-size: clamp\(1\.7rem, 4vw, 2\.35rem\);[^}]*line-height: 1;/s);
   assert.match(css, /\.platform-page-heading h1 \{[^}]*text-shadow:/s);
   for (const label of ["Customize my nameplate", "Fancy text", "Background", "Name color", "Changes save automatically"]) assert.match(app, new RegExp(label));
   assert.match(app, /STUDENT_NAMEPLATE_STORAGE_KEY/);
