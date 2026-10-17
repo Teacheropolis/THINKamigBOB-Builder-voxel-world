@@ -173,7 +173,9 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.doesNotMatch(app, /<h3 id="current-class-plan-title">Live Lesson Dashboard<\/h3>/);
   assert.match(app, /platform-live-lesson-status/);
   assert.match(app, /platform-current-plan-featured/);
-  assert.match(css, /platform-current-class-plan-compact \.platform-current-plan-timer-widget \{ grid-template-columns: 4\.75rem/);
+  assert.match(css, /platform-current-class-plan-compact \.platform-current-plan-timer-widget \{ grid-template-columns: 4rem/);
+  assert.match(css, /platform-today-board > \.platform-teacher-overview \{ grid-template-columns:[^}]+padding: 0\.65rem 0\.8rem/);
+  assert.match(css, /platform-main:has\(> \.platform-command-layout\) > \.platform-page-heading \{[^}]+margin-bottom: 0\.65rem/);
   assert.match(app, /data-classroom-bob-menu-hidden> Hide menu/);
   assert.match(css, /platform-classroom-bob-hide-menu, \.platform-classroom-bob-settings \{ display: none/);
   assert.match(css, /platform-classroom-bob-controls:has\(input\[data-classroom-bob-enabled\]:checked\)/);
