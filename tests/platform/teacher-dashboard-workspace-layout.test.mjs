@@ -173,6 +173,12 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.doesNotMatch(app, /<h3 id="current-class-plan-title">Live Lesson Dashboard<\/h3>/);
   assert.doesNotMatch(app, /platform-live-lesson-status/);
   assert.match(app, /controls">\$\{lessonDetails\}\$\{presentationToolControls\}/);
+  assert.match(app, /"Assigned activities"[\s\S]*: "Not set"/);
+  assert.match(app, /"Students can work in"[\s\S]*: "Not set"/);
+  assert.match(app, /"Current message"[\s\S]*: "Not set"/);
+  assert.match(css, /platform-current-plan-details > summary \{ min-height: 2\.35rem/);
+  assert.match(css, /platform-more-classroom-tools-standalone > summary \{ color: var\(--platform-muted\)/);
+  assert.match(css, /platform-current-plan-grid article \{[^}]+min-height: 6\.25rem; height: auto/);
   assert.match(app, /platform-current-plan-featured/);
   assert.match(css, /platform-current-class-plan-compact \.platform-current-plan-timer-widget \{ grid-template-columns: 4rem/);
   assert.match(css, /platform-today-board > \.platform-teacher-overview \{ grid-template-columns:[^}]+padding: 0\.65rem 0\.8rem/);

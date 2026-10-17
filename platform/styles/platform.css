@@ -692,9 +692,13 @@ summary:focus-visible {
 .platform-live-lesson-primary-tools .platform-live-lesson-tool-buttons button { min-width: min(100%, 16rem); }
 .platform-more-classroom-tools { margin-top: 0.55rem; border-top: 1px solid #c8d8de; }
 .platform-more-classroom-tools > summary, .platform-current-plan-details > summary { padding: 0.38rem 0.5rem; color: var(--platform-blue-dark); font-size: 0.76rem; font-weight: 850; cursor: pointer; }
+.platform-current-plan-details { border: 2px solid var(--platform-blue); border-radius: 0.65rem; background: #f4fafc; box-shadow: 0 0.24rem 0.55rem rgba(23, 105, 142, 0.14); }
+.platform-current-plan-details > summary { min-height: 2.35rem; padding: 0.48rem 0.65rem; color: #fff; background: linear-gradient(180deg, #247da3 0%, var(--platform-blue) 100%); font-size: 0.82rem; letter-spacing: 0.01em; }
+.platform-current-plan-details > summary::marker { color: #fff; }
+.platform-current-plan-details[open] > summary { border-radius: 0.48rem 0.48rem 0 0; }
+.platform-more-classroom-tools-standalone > summary { color: var(--platform-muted); background: #f3f7f6; font-size: 0.7rem; }
 .platform-more-classroom-tools > .platform-live-lesson-tool-buttons { grid-template-columns: repeat(4, minmax(0, 1fr)); padding-top: 0.45rem; }
 .platform-current-plan-featured .platform-current-plan-timer-card { padding: 0.4rem; border: 1px solid #c6d7cf; border-radius: 0.65rem; background: #fff; }
-.platform-current-plan-details { border: 1px solid #b8cdc3; border-radius: 0.65rem; background: #f8fcfa; }
 .platform-current-plan-details > .platform-current-plan-grid { padding: 0.65rem; border-top: 1px solid #c8d8d0; }
 .platform-more-classroom-tools-standalone { margin: 0; border: 1px solid #b8cdc3; border-radius: 0.55rem; background: #f8fcfa; }
 .platform-more-classroom-tools-standalone > .platform-live-lesson-tools { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.45rem 0.75rem; margin: 0; padding: 0.55rem; border: 0; border-top: 1px solid #c8d8d0; border-radius: 0; background: transparent; }
@@ -741,8 +745,8 @@ summary:focus-visible {
 .platform-today-primary-grid > #teacher-classroom-tools,
 .platform-today-primary-grid > .platform-command-card-timer,
 .platform-today-primary-grid > .platform-command-card-voice-meter { display: none; }
-.platform-current-plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 0.65rem; }
-.platform-current-plan-grid article { position: relative; display: grid; align-content: start; gap: 0.35rem; min-width: 0; padding: 0.75rem; border: 1px solid var(--platform-border); border-top-width: 5px; border-radius: 0.65rem; background: #fff; }
+.platform-current-plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.65rem; }
+.platform-current-plan-grid article { position: relative; display: grid; min-height: 6.25rem; height: auto; align-content: start; gap: 0.35rem; min-width: 0; padding: 0.75rem; overflow: visible; border: 1px solid var(--platform-border); border-top-width: 5px; border-radius: 0.65rem; background: #fff; overflow-wrap: anywhere; }
 .platform-current-plan-grid article[data-plan-card="activities"], .platform-current-plan-grid article[data-plan-card="access"] { border-top-color: var(--platform-blue); }
 .platform-current-plan-grid article[data-plan-card="message"] { border-top-color: var(--platform-gold); }
 .platform-current-plan-grid article[data-plan-card="timer"], .platform-current-plan-grid article[data-plan-card="whiteboard"] { border-top-color: var(--platform-purple); }
