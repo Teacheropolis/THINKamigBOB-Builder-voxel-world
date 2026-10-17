@@ -2114,6 +2114,8 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-student-zone .platform-student-section-label, .platform-student-zone .platform-stem-work-label, .platform-student-zone .platform-mission-choice-label { color: var(--student-zone-color); }
 .platform-student-zone > h2, .platform-student-zone .platform-student-section-heading > h2 { color: var(--platform-navy); }
 .platform-student-step-heading { display: flex; align-items: center; gap: clamp(.65rem, 2vw, 1rem); margin: .15rem 0 .5rem; }
+.platform-student-step-title { min-width: 0; }
+.platform-student-step-title .platform-student-section-label { margin: 0 0 .15rem; }
 .platform-student-step-heading img { width: clamp(4.5rem, 9vw, 6.25rem); height: clamp(4.5rem, 9vw, 6.25rem); flex: 0 0 auto; object-fit: contain; filter: drop-shadow(0 .3rem .35rem rgba(64, 39, 8, .3)); }
 .platform-student-step-heading h2 { margin: 0; color: #3b270d; font-family: "Roboto Slab", Rockwell, Georgia, serif; font-size: clamp(1.65rem, 4vw, 2.55rem); font-weight: 800; letter-spacing: .015em; text-shadow: 0 1px 0 #f1d28a; }
 .platform-student-step-heading h2::before { display: none !important; content: none !important; }
