@@ -685,9 +685,6 @@ summary:focus-visible {
 .platform-live-lesson-tools > [data-classroom-window-status] { grid-column: 1 / -1; min-height: 0; }
 .platform-live-lesson-tool-help { grid-column: 1 / -1; color: var(--platform-muted); font-size: 0.75rem; }
 .platform-current-class-plan-compact { gap: 0.45rem; padding: 0.55rem; }
-.platform-live-lesson-status { display: flex; flex-wrap: wrap; gap: 0.3rem; padding: 0.35rem; border: 1px solid #a8c5b7; border-radius: 0.65rem; background: #fff; }
-.platform-live-lesson-status button { display: grid; min-height: 1.9rem; flex: 1 1 8.5rem; gap: 0; padding: 0.2rem 0.45rem; border: 1px solid #c6d7cf; border-radius: 0.45rem; color: var(--platform-muted); background: #f4faf7; font: inherit; font-size: 0.66rem; cursor: pointer; }
-.platform-live-lesson-status button strong { color: var(--platform-navy); }
 .platform-live-lesson-tools-compact { display: block; padding: 0.6rem; }
 .platform-live-lesson-primary-tools { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.65rem; align-items: center; }
 .platform-live-lesson-primary-tools h4 { white-space: nowrap; }
@@ -718,7 +715,6 @@ summary:focus-visible {
 .platform-classroom-bob-settings input[type="number"] { width: 3.5rem; }
 .platform-classroom-bob-settings p { margin: 0; white-space: nowrap; font-size: 0.66rem; }
 .platform-current-class-plan-compact:has(> .platform-more-classroom-tools-standalone[open] .platform-classroom-bob-controls:has(input[data-classroom-bob-enabled]:checked)[data-menu-hidden="false"]) { grid-template-columns: minmax(42rem, 1.4fr) minmax(24rem, 0.6fr); align-items: start; }
-.platform-current-class-plan-compact:has(> .platform-more-classroom-tools-standalone[open] .platform-classroom-bob-controls:has(input[data-classroom-bob-enabled]:checked)[data-menu-hidden="false"]) > .platform-live-lesson-status,
 .platform-current-class-plan-compact:has(> .platform-more-classroom-tools-standalone[open] .platform-classroom-bob-controls:has(input[data-classroom-bob-enabled]:checked)[data-menu-hidden="false"]) > .platform-current-plan-details { grid-column: 1 / -1; }
 .platform-current-class-plan-compact:has(> .platform-more-classroom-tools-standalone[open] .platform-classroom-bob-controls:has(input[data-classroom-bob-enabled]:checked)[data-menu-hidden="false"]) > .platform-more-classroom-tools-standalone { grid-column: 1; }
 .platform-current-class-plan-compact:has(> .platform-more-classroom-tools-standalone[open] .platform-classroom-bob-controls:has(input[data-classroom-bob-enabled]:checked)[data-menu-hidden="false"]) > .platform-current-plan-featured { grid-column: 2; }

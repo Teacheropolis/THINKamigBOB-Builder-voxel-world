@@ -171,7 +171,8 @@ test("Run Today’s Class shows a compact live current plan", () => {
   const compactTools = app.slice(app.indexOf('const presentationToolControls ='), app.indexOf('const timerVisual ='));
   assert.doesNotMatch(compactTools, />Quick Message<|>Whiteboard<|>Voice Meter</);
   assert.doesNotMatch(app, /<h3 id="current-class-plan-title">Live Lesson Dashboard<\/h3>/);
-  assert.match(app, /platform-live-lesson-status/);
+  assert.doesNotMatch(app, /platform-live-lesson-status/);
+  assert.match(app, /controls">\$\{lessonDetails\}\$\{presentationToolControls\}/);
   assert.match(app, /platform-current-plan-featured/);
   assert.match(css, /platform-current-class-plan-compact \.platform-current-plan-timer-widget \{ grid-template-columns: 4rem/);
   assert.match(css, /platform-today-board > \.platform-teacher-overview \{ grid-template-columns:[^}]+padding: 0\.65rem 0\.8rem/);
