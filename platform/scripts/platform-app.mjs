@@ -2405,7 +2405,7 @@ function studentTwoWeekCalendarMarkup() {
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
   const calendarDays = [];
-  const weekMarkup = (label, start) => `<div class="platform-student-calendar-week"><h3>${label}</h3><div class="platform-student-calendar-days">${Array.from({ length: 7 }, (_, index) => {
+  const weekMarkup = (label, start) => `<div class="platform-student-calendar-week"><h3>${label}</h3><div class="platform-student-calendar-days">${Array.from({ length: 5 }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
     const isToday = sameDay(date, today);
@@ -2417,11 +2417,16 @@ function studentTwoWeekCalendarMarkup() {
     const dateLabel = date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
     const activityLabel = hasWork ? activities.join(", ") : "No saved work";
     calendarDays.push(`${dateLabel}. ${hasWork ? `Main activity: ${activityLabel}` : activityLabel}.`);
-    return `<button class="platform-student-calendar-day${isToday ? " is-today" : ""}" type="button" data-action="open-student-calendar-day" data-calendar-date="${escapeHtml(dateLabel)}" data-calendar-activity="${escapeHtml(activityLabel)}" data-calendar-work="${hasWork}" data-calendar-today="${isToday}" aria-label="${escapeHtml(dateLabel)}: ${meaning}${hasWork ? `. Main activity: ${activityLabel}` : ""}"><strong>${escapeHtml(date.toLocaleDateString(undefined, { weekday: "short" }))}</strong><span>${date.getDate()}</span><b aria-hidden="true">${symbol}</b></button>`;
+    return `<button class="platform-student-calendar-day${isToday ? " is-today" : ""}" type="button" data-action="open-student-calendar-day" data-calendar-date="${escapeHtml(dateLabel)}" data-calendar-activity="${escapeHtml(activityLabel)}" data-calendar-work="${hasWork}" data-calendar-today="${isToday}" data-calendar-url="#student-todays-activities" aria-label="${escapeHtml(dateLabel)}: ${meaning}${hasWork ? `. Main activity: ${activityLabel}. Select to open activity choices.` : ""}"><strong>${escapeHtml(date.toLocaleDateString(undefined, { weekday: "short" }))}</strong><span>${date.getDate()}</span><b aria-hidden="true">${symbol}</b></button>`;
   }).join("")}</div></div>`;
   const weeks = `${weekMarkup("Past Week", pastWeekStart)}${weekMarkup("This Week", thisWeekStart)}`;
-  const todayActivity = todayWork.map((item) => item.activity).find(Boolean) || "No saved work";
-  return `<section class="platform-student-calendar platform-student-zone platform-student-zone-history" aria-labelledby="student-calendar-title"><p class="platform-student-section-label">My calendar</p><h2 id="student-calendar-title">Past Week + This Week</h2><p class="platform-student-calendar-key"><span>⭐ Today</span><span>📎 Work saved</span><span>— No saved work</span></p><p class="platform-sr-only">${escapeHtml(calendarDays.join(" "))}</p><div class="platform-student-calendar-weeks">${weeks}</div><div class="platform-student-calendar-detail" data-student-calendar-detail role="status"><strong>⭐ Today</strong><span>${escapeHtml(todayActivity)}</span></div></section>`;
+  const defaultDate = new Date(today);
+  if (today.getDay() === 0 || today.getDay() === 6) { defaultDate.setTime(thisWeekStart.getTime()); defaultDate.setDate(thisWeekStart.getDate() + 4); }
+  const defaultWork = sameDay(defaultDate, today) ? todayWork : sameDay(defaultDate, yesterday) ? yesterdayWork : [];
+  const defaultActivity = defaultWork.map((item) => item.activity).find(Boolean) || "No saved work";
+  const defaultSymbol = sameDay(defaultDate, today) ? "⭐" : defaultWork.length ? "📎" : "—";
+  const defaultDateLabel = defaultDate.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  return `<section class="platform-student-calendar platform-student-zone platform-student-zone-history" aria-labelledby="student-calendar-title"><p class="platform-student-section-label">My calendar</p><h2 id="student-calendar-title">Past Week + This Week</h2><p class="platform-student-calendar-key"><span>⭐ Today</span><span>📎 Work saved</span><span>— No saved work</span></p><p class="platform-sr-only">${escapeHtml(calendarDays.join(" "))}</p><div class="platform-student-calendar-weeks">${weeks}</div><div class="platform-student-calendar-detail" data-student-calendar-detail role="status"><strong>${defaultSymbol} ${escapeHtml(defaultDateLabel)}</strong><span>${escapeHtml(defaultActivity)}</span><a href="#student-todays-activities" data-student-calendar-activity-link${defaultActivity === "No saved work" ? " hidden" : ""}>▶ Open Activity</a></div></section>`;
 }
 
 function studentDashboardView(state) {
@@ -5408,6 +5413,8 @@ function handleClick(event) {
     const symbol = action.dataset.calendarToday === "true" ? "⭐" : action.dataset.calendarWork === "true" ? "📎" : "—";
     detail.querySelector("strong").textContent = `${symbol} ${action.dataset.calendarDate}`;
     detail.querySelector("span").textContent = action.dataset.calendarWork === "true" ? `Main activity: ${action.dataset.calendarActivity}` : "No saved work";
+    const activityLink = detail.querySelector("[data-student-calendar-activity-link]");
+    if (activityLink) { activityLink.hidden = action.dataset.calendarWork !== "true"; activityLink.href = action.dataset.calendarUrl || "#student-todays-activities"; }
     action.closest(".platform-student-calendar-days")?.querySelectorAll(".is-selected").forEach((day) => day.classList.remove("is-selected"));
     action.classList.add("is-selected");
     return;

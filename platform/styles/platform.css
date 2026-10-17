@@ -365,16 +365,17 @@ summary:focus-visible {
 .platform-student-calendar-weeks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
 .platform-student-calendar-week { min-width: 0; padding: 0.75rem; border: 2px solid #b9ccd4; border-radius: 0.75rem; background: #fffaf0; }
 .platform-student-calendar-week h3 { margin: 0 0 0.55rem; color: var(--platform-blue-dark); font-size: 1rem; }
-.platform-student-calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.3rem; }
+.platform-student-calendar-days { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.4rem; }
 .platform-student-calendar-day { display: grid; min-width: 0; min-height: 4.4rem; padding: 0.3rem 0.1rem; place-items: center; align-content: center; border: 1px solid #c7d6dc; border-radius: 0.55rem; color: var(--platform-navy); background: #fff; text-align: center; }
 .platform-student-calendar-day strong { font-size: 0.68rem; text-transform: uppercase; }
 .platform-student-calendar-day span { font-size: 1rem; font-weight: 900; }
 .platform-student-calendar-day b { font-size: 1rem; line-height: 1; }
 .platform-student-calendar-day.is-today { border: 3px solid var(--platform-gold); background: #fff2c7; }
 .platform-student-calendar-day:hover, .platform-student-calendar-day:focus-visible, .platform-student-calendar-day.is-selected { border-color: var(--platform-blue-dark); background: #e6f4f8; }
-.platform-student-calendar-detail { display: flex; align-items: center; gap: 0.55rem 1rem; min-height: 3rem; margin-top: 0.75rem; padding: 0.65rem 0.8rem; border-left: 5px solid var(--platform-green); border-radius: 0.45rem; background: #edf7f1; }
+.platform-student-calendar-detail { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem 1rem; min-height: 3rem; margin-top: 0.75rem; padding: 0.65rem 0.8rem; border-left: 5px solid var(--platform-green); border-radius: 0.45rem; background: #edf7f1; }
 .platform-student-calendar-detail strong { color: var(--platform-green); }
 .platform-student-calendar-detail span { font-weight: 800; }
+.platform-student-calendar-detail a { margin-left: auto; padding: 0.45rem 0.7rem; border: 2px solid var(--platform-green); border-radius: 0.55rem; color: #fff; background: var(--platform-green); font-weight: 900; text-decoration: none; white-space: nowrap; }
 .platform-sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
 .platform-student-home-card { min-width: 0; padding: 1rem; border: 1px solid var(--platform-border); border-radius: 0.75rem; background: var(--platform-soft); }
 .platform-student-home-card > p:last-child { margin: 0.35rem 0 0; color: var(--platform-muted); font-size: 0.85rem; line-height: 1.45; }

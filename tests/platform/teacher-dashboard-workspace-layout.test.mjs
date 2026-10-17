@@ -286,6 +286,8 @@ test("Approved Research joins Today’s Lesson and gives students restricted lau
   assert.match(app, /function studentTwoWeekCalendarMarkup/);
   assert.match(app, /Past Week \+ This Week/);
   assert.match(app, /data-action="open-student-calendar-day"/);
+  assert.match(app, /▶ Open Activity/);
+  assert.match(app, /Array\.from\(\{ length: 5 \}/);
   assert.match(app, /Main activity:/);
   assert.match(css, /\.platform-student-calendar-days/);
   assert.match(app, /dataset\.action = "read-student-section"/);
