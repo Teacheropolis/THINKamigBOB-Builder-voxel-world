@@ -40,6 +40,9 @@ test("teacher and student workspaces use consistent visual zones for quick scann
   assert.match(css, /\.platform-student-quest-path \{[^}]*grid-template-columns: repeat\(4/);
   for (const destination of ["current-goal-title", "student-todays-activities", "student-calendar-title", "stem-work-title"]) assert.match(app, new RegExp(`href="#${destination}"`));
   assert.match(app, /data-action="open-student-quest-step"/);
+  assert.equal((app.match(/class="platform-student-trail-arrow/g) || []).length, 3);
+  assert.match(css, /\.platform-student-home > \.platform-student-trail-stop-left \{ grid-column: 1 \/ 11/);
+  assert.match(css, /\.platform-student-home > \.platform-student-trail-stop-right \{ grid-column: 3 \/ 13/);
   assert.match(css, /#teacher-live-lesson-dashboard \.platform-current-class-plan/);
 });
 

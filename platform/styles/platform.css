@@ -331,7 +331,7 @@ summary:focus-visible {
 .platform-student-home {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.25rem;
   background: transparent;
 }
 .platform-student-home > section { min-width: 0; border: 1px solid var(--platform-border); border-radius: 1rem; background: var(--platform-surface); box-shadow: var(--platform-shadow); }
@@ -349,6 +349,19 @@ summary:focus-visible {
 .platform-student-goal { grid-column: span 7; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-green) !important; }
 .platform-student-goal > p:last-child, .platform-student-reflection > p:last-child { margin: 0.35rem 0 0; color: var(--platform-muted); }
 .platform-student-goal-name { margin: 0.55rem 0 0; color: var(--platform-navy); font-size: clamp(1rem, 2.5vw, 1.35rem); font-weight: 800; }
+.platform-student-trail-stop { scroll-margin-top: 1.25rem; }
+.platform-student-home > .platform-student-trail-stop-left { grid-column: 1 / 11; }
+.platform-student-home > .platform-student-trail-stop-right { grid-column: 3 / 13; }
+.platform-student-trail-arrow { position: relative; display: flex; grid-column: 1 / -1; min-height: 7rem; align-items: center; gap: .75rem; color: #fff; text-decoration: none; }
+.platform-student-trail-arrow::before { position: absolute; top: -.8rem; bottom: -.8rem; width: 36%; border: .42rem dashed rgba(255,255,255,.72); content: ""; pointer-events: none; }
+.platform-student-trail-arrow-right { justify-content: flex-end; padding-right: 8%; }
+.platform-student-trail-arrow-right::before { right: 11%; border-top: 0; border-left: 0; border-radius: 0 0 3.5rem 0; }
+.platform-student-trail-arrow-left { justify-content: flex-start; padding-left: 8%; }
+.platform-student-trail-arrow-left::before { left: 11%; border-top: 0; border-right: 0; border-radius: 0 0 0 3.5rem; }
+.platform-student-trail-arrow span { z-index: 1; padding: .55rem .85rem; border: 3px solid #fff; border-radius: 999px; color: var(--platform-navy); background: #fff3c8; box-shadow: 0 .35rem .8rem rgba(7,27,39,.2); font-size: .9rem; font-weight: 900; }
+.platform-student-trail-arrow b { z-index: 1; display: grid; width: 3.5rem; height: 3.5rem; place-items: center; border: 4px solid #fff; border-radius: 50%; color: #fff; background: #16749b; box-shadow: 0 .45rem .9rem rgba(7,27,39,.28); font-size: 2rem; line-height: 1; }
+.platform-student-trail-arrow:hover b, .platform-student-trail-arrow:focus-visible b { background: #2d7d5b; transform: scale(1.08); }
+.platform-student-trail-arrow:focus-visible { border-radius: 1rem; outline: 4px solid #ffd85a; outline-offset: 3px; }
 .platform-student-empty-state, .platform-student-status { margin: 0.55rem 0 0; color: var(--platform-ink); font-weight: 800; }
 .platform-school-start-launcher { grid-column: 1 / -1; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-blue) !important; }
 .platform-school-start-launcher-inline { margin-top: 0.75rem; padding: 0.85rem; border: 1px solid #bdd1da !important; border-left: 5px solid var(--platform-blue) !important; border-radius: 0.65rem; background: #f3f8fa; }
@@ -1914,6 +1927,12 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
   .platform-google-connection-summary { grid-template-columns: 1fr; }
   .platform-student-home { grid-template-columns: 1fr; }
   .platform-student-home > section { grid-column: auto; }
+  .platform-student-home > .platform-student-trail-stop-left,
+  .platform-student-home > .platform-student-trail-stop-right { grid-column: auto; }
+  .platform-student-trail-arrow { grid-column: auto; min-height: 5.5rem; justify-content: center; padding: 0; }
+  .platform-student-trail-arrow::before { top: -.8rem; bottom: -.8rem; left: 50%; width: 0; border: 0; border-left: .42rem dashed rgba(255,255,255,.72); border-radius: 0; }
+  .platform-student-trail-arrow b { font-size: 0; }
+  .platform-student-trail-arrow b::after { content: "↓"; font-size: 2rem; }
   .platform-school-start-launch-grid { grid-template-columns: 1fr; }
   .platform-student-calendar-weeks { grid-template-columns: 1fr; }
   .platform-stem-work-layout, .platform-stem-work-history-layout, .platform-evidence-source-list { grid-template-columns: 1fr; }
