@@ -1137,8 +1137,17 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-todays-lesson-heading { display: grid; gap: 0.4rem; }
 .platform-todays-lesson-heading > * { margin: 0; }
 .platform-todays-lesson-heading .platform-button { justify-self: start; margin-top: 0.45rem; }
+.platform-todays-lesson-actions { display: flex; flex-wrap: wrap; gap: 0.55rem; }
 .platform-todays-lesson-sections { display: grid; gap: 1rem; }
-.platform-todays-lesson-sections > section { margin: 0; border-radius: 0.8rem; box-shadow: none; }
+.platform-todays-lesson-sections > details { border: 2px solid var(--platform-border); border-radius: 0.8rem; background: #fff; overflow: clip; }
+.platform-todays-lesson-sections > details > summary { cursor: pointer; padding: 0.9rem 1rem; color: var(--platform-navy); background: #eef7f3; font-size: 1.05rem; font-weight: 900; }
+.platform-todays-lesson-sections > details[open] > summary { border-bottom: 2px solid var(--platform-border); background: #dfeee7; }
+.platform-todays-lesson-sections > details > section { margin: 0; border: 0 !important; border-radius: 0; box-shadow: none; }
+.platform-direction-more { position: relative; }
+.platform-direction-more > summary { cursor: pointer; padding: 0.55rem 0.8rem; border: 2px solid var(--platform-border); border-radius: 0.5rem; background: #fff; font-weight: 800; list-style: none; }
+.platform-direction-more > div { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.45rem; }
+.platform-current-plan-grid article[data-plan-card="activities"], .platform-current-plan-grid article[data-plan-card="access"], .platform-current-plan-grid article[data-plan-card="message"], .platform-current-plan-grid article[data-plan-card="whiteboard"] { min-height: 0; padding: 0.45rem 0.6rem; border-top-width: 3px; }
+.platform-current-plan-grid article[data-plan-card="activities"] > :not(.platform-current-plan-card-title), .platform-current-plan-grid article[data-plan-card="access"] > :not(.platform-current-plan-card-title), .platform-current-plan-grid article[data-plan-card="message"] > :not(.platform-current-plan-card-title), .platform-current-plan-grid article[data-plan-card="whiteboard"] > :not(.platform-current-plan-card-title) { display: none; }
 .platform-todays-lesson-student { grid-column: 1 / -1; display: grid; gap: 1rem; }
 .platform-todays-lesson-student > section { margin: 0; padding: 1rem; border: 2px solid var(--platform-border); border-radius: 0.8rem; background: #fffaf0; }
 .platform-todays-lesson-student > section > h2, .platform-todays-lesson-student > section > h3 { margin-top: 0; }

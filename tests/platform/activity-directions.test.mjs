@@ -48,7 +48,7 @@ test("a direction card can contain multiple mixed resources", () => {
 test("teacher and student views expose the live directions timeline", () => {
   const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
   const css = readFileSync(new URL("../../platform/styles/platform.css", import.meta.url), "utf8");
-  for (const text of ["Live Activity Directions", "Add Direction Card", "Add another resource", "Release to Students", "Withdraw", "Duplicate", "Move Up", "Move Down"]) assert.match(app, new RegExp(text));
+  for (const text of ["Live Activity Directions", "Add Lesson Step", "Add or Edit a Lesson Step", "Add another resource", "Student visibility", "Release", "Withdraw", "Duplicate", "Move Up", "Move Down"]) assert.match(app, new RegExp(text));
   assert.match(app, /activityDirections\.releasedForStudents/);
   assert.match(app, /ACTIVITY_DIRECTIONS_STORAGE_KEY/);
   assert.match(css, /platform-activity-directions/);

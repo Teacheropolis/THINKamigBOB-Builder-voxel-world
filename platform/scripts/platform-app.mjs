@@ -1016,20 +1016,21 @@ function activityDirectionsTeacherMarkup(classId) {
   const cards = state.cards.map((card, index) => `<article class="platform-direction-card" data-direction-card-id="${escapeHtml(card.id)}" data-status="${card.status}">
     <div><span class="platform-direction-number">${index + 1}</span><span class="platform-direction-status">${card.status === "released" ? "Visible to students" : "Draft — teacher only"}</span></div>
     <h4>${escapeHtml(card.title)}</h4><p>${escapeHtml(card.directions)}</p>${directionMediaMarkup(card)}
-    <div class="platform-direction-actions"><button type="button" data-action="edit-direction-card" data-direction-id="${escapeHtml(card.id)}">Edit</button>${card.status === "released" ? `<button type="button" data-action="withdraw-direction-card" data-direction-id="${escapeHtml(card.id)}">Withdraw</button>` : `<button type="button" data-action="release-direction-card" data-direction-id="${escapeHtml(card.id)}">Release to Students</button>`}<button type="button" data-action="duplicate-direction-card" data-direction-id="${escapeHtml(card.id)}">Duplicate</button><button type="button" data-action="move-direction-card" data-direction-id="${escapeHtml(card.id)}" data-direction-offset="-1"${index === 0 ? " disabled" : ""}>Move Up</button><button type="button" data-action="move-direction-card" data-direction-id="${escapeHtml(card.id)}" data-direction-offset="1"${index === state.cards.length - 1 ? " disabled" : ""}>Move Down</button><button type="button" data-action="remove-direction-card" data-direction-id="${escapeHtml(card.id)}">Delete</button></div>
+    <div class="platform-direction-actions"><button type="button" data-action="edit-direction-card" data-direction-id="${escapeHtml(card.id)}">Edit</button>${card.status === "released" ? `<button type="button" data-action="withdraw-direction-card" data-direction-id="${escapeHtml(card.id)}">Withdraw</button>` : `<button type="button" data-action="release-direction-card" data-direction-id="${escapeHtml(card.id)}">Release</button>`}<details class="platform-direction-more"><summary>More</summary><div><button type="button" data-action="duplicate-direction-card" data-direction-id="${escapeHtml(card.id)}">Duplicate</button><button type="button" data-action="move-direction-card" data-direction-id="${escapeHtml(card.id)}" data-direction-offset="-1"${index === 0 ? " disabled" : ""}>Move Up</button><button type="button" data-action="move-direction-card" data-direction-id="${escapeHtml(card.id)}" data-direction-offset="1"${index === state.cards.length - 1 ? " disabled" : ""}>Move Down</button><button type="button" data-action="remove-direction-card" data-direction-id="${escapeHtml(card.id)}">Delete</button></div></details></div>
   </article>`).join("");
   return `<section class="platform-command-card platform-activity-directions platform-visual-zone platform-zone-create" data-activity-directions-teacher aria-labelledby="activity-directions-title">
     <p class="platform-command-label">Build as the lesson develops</p><h2 id="activity-directions-title">Live Activity Directions</h2>
     <p>Add direction cards whenever they are needed. Draft cards stay private until you release them.</p>
     <label class="platform-activity-title">Activity title<input data-activity-directions-title maxlength="100" value="${escapeHtml(state.title)}"></label>
     <div class="platform-direction-list">${cards || `<p class="platform-student-empty-state">No direction cards yet. Add the first card below.</p>`}</div>
-    <details class="platform-direction-editor" open><summary>Add Direction Card</summary>
+    <details class="platform-direction-editor"><summary>Add or Edit a Lesson Step</summary>
       <form data-form="activity-direction" novalidate><input type="hidden" name="id">
         <label>Card title<input name="title" maxlength="100" placeholder="Example: Step 1 — Investigate" required></label>
         <label>Directions<textarea name="directions" maxlength="2000" rows="4" placeholder="Tell students exactly what to do next." required></textarea></label>
         <fieldset class="platform-direction-resource-editor"><legend>Optional visuals and resources</legend><div data-direction-resource-list></div><button type="button" data-action="add-direction-resource">+ Add another resource</button></fieldset>
-        <div class="platform-direction-actions"><button type="button" data-action="save-direction-card">Save Draft</button><button type="button" data-action="save-release-direction-card">Save and Release</button><button type="reset" data-action="cancel-direction-edit">Clear</button></div>
-        <p data-activity-direction-status role="status">New cards are private drafts unless you choose Save and Release.</p>
+        <label>Student visibility<select name="visibility"><option value="draft">Keep private draft</option><option value="released">Show to students</option></select></label>
+        <div class="platform-direction-actions"><button type="button" data-action="save-direction-card">Save Lesson Step</button><button type="reset" data-action="cancel-direction-edit">Clear</button></div>
+        <p data-activity-direction-status role="status">Choose whether students can see this step, then save it.</p>
       </form>
     </details>
   </section>`;
@@ -1058,7 +1059,8 @@ function assignedResearchTeacherMarkup(assignedResearch, researchLinkBank, class
 }
 
 function todaysLessonTeacherMarkup(classId, assignedResearch, researchLinkBank, className) {
-  return `<section class="platform-todays-lesson platform-visual-zone platform-zone-create" aria-labelledby="todays-lesson-title"><header class="platform-todays-lesson-heading"><p class="platform-command-label">Build and release as students learn</p><h2 id="todays-lesson-title">Today’s Lesson</h2><p>Keep directions, activities, media, and approved research in one ordered workspace. Release only what students need now.</p><a class="platform-button platform-button-secondary" href="#${ROUTES.PREVIEW_STUDENT}" target="_blank" rel="noopener">Preview Today’s Lesson as a Student</a></header><div class="platform-todays-lesson-sections">${activityDirectionsTeacherMarkup(classId)}${classResourceTeacherMarkup(classId)}${assignedResearchTeacherMarkup(assignedResearch, researchLinkBank, className)}</div></section>`;
+  const state = activityDirections.read(classId), resources = classResourceSharing.read(classId).audienceRows.flatMap((row) => row.resources).filter(Boolean).length;
+  return `<section class="platform-todays-lesson platform-visual-zone platform-zone-create" aria-labelledby="todays-lesson-title"><header class="platform-todays-lesson-heading"><p class="platform-command-label">Build and release as students learn</p><h2 id="todays-lesson-title">Today’s Lesson</h2><p>${state.cards.length} lesson step${state.cards.length === 1 ? "" : "s"} · ${resources} assigned resource${resources === 1 ? "" : "s"} · ${assignedResearch.links.length} approved research link${assignedResearch.links.length === 1 ? "" : "s"}</p><div class="platform-todays-lesson-actions"><button type="button" data-action="add-lesson-step">+ Add Lesson Step</button><a class="platform-button platform-button-secondary" href="#${ROUTES.PREVIEW_STUDENT}" target="_blank" rel="noopener">Preview as Student</a></div></header><div class="platform-todays-lesson-sections"><details data-lesson-builder="steps" open><summary>Lesson Steps and Directions</summary>${activityDirectionsTeacherMarkup(classId)}</details><details data-lesson-builder="resources"><summary>Activities and Resources</summary>${classResourceTeacherMarkup(classId)}</details><details data-lesson-builder="research"><summary>Approved Research</summary>${assignedResearchTeacherMarkup(assignedResearch, researchLinkBank, className)}</details></div></section>`;
 }
 
 function todaysLessonStudentMarkup(classId, studentId, assignedResearch) {
@@ -6265,6 +6267,14 @@ function handleClick(event) {
     navigate(ROUTES.TEACHER_DASHBOARD);
     return;
   }
+  if (action.dataset.action === "add-lesson-step") {
+    const builder = document.querySelector('[data-lesson-builder="steps"]');
+    const editor = builder?.querySelector(".platform-direction-editor");
+    if (builder) builder.open = true;
+    if (editor) editor.open = true;
+    editor?.querySelector('[name="title"]')?.focus();
+    return;
+  }
   if (["save-direction-card", "save-release-direction-card", "edit-direction-card", "release-direction-card", "withdraw-direction-card", "duplicate-direction-card", "move-direction-card", "remove-direction-card", "cancel-direction-edit"].includes(action.dataset.action)) {
     const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id;
     const region = action.closest("[data-activity-directions-teacher]") ?? document.querySelector("[data-activity-directions-teacher]");
@@ -6275,12 +6285,14 @@ function handleClick(event) {
       const resources = [...form.querySelectorAll("[data-direction-resource-list] .platform-direction-resource-row")].map((row) => ({ mediaType: row.querySelector('[name="resourceType"]').value, url: row.querySelector('[name="resourceUrl"]').value.trim() })).filter((item) => item.url);
       const result = activityDirections.saveCard(classId, { id: form.elements.id.value, title: form.elements.title.value, directions: form.elements.directions.value, resources });
       if (!result.ok) { const output = form.querySelector("[data-activity-direction-status]"); if (output) output.textContent = result.reason === "missing-media" ? "Add a secure https link for the selected media." : "Add both a card title and student directions."; return; }
-      if (action.dataset.action === "save-release-direction-card") activityDirections.release(classId, result.card.id);
+      const visibility = form.elements.visibility?.value || (action.dataset.action === "save-release-direction-card" ? "released" : "draft");
+      if (visibility === "released") activityDirections.release(classId, result.card.id); else activityDirections.withdraw(classId, result.card.id);
     }
     if (action.dataset.action === "edit-direction-card") {
       const card = activityDirections.read(classId).cards.find((item) => item.id === id);
       if (!card) return;
       form.elements.id.value = card.id; form.elements.title.value = card.title; form.elements.directions.value = card.directions;
+      if (form.elements.visibility) form.elements.visibility.value = card.status;
       const resourceList = form.querySelector("[data-direction-resource-list]"); if (resourceList) resourceList.innerHTML = (card.resources || []).map(directionResourceEditorRow).join("");
       form.closest("details").open = true; form.elements.title.focus(); return;
     }
