@@ -85,6 +85,9 @@ export const ROUTES = Object.freeze({
 });
 
 const root = document.querySelector("#platform-root");
+const STUDENT_NAMEPLATE_STORAGE_KEY = "thinkamigbob.student-nameplate.v1";
+const STUDENT_NAMEPLATE_FONTS = Object.freeze(["slab", "classic", "cursive", "playful"]);
+const STUDENT_NAMEPLATE_BACKGROUNDS = Object.freeze(["cream", "brass", "blue", "green", "parchment"]);
 const BIRD_CHIRPING_SOUND_URL = new URL("./assets/sounds/bird-chirping-loswin23.mp3", window.location.href).href;
 const GUITAR_LOOP_SOUND_URL = new URL("./assets/sounds/guitar-loop-time-ending-idoberg.mp3", window.location.href).href;
 const CHOIR_TRANSITION_SOUND_URL = new URL("./assets/sounds/choir-heavenly-transition-floraphonic.mp3", window.location.href).href;
@@ -1097,6 +1100,33 @@ function assignedResearchTeacherMarkup(assignedResearch, researchLinkBank, class
 function todaysLessonTeacherMarkup(classId, assignedResearch, researchLinkBank, className) {
   const state = activityDirections.read(classId), resources = state.cards.flatMap((card) => card.resources || []).length;
   return `<section class="platform-todays-lesson platform-visual-zone platform-zone-create" aria-labelledby="todays-lesson-title"><header class="platform-todays-lesson-heading"><p class="platform-command-label">Build and release as students learn</p><h2 id="todays-lesson-title">Today’s Lesson</h2><p>${state.cards.length} lesson step${state.cards.length === 1 ? "" : "s"} · ${resources} attached activit${resources === 1 ? "y or resource" : "ies and resources"} · ${assignedResearch.links.length} approved research link${assignedResearch.links.length === 1 ? "" : "s"}</p><div class="platform-todays-lesson-actions"><button type="button" data-action="add-lesson-step">+ Add Lesson Step</button><a class="platform-button platform-button-secondary" href="#${ROUTES.PREVIEW_STUDENT}" target="_blank" rel="noopener">Preview as Student</a></div></header><div class="platform-todays-lesson-sections"><details data-lesson-builder="steps" open><summary>Lesson Steps, Activities, and Resources</summary>${activityDirectionsTeacherMarkup(classId)}</details><details data-lesson-builder="research"><summary>Approved Research</summary>${assignedResearchTeacherMarkup(assignedResearch, researchLinkBank, className)}</details></div></section>`;
+}
+
+function readStudentNameplate(studentId) {
+  const fallback = { font: "slab", background: "cream", color: "#173247" };
+  try {
+    const all = JSON.parse(window.localStorage.getItem(STUDENT_NAMEPLATE_STORAGE_KEY) || "{}");
+    const saved = all[studentId] || {};
+    return {
+      font: STUDENT_NAMEPLATE_FONTS.includes(saved.font) ? saved.font : fallback.font,
+      background: STUDENT_NAMEPLATE_BACKGROUNDS.includes(saved.background) ? saved.background : fallback.background,
+      color: /^#[0-9a-f]{6}$/i.test(saved.color) ? saved.color : fallback.color,
+    };
+  } catch { return fallback; }
+}
+
+function writeStudentNameplate(studentId, preferences) {
+  try {
+    const all = JSON.parse(window.localStorage.getItem(STUDENT_NAMEPLATE_STORAGE_KEY) || "{}");
+    all[studentId] = preferences;
+    window.localStorage.setItem(STUDENT_NAMEPLATE_STORAGE_KEY, JSON.stringify(all));
+  } catch {}
+}
+
+function studentNameplateMarkup(studentId, studentName, className) {
+  const preferences = readStudentNameplate(studentId);
+  const selected = (value, current) => value === current ? " selected" : "";
+  return `<section class="platform-student-orientation platform-student-nameplate-bg-${preferences.background} platform-student-nameplate-font-${preferences.font}" style="--student-name-color:${preferences.color}" data-student-nameplate data-student-id="${escapeHtml(studentId)}" aria-labelledby="student-orientation-title"><h2 id="student-orientation-title">${studentName}</h2><p class="platform-student-class">${className}</p><details class="platform-student-nameplate-customizer"><summary>Customize my nameplate</summary><div><label>Fancy text<select data-student-nameplate-control="font"><option value="slab"${selected("slab", preferences.font)}>Inventor</option><option value="classic"${selected("classic", preferences.font)}>Classic</option><option value="cursive"${selected("cursive", preferences.font)}>Cursive</option><option value="playful"${selected("playful", preferences.font)}>Playful</option></select></label><label>Background<select data-student-nameplate-control="background"><option value="cream"${selected("cream", preferences.background)}>Cream</option><option value="brass"${selected("brass", preferences.background)}>Brass</option><option value="blue"${selected("blue", preferences.background)}>Blue Steel</option><option value="green"${selected("green", preferences.background)}>Workshop Green</option><option value="parchment"${selected("parchment", preferences.background)}>Old Map</option></select></label><label>Name color<input type="color" value="${preferences.color}" data-student-nameplate-control="color"></label></div><p>Changes save automatically.</p></details></section>`;
 }
 
 function todaysLessonStudentMarkup(classId, studentId, assignedResearch) {
@@ -2456,10 +2486,7 @@ function studentDashboardView(state) {
   return shell(`
     <div class="platform-student-home">
       ${state.studentId === "student-preview-1" ? `<aside class="platform-student-preview-banner"><div><strong>Student Preview — No Sign-In Code</strong><p>You are viewing fictional student Ada Rivera in Preview STEM Class. Work completed here is only preview data in this browser.</p></div><a class="platform-button platform-button-secondary" href="#${ROUTES.WELCOME}">Exit Student Preview</a></aside>` : ""}
-      <section class="platform-student-orientation" aria-labelledby="student-orientation-title">
-        <h2 id="student-orientation-title">${studentName}</h2>
-        <p class="platform-student-class">${className}</p>
-      </section>
+      ${studentNameplateMarkup(state.studentId, studentName, className)}
 
       <section class="platform-student-quest-map" aria-labelledby="student-quest-map-title">
         <div class="platform-student-quest-map-heading">
@@ -7197,6 +7224,20 @@ root.addEventListener("drop", (event) => {
 });
 
 root.addEventListener("change", (event) => {
+  const studentNameplateControl = event.target.closest?.("[data-student-nameplate-control]");
+  if (studentNameplateControl) {
+    const nameplate = studentNameplateControl.closest("[data-student-nameplate]");
+    const font = nameplate?.querySelector('[data-student-nameplate-control="font"]')?.value || "slab";
+    const background = nameplate?.querySelector('[data-student-nameplate-control="background"]')?.value || "cream";
+    const color = nameplate?.querySelector('[data-student-nameplate-control="color"]')?.value || "#173247";
+    if (!nameplate || !STUDENT_NAMEPLATE_FONTS.includes(font) || !STUDENT_NAMEPLATE_BACKGROUNDS.includes(background) || !/^#[0-9a-f]{6}$/i.test(color)) return;
+    STUDENT_NAMEPLATE_FONTS.forEach((value) => nameplate.classList.remove(`platform-student-nameplate-font-${value}`));
+    STUDENT_NAMEPLATE_BACKGROUNDS.forEach((value) => nameplate.classList.remove(`platform-student-nameplate-bg-${value}`));
+    nameplate.classList.add(`platform-student-nameplate-font-${font}`, `platform-student-nameplate-bg-${background}`);
+    nameplate.style.setProperty("--student-name-color", color);
+    writeStudentNameplate(nameplate.dataset.studentId, { font, background, color });
+    return;
+  }
   const activityTitle = event.target.closest?.("[data-activity-directions-title]");
   if (activityTitle) { const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id; if (classId) activityDirections.setTitle(classId, activityTitle.value); return; }
   if (event.target.matches?.("[data-classroom-bob-enabled], [data-classroom-bob-menu-hidden], [data-classroom-bob-placement], [data-classroom-bob-earn-minutes], [data-classroom-bob-daily-limit]")) {

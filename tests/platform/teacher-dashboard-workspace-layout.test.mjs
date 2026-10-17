@@ -52,9 +52,11 @@ test("teacher and student workspaces use consistent visual zones for quick scann
   assert.match(css, /#teacher-live-lesson-dashboard \.platform-current-class-plan/);
 });
 
-test("student identity uses a polished antique nameplate with embossed text", () => {
+test("student dashboard uses an antique sign and students can customize their nameplate", () => {
   assert.match(css, /antique-student-nameplate\.png/);
-  assert.match(css, /\.platform-student-orientation h2 \{[^}]*text-shadow:/s);
+  assert.match(css, /\.platform-page-heading h1 \{[^}]*text-shadow:/s);
+  for (const label of ["Customize my nameplate", "Fancy text", "Background", "Name color", "Changes save automatically"]) assert.match(app, new RegExp(label));
+  assert.match(app, /STUDENT_NAMEPLATE_STORAGE_KEY/);
 });
 
 test("form placeholders are visibly stronger without matching entered text", () => {

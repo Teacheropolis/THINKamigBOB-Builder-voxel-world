@@ -282,11 +282,23 @@ summary:focus-visible {
 }
 
 #platform-main.platform-main:has(> .platform-student-home) > .platform-page-heading {
-  padding: clamp(0.9rem, 2vw, 1.25rem);
-  border: 1px solid rgba(197, 213, 220, 0.9);
-  border-radius: 1rem;
-  background: rgba(247, 251, 252, 0.94);
-  box-shadow: 0 0.75rem 1.75rem rgba(7, 27, 39, 0.14);
+  display: grid;
+  align-content: center;
+  min-height: clamp(8.5rem, 16vw, 11.5rem);
+  padding: 1.5rem clamp(4.75rem, 10vw, 8rem);
+  border: 0;
+  border-radius: 0;
+  background: transparent url("../assets/images/student-platform/antique-student-nameplate.png") center / 100% 100% no-repeat;
+  box-shadow: none;
+}
+#platform-main.platform-main:has(> .platform-student-home) > .platform-page-heading .platform-eyebrow {
+  color: #5c3510;
+  text-shadow: 0 1px 0 #f6d17a, 0 -1px 0 rgba(38, 19, 4, .65);
+}
+#platform-main.platform-main:has(> .platform-student-home) > .platform-page-heading h1 {
+  color: #462707;
+  font-family: "Roboto Slab", Rockwell, Georgia, serif;
+  text-shadow: 0 1px 0 #f8d886, 0 -1px 0 #1c0f04, 1px 0 0 #d09b3e, -1px 0 0 #2b1706, 0 3px 3px rgba(62, 34, 8, .35);
 }
 
 #platform-main.platform-main:has(> .platform-command-layout) {
@@ -343,35 +355,48 @@ summary:focus-visible {
 .platform-student-orientation {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: minmax(0, auto) auto;
+  grid-template-columns: minmax(0, auto) auto minmax(15rem, 1fr);
   grid-template-rows: auto auto;
-  align-content: center;
-  justify-content: start;
-  min-height: clamp(8rem, 15vw, 10rem);
-  padding: 1.25rem clamp(4.75rem, 10vw, 8rem);
-  border: 0 !important;
-  background: transparent url("../assets/images/student-platform/antique-student-nameplate.png") center / 100% 100% no-repeat !important;
-  box-shadow: none !important;
+  align-items: center;
+  gap: .15rem 1rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border: 2px solid #b7c9d0 !important;
+  border-left: 7px solid var(--platform-green) !important;
+  border-radius: 1rem;
+  box-shadow: var(--platform-shadow) !important;
 }
 .platform-student-orientation h2 {
   grid-column: 1;
   grid-row: 1;
-  color: #4a2a0b;
-  font-family: "Roboto Slab", Rockwell, Georgia, serif;
+  color: var(--student-name-color, var(--platform-navy));
   font-size: clamp(1.65rem, 4vw, 2.55rem);
   letter-spacing: .025em;
-  text-shadow: 0 1px 0 #f7d27c, 0 -1px 0 #1d1005, 1px 0 0 #d7a54d, -1px 0 0 #2b1807, 0 3px 3px rgba(62, 34, 8, .35);
+  text-shadow: 0 1px 0 rgba(255,255,255,.8), 0 2px 2px rgba(7,27,39,.16);
 }
-.platform-student-orientation > .platform-student-section-listen { grid-column: 2; grid-row: 1 / 3; align-self: center; margin-left: 1rem; border-color: #5d3712; color: #3a220d; background: rgba(255, 235, 177, .72); }
-.platform-student-orientation > p:last-child {
+.platform-student-nameplate-font-slab h2 { font-family: "Roboto Slab", Rockwell, Georgia, serif; }
+.platform-student-nameplate-font-classic h2 { font-family: Georgia, "Times New Roman", serif; font-style: italic; }
+.platform-student-nameplate-font-cursive h2 { font-family: "School Cursive", cursive; font-weight: 400; }
+.platform-student-nameplate-font-playful h2 { font-family: "Comic Sans MS", "Comic Sans", cursive; }
+.platform-student-nameplate-bg-cream { background: linear-gradient(145deg, #fffdf4, #f5ead1) !important; }
+.platform-student-nameplate-bg-brass { background: linear-gradient(135deg, #72501b, #e0b85c 24%, #fff0aa 50%, #b8832f 78%, #5a3914) !important; }
+.platform-student-nameplate-bg-blue { background: linear-gradient(145deg, #e8f6fa, #a9ced8 58%, #6f9ead) !important; }
+.platform-student-nameplate-bg-green { background: linear-gradient(145deg, #ecf7ee, #acd2b7 58%, #6c9f7f) !important; }
+.platform-student-nameplate-bg-parchment { background: linear-gradient(145deg, #fff0bc, #dfbd72 58%, #a87531) !important; }
+.platform-student-orientation > .platform-student-section-listen { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+.platform-student-orientation > .platform-student-class {
   grid-column: 1;
   grid-row: 2;
-  margin: .2rem 0 0;
-  color: #513417;
-  text-shadow: 0 1px 0 #f4d68e, 0 -1px 0 rgba(42, 22, 5, .6);
-  transform: translateY(-.35rem);
+  margin: 0;
+  color: var(--platform-blue-dark);
 }
 .platform-student-class { font-size: 1.05rem; font-weight: 850; letter-spacing: .035em; }
+.platform-student-nameplate-customizer { grid-column: 3; grid-row: 1 / 3; justify-self: stretch; margin-left: auto; }
+.platform-student-nameplate-customizer > summary { cursor: pointer; color: var(--platform-blue-dark); font-weight: 900; text-align: right; }
+.platform-student-nameplate-customizer > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-top: .65rem; }
+.platform-student-nameplate-customizer label { display: grid; gap: .2rem; color: var(--platform-navy); font-size: .75rem; font-weight: 850; }
+.platform-student-nameplate-customizer select { min-width: 0; padding: .45rem; font-size: .82rem; }
+.platform-student-nameplate-customizer input[type="color"] { width: 100%; min-height: 2.3rem; padding: .15rem; }
+.platform-student-nameplate-customizer > p:last-child { margin: .35rem 0 0; color: var(--platform-muted); font-size: .72rem; font-weight: 750; text-align: right; }
 .platform-bob-welcome { grid-column: span 5; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-blue) !important; }
 .platform-bob-welcome > p:last-child { margin: 0.5rem 0 0; color: var(--platform-muted); line-height: 1.5; }
 .platform-student-goal { grid-column: span 7; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-green) !important; }
@@ -1922,6 +1947,10 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
     padding-top: clamp(2rem, 5vw, 4rem);
     background-image: linear-gradient(180deg, rgba(18, 51, 70, 0.18), rgba(39, 49, 61, 0) 14rem);
   }
+  #platform-main.platform-main:has(> .platform-student-home) > .platform-page-heading { min-height: 8rem; padding-inline: 3.75rem; }
+  .platform-student-orientation { grid-template-columns: minmax(0, 1fr) auto; }
+  .platform-student-nameplate-customizer { grid-column: 1 / -1; grid-row: 3; width: 100%; margin: .5rem 0 0; }
+  .platform-student-nameplate-customizer > summary, .platform-student-nameplate-customizer > p:last-child { text-align: left; }
 }
 
 @media (max-width: 520px) {
@@ -1933,6 +1962,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
   .platform-main { width: min(100% - 1.25rem, 1180px); }
   .platform-roster-grid, .platform-placeholder-grid { grid-template-columns: 1fr; }
   .platform-actions, .platform-button { width: 100%; }
+  .platform-student-nameplate-customizer > div { grid-template-columns: 1fr; }
   .platform-text-links { flex-direction: column; }
   .platform-page-heading-bottom { align-items: stretch; flex-direction: column; }
   .platform-page-heading-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
