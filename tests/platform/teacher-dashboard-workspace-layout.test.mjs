@@ -33,10 +33,11 @@ test("teacher workspace uses layered surfaces to emphasize functions", () => {
 
 test("teacher and student workspaces use consistent visual zones for quick scanning", () => {
   for (const zone of ["platform-zone-today", "platform-zone-present", "platform-zone-create", "platform-zone-review", "platform-zone-settings"]) assert.match(css + app, new RegExp(zone));
-  for (const label of ["Today", "My Tools", "My Work", "Review"]) assert.match(app, new RegExp(label));
+  for (const label of ["My Tools", "My Work", "Review"]) assert.match(app, new RegExp(label));
   assert.doesNotMatch(app, /What I’m Doing Now/);
+  assert.doesNotMatch(app, /<strong>Today<\/strong><small>Current goal and activity<\/small>/);
   for (const zone of ["platform-student-zone-now", "platform-student-zone-tools", "platform-student-zone-work", "platform-student-zone-review", "platform-student-zone-history"]) assert.match(app, new RegExp(zone));
-  assert.match(css, /\.platform-student-area-map \{[^}]*grid-template-columns: repeat\(4/);
+  assert.match(css, /\.platform-student-area-map \{[^}]*grid-template-columns: repeat\(3/);
   assert.match(css, /#teacher-live-lesson-dashboard \.platform-current-class-plan/);
 });
 
@@ -279,6 +280,8 @@ test("Run Today’s Class shows a compact live current plan", () => {
 test("Approved Research joins Today’s Lesson and gives students restricted launch controls", () => {
   for (const label of ["Today’s Activity", "Approved Research", "Preview This Topic in Google", "Add to Today’s Lesson", "Research for This Activity", "Students never receive an open Google search box"]) assert.match(app, new RegExp(label));
   assert.match(app, /platform-school-start-launcher-inline/);
+  assert.match(app, /CURRENT SIDE PATH/);
+  assert.match(app, /resource\.mediaType === "side-path"/);
   assert.match(app, /if \(!reflectionStatus\.required\) return ""/);
   assert.match(app, /Due \$\{escapeHtml\(dueLabel\)\}/);
   assert.match(app, /TEACHER_ASSIGNED_RESEARCH_KEY/);
