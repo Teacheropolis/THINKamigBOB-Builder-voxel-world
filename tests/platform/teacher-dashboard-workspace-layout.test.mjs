@@ -33,7 +33,7 @@ test("teacher workspace uses layered surfaces to emphasize functions", () => {
 
 test("teacher and student workspaces use consistent visual zones for quick scanning", () => {
   for (const zone of ["platform-zone-today", "platform-zone-present", "platform-zone-create", "platform-zone-review", "platform-zone-settings"]) assert.match(css + app, new RegExp(zone));
-  for (const label of ["Today’s Path", "Look", "Do", "Show", "Finish", "Come Back Later"]) assert.match(app, new RegExp(label));
+  for (const label of ["Mission Route", "Mission Briefing", "Inventor’s Workshop", "Evidence Vault", "Captain’s Log", "Archive Room"]) assert.match(app, new RegExp(label));
   assert.doesNotMatch(app, /What I’m Doing Now/);
   assert.doesNotMatch(app, /<strong>Today<\/strong><small>Current goal and activity<\/small>/);
   for (const zone of ["platform-student-zone-now", "platform-student-zone-work", "platform-student-zone-review", "platform-student-zone-history"]) assert.match(app, new RegExp(zone));
@@ -285,23 +285,23 @@ test("Run Today’s Class shows a compact live current plan", () => {
 test("Approved Research joins Today’s Lesson and gives students restricted launch controls", () => {
   for (const label of ["Today’s Lesson", "Approved Research", "Preview This Topic in Google", "Add to Today’s Lesson", "Teacher links", "Students never receive an open Google search box"]) assert.match(app, new RegExp(label));
   assert.match(app, /platform-school-start-launcher-inline/);
-  assert.match(app, /Other Allowed Activities/);
+  assert.match(app, /Auxiliary Machines/);
   assert.match(app, /const sidePathType = currentSidePath\?\.title \|\| currentSidePath\?\.type/);
   assert.match(app, /<strong>SIDE PATH<\/strong>/);
   assert.match(app, /data-action="read-student-launches"/);
   assert.match(app, /installStudentReadAloudControls/);
   assert.match(app, /function studentTwoWeekCalendarMarkup/);
-  assert.match(app, /<h2 id="student-calendar-title">Calendar<\/h2>/);
+  assert.match(app, /<h2 id="student-calendar-title">Mission Ledger<\/h2>/);
   assert.doesNotMatch(app, /<h2 id="choose-path-title">Choose Your Path<\/h2>/);
   assert.doesNotMatch(app, /<h3 id="future-path-title">Choose a Future Path<\/h3>/);
   assert.match(app, /data-action="open-student-calendar-day"/);
-  assert.match(app, /▶ Open Activity/);
+  assert.match(app, /Reopen Mission/);
   assert.match(app, /Array\.from\(\{ length: 5 \}/);
   assert.match(app, /Main activity:/);
   assert.match(css, /\.platform-student-calendar-days/);
   assert.match(app, /dataset\.action = "read-student-section"/);
   assert.match(css, /\.platform-student-section-listen/);
-  assert.match(app, /🔊 Listen/);
+  assert.match(app, />Listen<\/button>/);
   assert.match(app, /<small>🔒 Locked<\/small>/);
   assert.match(app, /resource\.mediaType === "side-path"/);
   assert.match(app, /if \(!reflectionStatus\.required\) return ""/);

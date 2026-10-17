@@ -28,7 +28,7 @@ test("School-Start Launcher contains the three approved choices with visual and 
   assert.equal((launcherSource.match(/target="_blank"/g) ?? []).length, 3);
   assert.equal((launcherSource.match(/rel="noopener noreferrer"/g) ?? []).length, 3);
   assert.match(launcherSource, /data-action="read-student-launches"/);
-  assert.match(launcherSource, /🔊 Listen/);
+  assert.match(launcherSource, />Listen<\/button>/);
 });
 
 test("launcher does not add network or persistence behavior", () => {

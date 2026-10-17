@@ -1104,16 +1104,16 @@ function todaysLessonStudentMarkup(classId, studentId, assignedResearch) {
   const assignedSidePath = classResourceSharing.resourcesForStudent(classId, studentId).find((resource) => resource.type === "Side Path" && resource.url);
   const currentSidePath = releasedSidePath ?? assignedSidePath;
   const sidePathType = currentSidePath?.title || currentSidePath?.type || "Teacher choice";
-  const sidePathLaunch = currentSidePath ? `<a class="platform-school-start-launch-link platform-school-start-launch-link-side-path" href="${escapeHtml(currentSidePath.url)}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">🧭</span><strong>SIDE PATH</strong><small>${escapeHtml(sidePathType)}</small></a>` : `<button class="platform-school-start-launch-link platform-school-start-launch-link-side-path is-unavailable" type="button" disabled aria-label="Side Path locked"><span aria-hidden="true">🧭</span><strong>SIDE PATH</strong><small>🔒 Locked</small></button>`;
+  const sidePathLaunch = currentSidePath ? `<a class="platform-school-start-launch-link platform-school-start-launch-link-side-path" href="${escapeHtml(currentSidePath.url)}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SP</span><strong>SIDE PATH</strong><small>${escapeHtml(sidePathType)}</small></a>` : `<button class="platform-school-start-launch-link platform-school-start-launch-link-side-path is-unavailable" type="button" disabled aria-label="Side Path locked"><span aria-hidden="true">SP</span><strong>SIDE PATH</strong><small>🔒 Locked</small></button>`;
   const researchMarkup = assignedResearch.topic || assignedResearch.links.length ? `<section class="platform-assigned-research platform-assigned-research-student" aria-labelledby="assigned-research-student-title"><p class="platform-student-section-label">Teacher links</p><h3 id="assigned-research-student-title">Research</h3>${assignedResearch.topic ? `<p>${escapeHtml(assignedResearch.topic)}</p>` : ""}${assignedResearch.links.length ? `<div class="platform-assigned-research-links">${assignedResearch.links.map((link) => `<button type="button" data-action="open-assigned-research" data-research-url="${escapeHtml(link.url)}">${escapeHtml(link.title)}</button>`).join("")}</div>` : ""}</section>` : "";
-  return `<section class="platform-todays-lesson-student platform-student-zone platform-student-zone-now platform-student-trail-stop platform-student-trail-stop-right" id="student-todays-activities" aria-labelledby="student-todays-lesson-title"><p class="platform-student-section-label">Step 2</p><h2 id="student-todays-lesson-title">🛠️ Do</h2><p>Follow the directions. Use the tools you need.</p>${activityDirectionsStudentMarkup(classId)}<section class="platform-school-start-launcher platform-school-start-launcher-inline" aria-labelledby="school-start-launcher-title"><h3 id="school-start-launcher-title">Other Allowed Activities</h3><div class="platform-school-start-launch-grid">${sidePathLaunch}<a class="platform-school-start-launch-link platform-school-start-launch-link-builder" href="../index.html" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">🧱</span><strong>STEM BUILDER</strong><small>Build</small></a><a class="platform-school-start-launch-link platform-school-start-launch-link-workshop" href="http://192.168.1.252:8000" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">🛠️</span><strong>STEM WORKSHOP</strong><small>Open</small></a></div><button class="platform-student-listen-button" type="button" data-action="read-student-launches" data-side-path-assigned="${currentSidePath ? "true" : "false"}" aria-pressed="false">🔊 Listen</button></section>${researchMarkup}</section>`;
+  return `<section class="platform-todays-lesson-student platform-student-zone platform-student-zone-now platform-student-trail-stop platform-student-trail-stop-right" id="student-todays-activities" aria-labelledby="student-todays-lesson-title"><p class="platform-student-section-label">Step 2</p><h2 id="student-todays-lesson-title">Inventor’s Workshop</h2><p>Follow the mission orders. Use the machines you need.</p>${activityDirectionsStudentMarkup(classId)}<section class="platform-school-start-launcher platform-school-start-launcher-inline" aria-labelledby="school-start-launcher-title"><h3 id="school-start-launcher-title">Auxiliary Machines</h3><div class="platform-school-start-launch-grid">${sidePathLaunch}<a class="platform-school-start-launch-link platform-school-start-launch-link-builder" href="../index.html" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SB</span><strong>STEM BUILDER</strong><small>Build</small></a><a class="platform-school-start-launch-link platform-school-start-launch-link-workshop" href="http://192.168.1.252:8000" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SW</span><strong>STEM WORKSHOP</strong><small>Open</small></a></div><button class="platform-student-listen-button" type="button" data-action="read-student-launches" data-side-path-assigned="${currentSidePath ? "true" : "false"}" aria-pressed="false">Listen</button></section>${researchMarkup}</section>`;
 }
 
 function studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions) {
   if (!reflectionStatus.required) return "";
   const due = new Date(reflectionActivityWindowStart(new Date()) + (6 * 24 * 60 * 60 * 1000));
   const dueLabel = due.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
-  return `<section class="platform-student-reflection platform-student-reflection-inline platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><h2 id="reflection-check-title">✅ Finish</h2><p class="platform-student-status" data-weekly-reflection-status>${reflectionStatus.remaining === 0 ? `Done! ${reflectionStatus.completed} finished this week.` : `Tell what you learned. Due ${escapeHtml(dueLabel)}.`}</p>${reflectionStatus.remaining === 0 ? "" : `<details class="platform-student-reflection-form"><summary>What I Learned</summary><form data-form="weekly-reflection" novalidate><label for="weekly-reflection-activity">Activity Worked On Today</label><select id="weekly-reflection-activity" name="activityChoice" required><option value="">Choose an activity</option>${teacherActivities.map((activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activity)}</option>`).join("")}<option value="__other__">Other activity — type my own</option></select><label data-reflection-other-activity hidden>Type the activity name<input name="activityOther" maxlength="120"></label><label for="weekly-reflection-progress">Mission Progress</label><select id="weekly-reflection-progress" name="progress" required>${reflectionOptions(REFLECTION_PROGRESS_OPTIONS)}</select><label for="weekly-reflection-response">What did you learn?</label><textarea id="weekly-reflection-response" name="explanation" minlength="10" maxlength="500" required></textarea><button class="platform-reflection-speech-button" type="button" data-action="reflection-dictate" aria-pressed="false">🎙 Speak Answer</button><button class="platform-reflection-speech-stop" type="button" data-action="reflection-dictate-stop" hidden>■ Stop Speaking</button><p class="platform-reflection-speech-status" data-reflection-speech-status role="status">Type or speak.</p><label>Did you improve your idea?<select name="improved" required>${reflectionOptions(REFLECTION_IMPROVEMENT_OPTIONS)}</select></label><label>🏅 Badge<select name="badge" required>${reflectionOptions(REFLECTION_BADGE_OPTIONS)}</select></label><label>🆘 Need help next class?<select name="help" required>${reflectionOptions(REFLECTION_HELP_OPTIONS)}</select></label><label>Could you help someone?<select name="helpOther" required>${reflectionOptions(REFLECTION_HELP_OTHER_OPTIONS)}</select></label><label>⭐ How did it go?<select name="rating" required>${reflectionOptions(REFLECTION_ACTIVITY_RATING_OPTIONS)}</select></label><button type="submit">Finish</button><p class="platform-error" data-weekly-reflection-error role="alert" hidden></p></form></details>`}</section>`;
+  return `<section class="platform-student-reflection platform-student-reflection-inline platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><h2 id="reflection-check-title">Captain’s Log</h2><p class="platform-student-status" data-weekly-reflection-status>${reflectionStatus.remaining === 0 ? `Done! ${reflectionStatus.completed} finished this week.` : `Record what you learned. Due ${escapeHtml(dueLabel)}.`}</p>${reflectionStatus.remaining === 0 ? "" : `<details class="platform-student-reflection-form"><summary>Open Captain’s Log</summary><form data-form="weekly-reflection" novalidate><label for="weekly-reflection-activity">Activity Worked On Today</label><select id="weekly-reflection-activity" name="activityChoice" required><option value="">Choose an activity</option>${teacherActivities.map((activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activity)}</option>`).join("")}<option value="__other__">Other activity — type my own</option></select><label data-reflection-other-activity hidden>Type the activity name<input name="activityOther" maxlength="120"></label><label for="weekly-reflection-progress">Mission Progress</label><select id="weekly-reflection-progress" name="progress" required>${reflectionOptions(REFLECTION_PROGRESS_OPTIONS)}</select><label for="weekly-reflection-response">What did you learn?</label><textarea id="weekly-reflection-response" name="explanation" minlength="10" maxlength="500" required></textarea><button class="platform-reflection-speech-button" type="button" data-action="reflection-dictate" aria-pressed="false">Speak Answer</button><button class="platform-reflection-speech-stop" type="button" data-action="reflection-dictate-stop" hidden>Stop Speaking</button><p class="platform-reflection-speech-status" data-reflection-speech-status role="status">Type or speak.</p><label>Did you improve your idea?<select name="improved" required>${reflectionOptions(REFLECTION_IMPROVEMENT_OPTIONS)}</select></label><label>Badge<select name="badge" required>${reflectionOptions(REFLECTION_BADGE_OPTIONS)}</select></label><label>Need help next class?<select name="help" required>${reflectionOptions(REFLECTION_HELP_OPTIONS)}</select></label><label>Could you help someone?<select name="helpOther" required>${reflectionOptions(REFLECTION_HELP_OTHER_OPTIONS)}</select></label><label>How did it go?<select name="rating" required>${reflectionOptions(REFLECTION_ACTIVITY_RATING_OPTIONS)}</select></label><button type="submit">Finish Log</button><p class="platform-error" data-weekly-reflection-error role="alert" hidden></p></form></details>`}</section>`;
 }
 
 function weeklyReflectionTeacherMarkup(classId) {
@@ -2414,7 +2414,7 @@ function studentTwoWeekCalendarMarkup() {
     const dayWork = isToday ? todayWork : sameDay(date, yesterday) ? yesterdayWork : [];
     const activities = [...new Set(dayWork.map((item) => item.activity).filter(Boolean))];
     const hasWork = activities.length > 0;
-    const symbol = isToday ? "⭐" : hasWork ? "📎" : "—";
+    const symbol = isToday ? "TODAY" : hasWork ? "SAVED" : "—";
     const meaning = isToday ? (hasWork ? "Today, work saved" : "Today") : hasWork ? "Work saved" : "No saved work";
     const dateLabel = date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
     const activityLabel = hasWork ? activities.join(", ") : "No saved work";
@@ -2426,9 +2426,9 @@ function studentTwoWeekCalendarMarkup() {
   if (today.getDay() === 0 || today.getDay() === 6) { defaultDate.setTime(thisWeekStart.getTime()); defaultDate.setDate(thisWeekStart.getDate() + 4); }
   const defaultWork = sameDay(defaultDate, today) ? todayWork : sameDay(defaultDate, yesterday) ? yesterdayWork : [];
   const defaultActivity = defaultWork.map((item) => item.activity).find(Boolean) || "No saved work";
-  const defaultSymbol = sameDay(defaultDate, today) ? "⭐" : defaultWork.length ? "📎" : "—";
+  const defaultSymbol = sameDay(defaultDate, today) ? "TODAY" : defaultWork.length ? "SAVED" : "—";
   const defaultDateLabel = defaultDate.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
-  return `<section class="platform-student-calendar platform-student-zone platform-student-zone-history" aria-labelledby="student-calendar-title"><h2 id="student-calendar-title">Calendar</h2><p class="platform-student-calendar-key"><span>⭐ Today</span><span>📎 Saved</span><span>— None</span></p><p class="platform-sr-only">${escapeHtml(calendarDays.join(" "))}</p><div class="platform-student-calendar-weeks">${weeks}</div><div class="platform-student-calendar-detail" data-student-calendar-detail role="status"><strong>${defaultSymbol} ${escapeHtml(defaultDateLabel)}</strong><span>${escapeHtml(defaultActivity)}</span><a href="#student-todays-activities" data-student-calendar-activity-link${defaultActivity === "No saved work" ? " hidden" : ""}>▶ Open Activity</a></div></section>`;
+  return `<section class="platform-student-calendar platform-student-zone platform-student-zone-history" aria-labelledby="student-calendar-title"><h2 id="student-calendar-title">Mission Ledger</h2><p class="platform-student-calendar-key"><span>Today</span><span>Saved</span><span>None</span></p><p class="platform-sr-only">${escapeHtml(calendarDays.join(" "))}</p><div class="platform-student-calendar-weeks">${weeks}</div><div class="platform-student-calendar-detail" data-student-calendar-detail role="status"><strong>${defaultSymbol} ${escapeHtml(defaultDateLabel)}</strong><span>${escapeHtml(defaultActivity)}</span><a href="#student-todays-activities" data-student-calendar-activity-link${defaultActivity === "No saved work" ? " hidden" : ""}>Reopen Mission</a></div></section>`;
 }
 
 function studentDashboardView(state) {
@@ -2450,7 +2450,7 @@ function studentDashboardView(state) {
   ].filter(Boolean))];
   const reflectionOptions = (options) => `<option value="">Choose one</option>${options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join("")}`;
   const assignedReflection = studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions);
-  const finishMarkup = assignedReflection || `<section class="platform-student-finish platform-student-zone platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><h2 id="reflection-check-title">✅ Finish</h2><p>All done for today!</p></section>`;
+  const finishMarkup = assignedReflection || `<section class="platform-student-finish platform-student-zone platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><h2 id="reflection-check-title">Captain’s Log</h2><p>Mission complete for today!</p></section>`;
   const studentName = escapeHtml(student?.displayName ?? "Student");
   const className = escapeHtml(classRecord?.displayName ?? "Class not selected");
   return shell(`
@@ -2463,44 +2463,44 @@ function studentDashboardView(state) {
 
       <section class="platform-student-quest-map" aria-labelledby="student-quest-map-title">
         <div class="platform-student-quest-map-heading">
-          <h2 id="student-quest-map-title">Today’s Path</h2>
+          <h2 id="student-quest-map-title">Mission Route</h2>
           <p>Tap each step.</p>
         </div>
         <nav class="platform-student-quest-path" aria-label="Mission steps in order">
-          <a class="platform-student-quest-stop is-current" href="#current-goal-title" data-action="open-student-quest-step" data-student-quest="look" aria-current="step"><span class="platform-student-quest-number">1</span><span class="platform-student-quest-icon" aria-hidden="true">👀</span><strong>Look</strong><small data-student-quest-status>You are here</small></a>
-          <a class="platform-student-quest-stop" href="#student-todays-activities" data-action="open-student-quest-step" data-student-quest="do"><span class="platform-student-quest-number">2</span><span class="platform-student-quest-icon" aria-hidden="true">🛠️</span><strong>Do</strong><small data-student-quest-status>Next</small></a>
-          <a class="platform-student-quest-stop" href="#evidence-connections-title" data-action="open-student-quest-step" data-student-quest="show"><span class="platform-student-quest-number">3</span><span class="platform-student-quest-icon" aria-hidden="true">📷</span><strong>Show</strong><small data-student-quest-status>Then</small></a>
-          <a class="platform-student-quest-stop" href="#reflection-check-title" data-action="open-student-quest-step" data-student-quest="finish"><span class="platform-student-quest-number">4</span><span class="platform-student-quest-icon" aria-hidden="true">✅</span><strong>Finish</strong><small data-student-quest-status>Last</small></a>
+          <a class="platform-student-quest-stop is-current" href="#current-goal-title" data-action="open-student-quest-step" data-student-quest="look" aria-current="step"><span class="platform-student-quest-number">1</span><span class="platform-student-quest-icon" aria-hidden="true">BRIEF</span><strong>Mission Briefing</strong><small data-student-quest-status>You are here</small></a>
+          <a class="platform-student-quest-stop" href="#student-todays-activities" data-action="open-student-quest-step" data-student-quest="do"><span class="platform-student-quest-number">2</span><span class="platform-student-quest-icon" aria-hidden="true">BUILD</span><strong>Inventor’s Workshop</strong><small data-student-quest-status>Next</small></a>
+          <a class="platform-student-quest-stop" href="#evidence-connections-title" data-action="open-student-quest-step" data-student-quest="show"><span class="platform-student-quest-number">3</span><span class="platform-student-quest-icon" aria-hidden="true">PROOF</span><strong>Evidence Vault</strong><small data-student-quest-status>Then</small></a>
+          <a class="platform-student-quest-stop" href="#reflection-check-title" data-action="open-student-quest-step" data-student-quest="finish"><span class="platform-student-quest-number">4</span><span class="platform-student-quest-icon" aria-hidden="true">LOG</span><strong>Captain’s Log</strong><small data-student-quest-status>Last</small></a>
         </nav>
       </section>
 
       <section class="platform-student-goal platform-student-zone platform-student-zone-now platform-student-trail-stop platform-student-trail-stop-left" aria-labelledby="current-goal-title">
         <p class="platform-student-section-label">Step 1</p>
-        <h2 id="current-goal-title">👀 Look</h2>
+        <h2 id="current-goal-title">Mission Briefing</h2>
         <div data-pb002j-current-goal>
           <p class="platform-student-empty-state">Checking your goal…</p>
         </div>
       </section>
 
-      <a class="platform-student-trail-arrow platform-student-trail-arrow-right" href="#student-todays-activities" aria-label="Go to step 2, Do"><span>Next: Do</span><b aria-hidden="true">↘</b></a>
+      <a class="platform-student-trail-arrow platform-student-trail-arrow-right" href="#student-todays-activities" aria-label="Go to step 2, Inventor’s Workshop"><span>Next: Workshop</span><b aria-hidden="true">↘</b></a>
 
       ${todaysLessonStudentMarkup(state.classId, state.studentId, assignedResearch)}
 
-      <a class="platform-student-trail-arrow platform-student-trail-arrow-left" href="#evidence-connections-title" aria-label="Go to step 3, Show"><span>Next: Show</span><b aria-hidden="true">↙</b></a>
+      <a class="platform-student-trail-arrow platform-student-trail-arrow-left" href="#evidence-connections-title" aria-label="Go to step 3, Evidence Vault"><span>Next: Evidence Vault</span><b aria-hidden="true">↙</b></a>
 
       <section class="platform-student-show platform-student-zone platform-student-zone-tools platform-student-trail-stop platform-student-trail-stop-left" aria-labelledby="evidence-connections-title" data-evidence-foundation>
         <p class="platform-student-section-label">Step 3</p>
-        <h2 id="evidence-connections-title">📷 Show</h2>
+        <h2 id="evidence-connections-title">Evidence Vault</h2>
         <p>Add evidence.</p>
         ${evidenceCaptureMarkup()}
       </section>
 
-      <a class="platform-student-trail-arrow platform-student-trail-arrow-right" href="#reflection-check-title" aria-label="Go to step 4, Finish"><span>Next: Finish</span><b aria-hidden="true">↘</b></a>
+      <a class="platform-student-trail-arrow platform-student-trail-arrow-right" href="#reflection-check-title" aria-label="Go to step 4, Captain’s Log"><span>Next: Captain’s Log</span><b aria-hidden="true">↘</b></a>
 
       ${finishMarkup}
 
       <details class="platform-student-later">
-        <summary>🗂️ Come Back Later</summary>
+        <summary>Archive Room</summary>
         <p>Calendar and saved work</p>
         ${studentTwoWeekCalendarMarkup()}
       <section class="platform-stem-work platform-student-zone platform-student-zone-work" aria-labelledby="stem-work-title">
@@ -5400,7 +5400,7 @@ function handleClick(event) {
   if (action.dataset.action === "open-student-calendar-day") {
     const detail = action.closest(".platform-student-calendar")?.querySelector("[data-student-calendar-detail]");
     if (!detail) return;
-    const symbol = action.dataset.calendarToday === "true" ? "⭐" : action.dataset.calendarWork === "true" ? "📎" : "—";
+    const symbol = action.dataset.calendarToday === "true" ? "TODAY" : action.dataset.calendarWork === "true" ? "SAVED" : "—";
     detail.querySelector("strong").textContent = `${symbol} ${action.dataset.calendarDate}`;
     detail.querySelector("span").textContent = action.dataset.calendarWork === "true" ? `Main activity: ${action.dataset.calendarActivity}` : "No saved work";
     const activityLink = detail.querySelector("[data-student-calendar-activity-link]");
@@ -5415,18 +5415,18 @@ function handleClick(event) {
     if (window.speechSynthesis.speaking && action.getAttribute("aria-pressed") === "true") {
       window.speechSynthesis.cancel();
       action.setAttribute("aria-pressed", "false");
-      action.textContent = "🔊 Listen";
+      action.textContent = "Listen";
       return;
     }
     window.speechSynthesis.cancel();
-    document.querySelectorAll('[data-action="read-student-section"][aria-pressed="true"]').forEach((button) => { button.setAttribute("aria-pressed", "false"); button.textContent = "🔊 Listen"; });
+    document.querySelectorAll('[data-action="read-student-section"][aria-pressed="true"]').forEach((button) => { button.setAttribute("aria-pressed", "false"); button.textContent = "Listen"; });
     const copy = section.cloneNode(true);
     copy.querySelectorAll("section, article, nav, form, details, button, [aria-hidden='true'], [hidden]").forEach((element) => element.remove());
     const text = copy.textContent.replace(/\s+/g, " ").trim();
     if (!text) return;
     const message = new SpeechSynthesisUtterance(text);
     message.rate = 0.86;
-    message.onend = () => { action.setAttribute("aria-pressed", "false"); action.textContent = "🔊 Listen"; };
+    message.onend = () => { action.setAttribute("aria-pressed", "false"); action.textContent = "Listen"; };
     action.setAttribute("aria-pressed", "true");
     action.textContent = "■ Stop";
     window.speechSynthesis.speak(message);
@@ -5438,14 +5438,14 @@ function handleClick(event) {
     if (window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel();
       action.setAttribute("aria-pressed", "false");
-      action.textContent = "🔊 Listen";
+      action.textContent = "Listen";
       if (status) status.textContent = "Reading stopped.";
       return;
     }
     const sidePathWords = action.dataset.sidePathAssigned === "true" ? "Current Side Path. Open your assigned directions." : "Current Side Path is not assigned yet.";
     const message = new SpeechSynthesisUtterance(`${sidePathWords} STEM Builder. Build and test your idea. STEM Workshop. Open your class workshop.`);
     message.rate = 0.86;
-    message.onend = () => { action.setAttribute("aria-pressed", "false"); action.textContent = "🔊 Listen"; if (status) status.textContent = "Choose the tool you need."; };
+    message.onend = () => { action.setAttribute("aria-pressed", "false"); action.textContent = "Listen"; if (status) status.textContent = "Choose the tool you need."; };
     action.setAttribute("aria-pressed", "true");
     action.textContent = "■ Stop";
     if (status) status.textContent = "Reading the choices aloud.";
@@ -6891,7 +6891,7 @@ function installStudentReadAloudControls() {
     button.dataset.action = "read-student-section";
     button.setAttribute("aria-pressed", "false");
     button.setAttribute("aria-label", `Listen to ${heading.textContent.trim()}`);
-    button.textContent = "🔊 Listen";
+    button.textContent = "Listen";
     heading.insertAdjacentElement("afterend", button);
   });
 }
