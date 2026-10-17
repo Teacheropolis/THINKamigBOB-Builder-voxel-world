@@ -52,6 +52,11 @@ test("teacher and student workspaces use consistent visual zones for quick scann
   assert.match(css, /#teacher-live-lesson-dashboard \.platform-current-class-plan/);
 });
 
+test("student identity uses a polished antique nameplate with embossed text", () => {
+  assert.match(css, /antique-student-nameplate\.png/);
+  assert.match(css, /\.platform-student-orientation h2 \{[^}]*text-shadow:/s);
+});
+
 test("form placeholders are visibly stronger without matching entered text", () => {
   assert.match(css, /input::placeholder, \.platform-main textarea::placeholder \{[^}]*font-weight: 700[^}]*opacity: 1/);
 });
