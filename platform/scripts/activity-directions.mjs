@@ -1,12 +1,15 @@
 export const ACTIVITY_DIRECTIONS_STORAGE_KEY = "thinkamigbob.activity-directions.v1";
-export const DIRECTION_MEDIA_TYPES = Object.freeze(["none", "image", "google-slides", "youtube", "pdf", "webpage"]);
+export const DIRECTION_MEDIA_TYPES = Object.freeze(["none", "image", "google-slides", "youtube", "pdf", "webpage", "builder", "mission-activity", "side-path"]);
 
 function emptyState() { return { classes: {} }; }
 function cleanText(value, limit) { return String(value ?? "").trim().slice(0, limit); }
-function safeUrl(value) { return !value || (/^https:\/\//i.test(value) && !/[\u0000-\u001f]/.test(value)); }
+function safeUrl(value) {
+  if (!value || /[\u0000-\u001f]/.test(value)) return !value;
+  return /^https:\/\//i.test(value) || /^(?:\.\.\/|\.\/|\/)[^/]/.test(value);
+}
 function normalizeResource(value = {}) {
   const mediaType = DIRECTION_MEDIA_TYPES.includes(value.mediaType) && value.mediaType !== "none" ? value.mediaType : "webpage";
-  return { mediaType, url: cleanText(value.url, 1500) };
+  return { title: cleanText(value.title, 100), mediaType, url: cleanText(value.url, 1500) };
 }
 function normalizeCard(value = {}) {
   const mediaType = DIRECTION_MEDIA_TYPES.includes(value.mediaType) ? value.mediaType : "none";

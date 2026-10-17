@@ -40,15 +40,17 @@ test("unsafe or incomplete media is rejected", () => {
 
 test("a direction card can contain multiple mixed resources", () => {
   const store = createActivityDirections({ storage: memoryStorage() });
-  const saved = store.saveCard("a", { title: "Explore", directions: "Use both resources.", resources: [{ mediaType: "image", url: "https://example.com/model.png" }, { mediaType: "youtube", url: "https://www.youtube.com/watch?v=abcdef123" }] });
+  const saved = store.saveCard("a", { title: "Explore", directions: "Use both resources.", resources: [{ title: "Model image", mediaType: "image", url: "https://example.com/model.png" }, { title: "Bridge video", mediaType: "youtube", url: "https://www.youtube.com/watch?v=abcdef123" }, { title: "Open Builder", mediaType: "builder", url: "../index.html" }] });
   assert.equal(saved.ok, true);
-  assert.deepEqual(store.read("a").cards[0].resources.map((item) => item.mediaType), ["image", "youtube"]);
+  assert.deepEqual(store.read("a").cards[0].resources.map((item) => item.mediaType), ["image", "youtube", "builder"]);
+  assert.equal(store.read("a").cards[0].resources[1].title, "Bridge video");
 });
 
 test("teacher and student views expose the live directions timeline", () => {
   const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
   const css = readFileSync(new URL("../../platform/styles/platform.css", import.meta.url), "utf8");
-  for (const text of ["Live Activity Directions", "Add Lesson Step", "Add or Edit a Lesson Step", "Add another resource", "Student visibility", "Release", "Withdraw", "Duplicate", "Move Up", "Move Down"]) assert.match(app, new RegExp(text));
+  for (const text of ["Lesson Steps", "Lesson Steps, Activities, and Resources", "Add Lesson Step", "Add or Edit a Lesson Step", "Add an Activity or Resource", "Student visibility", "Release", "Withdraw", "Duplicate", "Move Up", "Move Down"]) assert.match(app, new RegExp(text));
+  assert.doesNotMatch(app.slice(app.indexOf("function todaysLessonTeacherMarkup"), app.indexOf("function todaysLessonStudentMarkup")), /classResourceTeacherMarkup/);
   assert.match(app, /activityDirections\.releasedForStudents/);
   assert.match(app, /ACTIVITY_DIRECTIONS_STORAGE_KEY/);
   assert.match(css, /platform-activity-directions/);
