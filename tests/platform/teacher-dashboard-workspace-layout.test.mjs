@@ -39,6 +39,7 @@ test("teacher and student workspaces use consistent visual zones for quick scann
   assert.match(css, /font-family: "Roboto Slab", Rockwell, Georgia, serif/);
   assert.match(css, /margin-bottom: clamp\(3rem, 7vw, 5\.5rem\)/);
   assert.match(css, /mission-route-antique-map\.jpg/);
+  for (const trim of ["#2d7d5b", "#16749b", "#b57a09", "#9a4f24"]) assert.match(css, new RegExp(trim));
   assert.doesNotMatch(app, /What I’m Doing Now/);
   assert.doesNotMatch(app, /<strong>Today<\/strong><small>Current goal and activity<\/small>/);
   for (const zone of ["platform-student-zone-now", "platform-student-zone-work", "platform-student-zone-review", "platform-student-zone-history"]) assert.match(app, new RegExp(zone));
@@ -290,7 +291,7 @@ test("Run Today’s Class shows a compact live current plan", () => {
 test("Approved Research joins Today’s Lesson and gives students restricted launch controls", () => {
   for (const label of ["Today’s Lesson", "Approved Research", "Preview This Topic in Google", "Add to Today’s Lesson", "Teacher links", "Students never receive an open Google search box"]) assert.match(app, new RegExp(label));
   assert.match(app, /platform-school-start-launcher-inline/);
-  assert.match(app, /Auxiliary Machines/);
+  assert.match(app, /Extra Activities/);
   assert.match(app, /const sidePathType = currentSidePath\?\.title \|\| currentSidePath\?\.type/);
   assert.match(app, /<strong>SIDE PATH<\/strong>/);
   assert.match(app, /data-action="read-student-launches"/);
