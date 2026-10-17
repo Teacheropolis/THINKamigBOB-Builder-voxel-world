@@ -2469,7 +2469,7 @@ function studentDashboardView(state) {
       <section class="platform-bob-welcome platform-student-zone platform-student-zone-now" aria-labelledby="bob-welcome-title">
         <p class="platform-student-section-label">Getting started</p>
         <h2 id="bob-welcome-title">BOB Welcome</h2>
-        <p>Welcome, ${studentName}. Your goals and paths will appear here when they are ready. Start by checking Current Goal, then review Choose Your Path.</p>
+        <p>Welcome, ${studentName}. Start with Current Goal, then open Today’s Activity.</p>
       </section>
 
       <section class="platform-student-goal platform-student-zone platform-student-zone-now" aria-labelledby="current-goal-title">
@@ -2486,38 +2486,6 @@ function studentDashboardView(state) {
 
       <!-- What I Learned Today is rendered inside Today’s Activity when assigned. id="reflection-check-title" -->
 
-      <section class="platform-student-paths platform-student-zone platform-student-zone-tools" aria-labelledby="choose-path-title">
-        <div class="platform-student-section-heading">
-          <p class="platform-student-section-label">Next actions</p>
-          <h2 id="choose-path-title">Choose Your Path</h2>
-          <p><strong>Continue</strong> returns to work already started. <strong>Start</strong> begins a mission made available to you through the approved class-wide prototype.</p>
-        </div>
-        <div class="platform-mission-choice-layout">
-          <section class="platform-mission-choice-section platform-mission-choice-continue" aria-labelledby="mission-continue-title">
-            <p class="platform-mission-choice-label">Continue first</p>
-            <h3 id="mission-continue-title">Continue</h3>
-            <p class="platform-student-empty-state">No mission is ready to continue yet.</p>
-            <p>Existing mission work will appear here when an approved current-work source is connected.</p>
-          </section>
-          <section class="platform-mission-choice-section platform-mission-choice-available" aria-labelledby="available-missions-title">
-            <p class="platform-mission-choice-label">Start something available</p>
-            <h3 id="available-missions-title">Available Missions</h3>
-            <div class="platform-mission-card-container" aria-labelledby="available-missions-title">
-              <div data-pb002j-available-missions>
-                <p class="platform-student-empty-state">No new missions are available right now.</p>
-                <p>Checking teacher-confirmed availability…</p>
-              </div>
-            </div>
-          </section>
-          <section class="platform-mission-choice-section platform-mission-choice-side-paths" aria-labelledby="side-paths-title">
-            <p class="platform-mission-choice-label">Coming Later</p>
-            <h3 id="side-paths-title">Side Paths</h3>
-            <p class="platform-student-empty-state">Optional Side Paths are not available yet.</p>
-            <p>Side Paths will be optional ways to explore a related idea in a future approved build.</p>
-          </section>
-        </div>
-      </section>
-
       <section class="platform-stem-work platform-student-zone platform-student-zone-work" aria-labelledby="stem-work-title">
         <div class="platform-student-section-heading">
           <p class="platform-student-section-label">Your engineering journey</p>
@@ -2532,11 +2500,6 @@ function studentDashboardView(state) {
               <p class="platform-student-empty-state">You do not have current work to continue yet.</p>
               <p>When a project is ready, you can return to it here.</p>
             </div>
-          </section>
-          <section class="platform-stem-work-section platform-stem-work-future-path" aria-labelledby="future-path-title">
-            <p class="platform-stem-work-label">Your next choice</p>
-            <h3 id="future-path-title">Choose a Future Path</h3>
-            <p class="platform-student-empty-state">Available mission choices will appear in Mission Choice.</p>
           </section>
           <section class="platform-stem-work-history" aria-labelledby="work-history-title">
             <div class="platform-stem-work-history-heading">

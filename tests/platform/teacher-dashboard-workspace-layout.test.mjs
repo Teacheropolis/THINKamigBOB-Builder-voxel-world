@@ -36,7 +36,7 @@ test("teacher and student workspaces use consistent visual zones for quick scann
   for (const label of ["My Tools", "My Work", "Review"]) assert.match(app, new RegExp(label));
   assert.doesNotMatch(app, /What I’m Doing Now/);
   assert.doesNotMatch(app, /<strong>Today<\/strong><small>Current goal and activity<\/small>/);
-  for (const zone of ["platform-student-zone-now", "platform-student-zone-tools", "platform-student-zone-work", "platform-student-zone-review", "platform-student-zone-history"]) assert.match(app, new RegExp(zone));
+  for (const zone of ["platform-student-zone-now", "platform-student-zone-work", "platform-student-zone-review", "platform-student-zone-history"]) assert.match(app, new RegExp(zone));
   assert.match(css, /\.platform-student-area-map \{[^}]*grid-template-columns: repeat\(3/);
   assert.match(css, /#teacher-live-lesson-dashboard \.platform-current-class-plan/);
 });
@@ -285,6 +285,8 @@ test("Approved Research joins Today’s Lesson and gives students restricted lau
   assert.match(app, /installStudentReadAloudControls/);
   assert.match(app, /function studentTwoWeekCalendarMarkup/);
   assert.match(app, /Past Week \+ This Week/);
+  assert.doesNotMatch(app, /<h2 id="choose-path-title">Choose Your Path<\/h2>/);
+  assert.doesNotMatch(app, /<h3 id="future-path-title">Choose a Future Path<\/h3>/);
   assert.match(app, /data-action="open-student-calendar-day"/);
   assert.match(app, /▶ Open Activity/);
   assert.match(app, /Array\.from\(\{ length: 5 \}/);

@@ -51,8 +51,8 @@ test("launcher CSS is namespaced, touch-sized, wrapping, and responsive", () => 
     /\.platform-school-start-[^{]*\{[^}]*overflow-x:\s*(?:auto|scroll)/);
 });
 
-test("protected Mission Choice and My STEM Work remain outside the launcher", () => {
+test("My STEM Work remains outside the launcher after duplicate Mission Choice is removed", () => {
   assert.doesNotMatch(launcherSource, /platform-student-paths|platform-stem-work/);
-  assert.match(studentHomeSource, /class="platform-student-paths\s/);
+  assert.doesNotMatch(studentHomeSource, /class="platform-student-paths\s/);
   assert.match(studentHomeSource, /class="platform-stem-work\s/);
 });
