@@ -5386,6 +5386,29 @@ function closeQuickClassSchedule() {
 function handleClick(event) {
   const action = event.target.closest("[data-action]");
   if (!action) return;
+  if (action.dataset.action === "read-student-section") {
+    const section = action.closest("section, article");
+    if (!section || !("speechSynthesis" in window)) { action.textContent = "Listening unavailable"; return; }
+    if (window.speechSynthesis.speaking && action.getAttribute("aria-pressed") === "true") {
+      window.speechSynthesis.cancel();
+      action.setAttribute("aria-pressed", "false");
+      action.textContent = "🔊 Listen";
+      return;
+    }
+    window.speechSynthesis.cancel();
+    document.querySelectorAll('[data-action="read-student-section"][aria-pressed="true"]').forEach((button) => { button.setAttribute("aria-pressed", "false"); button.textContent = "🔊 Listen"; });
+    const copy = section.cloneNode(true);
+    copy.querySelectorAll("section, article, nav, form, details, button, [aria-hidden='true'], [hidden]").forEach((element) => element.remove());
+    const text = copy.textContent.replace(/\s+/g, " ").trim();
+    if (!text) return;
+    const message = new SpeechSynthesisUtterance(text);
+    message.rate = 0.86;
+    message.onend = () => { action.setAttribute("aria-pressed", "false"); action.textContent = "🔊 Listen"; };
+    action.setAttribute("aria-pressed", "true");
+    action.textContent = "■ Stop";
+    window.speechSynthesis.speak(message);
+    return;
+  }
   if (action.dataset.action === "read-student-launches") {
     const status = action.closest(".platform-school-start-launcher")?.querySelector("[data-student-launch-listen-status]");
     if (!("speechSynthesis" in window)) { if (status) status.textContent = "Listening is not available on this device."; return; }
@@ -6805,6 +6828,7 @@ function render() {
   if (allowedRoute === ROUTES.TEACHER_LOGIN) mountProductionGoogleSignIn();
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) pb002jClasswide.mount(root, "teacher");
   if (allowedRoute === ROUTES.STUDENT_DASHBOARD) pb002jClasswide.mount(root, "student");
+  if (allowedRoute === ROUTES.STUDENT_DASHBOARD) installStudentReadAloudControls();
   manageLessonTimerPresentation(allowedRoute);
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) {
     syncStudentDisplayPresentation();
@@ -6828,6 +6852,24 @@ function render() {
     } else {
       document.querySelector("#platform-main")?.focus({ preventScroll: true });
     }
+  });
+}
+
+function installStudentReadAloudControls() {
+  root.querySelectorAll(".platform-student-home section, .platform-student-home article").forEach((section) => {
+    if (section.matches(".platform-school-start-launcher") || section.querySelector(":scope > .platform-student-section-listen")) return;
+    const heading = section.querySelector(":scope > h2, :scope > h3, :scope > h4, :scope > div > h2, :scope > div > h3, :scope > div > h4");
+    if (!heading) return;
+    const readable = [...section.childNodes].some((node) => node.nodeType === Node.TEXT_NODE ? node.textContent.trim() : node.matches?.("p, div:not(:has(section, article)), ul, ol"));
+    if (!readable) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "platform-student-section-listen";
+    button.dataset.action = "read-student-section";
+    button.setAttribute("aria-pressed", "false");
+    button.setAttribute("aria-label", `Listen to ${heading.textContent.trim()}`);
+    button.textContent = "🔊 Listen";
+    heading.insertAdjacentElement("afterend", button);
   });
 }
 

@@ -282,6 +282,9 @@ test("Approved Research joins Today’s Lesson and gives students restricted lau
   assert.match(app, /platform-school-start-launcher-inline/);
   assert.match(app, /CURRENT SIDE PATH/);
   assert.match(app, /data-action="read-student-launches"/);
+  assert.match(app, /installStudentReadAloudControls/);
+  assert.match(app, /dataset\.action = "read-student-section"/);
+  assert.match(css, /\.platform-student-section-listen/);
   assert.match(app, /🔊 Listen/);
   assert.match(app, /Open directions/);
   assert.match(app, /resource\.mediaType === "side-path"/);
