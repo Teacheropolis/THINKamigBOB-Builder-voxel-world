@@ -281,6 +281,9 @@ test("Approved Research joins Today’s Lesson and gives students restricted lau
   for (const label of ["Today’s Activity", "Approved Research", "Preview This Topic in Google", "Add to Today’s Lesson", "Research for This Activity", "Students never receive an open Google search box"]) assert.match(app, new RegExp(label));
   assert.match(app, /platform-school-start-launcher-inline/);
   assert.match(app, /CURRENT SIDE PATH/);
+  assert.match(app, /data-action="read-student-launches"/);
+  assert.match(app, /🔊 Listen/);
+  assert.match(app, /Open directions/);
   assert.match(app, /resource\.mediaType === "side-path"/);
   assert.match(app, /if \(!reflectionStatus\.required\) return ""/);
   assert.match(app, /Due \$\{escapeHtml\(dueLabel\)\}/);

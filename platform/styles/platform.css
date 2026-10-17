@@ -354,7 +354,9 @@ summary:focus-visible {
 .platform-school-start-launcher-inline { margin-top: 0.75rem; padding: 0.85rem; border: 1px solid #bdd1da !important; border-left: 5px solid var(--platform-blue) !important; border-radius: 0.65rem; background: #f3f8fa; }
 .platform-school-start-launcher-inline h3 { margin: 0.2rem 0 0.65rem; }
 .platform-school-start-launch-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin-top: 0.85rem; min-width: 0; }
-.platform-school-start-launch-link { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 2.75rem; padding: 0.75rem 1rem; border: 2px solid var(--platform-blue); border-radius: 0.7rem; color: #fff; background: var(--platform-blue-dark); font-weight: 800; line-height: 1.25; text-align: center; text-decoration: none; overflow-wrap: anywhere; }
+.platform-school-start-launch-link { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; min-width: 0; min-height: 5.25rem; padding: 0.7rem 1rem; border: 2px solid var(--platform-blue); border-radius: 0.7rem; color: #fff; background: var(--platform-blue-dark); font-weight: 800; line-height: 1.2; text-align: center; text-decoration: none; overflow-wrap: anywhere; }
+.platform-school-start-launch-link > span { font-size: 1.65rem; line-height: 1; }
+.platform-school-start-launch-link > small { display: block; font-size: 0.76rem; font-weight: 700; }
 .platform-school-start-launch-link:hover { color: #fff; background: var(--platform-navy); }
 .platform-school-start-launch-link-builder { border-color: var(--platform-green); background: var(--platform-green); }
 .platform-school-start-launch-link-workshop { border-color: #a56e00; background: #765100; }
@@ -2093,3 +2095,5 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-school-start-launch-link-side-path { border-color: #176b4b; background: #176b4b; }
 .platform-school-start-launch-link.is-unavailable { flex-direction: column; color: #5c6b72; border-color: #aab8be; background: #e7edef; cursor: not-allowed; }
 .platform-school-start-launch-link.is-unavailable small { display: block; font-size: 0.68rem; }
+.platform-student-listen-button { margin-top: 0.75rem; min-width: 8.5rem; min-height: 2.75rem; border-color: var(--platform-blue-dark); background: #fff8e7; color: var(--platform-blue-dark); font-size: 1rem; font-weight: 900; }
+.platform-student-listen-status { display: inline; margin-left: 0.6rem; color: #435b68; font-size: 0.88rem; font-weight: 700; }
