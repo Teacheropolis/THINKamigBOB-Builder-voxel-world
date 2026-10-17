@@ -2171,7 +2171,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-student-quest-map-heading p:last-child { margin: .15rem 0 1rem; color: #4b3217; font-weight: 850; }
 .platform-student-quest-path { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(.55rem, 2vw, 1.2rem); padding: .65rem .35rem 0; }
 .platform-student-quest-path::before { position: absolute; top: 4.3rem; right: 5%; left: 5%; height: .42rem; border-radius: 999px; background: repeating-linear-gradient(90deg, #563817 0 .8rem, transparent .8rem 1.25rem); content: ""; opacity: .82; }
-.platform-student-quest-stop { --quest-color: #6c4518; --quest-soft: rgba(255, 239, 194, .9); position: relative; z-index: 1; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; gap: 0 .5rem; align-items: center; min-height: 7rem; padding: .7rem; border: 4px double var(--quest-color); border-radius: .55rem; color: #2f210f; background: var(--quest-soft); text-decoration: none; box-shadow: 0 .45rem 0 #4b2e0f, 0 .8rem 1rem rgba(50,28,7,.28); backdrop-filter: blur(1.5px); transition: transform .18s ease, box-shadow .18s ease; }
+.platform-student-quest-stop { --quest-color: #6c4518; --quest-soft: rgba(255, 239, 194, .9); position: relative; z-index: 1; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; gap: 0 .5rem; align-items: center; min-height: 7rem; padding: .7rem; border: 4px double var(--quest-color); border-radius: .55rem; color: #2f210f; background: var(--quest-soft); text-decoration: none; box-shadow: 0 .45rem 0 #4b2e0f, 0 .8rem 1rem rgba(50,28,7,.28); backdrop-filter: blur(1.5px); transition: transform .18s ease, box-shadow .18s ease; }
 .platform-student-quest-stop:nth-child(even) { margin-top: 2rem; }
 .platform-student-quest-stop:nth-child(1) { --quest-color: #2d7d5b; --quest-soft: rgba(229, 243, 223, .92); }
 .platform-student-quest-stop:nth-child(2) { --quest-color: #16749b; --quest-soft: rgba(222, 240, 242, .92); }
@@ -2180,9 +2180,9 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-student-quest-stop:hover, .platform-student-quest-stop:focus-visible { transform: translateY(-4px); box-shadow: 0 .8rem 0 var(--quest-color), 0 1.1rem 1.4rem rgba(7,27,39,.2); }
 .platform-student-quest-stop.is-current { outline: 5px solid #fff; outline-offset: -9px; }
 .platform-student-quest-number { position: absolute; top: -.75rem; left: -.55rem; display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 3px solid #fff; border-radius: 50%; color: #fff; background: var(--quest-color); box-shadow: 0 .2rem .45rem rgba(7,27,39,.25); font-size: 1.15rem; font-weight: 950; }
-.platform-student-quest-icon { grid-row: 1 / 3; width: clamp(4.25rem, 8vw, 5.5rem); height: clamp(4.25rem, 8vw, 5.5rem); object-fit: contain; filter: drop-shadow(0 .3rem .35rem rgba(64, 39, 8, .32)); }
-.platform-student-quest-stop strong { align-self: end; color: #36240e; font-family: "Roboto Slab", Rockwell, Georgia, serif; font-size: clamp(1rem, 2vw, 1.25rem); }
-.platform-student-quest-stop small { align-self: start; color: #5b3d1d; font-size: .82rem; font-weight: 850; }
+.platform-student-quest-icon { grid-row: 1 / 3; width: clamp(3.75rem, 6vw, 4.75rem); height: clamp(3.75rem, 6vw, 4.75rem); object-fit: contain; filter: drop-shadow(0 .3rem .35rem rgba(64, 39, 8, .32)); }
+.platform-student-quest-stop strong { min-width: 0; max-width: 100%; align-self: end; color: #36240e; font-family: "Roboto Slab", Rockwell, Georgia, serif; font-size: clamp(.88rem, 1.55vw, 1.08rem); line-height: 1.15; overflow-wrap: normal; }
+.platform-student-quest-stop small { min-width: 0; max-width: 100%; align-self: start; color: #5b3d1d; font-size: .76rem; font-weight: 850; }
 .platform-student-quest-stop.is-current small { color: #9a330e; }
 .platform-student-zone { --student-zone-color: #657780; --student-zone-soft: #f2f5f6; position: relative; border-top: 8px solid var(--student-zone-color) !important; background: linear-gradient(145deg, #fff 0%, var(--student-zone-soft) 100%) !important; scroll-margin-top: 1rem; }
 .platform-student-zone-now { --student-zone-color: #2d7d5b; --student-zone-soft: #e8f6ee; }

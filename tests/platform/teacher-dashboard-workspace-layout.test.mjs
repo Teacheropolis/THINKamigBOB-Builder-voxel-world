@@ -56,6 +56,8 @@ test("student dashboard uses an antique sign and students can customize their na
   assert.match(css, /industrial-dashboard-nameplate\.png/);
   assert.match(css, /\.platform-page-heading \{[^}]*justify-items: center;[^}]*text-align: center;/s);
   assert.match(css, /\.platform-page-heading h1 \{[^}]*font-size: clamp\(1\.7rem, 4vw, 2\.35rem\);[^}]*line-height: 1;/s);
+  assert.match(css, /\.platform-student-quest-stop \{[^}]*grid-template-columns: auto minmax\(0, 1fr\)/s);
+  assert.match(css, /\.platform-student-quest-stop strong \{[^}]*min-width: 0;[^}]*max-width: 100%;/s);
   assert.match(css, /\.platform-page-heading h1 \{[^}]*text-shadow:/s);
   for (const label of ["Customize my nameplate", "Fancy text", "Background", "Name color", "Changes save automatically"]) assert.match(app, new RegExp(label));
   assert.match(app, /STUDENT_NAMEPLATE_STORAGE_KEY/);
