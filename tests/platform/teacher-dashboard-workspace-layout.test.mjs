@@ -292,6 +292,7 @@ test("Approved Research joins Today’s Lesson and gives students restricted lau
   for (const label of ["Today’s Lesson", "Approved Research", "Preview This Topic in Google", "Add to Today’s Lesson", "Teacher links", "Students never receive an open Google search box"]) assert.match(app, new RegExp(label));
   assert.match(app, /platform-school-start-launcher-inline/);
   assert.match(app, /Extra Activities/);
+  assert.match(app, /Auxiliary Machines/);
   assert.match(app, /const sidePathType = currentSidePath\?\.title \|\| currentSidePath\?\.type/);
   assert.match(app, /<strong>SIDE PATH<\/strong>/);
   assert.match(app, /data-action="read-student-launches"/);
