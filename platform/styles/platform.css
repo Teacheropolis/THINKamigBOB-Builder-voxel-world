@@ -1133,6 +1133,15 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-direction-image { display: block; width: auto; max-width: 100%; max-height: 28rem; margin-inline: auto; border-radius: 0.65rem; object-fit: contain; }
 .platform-direction-embed { display: block; width: 100%; min-height: clamp(18rem, 48vw, 38rem); border: 0; border-radius: 0.65rem; background: #fff; }
 .platform-activity-directions-student { grid-column: 1 / -1; }
+.platform-todays-lesson { grid-column: 1 / -1; display: grid; gap: 1rem; padding: 1rem; border: 3px solid var(--platform-blue); border-top: 0.7rem solid var(--platform-green); border-radius: 1rem; background: #fffaf0; }
+.platform-todays-lesson-heading { display: grid; gap: 0.4rem; }
+.platform-todays-lesson-heading > * { margin: 0; }
+.platform-todays-lesson-heading .platform-button { justify-self: start; margin-top: 0.45rem; }
+.platform-todays-lesson-sections { display: grid; gap: 1rem; }
+.platform-todays-lesson-sections > section { margin: 0; border-radius: 0.8rem; box-shadow: none; }
+.platform-todays-lesson-student { grid-column: 1 / -1; display: grid; gap: 1rem; }
+.platform-todays-lesson-student > section { margin: 0; padding: 1rem; border: 2px solid var(--platform-border); border-radius: 0.8rem; background: #fffaf0; }
+.platform-todays-lesson-student > section > h2, .platform-todays-lesson-student > section > h3 { margin-top: 0; }
 .platform-student-direction-list { counter-reset: direction-step; }
 .platform-student-direction-list > li { position: relative; border-left-color: var(--platform-blue); }
 .platform-student-direction-list > li::before { counter-increment: direction-step; content: "Step " counter(direction-step); color: var(--platform-green); font-size: 0.78rem; font-weight: 900; text-transform: uppercase; }

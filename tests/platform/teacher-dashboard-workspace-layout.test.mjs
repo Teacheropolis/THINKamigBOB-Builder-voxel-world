@@ -233,8 +233,8 @@ test("Run Today’s Class shows a live read-only current plan", () => {
   assert.match(css, /\.platform-return-current-plan \{[^}]*background: var\(--platform-green\)/);
 });
 
-test("Teacher-Assigned Research saves approved links and gives students restricted launch controls", () => {
-  for (const label of ["Teacher-Assigned Research", "Preview This Topic in Google", "Save Approved Student Research", "Teacher-approved resources", "Students do not receive a Google search box", "Pilot limitation"]) assert.match(app, new RegExp(label));
+test("Approved Research joins Today’s Lesson and gives students restricted launch controls", () => {
+  for (const label of ["Today’s Lesson", "Approved Research", "Preview This Topic in Google", "Add to Today’s Lesson", "Research for This Lesson", "Students never receive an open Google search box"]) assert.match(app, new RegExp(label));
   assert.match(app, /TEACHER_ASSIGNED_RESEARCH_KEY/);
   assert.match(app, /parseTeacherAssignedResearchLinks/);
   assert.match(app, /data-form="teacher-assigned-research"/);

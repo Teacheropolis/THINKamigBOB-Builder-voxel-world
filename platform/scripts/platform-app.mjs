@@ -983,9 +983,9 @@ function classResourceTeacherMarkup(classId) {
 
 function classResourceStudentMarkup(classId, studentId) {
   const activeResources = classResourceSharing.resourcesForStudent(classId, studentId);
-  return `<section id="student-todays-activities" class="platform-student-shared-resource platform-student-zone platform-student-zone-now" aria-labelledby="student-shared-resource-title" data-class-resource-student>
-    <p class="platform-student-section-label">Teacher shared</p>
-    <h2 id="student-shared-resource-title">Today’s Activities</h2>
+  return `<section id="student-lesson-resources" class="platform-student-shared-resource" aria-labelledby="student-shared-resource-title" data-class-resource-student>
+    <p class="platform-student-section-label">Activities and resources</p>
+    <h3 id="student-shared-resource-title">Lesson Resources</h3>
     ${activeResources.length ? `<div class="platform-student-activity-tray">${activeResources.map((active) => { const automaticVisual = matchAutomaticVisual({ title: active.title, type: active.type }); return `<article><img class="platform-automatic-resource-visual" src="${escapeHtml(automaticVisual.src)}" alt="${escapeHtml(automaticVisual.alt)}"><p><strong>${escapeHtml(active.title)}</strong><small>${escapeHtml(active.type)}</small></p><a class="platform-button platform-button-primary" href="${escapeHtml(active.url)}" target="_blank" rel="noopener noreferrer"><span class="platform-rainbow-button-text">Open ${escapeHtml(active.title)}</span></a></article>`; }).join("")}</div><p>Choose the activity your teacher directed you to open.</p>` : `<p class="platform-student-empty-state">Your teacher has not shared an activity yet.</p><p>Keep Student Home open; activities pushed from a teacher tab on this same platform address will appear automatically.</p>`}
   </section>`;
 }
@@ -1041,6 +1041,28 @@ function activityDirectionsStudentMarkup(classId) {
     <p class="platform-student-section-label">Teacher directions</p><h2 id="student-directions-title">${escapeHtml(state.title)}</h2>
     ${cards.length ? `<ol class="platform-student-direction-list">${cards.map((card) => `<li><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.directions)}</p>${directionMediaMarkup(card)}</li>`).join("")}</ol>` : `<p class="platform-student-empty-state">Your teacher has not released any directions yet.</p>`}
   </section>`;
+}
+
+function assignedResearchTeacherMarkup(assignedResearch, researchLinkBank, className) {
+  return `<section class="platform-assigned-research platform-assigned-research-teacher" aria-labelledby="assigned-research-teacher-title">
+    <div><p class="platform-command-label">Approved research step</p><h3 id="assigned-research-teacher-title">Approved Research</h3><p>Add a topic and trusted links to today’s lesson. Students never receive an open Google search box.</p></div>
+    <form data-form="teacher-assigned-research" novalidate>
+      <label>Research topic<input name="topic" maxlength="140" value="${escapeHtml(assignedResearch.topic)}" placeholder="Example: how bridges support weight for kids"></label>
+      <button type="button" data-action="preview-assigned-google-search">Preview This Topic in Google</button>
+      <label>Approved links—one per line<textarea name="links" rows="5" placeholder="Bridge article | https://example.org/bridge-article">${escapeHtml(teacherAssignedResearchLinksText(assignedResearch))}</textarea><small>Use: Resource title | https://website-address</small></label>
+      <div class="platform-actions"><button type="submit">Add to Today’s Lesson</button><button type="button" data-action="clear-assigned-research">Remove from Lesson</button></div>
+      <p data-assigned-research-status role="status">${assignedResearch.links.length ? `${assignedResearch.links.length} approved link${assignedResearch.links.length === 1 ? "" : "s"} included for ${escapeHtml(className)}.` : "No approved research links are included in today’s lesson."}</p>
+    </form>
+    <details class="platform-research-link-bank"><summary>Open Approved Link Bank</summary><div><p class="platform-command-label">Reusable teacher library</p><h4 id="research-link-bank-title">Approved Link Bank</h4><p>Reuse a trusted group of links in this lesson.</p></div><div class="platform-research-bank-grid">${teacherResearchLinkBankMarkup(researchLinkBank, assignedResearch)}</div><details class="platform-research-bank-create"><summary>Create a New Link Group</summary><form data-form="teacher-research-link-bank" novalidate><label>Group title<input name="title" maxlength="80" placeholder="Example: Bridges and Structures" required></label><label>Topic or description<input name="topic" maxlength="140" placeholder="Example: How bridges support weight"></label><label>Approved links—one per line<textarea name="links" rows="5" placeholder="Bridge article | https://example.org/bridge-article" required></textarea><small>Use: Resource title | https://website-address</small></label><div class="platform-actions"><button type="submit">Save Group to Link Bank</button></div><p data-research-bank-status role="status">You can save up to 24 groups in this browser.</p></form></details></details>
+  </section>`;
+}
+
+function todaysLessonTeacherMarkup(classId, assignedResearch, researchLinkBank, className) {
+  return `<section class="platform-todays-lesson platform-visual-zone platform-zone-create" aria-labelledby="todays-lesson-title"><header class="platform-todays-lesson-heading"><p class="platform-command-label">Build and release as students learn</p><h2 id="todays-lesson-title">Today’s Lesson</h2><p>Keep directions, activities, media, and approved research in one ordered workspace. Release only what students need now.</p><a class="platform-button platform-button-secondary" href="#${ROUTES.PREVIEW_STUDENT}" target="_blank" rel="noopener">Preview Today’s Lesson as a Student</a></header><div class="platform-todays-lesson-sections">${activityDirectionsTeacherMarkup(classId)}${classResourceTeacherMarkup(classId)}${assignedResearchTeacherMarkup(assignedResearch, researchLinkBank, className)}</div></section>`;
+}
+
+function todaysLessonStudentMarkup(classId, studentId, assignedResearch) {
+  return `<section class="platform-todays-lesson-student platform-student-zone platform-student-zone-now" id="student-todays-activities" aria-labelledby="student-todays-lesson-title"><p class="platform-student-section-label">Follow each released step</p><h2 id="student-todays-lesson-title">Today’s Lesson</h2><p>Complete the visible steps in order. New steps may appear as your teacher releases them.</p>${activityDirectionsStudentMarkup(classId)}${classResourceStudentMarkup(classId, studentId)}<section class="platform-assigned-research platform-assigned-research-student" aria-labelledby="assigned-research-student-title"><p class="platform-student-section-label">Approved research</p><h3 id="assigned-research-student-title">Research for This Lesson</h3>${assignedResearch.topic ? `<p><strong>Research topic:</strong> ${escapeHtml(assignedResearch.topic)}</p>` : `<p class="platform-student-empty-state">No research step has been released.</p>`}${assignedResearch.links.length ? `<div class="platform-assigned-research-links">${assignedResearch.links.map((link) => `<button type="button" data-action="open-assigned-research" data-research-url="${escapeHtml(link.url)}">${escapeHtml(link.title)}</button>`).join("")}</div><p data-assigned-research-student-status role="status">Choose an approved resource to open it beside the platform.</p>` : ""}</section></section>`;
 }
 
 function weeklyReflectionTeacherMarkup(classId) {
@@ -1887,8 +1909,7 @@ function teacherDashboardView(state) {
               <p data-classroom-window-status role="status"></p>
             </div>
           </div>
-          ${activityDirectionsTeacherMarkup(classRecord?.id)}
-          ${classResourceTeacherMarkup(classRecord?.id)}
+          ${todaysLessonTeacherMarkup(classRecord?.id, assignedResearch, researchLinkBank, className)}
           <section id="teacher-timer-card" class="platform-command-card platform-command-card-timer" hidden>
             <p class="platform-command-label">Class timing</p>
             <h3>Today’s Class Timer</h3>
@@ -2046,31 +2067,6 @@ function teacherDashboardView(state) {
           </section>
           </section>
         </div>
-      </section>
-      <section class="platform-assigned-research platform-assigned-research-teacher platform-visual-zone platform-zone-create" aria-labelledby="assigned-research-teacher-title">
-        <div><p class="platform-command-label">Controlled pilot research</p><h2 id="assigned-research-teacher-title">Teacher-Assigned Research</h2><p>Enter a topic, preview a Google search yourself, then give students only the approved links you save. Students do not receive a Google search box from the platform.</p></div>
-        <form data-form="teacher-assigned-research" novalidate>
-          <label>Research topic<input name="topic" maxlength="140" value="${escapeHtml(assignedResearch.topic)}" placeholder="Example: how bridges support weight for kids"></label>
-          <button type="button" data-action="preview-assigned-google-search">Preview This Topic in Google</button>
-          <label>Approved links—one per line<textarea name="links" rows="5" placeholder="Bridge article | https://example.org/bridge-article">${escapeHtml(teacherAssignedResearchLinksText(assignedResearch))}</textarea><small>Use: Resource title | https://website-address</small></label>
-          <div class="platform-actions"><button type="submit">Save Approved Student Research</button><button type="button" data-action="clear-assigned-research">Clear</button></div>
-          <p data-assigned-research-status role="status">${assignedResearch.links.length ? `${assignedResearch.links.length} approved link${assignedResearch.links.length === 1 ? "" : "s"} saved in this browser for ${escapeHtml(className)}.` : "No approved student research links are saved for this class."}</p>
-          <p class="platform-assigned-research-boundary">Pilot limitation: these settings currently remain in this browser. Secure cross-Chromebook delivery will require the pilot cloud service.</p>
-        </form>
-        <section class="platform-research-link-bank" aria-labelledby="research-link-bank-title">
-          <div><p class="platform-command-label">Reusable teacher library</p><h3 id="research-link-bank-title">Approved Link Bank</h3><p>Organize trusted resources into groups by topic or title, then assign a whole group to the current class.</p></div>
-          <div class="platform-research-bank-grid">${teacherResearchLinkBankMarkup(researchLinkBank, assignedResearch)}</div>
-          <details class="platform-research-bank-create">
-            <summary>Create a New Link Group</summary>
-            <form data-form="teacher-research-link-bank" novalidate>
-              <label>Group title<input name="title" maxlength="80" placeholder="Example: Bridges and Structures" required></label>
-              <label>Topic or description<input name="topic" maxlength="140" placeholder="Example: How bridges support weight"></label>
-              <label>Approved links—one per line<textarea name="links" rows="5" placeholder="Bridge article | https://example.org/bridge-article" required></textarea><small>Use: Resource title | https://website-address</small></label>
-              <div class="platform-actions"><button type="submit">Save Group to Link Bank</button></div>
-              <p data-research-bank-status role="status">You can save up to 24 groups in this browser.</p>
-            </form>
-          </details>
-        </section>
       </section>
     </div>
     <section id="platform-student-timer-display" class="platform-student-timer-display ${studentDisplayClass}" role="dialog" aria-modal="true" aria-labelledby="${showStudentTimer ? "student-timer-title" : "student-message-title"}" tabindex="-1" hidden>
@@ -2398,15 +2394,7 @@ function studentDashboardView(state) {
         </div>
       </section>
 
-      ${activityDirectionsStudentMarkup(state.classId)}
-      ${classResourceStudentMarkup(state.classId, state.studentId)}
-
-      <section class="platform-assigned-research platform-assigned-research-student platform-student-zone platform-student-zone-tools" aria-labelledby="assigned-research-student-title">
-        <p class="platform-student-section-label">Teacher-approved resources</p>
-        <h2 id="assigned-research-student-title">Teacher-Assigned Research</h2>
-        ${assignedResearch.topic ? `<p><strong>Research topic:</strong> ${escapeHtml(assignedResearch.topic)}</p>` : `<p class="platform-student-empty-state">Your teacher has not assigned a research topic yet.</p>`}
-        ${assignedResearch.links.length ? `<div class="platform-assigned-research-links">${assignedResearch.links.map((link) => `<button type="button" data-action="open-assigned-research" data-research-url="${escapeHtml(link.url)}">${escapeHtml(link.title)}</button>`).join("")}</div><p data-assigned-research-student-status role="status">Choose an approved resource to open it beside the platform.</p>` : `<p>No approved research links are available right now.</p>`}
-      </section>
+      ${todaysLessonStudentMarkup(state.classId, state.studentId, assignedResearch)}
 
       <section class="platform-school-start-launcher" aria-labelledby="school-start-launcher-title"${activeClassResources.length ? " hidden" : ""}>
         <p class="platform-student-section-label">Start here</p>

@@ -69,7 +69,7 @@ test("scheduled resources release only for their selected trigger", () => {
 test("teacher and student views expose the browser-local push workflow", () => {
   const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
   const css = readFileSync(new URL("../../platform/styles/platform.css", import.meta.url), "utf8");
-  for (const text of ["Prepare and assign", "Today’s Resources", "How do you want today’s resources assigned", "Will any students need resources assigned a different way", "Whole class", "Individual students", "Teacher-chosen group", "Random group", "Add Different Assignment", "Choose a resource", "Share Resource Settings With Other Classes", "Add an Additional Slot", "Save for Later", "Show on Student Page", "Today’s Activities"]) assert.match(app, new RegExp(text));
+  for (const text of ["Today’s Lesson", "Prepare and assign", "Today’s Resources", "How do you want today’s resources assigned", "Will any students need resources assigned a different way", "Whole class", "Individual students", "Teacher-chosen group", "Random group", "Add Different Assignment", "Choose a resource", "Share Resource Settings With Other Classes", "Add an Additional Slot", "Save for Later", "Show on Student Page", "Lesson Resources"]) assert.match(app, new RegExp(text));
   assert.match(app, /state\.audienceRows\.map/);
   assert.match(app, /Array\.from\(\{ length: row\.slotCount \}/);
   assert.match(app, /Slot \$\{index \+ 1\}/);
