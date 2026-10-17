@@ -302,7 +302,7 @@ test("Approved Research joins Today’s Lesson and gives students restricted lau
   assert.match(app, /dataset\.action = "read-student-section"/);
   assert.match(css, /\.platform-student-section-listen/);
   assert.match(app, /🔊 Listen/);
-  assert.match(app, /Wait for teacher/);
+  assert.match(app, /<small>🔒 Locked<\/small>/);
   assert.match(app, /resource\.mediaType === "side-path"/);
   assert.match(app, /if \(!reflectionStatus\.required\) return ""/);
   assert.match(app, /Due \$\{escapeHtml\(dueLabel\)\}/);
