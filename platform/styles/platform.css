@@ -727,6 +727,8 @@ summary:focus-visible {
 .platform-current-class-plan-compact:has(> .platform-more-classroom-tools-standalone[open] .platform-classroom-bob-controls:has(input[data-classroom-bob-enabled]:checked)[data-menu-hidden="false"]) > .platform-current-plan-featured { grid-column: 2; }
 .platform-run-class-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
 .platform-run-class-actions .platform-lesson-readiness-items { margin-right: auto; }
+.platform-run-class-actions .platform-set-todays-plan { min-height: 2.8rem; padding: 0.55rem 1rem; border: 3px solid #9a6800; border-radius: 0.65rem; color: #19384a; background: linear-gradient(180deg, #fff5c9 0%, #f4c94f 100%); box-shadow: 0 0.35rem 0.75rem rgba(122, 84, 0, 0.24); font-size: 0.9rem; font-weight: 900; }
+.platform-run-class-actions .platform-set-todays-plan:hover, .platform-run-class-actions .platform-set-todays-plan:focus-visible { background: linear-gradient(180deg, #fff9df 0%, #ffd968 100%); outline: 3px solid rgba(216, 165, 38, 0.35); }
 .platform-run-class-actions .platform-start-classroom-display, .platform-run-class-actions .platform-preview-student-view { min-height: 2.2rem; padding-block: 0.35rem; }
 .platform-current-class-plan-compact .platform-current-plan-timer-widget { grid-template-columns: 4rem minmax(9rem, 1fr) minmax(22rem, 1.6fr); gap: 0.5rem; }
 .platform-current-class-plan-compact .platform-current-plan-timer-wheel { width: 4rem; }
@@ -1213,7 +1215,13 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-direction-more > summary { cursor: pointer; padding: 0.55rem 0.8rem; border: 2px solid var(--platform-border); border-radius: 0.5rem; background: #fff; font-weight: 800; list-style: none; }
 .platform-direction-more > div { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.45rem; }
 .platform-current-plan-grid article[data-plan-card="activities"], .platform-current-plan-grid article[data-plan-card="access"], .platform-current-plan-grid article[data-plan-card="message"], .platform-current-plan-grid article[data-plan-card="whiteboard"] { min-height: 0; padding: 0.45rem 0.6rem; border-top-width: 3px; }
-.platform-current-plan-grid article[data-plan-card="activities"] > :not(.platform-current-plan-card-title), .platform-current-plan-grid article[data-plan-card="access"] > :not(.platform-current-plan-card-title), .platform-current-plan-grid article[data-plan-card="message"] > :not(.platform-current-plan-card-title), .platform-current-plan-grid article[data-plan-card="whiteboard"] > :not(.platform-current-plan-card-title) { display: none; }
+.platform-current-plan-grid article[data-plan-card="activities"] > :not(.platform-current-plan-card-title):not(.platform-current-plan-status), .platform-current-plan-grid article[data-plan-card="access"] > :not(.platform-current-plan-card-title):not(.platform-current-plan-status), .platform-current-plan-grid article[data-plan-card="message"] > :not(.platform-current-plan-card-title):not(.platform-current-plan-status), .platform-current-plan-grid article[data-plan-card="whiteboard"] > :not(.platform-current-plan-card-title) { display: none; }
+.platform-current-plan-grid .platform-current-plan-status { display: block; min-height: 1.35rem; padding: 0.15rem 0.45rem 0.3rem 2.65rem; color: #465f6d; font-size: 0.76rem; font-weight: 750; }
+.platform-planning-range { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; padding: 0.75rem; border: 2px solid #c7d9df; border-radius: 0.65rem; background: #fffaf0; }
+.platform-planning-range legend { padding-inline: 0.35rem; color: var(--platform-navy); font-weight: 900; }
+.platform-planning-range label { display: flex; align-items: center; gap: 0.45rem; padding: 0.55rem; border: 1px solid #d8c68d; border-radius: 0.45rem; background: #fff; font-weight: 800; }
+.platform-planning-range input { width: 1.2rem; height: 1.2rem; accent-color: var(--platform-green); }
+.platform-planning-range p { grid-column: 1 / -1; margin: 0; color: var(--platform-muted); font-size: 0.78rem; }
 .platform-todays-lesson-student { grid-column: 1 / -1; display: grid; gap: 1rem; }
 .platform-todays-lesson-student > section { margin: 0; padding: 1rem; border: 2px solid var(--platform-border); border-radius: 0.8rem; background: #fffaf0; }
 .platform-todays-lesson-student > section > h2, .platform-todays-lesson-student > section > h3 { margin-top: 0; }
