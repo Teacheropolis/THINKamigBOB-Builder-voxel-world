@@ -33,11 +33,13 @@ test("teacher workspace uses layered surfaces to emphasize functions", () => {
 
 test("teacher and student workspaces use consistent visual zones for quick scanning", () => {
   for (const zone of ["platform-zone-today", "platform-zone-present", "platform-zone-create", "platform-zone-review", "platform-zone-settings"]) assert.match(css + app, new RegExp(zone));
-  for (const label of ["My Tools", "My Work", "Review"]) assert.match(app, new RegExp(label));
+  for (const label of ["Your Mission Map", "Goal", "Activity", "Calendar", "My Work"]) assert.match(app, new RegExp(label));
   assert.doesNotMatch(app, /What I’m Doing Now/);
   assert.doesNotMatch(app, /<strong>Today<\/strong><small>Current goal and activity<\/small>/);
   for (const zone of ["platform-student-zone-now", "platform-student-zone-work", "platform-student-zone-review", "platform-student-zone-history"]) assert.match(app, new RegExp(zone));
-  assert.match(css, /\.platform-student-area-map \{[^}]*grid-template-columns: repeat\(3/);
+  assert.match(css, /\.platform-student-quest-path \{[^}]*grid-template-columns: repeat\(4/);
+  for (const destination of ["current-goal-title", "student-todays-activities", "student-calendar-title", "stem-work-title"]) assert.match(app, new RegExp(`href="#${destination}"`));
+  assert.match(app, /data-action="open-student-quest-step"/);
   assert.match(css, /#teacher-live-lesson-dashboard \.platform-current-class-plan/);
 });
 

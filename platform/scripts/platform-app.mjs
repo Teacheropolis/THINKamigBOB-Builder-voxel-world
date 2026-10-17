@@ -2460,11 +2460,19 @@ function studentDashboardView(state) {
         <p>Your private place to see what matters and choose what comes next.</p>
       </section>
 
-      <nav class="platform-student-area-map" aria-label="Student Home areas">
-        <a href="#assigned-research-student-title" data-student-map="tools"><span aria-hidden="true">↗</span><strong>My Tools</strong><small>Teacher-approved resources</small></a>
-        <a href="#stem-work-title" data-student-map="work"><span aria-hidden="true">▤</span><strong>My Work</strong><small>Projects and evidence</small></a>
-        <a href="#reflection-check-title" data-student-map="review"><span aria-hidden="true">✓</span><strong>Review</strong><small>Reflection and progress</small></a>
-      </nav>
+      <section class="platform-student-quest-map" aria-labelledby="student-quest-map-title">
+        <div class="platform-student-quest-map-heading">
+          <p class="platform-student-section-label">Follow the path</p>
+          <h2 id="student-quest-map-title">Your Mission Map</h2>
+          <p>Tap 1. Then 2. Keep going in order!</p>
+        </div>
+        <nav class="platform-student-quest-path" aria-label="Mission steps in order">
+          <a class="platform-student-quest-stop is-current" href="#current-goal-title" data-action="open-student-quest-step" data-student-quest="goal" aria-current="step"><span class="platform-student-quest-number">1</span><span class="platform-student-quest-icon" aria-hidden="true">🎯</span><strong>Goal</strong><small data-student-quest-status>You are here</small></a>
+          <a class="platform-student-quest-stop" href="#student-todays-activities" data-action="open-student-quest-step" data-student-quest="activity"><span class="platform-student-quest-number">2</span><span class="platform-student-quest-icon" aria-hidden="true">🧭</span><strong>Activity</strong><small data-student-quest-status>Next</small></a>
+          <a class="platform-student-quest-stop" href="#student-calendar-title" data-action="open-student-quest-step" data-student-quest="calendar"><span class="platform-student-quest-number">3</span><span class="platform-student-quest-icon" aria-hidden="true">🗓️</span><strong>Calendar</strong><small data-student-quest-status>Then</small></a>
+          <a class="platform-student-quest-stop" href="#stem-work-title" data-action="open-student-quest-step" data-student-quest="work"><span class="platform-student-quest-number">4</span><span class="platform-student-quest-icon" aria-hidden="true">🧰</span><strong>My Work</strong><small data-student-quest-status>Finish here</small></a>
+        </nav>
+      </section>
 
       <section class="platform-bob-welcome platform-student-zone platform-student-zone-now" aria-labelledby="bob-welcome-title">
         <p class="platform-student-section-label">Getting started</p>
@@ -5370,6 +5378,21 @@ function closeQuickClassSchedule() {
 function handleClick(event) {
   const action = event.target.closest("[data-action]");
   if (!action) return;
+  if (action.dataset.action === "open-student-quest-step") {
+    const map = action.closest(".platform-student-quest-map");
+    map?.querySelectorAll(".platform-student-quest-stop").forEach((stop, index) => {
+      const status = stop.querySelector("[data-student-quest-status]");
+      stop.classList.toggle("is-current", stop === action);
+      if (stop === action) {
+        stop.setAttribute("aria-current", "step");
+        if (status) status.textContent = "You are here";
+      } else {
+        stop.removeAttribute("aria-current");
+        if (status) status.textContent = index < Number(action.querySelector(".platform-student-quest-number")?.textContent || 1) - 1 ? "Visited" : index === 3 ? "Finish here" : index === 2 ? "Then" : "Next";
+      }
+    });
+    return;
+  }
   if (action.dataset.action === "open-student-calendar-day") {
     const detail = action.closest(".platform-student-calendar")?.querySelector("[data-student-calendar-detail]");
     if (!detail) return;
