@@ -174,10 +174,10 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /platform-live-lesson-status/);
   assert.match(app, /platform-current-plan-featured/);
   assert.match(css, /platform-current-class-plan-compact \.platform-current-plan-timer-widget \{ grid-template-columns: 4\.75rem/);
-  assert.match(app, /<summary>Bob Settings<\/summary>/);
-  assert.match(css, /platform-classroom-bob-settings \{ display: none/);
+  assert.match(app, /data-classroom-bob-menu-hidden> Hide menu/);
+  assert.match(css, /platform-classroom-bob-hide-menu, \.platform-classroom-bob-settings \{ display: none/);
   assert.match(css, /platform-classroom-bob-controls:has\(input\[data-classroom-bob-enabled\]:checked\)/);
-  assert.match(css, /platform-classroom-bob-settings > div \{ display: grid; grid-template-columns:/);
+  assert.match(css, /platform-classroom-bob-settings \{ display: grid; flex: 1 1 42rem; grid-template-columns:/);
   assert.match(css, /platform-current-class-plan-compact:has\(> \.platform-more-classroom-tools-standalone\[open\][\s\S]*grid-template-columns: minmax\(16rem/);
   assert.doesNotMatch(app, /Classroom Sound Goals/);
   for (const label of ["Present on This Screen", "Open Separate Classroom Screen", "Floating Timer", "Quick Message", "Whiteboard", "Voice Meter"]) assert.match(app, new RegExp(label));
