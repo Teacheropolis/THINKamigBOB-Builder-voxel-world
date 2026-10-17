@@ -288,17 +288,17 @@ summary:focus-visible {
   padding: 1.5rem clamp(4.75rem, 10vw, 8rem);
   border: 0;
   border-radius: 0;
-  background: transparent url("../assets/images/student-platform/antique-student-nameplate.png") center / 100% 100% no-repeat;
+  background: transparent url("../assets/images/student-platform/industrial-dashboard-nameplate.png") center / 100% 100% no-repeat;
   box-shadow: none;
 }
 #platform-main.platform-main:has(> .platform-student-home) > .platform-page-heading .platform-eyebrow {
-  color: #5c3510;
-  text-shadow: 0 1px 0 #f6d17a, 0 -1px 0 rgba(38, 19, 4, .65);
+  color: #c58a52;
+  text-shadow: 0 1px 0 #f1c58f, 0 -1px 0 #2a1207, 1px 0 0 #dfad72, -1px 0 0 #1c0d07, 0 2px 3px #000;
 }
 #platform-main.platform-main:has(> .platform-student-home) > .platform-page-heading h1 {
-  color: #462707;
+  color: #d19a62;
   font-family: "Roboto Slab", Rockwell, Georgia, serif;
-  text-shadow: 0 1px 0 #f8d886, 0 -1px 0 #1c0f04, 1px 0 0 #d09b3e, -1px 0 0 #2b1706, 0 3px 3px rgba(62, 34, 8, .35);
+  text-shadow: 0 1px 0 #ffd19b, 0 -2px 0 #260f06, 2px 0 0 #8a4b26, -1px 0 0 #1b0b06, 0 4px 5px rgba(0,0,0,.85);
 }
 
 #platform-main.platform-main:has(> .platform-command-layout) {
