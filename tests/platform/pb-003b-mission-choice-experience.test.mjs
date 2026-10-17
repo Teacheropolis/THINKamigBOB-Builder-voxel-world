@@ -69,8 +69,7 @@ test("PB-003A regions outside Mission Choice remain intact", () => {
     "student-orientation-title",
     "bob-welcome-title",
     "current-goal-title",
-    "yesterday-wins-title",
-    "yesterday-challenge-title",
+    "student-calendar-title",
     "reflection-check-title",
   ]) assert.ok(studentHomeSource.includes(`id="${id}"`), `expected ${id}`);
 });

@@ -29,8 +29,7 @@ test("Student Home presents the approved sections in logical order", () => {
     "student-orientation-title",
     "bob-welcome-title",
     "current-goal-title",
-    "yesterday-wins-title",
-    "yesterday-challenge-title",
+    "student-calendar-title",
     "reflection-check-title",
     "choose-path-title",
   ];
@@ -42,16 +41,12 @@ test("Student Home presents the approved sections in logical order", () => {
   }
   assert.match(studentHomeSource, /title: "Student Home"/);
   assert.match(studentHomeSource, /aria-labelledby="student-orientation-title"/);
-  assert.match(studentHomeSource, /aria-labelledby="yesterday-title"/);
+  assert.match(studentHomeSource, /studentTwoWeekCalendarMarkup\(\)/);
   assert.match(studentHomeSource, /aria-labelledby="choose-path-title"/);
 });
 
 test("unowned information uses only the approved honest states", () => {
-  for (const message of [
-    "No verified Win is available yet.",
-    "No Challenge is available yet.",
-  ]) assert.ok(studentHomeSource.includes(message), `expected ${message}`);
-
+  assert.match(appSource, /— No saved work/);
   assert.match(studentHomeSource, /No mission is ready to continue yet\./);
   assert.match(studentHomeSource, /data-pb002j-current-goal/);
   assert.match(studentHomeSource, /data-pb002j-available-missions/);
@@ -92,7 +87,7 @@ test("Student Home CSS is namespaced, responsive, and Chromebook-friendly", () =
     ".platform-student-orientation",
     ".platform-bob-welcome",
     ".platform-student-goal",
-    ".platform-yesterday-grid",
+    ".platform-student-calendar-days",
     ".platform-student-reflection",
     ".platform-mission-choice-layout",
   ]) assert.ok(cssSource.includes(selector), `expected ${selector}`);

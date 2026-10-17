@@ -360,8 +360,17 @@ summary:focus-visible {
 .platform-school-start-launch-link:hover { color: #fff; background: var(--platform-navy); }
 .platform-school-start-launch-link-builder { border-color: var(--platform-green); background: var(--platform-green); }
 .platform-school-start-launch-link-workshop { border-color: #a56e00; background: #765100; }
-.platform-yesterday { grid-column: span 8; padding: clamp(1rem, 2.5vw, 1.4rem); }
-.platform-yesterday-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.platform-student-calendar { grid-column: 1 / -1; padding: clamp(1rem, 2.5vw, 1.4rem); }
+.platform-student-calendar-key { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin: 0.35rem 0 0.8rem; font-size: 0.84rem; font-weight: 800; }
+.platform-student-calendar-weeks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
+.platform-student-calendar-week { min-width: 0; padding: 0.75rem; border: 2px solid #b9ccd4; border-radius: 0.75rem; background: #fffaf0; }
+.platform-student-calendar-week h3 { margin: 0 0 0.55rem; color: var(--platform-blue-dark); font-size: 1rem; }
+.platform-student-calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.3rem; }
+.platform-student-calendar-day { display: grid; min-width: 0; min-height: 4.4rem; padding: 0.3rem 0.1rem; place-items: center; align-content: center; border: 1px solid #c7d6dc; border-radius: 0.55rem; color: var(--platform-navy); background: #fff; text-align: center; }
+.platform-student-calendar-day strong { font-size: 0.68rem; text-transform: uppercase; }
+.platform-student-calendar-day span { font-size: 1rem; font-weight: 900; }
+.platform-student-calendar-day b { font-size: 1rem; line-height: 1; }
+.platform-student-calendar-day.is-today { border: 3px solid var(--platform-gold); background: #fff2c7; }
 .platform-student-home-card { min-width: 0; padding: 1rem; border: 1px solid var(--platform-border); border-radius: 0.75rem; background: var(--platform-soft); }
 .platform-student-home-card > p:last-child { margin: 0.35rem 0 0; color: var(--platform-muted); font-size: 0.85rem; line-height: 1.45; }
 .platform-student-win { border-top: 4px solid #c28b12; }
@@ -1833,7 +1842,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
   .platform-command-card-voice-meter { grid-template-columns: 1fr; }
   .platform-command-card-voice-meter > * { grid-column: 1 !important; }
   .platform-student-display-controls { grid-column: 1 / -1; }
-  .platform-bob-welcome, .platform-student-goal, .platform-yesterday, .platform-student-reflection { grid-column: span 6; }
+  .platform-bob-welcome, .platform-student-goal, .platform-student-reflection { grid-column: span 6; }
   .platform-mission-choice-layout { grid-template-columns: 1fr; }
   .platform-mission-choice-side-paths { grid-column: auto; }
   .platform-stem-work-history-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1900,7 +1909,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
   .platform-student-home { grid-template-columns: 1fr; }
   .platform-student-home > section { grid-column: auto; }
   .platform-school-start-launch-grid { grid-template-columns: 1fr; }
-  .platform-yesterday-grid { grid-template-columns: 1fr; }
+  .platform-student-calendar-weeks { grid-template-columns: 1fr; }
   .platform-stem-work-layout, .platform-stem-work-history-layout, .platform-evidence-source-list { grid-template-columns: 1fr; }
   .platform-stem-work-current, .platform-evidence-connections { grid-column: auto; }
   .platform-evidence-actions { grid-template-columns: 1fr; }

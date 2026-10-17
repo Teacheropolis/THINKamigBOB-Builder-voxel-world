@@ -2391,6 +2391,31 @@ function teacherClassesView(state) {
   });
 }
 
+function studentTwoWeekCalendarMarkup() {
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  const thisWeekStart = new Date(today);
+  thisWeekStart.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  const pastWeekStart = new Date(thisWeekStart);
+  pastWeekStart.setDate(thisWeekStart.getDate() - 7);
+  const evidence = evidenceFoundation.timeline();
+  const hasTodayWork = evidence.some((item) => /^(?:Today|Saved just now)/i.test(item.time));
+  const hasYesterdayWork = evidence.some((item) => /^Yesterday/i.test(item.time));
+  const sameDay = (left, right) => left.toDateString() === right.toDateString();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const weekMarkup = (label, start) => `<div class="platform-student-calendar-week"><h3>${label}</h3><div class="platform-student-calendar-days">${Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    const isToday = sameDay(date, today);
+    const hasWork = (isToday && hasTodayWork) || (sameDay(date, yesterday) && hasYesterdayWork);
+    const symbol = isToday ? "⭐" : hasWork ? "📎" : "—";
+    const meaning = isToday ? (hasWork ? "Today, work saved" : "Today") : hasWork ? "Work saved" : "No saved work";
+    return `<div class="platform-student-calendar-day${isToday ? " is-today" : ""}" aria-label="${escapeHtml(date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }))}: ${meaning}"><strong>${escapeHtml(date.toLocaleDateString(undefined, { weekday: "short" }))}</strong><span>${date.getDate()}</span><b aria-hidden="true">${symbol}</b></div>`;
+  }).join("")}</div></div>`;
+  return `<section class="platform-student-calendar platform-student-zone platform-student-zone-history" aria-labelledby="student-calendar-title"><p class="platform-student-section-label">My calendar</p><h2 id="student-calendar-title">Past Week + This Week</h2><p class="platform-student-calendar-key"><span>⭐ Today</span><span>📎 Work saved</span><span>— No saved work</span></p><div class="platform-student-calendar-weeks">${weekMarkup("Past Week", pastWeekStart)}${weekMarkup("This Week", thisWeekStart)}</div></section>`;
+}
+
 function studentDashboardView(state) {
   const student = getStudentById(state.studentId);
   const classRecord = getClassById(state.classId);
@@ -2444,24 +2469,7 @@ function studentDashboardView(state) {
 
       ${todaysLessonStudentMarkup(state.classId, state.studentId, assignedResearch, assignedReflection)}
 
-      <section class="platform-yesterday platform-student-zone platform-student-zone-history" aria-labelledby="yesterday-title">
-        <div class="platform-student-section-heading">
-          <p class="platform-student-section-label">Looking back</p>
-          <h2 id="yesterday-title">Yesterday</h2>
-        </div>
-        <div class="platform-yesterday-grid">
-          <article class="platform-student-home-card platform-student-win" aria-labelledby="yesterday-wins-title">
-            <h3 id="yesterday-wins-title">Yesterday's Wins</h3>
-            <p class="platform-student-empty-state">No verified Win is available yet.</p>
-            <p>Only verified activity will appear here in a future approved build.</p>
-          </article>
-          <article class="platform-student-home-card platform-student-challenge" aria-labelledby="yesterday-challenge-title">
-            <h3 id="yesterday-challenge-title">Yesterday's Challenge</h3>
-            <p class="platform-student-empty-state">No Challenge is available yet.</p>
-            <p>Private, approved work reminders may appear here in a future build.</p>
-          </article>
-        </div>
-      </section>
+      ${studentTwoWeekCalendarMarkup()}
 
       <!-- What I Learned Today is rendered inside Today’s Activity when assigned. id="reflection-check-title" -->
 

@@ -283,6 +283,9 @@ test("Approved Research joins Today’s Lesson and gives students restricted lau
   assert.match(app, /CURRENT SIDE PATH/);
   assert.match(app, /data-action="read-student-launches"/);
   assert.match(app, /installStudentReadAloudControls/);
+  assert.match(app, /function studentTwoWeekCalendarMarkup/);
+  assert.match(app, /Past Week \+ This Week/);
+  assert.match(css, /\.platform-student-calendar-days/);
   assert.match(app, /dataset\.action = "read-student-section"/);
   assert.match(css, /\.platform-student-section-listen/);
   assert.match(app, /🔊 Listen/);
