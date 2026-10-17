@@ -351,6 +351,8 @@ summary:focus-visible {
 .platform-student-goal-name { margin: 0.55rem 0 0; color: var(--platform-navy); font-size: clamp(1rem, 2.5vw, 1.35rem); font-weight: 800; }
 .platform-student-empty-state, .platform-student-status { margin: 0.55rem 0 0; color: var(--platform-ink); font-weight: 800; }
 .platform-school-start-launcher { grid-column: 1 / -1; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-blue) !important; }
+.platform-school-start-launcher-inline { margin-top: 0.75rem; padding: 0.85rem; border: 1px solid #bdd1da !important; border-left: 5px solid var(--platform-blue) !important; border-radius: 0.65rem; background: #f3f8fa; }
+.platform-school-start-launcher-inline h3 { margin: 0.2rem 0 0.65rem; }
 .platform-school-start-launch-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin-top: 0.85rem; min-width: 0; }
 .platform-school-start-launch-link { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 2.75rem; padding: 0.75rem 1rem; border: 2px solid var(--platform-blue); border-radius: 0.7rem; color: #fff; background: var(--platform-blue-dark); font-weight: 800; line-height: 1.25; text-align: center; text-decoration: none; overflow-wrap: anywhere; }
 .platform-school-start-launch-link:hover { color: #fff; background: var(--platform-navy); }
@@ -371,6 +373,10 @@ summary:focus-visible {
 .platform-student-reflection form select, .platform-student-reflection form input, .platform-student-reflection form textarea { width: 100%; min-width: 0; min-height: 2.75rem; padding: 0.55rem 0.65rem; border: 2px solid var(--platform-border); border-radius: 0.5rem; color: var(--platform-ink); background: #fff; font: inherit; }
 .platform-student-reflection textarea { min-height: 6rem; resize: vertical; }
 .platform-student-reflection button { min-height: 2.75rem; }
+.platform-student-reflection-inline { grid-column: auto; margin-top: 0.75rem; border-radius: 0.7rem; }
+.platform-student-reflection-inline h3 { margin: 0.2rem 0 0.5rem; }
+.platform-student-reflection-form { margin-top: 0.65rem; }
+.platform-student-reflection-form > summary { cursor: pointer; padding: 0.65rem 0.8rem; border: 2px solid var(--platform-green); border-radius: 0.5rem; color: #fff; background: var(--platform-green); font-weight: 900; }
 .platform-student-reflection form > button[type="submit"], .platform-student-reflection .platform-error { grid-column: 1 / -1; }
 .platform-reflection-speech-button { align-self: start; border-color: var(--platform-blue-dark); color: #fff; background: var(--platform-blue-dark); }
 .platform-reflection-speech-stop { align-self: start; border-color: #8d2925; color: #fff; background: #b23b35; }

@@ -86,7 +86,7 @@ test("teacher and student views expose the browser-local push workflow", () => {
   assert.match(app, /const classResourceState = classResourceSharing\.read\(state\.classId\)/);
   assert.match(app, /const activeClassResources = classResourceState\.activeResources/);
   assert.match(app, /classResourceState\.history/);
-  assert.match(app, /platform-school-start-launcher[^\n]+activeClassResources\.length \? " hidden"/);
+  assert.match(app, /platform-school-start-launcher-inline/);
   assert.equal(CLASS_RESOURCE_STORAGE_KEY, "thinkamigbob.class-resource-sharing.v1");
   assert.match(css, /\.platform-class-resource-sharing \{ grid-column: 1 \/ -1;/);
   assert.match(css, /\.platform-student-shared-resource \{ grid-column: 1 \/ -1;/);

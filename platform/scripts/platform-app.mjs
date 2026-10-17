@@ -1099,8 +1099,15 @@ function todaysLessonTeacherMarkup(classId, assignedResearch, researchLinkBank, 
   return `<section class="platform-todays-lesson platform-visual-zone platform-zone-create" aria-labelledby="todays-lesson-title"><header class="platform-todays-lesson-heading"><p class="platform-command-label">Build and release as students learn</p><h2 id="todays-lesson-title">Today’s Lesson</h2><p>${state.cards.length} lesson step${state.cards.length === 1 ? "" : "s"} · ${resources} attached activit${resources === 1 ? "y or resource" : "ies and resources"} · ${assignedResearch.links.length} approved research link${assignedResearch.links.length === 1 ? "" : "s"}</p><div class="platform-todays-lesson-actions"><button type="button" data-action="add-lesson-step">+ Add Lesson Step</button><a class="platform-button platform-button-secondary" href="#${ROUTES.PREVIEW_STUDENT}" target="_blank" rel="noopener">Preview as Student</a></div></header><div class="platform-todays-lesson-sections"><details data-lesson-builder="steps" open><summary>Lesson Steps, Activities, and Resources</summary>${activityDirectionsTeacherMarkup(classId)}</details><details data-lesson-builder="research"><summary>Approved Research</summary>${assignedResearchTeacherMarkup(assignedResearch, researchLinkBank, className)}</details></div></section>`;
 }
 
-function todaysLessonStudentMarkup(classId, studentId, assignedResearch) {
-  return `<section class="platform-todays-lesson-student platform-student-zone platform-student-zone-now" id="student-todays-activities" aria-labelledby="student-todays-lesson-title"><p class="platform-student-section-label">Follow each released step</p><h2 id="student-todays-lesson-title">Today’s Lesson</h2><p>Complete the visible steps in order. Directions, activities, and resources appear together. New steps may appear as your teacher releases them.</p>${activityDirectionsStudentMarkup(classId)}<section class="platform-assigned-research platform-assigned-research-student" aria-labelledby="assigned-research-student-title"><p class="platform-student-section-label">Approved research</p><h3 id="assigned-research-student-title">Research for This Lesson</h3>${assignedResearch.topic ? `<p><strong>Research topic:</strong> ${escapeHtml(assignedResearch.topic)}</p>` : `<p class="platform-student-empty-state">No research step has been released.</p>`}${assignedResearch.links.length ? `<div class="platform-assigned-research-links">${assignedResearch.links.map((link) => `<button type="button" data-action="open-assigned-research" data-research-url="${escapeHtml(link.url)}">${escapeHtml(link.title)}</button>`).join("")}</div><p data-assigned-research-student-status role="status">Choose an approved resource to open it beside the platform.</p>` : ""}</section></section>`;
+function todaysLessonStudentMarkup(classId, studentId, assignedResearch, reflectionMarkup = "") {
+  return `<section class="platform-todays-lesson-student platform-student-zone platform-student-zone-now" id="student-todays-activities" aria-labelledby="student-todays-lesson-title"><p class="platform-student-section-label">Today</p><h2 id="student-todays-lesson-title">Today’s Activity</h2><p>Complete the visible steps in order. Directions, activities, and resources appear together. New steps may appear as your teacher releases them.</p>${activityDirectionsStudentMarkup(classId)}<section class="platform-school-start-launcher platform-school-start-launcher-inline" aria-labelledby="school-start-launcher-title"><p class="platform-student-section-label">Activity tools</p><h3 id="school-start-launcher-title">Classroom Launches</h3><div class="platform-school-start-launch-grid"><a class="platform-school-start-launch-link platform-school-start-launch-link-missions" href="https://sites.google.com/ravennaschools.us/steminbobwarts/home-start" target="_blank" rel="noopener noreferrer">GO TO MY STEM MISSIONS</a><a class="platform-school-start-launch-link platform-school-start-launch-link-builder" href="../index.html" target="_blank" rel="noopener noreferrer">STEM BUILDER</a><a class="platform-school-start-launch-link platform-school-start-launch-link-workshop" href="http://192.168.1.252:8000" target="_blank" rel="noopener noreferrer">STEM WORKSHOP</a></div></section><section class="platform-assigned-research platform-assigned-research-student" aria-labelledby="assigned-research-student-title"><p class="platform-student-section-label">Approved research</p><h3 id="assigned-research-student-title">Research for This Activity</h3>${assignedResearch.topic ? `<p><strong>Research topic:</strong> ${escapeHtml(assignedResearch.topic)}</p>` : `<p class="platform-student-empty-state">No research step has been released.</p>`}${assignedResearch.links.length ? `<div class="platform-assigned-research-links">${assignedResearch.links.map((link) => `<button type="button" data-action="open-assigned-research" data-research-url="${escapeHtml(link.url)}">${escapeHtml(link.title)}</button>`).join("")}</div><p data-assigned-research-student-status role="status">Choose an approved resource to open it beside the platform.</p>` : ""}</section>${reflectionMarkup}</section>`;
+}
+
+function studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions) {
+  if (!reflectionStatus.required) return "";
+  const due = new Date(reflectionActivityWindowStart(new Date()) + (6 * 24 * 60 * 60 * 1000));
+  const dueLabel = due.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+  return `<section class="platform-student-reflection platform-student-reflection-inline platform-student-zone-review" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Assigned reflection</p><h3 id="reflection-check-title">What I Learned Today</h3><p class="platform-student-status" data-weekly-reflection-status>${reflectionStatus.remaining === 0 ? `Completed — ${reflectionStatus.completed} of ${reflectionStatus.required} finished this week.` : `Due ${escapeHtml(dueLabel)} · ${reflectionStatus.remaining} response${reflectionStatus.remaining === 1 ? "" : "s"} remaining.`}</p>${reflectionStatus.remaining === 0 ? "" : `<details class="platform-student-reflection-form"><summary>Complete Reflection</summary><form data-form="weekly-reflection" novalidate><label for="weekly-reflection-activity">Activity Worked On Today</label><select id="weekly-reflection-activity" name="activityChoice" required><option value="">Choose an activity</option>${teacherActivities.map((activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activity)}</option>`).join("")}<option value="__other__">Other activity — type my own</option></select><label data-reflection-other-activity hidden>Type the activity name<input name="activityOther" maxlength="120"></label><label for="weekly-reflection-progress">Mission Progress</label><select id="weekly-reflection-progress" name="progress" required>${reflectionOptions(REFLECTION_PROGRESS_OPTIONS)}</select><label for="weekly-reflection-response">Tell what you built, tested, created, discovered, or improved.</label><textarea id="weekly-reflection-response" name="explanation" minlength="10" maxlength="500" required></textarea><button class="platform-reflection-speech-button" type="button" data-action="reflection-dictate" aria-pressed="false">🎙 Speak Answer</button><button class="platform-reflection-speech-stop" type="button" data-action="reflection-dictate-stop" hidden>■ Stop Speaking</button><p class="platform-reflection-speech-status" data-reflection-speech-status role="status">You can type or use Speak Answer.</p><label>Did You Improve Your Idea Today by working to make it better?<select name="improved" required>${reflectionOptions(REFLECTION_IMPROVEMENT_OPTIONS)}</select></label><label>🏅 Which Badge Did You Earn Today?<select name="badge" required>${reflectionOptions(REFLECTION_BADGE_OPTIONS)}</select></label><label>🆘 Do You Need Help Next Class?<select name="help" required>${reflectionOptions(REFLECTION_HELP_OPTIONS)}</select></label><label>Could You Help Another Student With Today's Activity?<select name="helpOther" required>${reflectionOptions(REFLECTION_HELP_OTHER_OPTIONS)}</select></label><label>⭐ How Did This Activity Go Today?<select name="rating" required>${reflectionOptions(REFLECTION_ACTIVITY_RATING_OPTIONS)}</select></label><button type="submit">Submit Reflection</button><p class="platform-error" data-weekly-reflection-error role="alert" hidden></p></form></details>`}</section>`;
 }
 
 function weeklyReflectionTeacherMarkup(classId) {
@@ -2398,6 +2405,7 @@ function studentDashboardView(state) {
     todaysMission.read().title,
   ].filter(Boolean))];
   const reflectionOptions = (options) => `<option value="">Choose one</option>${options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join("")}`;
+  const assignedReflection = studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions);
   const studentName = escapeHtml(student?.displayName ?? "Student");
   const className = escapeHtml(classRecord?.displayName ?? "Class not selected");
   return shell(`
@@ -2411,7 +2419,7 @@ function studentDashboardView(state) {
       </section>
 
       <nav class="platform-student-area-map" aria-label="Student Home areas">
-        <a href="#student-todays-activities" data-student-map="now"><span aria-hidden="true">★</span><strong>What I’m Doing Now</strong><small>Goal and activities</small></a>
+        <a href="#current-goal-title" data-student-map="now"><span aria-hidden="true">★</span><strong>Today</strong><small>Current goal and activity</small></a>
         <a href="#assigned-research-student-title" data-student-map="tools"><span aria-hidden="true">↗</span><strong>My Tools</strong><small>Teacher-approved resources</small></a>
         <a href="#stem-work-title" data-student-map="work"><span aria-hidden="true">▤</span><strong>My Work</strong><small>Projects and evidence</small></a>
         <a href="#reflection-check-title" data-student-map="review"><span aria-hidden="true">✓</span><strong>Review</strong><small>Reflection and progress</small></a>
@@ -2431,17 +2439,7 @@ function studentDashboardView(state) {
         </div>
       </section>
 
-      ${todaysLessonStudentMarkup(state.classId, state.studentId, assignedResearch)}
-
-      <section class="platform-school-start-launcher" aria-labelledby="school-start-launcher-title"${activeClassResources.length ? " hidden" : ""}>
-        <p class="platform-student-section-label">Start here</p>
-        <h2 id="school-start-launcher-title">Classroom Launches</h2>
-        <div class="platform-school-start-launch-grid">
-          <a class="platform-school-start-launch-link platform-school-start-launch-link-missions" href="https://sites.google.com/ravennaschools.us/steminbobwarts/home-start" target="_blank" rel="noopener noreferrer">GO TO MY STEM MISSIONS</a>
-          <a class="platform-school-start-launch-link platform-school-start-launch-link-builder" href="../index.html" target="_blank" rel="noopener noreferrer">STEM BUILDER</a>
-          <a class="platform-school-start-launch-link platform-school-start-launch-link-workshop" href="http://192.168.1.252:8000" target="_blank" rel="noopener noreferrer">STEM WORKSHOP</a>
-        </div>
-      </section>
+      ${todaysLessonStudentMarkup(state.classId, state.studentId, assignedResearch, assignedReflection)}
 
       <section class="platform-yesterday platform-student-zone platform-student-zone-history" aria-labelledby="yesterday-title">
         <div class="platform-student-section-heading">
@@ -2462,34 +2460,7 @@ function studentDashboardView(state) {
         </div>
       </section>
 
-      <section class="platform-student-reflection platform-student-zone platform-student-zone-review" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title">
-        <p class="platform-student-section-label">Reflection</p>
-        <h2 id="reflection-check-title">What I Learned Today</h2>
-        <p class="platform-student-status" data-weekly-reflection-status>${reflectionStatus.remaining === 0 ? `Complete — ${reflectionStatus.completed} of ${reflectionStatus.required} finished this week.` : `${reflectionStatus.remaining} response${reflectionStatus.remaining === 1 ? "" : "s"} still needed this week.`}</p>
-        <form data-form="weekly-reflection" novalidate${reflectionStatus.remaining === 0 ? " hidden" : ""}>
-          <label for="weekly-reflection-activity">Activity Worked On Today</label>
-          <select id="weekly-reflection-activity" name="activityChoice" required>
-            <option value="">Choose an activity</option>
-            ${teacherActivities.map((activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activity)}</option>`).join("")}
-            <option value="__other__">Other activity — type my own</option>
-          </select>
-          <label data-reflection-other-activity hidden>Type the activity name<input name="activityOther" maxlength="120"></label>
-          <label for="weekly-reflection-progress">Mission Progress</label>
-          <select id="weekly-reflection-progress" name="progress" required>${reflectionOptions(REFLECTION_PROGRESS_OPTIONS)}</select>
-          <label for="weekly-reflection-response">Tell what you built, tested, created, discovered, or improved.</label>
-          <textarea id="weekly-reflection-response" name="explanation" minlength="10" maxlength="500" required></textarea>
-          <button class="platform-reflection-speech-button" type="button" data-action="reflection-dictate" aria-pressed="false">🎙 Speak Answer</button>
-          <button class="platform-reflection-speech-stop" type="button" data-action="reflection-dictate-stop" hidden>■ Stop Speaking</button>
-          <p class="platform-reflection-speech-status" data-reflection-speech-status role="status">You can type or use Speak Answer.</p>
-          <label>Did You Improve Your Idea Today by working to make it better?<select name="improved" required>${reflectionOptions(REFLECTION_IMPROVEMENT_OPTIONS)}</select></label>
-          <label>🏅 Which Badge Did You Earn Today?<select name="badge" required>${reflectionOptions(REFLECTION_BADGE_OPTIONS)}</select></label>
-          <label>🆘 Do You Need Help Next Class?<select name="help" required>${reflectionOptions(REFLECTION_HELP_OPTIONS)}</select></label>
-          <label>Could You Help Another Student With Today's Activity?<select name="helpOther" required>${reflectionOptions(REFLECTION_HELP_OTHER_OPTIONS)}</select></label>
-          <label>⭐ How Did This Activity Go Today?<select name="rating" required>${reflectionOptions(REFLECTION_ACTIVITY_RATING_OPTIONS)}</select></label>
-          <button type="submit">Submit Reflection</button>
-          <p class="platform-error" data-weekly-reflection-error role="alert" hidden></p>
-        </form>
-      </section>
+      <!-- What I Learned Today is rendered inside Today’s Activity when assigned. id="reflection-check-title" -->
 
       <section class="platform-student-paths platform-student-zone platform-student-zone-tools" aria-labelledby="choose-path-title">
         <div class="platform-student-section-heading">
