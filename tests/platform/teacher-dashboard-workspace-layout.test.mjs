@@ -166,8 +166,11 @@ test("scheduled Pomodoro classes use a Pomodoro class timer and an independent a
   assert.match(css, /background: #fff4c7/);
 });
 
-test("Run Today’s Class shows a live read-only current plan", () => {
-  for (const label of ["Present and monitor", "Live Lesson Dashboard", "Classroom Presentation Tools", "Assigned activities", "Students can work in", "Current message", "Latest whiteboard", "Live Voice Meter", "Compare with"]) assert.match(app, new RegExp(label));
+test("Run Today’s Class shows a compact live current plan", () => {
+  for (const label of ["Classroom Controls", "More Classroom Tools", "View Lesson Details and Live Status", "Assigned activities", "Students can work in", "Current message", "Latest whiteboard", "Live Voice Meter", "Compare with"]) assert.match(app, new RegExp(label));
+  assert.doesNotMatch(app, /<h3 id="current-class-plan-title">Live Lesson Dashboard<\/h3>/);
+  assert.match(app, /platform-live-lesson-status/);
+  assert.match(app, /platform-current-plan-featured/);
   assert.doesNotMatch(app, /Classroom Sound Goals/);
   for (const label of ["Present on This Screen", "Open Separate Classroom Screen", "Floating Timer", "Quick Message", "Whiteboard", "Voice Meter"]) assert.match(app, new RegExp(label));
   for (const label of ["Teacher-led instruction", "Independent seat work", "Collaborative activity", "Sound goal achieved", "Almost there"]) assert.match(app, new RegExp(label));
