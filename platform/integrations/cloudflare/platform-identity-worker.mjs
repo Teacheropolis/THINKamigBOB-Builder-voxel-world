@@ -9,7 +9,8 @@ const SIGNOUT_PATH = "/api/auth/v1/signout";
 const SESSION_PATH = "/api/auth/v1/session";
 const HEALTH_PATH = "/api/auth/v1/health";
 const CLASSROOMS_PATH = "/api/classrooms/v1";
-const MAX_BODY_BYTES = 16_384;
+const LESSON_STEPS_PATH = "/api/classrooms/v1/lesson-steps";
+const MAX_BODY_BYTES = 65_536;
 
 function json(status, value, headers = {}) {
   return new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...headers } });
@@ -63,7 +64,7 @@ export function createPlatformIdentityWorker({ verifierFactory = (options) => cr
     async fetch(request, env) {
       const url = new URL(request.url);
       if (url.pathname === HEALTH_PATH && request.method === "GET") return json(200, { ok: true, productionReady: ready(env) });
-      if (![GOOGLE_PATH, STUDENT_PATH, SIGNOUT_PATH, SESSION_PATH, CLASSROOMS_PATH].includes(url.pathname)) return json(404, { error: "not-found" });
+      if (![GOOGLE_PATH, STUDENT_PATH, SIGNOUT_PATH, SESSION_PATH, CLASSROOMS_PATH, LESSON_STEPS_PATH].includes(url.pathname)) return json(404, { error: "not-found" });
       if (!ready(env)) return json(503, { status: "setup-required" });
       const origin = new URL(env.PLATFORM_ORIGIN).origin;
       try {
@@ -114,6 +115,23 @@ export function createPlatformIdentityWorker({ verifierFactory = (options) => cr
           if (!result.ok) return json(result.status, result.value);
           return json(200, result.value);
         }
+
+        if (url.pathname === LESSON_STEPS_PATH && request.method === "POST") {
+          if (request.headers.get("origin") !== origin) return json(403, { error: "same-origin-request-required" });
+          let input;
+          try { input = JSON.parse(await boundedText(request)); } catch { return json(400, { error: "invalid-json" }); }
+          const result = await internal(env.PLATFORM_AUTH, PLATFORM_IDENTITY_INTERNAL_PATHS.lessonSteps, { classId: input.classId, step: input.step }, request);
+          if (!result.ok) return json(result.status, result.value);
+          return json(201, result.value);
+        }
+
+        if (url.pathname === LESSON_STEPS_PATH && request.method === "GET") {
+          const classId = url.searchParams.get("classId");
+          const path = classId ? `${PLATFORM_IDENTITY_INTERNAL_PATHS.lessonSteps}?classId=${encodeURIComponent(classId)}` : PLATFORM_IDENTITY_INTERNAL_PATHS.lessonSteps;
+          const result = await internal(env.PLATFORM_AUTH, path, {}, request, "GET");
+          if (!result.ok) return json(result.status, result.value);
+          return json(200, result.value);
+        }
         return json(405, { error: "method-not-allowed" });
       } catch (error) {
         const status = Number(error?.status) || 401;
@@ -126,4 +144,4 @@ export function createPlatformIdentityWorker({ verifierFactory = (options) => cr
 
 export default createPlatformIdentityWorker();
 
-export const PLATFORM_IDENTITY_ENDPOINTS = Object.freeze({ health: HEALTH_PATH, google: GOOGLE_PATH, student: STUDENT_PATH, signout: SIGNOUT_PATH, session: SESSION_PATH, classrooms: CLASSROOMS_PATH });
+export const PLATFORM_IDENTITY_ENDPOINTS = Object.freeze({ health: HEALTH_PATH, google: GOOGLE_PATH, student: STUDENT_PATH, signout: SIGNOUT_PATH, session: SESSION_PATH, classrooms: CLASSROOMS_PATH, lessonSteps: LESSON_STEPS_PATH });

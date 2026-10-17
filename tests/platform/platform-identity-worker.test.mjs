@@ -27,6 +27,7 @@ function environment() {
         const path = new URL(request.url).pathname;
         if (path.endsWith("teacher-session")) return Response.json({ token, expiresAt: Date.now() + 1000 }, { status: 201 });
         if (path.endsWith("student-session")) return Response.json({ token, expiresAt: Date.now() + 1000 }, { status: 201 });
+        if (path.endsWith("lesson-steps")) return Response.json(request.method === "GET" ? { steps: [{ id: "lesson-1", status: "released" }] } : { step: { id: "lesson-1", status: "released" } }, { status: request.method === "GET" ? 200 : 201 });
         if (path.endsWith("classrooms")) return Response.json(request.method === "GET" ? { classrooms: [] } : { classroom: { classId: "class-1", name: "STEM Lab", classCode: "ABCDEFGH", students: [] } }, { status: request.method === "GET" ? 200 : 201 });
         if (path.endsWith("session")) return Response.json({ teacher: { id: "teacher-1" }, student: null });
         return Response.json({ revoked: true });
@@ -89,4 +90,15 @@ test("teacher classroom setup remains authenticated through the private service"
   const response = await worker.fetch(new Request(`${origin}/api/classrooms/v1`, { method: "POST", headers: { origin, cookie: `${PLATFORM_SESSION_COOKIE}=${token}` }, body: JSON.stringify({ name: "STEM Lab", studentLabels: ["Avery", "Jordan"] }) }), environment());
   assert.equal(response.status, 201);
   assert.equal((await response.json()).classroom.classCode, "ABCDEFGH");
+});
+
+test("shared lesson steps pass through the public same-origin classroom boundary", async () => {
+  const worker = createPlatformIdentityWorker();
+  const saved = await worker.fetch(new Request(`${origin}/api/classrooms/v1/lesson-steps`, { method: "POST", headers: { origin, cookie: `${PLATFORM_SESSION_COOKIE}=${token}` }, body: JSON.stringify({ classId: "class-1", step: { title: "Build", directions: "Build a bridge.", status: "released" } }) }), environment());
+  assert.equal(saved.status, 201);
+  assert.equal((await saved.json()).step.status, "released");
+  const listed = await worker.fetch(new Request(`${origin}/api/classrooms/v1/lesson-steps`, { headers: { cookie: `${PLATFORM_SESSION_COOKIE}=${token}` } }), environment());
+  assert.equal((await listed.json()).steps[0].id, "lesson-1");
+  const denied = await worker.fetch(new Request(`${origin}/api/classrooms/v1/lesson-steps`, { method: "POST", headers: { origin: "https://evil.example" }, body: "{}" }), environment());
+  assert.equal(denied.status, 403);
 });

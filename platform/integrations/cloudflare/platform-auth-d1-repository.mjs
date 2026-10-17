@@ -46,6 +46,44 @@ function displayLabel(value) {
   return label;
 }
 
+function lessonText(value, name, maxLength) {
+  const result = String(value || "").trim().replace(/\s+/g, " ");
+  if (!result || result.length > maxLength) throw new Error(`valid-${name}-required`);
+  return result;
+}
+
+function lessonResources(value) {
+  if (value == null) return [];
+  if (!Array.isArray(value) || value.length > 8) throw new Error("bounded-lesson-resources-required");
+  return value.map((item) => {
+    const type = String(item?.type || "").trim().toLowerCase();
+    if (!["image", "video", "link"].includes(type)) throw new Error("valid-lesson-resource-type-required");
+    const label = lessonText(item?.label, "lesson-resource-label", 100);
+    const url = String(item?.url || "").trim();
+    if (url.length > 2000) throw new Error("valid-lesson-resource-url-required");
+    let parsed;
+    try { parsed = new URL(url); } catch { throw new Error("valid-lesson-resource-url-required"); }
+    if (!["https:", "http:"].includes(parsed.protocol)) throw new Error("valid-lesson-resource-url-required");
+    return Object.freeze({ type, label, url: parsed.toString() });
+  });
+}
+
+function lessonProjection(row) {
+  let resources = [];
+  try { resources = lessonResources(JSON.parse(String(row.resources_json || "[]"))); } catch { resources = []; }
+  return Object.freeze({
+    id: String(row.step_id),
+    classId: String(row.class_id),
+    title: String(row.title),
+    directions: String(row.directions),
+    resources,
+    status: row.status === "released" ? "released" : "draft",
+    order: Number(row.sort_order) || 0,
+    updatedAt: Number(row.updated_at) || 0,
+    releasedAt: row.released_at == null ? null : Number(row.released_at),
+  });
+}
+
 export function createPlatformAuthD1Repository({ database, classroomCodeKey, now = () => Date.now(), random = (length) => randomBytes(length) } = {}) {
   const db = requireDatabase(database);
   const lookupKey = codeKey(classroomCodeKey);
@@ -72,6 +110,52 @@ export function createPlatformAuthD1Repository({ database, classroomCodeKey, now
   }
 
   return Object.freeze({
+    async saveLessonStep({ teacherId, classId, step }) {
+      const owner = clean(teacherId, "teacher-id");
+      const classroom = clean(classId, "class-id");
+      if (!(await this.teacherOwnsClass({ teacherId: owner, classId: classroom }))) throw Object.assign(new Error("teacher-class-authorization-required"), { status: 403 });
+      const id = step?.id ? clean(step.id, "lesson-step-id") : `lesson-${random(18).toString("base64url")}`;
+      const title = lessonText(step?.title, "lesson-title", 100);
+      const directions = lessonText(step?.directions, "lesson-directions", 2000);
+      const resources = lessonResources(step?.resources);
+      const status = step?.status === "released" ? "released" : "draft";
+      const order = Number.isSafeInteger(step?.order) && step.order >= 0 && step.order <= 999 ? step.order : 0;
+      const updatedAt = now();
+      const releasedAt = status === "released" ? updatedAt : null;
+      const statement = db.prepare(`INSERT INTO platform_lesson_steps
+        (step_id, class_id, teacher_id, title, directions, resources_json, status, sort_order, created_at, updated_at, released_at)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9, ?10)
+        ON CONFLICT(step_id) DO UPDATE SET title = excluded.title, directions = excluded.directions,
+          resources_json = excluded.resources_json, status = excluded.status, sort_order = excluded.sort_order,
+          updated_at = excluded.updated_at, released_at = excluded.released_at
+        WHERE platform_lesson_steps.class_id = excluded.class_id AND platform_lesson_steps.teacher_id = excluded.teacher_id`)
+        .bind(id, classroom, owner, title, directions, JSON.stringify(resources), status, order, updatedAt, releasedAt);
+      if (status === "released" && typeof db.batch === "function") {
+        await db.batch([statement, auditStatement({ eventType: "LESSON_STEP_RELEASED", actorRole: "teacher", actorId: owner, classId: classroom, occurredAt: updatedAt })]);
+      } else {
+        await statement.run();
+      }
+      return Object.freeze({ id, classId: classroom, title, directions, resources, status, order, updatedAt, releasedAt });
+    },
+
+    async listTeacherLessonSteps({ teacherId, classId }) {
+      const owner = clean(teacherId, "teacher-id");
+      const classroom = clean(classId, "class-id");
+      if (!(await this.teacherOwnsClass({ teacherId: owner, classId: classroom }))) throw Object.assign(new Error("teacher-class-authorization-required"), { status: 403 });
+      const result = await primary(db).prepare(`SELECT step_id, class_id, title, directions, resources_json, status, sort_order, updated_at, released_at
+        FROM platform_lesson_steps WHERE class_id = ?1 AND teacher_id = ?2
+        ORDER BY sort_order ASC, created_at ASC LIMIT 100`).bind(classroom, owner).all();
+      return Object.freeze((result?.results || []).map(lessonProjection));
+    },
+
+    async listReleasedLessonSteps({ classId }) {
+      const classroom = clean(classId, "class-id");
+      const result = await primary(db).prepare(`SELECT step_id, class_id, title, directions, resources_json, status, sort_order, updated_at, released_at
+        FROM platform_lesson_steps WHERE class_id = ?1 AND status = 'released'
+        ORDER BY sort_order ASC, created_at ASC LIMIT 100`).bind(classroom).all();
+      return Object.freeze((result?.results || []).map(lessonProjection));
+    },
+
     async createClassroom({ teacherId, name, studentLabels }) {
       if (typeof db.batch !== "function") throw new Error("d1-batch-required");
       const owner = clean(teacherId, "teacher-id");

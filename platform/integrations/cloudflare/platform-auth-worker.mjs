@@ -8,8 +8,9 @@ const TEACHER_SESSION_PATH = "/internal/identity/v1/teacher-session";
 const STUDENT_SESSION_PATH = "/internal/identity/v1/student-session";
 const REVOKE_SESSION_PATH = "/internal/identity/v1/revoke-session";
 const CLASSROOMS_PATH = "/internal/classroom/v1/classrooms";
+const LESSON_STEPS_PATH = "/internal/classroom/v1/lesson-steps";
 const AUDIT_RETENTION_STATUS_PATH = "/internal/operations/v1/audit-retention";
-const MAX_BODY_BYTES = 4096;
+const MAX_BODY_BYTES = 32768;
 
 function json(status, body) {
   return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" } });
@@ -37,7 +38,7 @@ export function createPlatformAuthWorker({ repositoryFactory = ({ database, clas
       const auditPolicy = evaluatePlatformAuditPolicy(env);
       const productionReady = env?.PRODUCTION_ENABLED === "true" && typeof env?.AUTH_DB?.prepare === "function" && Boolean(env?.CLASSROOM_CODE_HASH_KEY) && auditPolicy.ready;
       if (path === "/health") return json(200, { ok: true, productionReady });
-      if (![SESSION_PATH, CLASS_PATH, TEACHER_SESSION_PATH, STUDENT_SESSION_PATH, REVOKE_SESSION_PATH, CLASSROOMS_PATH, AUDIT_RETENTION_STATUS_PATH].includes(path)) return json(404, { error: "not-found" });
+      if (![SESSION_PATH, CLASS_PATH, TEACHER_SESSION_PATH, STUDENT_SESSION_PATH, REVOKE_SESSION_PATH, CLASSROOMS_PATH, LESSON_STEPS_PATH, AUDIT_RETENTION_STATUS_PATH].includes(path)) return json(404, { error: "not-found" });
       if (!productionReady) return json(503, { status: "setup-required" });
       try {
         const repository = repositoryFactory({ database: env.AUTH_DB, classroomCodeKey: env.CLASSROOM_CODE_HASH_KEY });
@@ -93,6 +94,22 @@ export function createPlatformAuthWorker({ repositoryFactory = ({ database, clas
           return json(200, { classrooms: await repository.listTeacherClassrooms({ teacherId: session.id }) });
         }
 
+        if (path === LESSON_STEPS_PATH && request.method === "POST") {
+          if (session?.role !== "teacher") return json(401, { error: "authenticated-teacher-required" });
+          const input = await body(request);
+          const step = await repository.saveLessonStep({ teacherId: session.id, classId: input.classId, step: input.step });
+          return json(201, { step });
+        }
+
+        if (path === LESSON_STEPS_PATH && request.method === "GET") {
+          if (session?.role === "teacher") {
+            const classId = new URL(request.url).searchParams.get("classId");
+            return json(200, { steps: await repository.listTeacherLessonSteps({ teacherId: session.id, classId }) });
+          }
+          if (session?.role === "student") return json(200, { steps: await repository.listReleasedLessonSteps({ classId: session.classId }) });
+          return json(401, { error: "authenticated-classroom-session-required" });
+        }
+
         return json(405, { error: "method-not-allowed" });
       } catch (error) {
         const status = Number(error?.status) || 500;
@@ -118,4 +135,4 @@ export function createPlatformAuthWorker({ repositoryFactory = ({ database, clas
 
 export default createPlatformAuthWorker();
 
-export const PLATFORM_IDENTITY_INTERNAL_PATHS = Object.freeze({ session: SESSION_PATH, teacherSession: TEACHER_SESSION_PATH, studentSession: STUDENT_SESSION_PATH, revokeSession: REVOKE_SESSION_PATH, classrooms: CLASSROOMS_PATH, auditRetentionStatus: AUDIT_RETENTION_STATUS_PATH });
+export const PLATFORM_IDENTITY_INTERNAL_PATHS = Object.freeze({ session: SESSION_PATH, teacherSession: TEACHER_SESSION_PATH, studentSession: STUDENT_SESSION_PATH, revokeSession: REVOKE_SESSION_PATH, classrooms: CLASSROOMS_PATH, lessonSteps: LESSON_STEPS_PATH, auditRetentionStatus: AUDIT_RETENTION_STATUS_PATH });

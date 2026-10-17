@@ -25,6 +25,9 @@ function workerFor(session, owns = true) {
     async revokeSession(value) { return value === token; },
     async createClassroom() { return { classId: "class-1", name: "STEM Lab", classCode: "ABCDEFGH", students: [{ studentId: "student-1", displayLabel: "Avery", studentCode: "ABCDEFGHJK" }] }; },
     async listTeacherClassrooms() { return [{ id: "class-1", name: "STEM Lab", status: "active", studentCount: 1 }]; },
+    async saveLessonStep({ teacherId, classId, step }) { return { id: "lesson-1", classId, title: step.title, directions: step.directions, resources: step.resources || [], status: step.status === "released" ? "released" : "draft", order: step.order || 0, updatedAt: 1000, releasedAt: step.status === "released" ? 1000 : null, teacherId }; },
+    async listTeacherLessonSteps() { return [{ id: "lesson-1", classId: "class-1", title: "Build", directions: "Build a bridge.", resources: [], status: "draft", order: 0, updatedAt: 1000, releasedAt: null }]; },
+    async listReleasedLessonSteps() { return [{ id: "lesson-2", classId: "class-1", title: "Test", directions: "Test the bridge.", resources: [], status: "released", order: 1, updatedAt: 1000, releasedAt: 1000 }]; },
   }) });
 }
 
@@ -89,6 +92,22 @@ test("classroom setup is available only to a verified teacher session", async ()
   assert.equal((await created.json()).classroom.classCode, "ABCDEFGH");
   const student = workerFor({ role: "student", id: "student-1", classId: "class-1" });
   assert.equal((await student.fetch(request("/internal/classroom/v1/classrooms", { method: "POST", body: "{}" }), env)).status, 401);
+});
+
+test("teacher can release a shared lesson step and students receive only released steps", async () => {
+  const teacher = workerFor({ role: "teacher", id: "teacher-1" });
+  const created = await teacher.fetch(request("/internal/classroom/v1/lesson-steps", { method: "POST", body: JSON.stringify({ classId: "class-1", step: { title: "Test", directions: "Test the bridge.", status: "released", resources: [{ type: "image", label: "Bridge example", url: "https://example.test/bridge.png" }] } }) }), env);
+  assert.equal(created.status, 201);
+  assert.equal((await created.json()).step.status, "released");
+  const teacherList = await teacher.fetch(request("/internal/classroom/v1/lesson-steps?classId=class-1"), env);
+  assert.equal((await teacherList.json()).steps[0].status, "draft");
+
+  const student = workerFor({ role: "student", id: "student-1", classId: "class-1" });
+  const studentList = await student.fetch(request("/internal/classroom/v1/lesson-steps"), env);
+  const studentBody = await studentList.json();
+  assert.equal(studentBody.steps.length, 1);
+  assert.equal(studentBody.steps[0].status, "released");
+  assert.equal((await student.fetch(request("/internal/classroom/v1/lesson-steps", { method: "POST", body: "{}" }), env)).status, 401);
 });
 
 test("scheduled audit retention runs only with complete production policy", async () => {
