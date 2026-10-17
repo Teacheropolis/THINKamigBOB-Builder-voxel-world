@@ -57,6 +57,9 @@ test("student dashboard uses an antique sign and students can customize their na
   assert.match(css, /\.platform-page-heading h1 \{[^}]*text-shadow:/s);
   for (const label of ["Customize my nameplate", "Fancy text", "Background", "Name color", "Changes save automatically"]) assert.match(app, new RegExp(label));
   assert.match(app, /STUDENT_NAMEPLATE_STORAGE_KEY/);
+  assert.match(app, /option value="cursive" style="font-family:'School Cursive',cursive"/);
+  assert.match(css, /\.platform-student-nameplate-bg-blue \{[^}]*repeating-linear-gradient/s);
+  assert.match(css, /\.platform-student-nameplate-bg-green \{[^}]*repeating-linear-gradient/s);
 });
 
 test("form placeholders are visibly stronger without matching entered text", () => {

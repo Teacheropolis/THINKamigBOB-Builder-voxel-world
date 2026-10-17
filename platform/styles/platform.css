@@ -377,10 +377,28 @@ summary:focus-visible {
 .platform-student-nameplate-font-classic h2 { font-family: Georgia, "Times New Roman", serif; font-style: italic; }
 .platform-student-nameplate-font-cursive h2 { font-family: "School Cursive", cursive; font-weight: 400; }
 .platform-student-nameplate-font-playful h2 { font-family: "Comic Sans MS", "Comic Sans", cursive; }
+.platform-student-nameplate-font-slab [data-student-nameplate-control="font"] { font-family: "Roboto Slab", Rockwell, Georgia, serif; }
+.platform-student-nameplate-font-classic [data-student-nameplate-control="font"] { font-family: Georgia, "Times New Roman", serif; font-style: italic; }
+.platform-student-nameplate-font-cursive [data-student-nameplate-control="font"] { font-family: "School Cursive", cursive; }
+.platform-student-nameplate-font-playful [data-student-nameplate-control="font"] { font-family: "Comic Sans MS", "Comic Sans", cursive; }
 .platform-student-nameplate-bg-cream { background: linear-gradient(145deg, #fffdf4, #f5ead1) !important; }
 .platform-student-nameplate-bg-brass { background: linear-gradient(135deg, #72501b, #e0b85c 24%, #fff0aa 50%, #b8832f 78%, #5a3914) !important; }
-.platform-student-nameplate-bg-blue { background: linear-gradient(145deg, #e8f6fa, #a9ced8 58%, #6f9ead) !important; }
-.platform-student-nameplate-bg-green { background: linear-gradient(145deg, #ecf7ee, #acd2b7 58%, #6c9f7f) !important; }
+.platform-student-nameplate-bg-blue {
+  border-color: #547f90 !important;
+  background:
+    linear-gradient(105deg, transparent 0 22%, rgba(255,255,255,.52) 34%, transparent 46% 68%, rgba(255,255,255,.28) 78%, transparent 88%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 1px, rgba(20,55,69,.08) 1px 3px),
+    linear-gradient(145deg, #315d70 0%, #9dc3cf 22%, #e2f2f4 48%, #7fa9b7 72%, #294f61 100%) !important;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.62), inset 0 -3px 0 rgba(23,60,74,.45), 0 .45rem 1rem rgba(7,27,39,.22) !important;
+}
+.platform-student-nameplate-bg-green {
+  border-color: #4f8064 !important;
+  background:
+    linear-gradient(105deg, transparent 0 20%, rgba(255,255,255,.48) 32%, transparent 45% 68%, rgba(255,255,255,.25) 78%, transparent 88%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.07) 0 1px, rgba(22,66,43,.09) 1px 3px),
+    linear-gradient(145deg, #295d43 0%, #8fbea0 23%, #d9eddf 48%, #72a488 73%, #234f39 100%) !important;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.6), inset 0 -3px 0 rgba(23,70,46,.45), 0 .45rem 1rem rgba(7,27,39,.22) !important;
+}
 .platform-student-nameplate-bg-parchment { background: linear-gradient(145deg, #fff0bc, #dfbd72 58%, #a87531) !important; }
 .platform-student-orientation > .platform-student-section-listen { grid-column: 2; grid-row: 1 / 3; align-self: center; }
 .platform-student-orientation > .platform-student-class {
