@@ -21,7 +21,8 @@ test("School-Start Launcher is one full-width region inside Today’s Activity",
 });
 
 test("School-Start Launcher contains the three approved choices with visual and spoken support", () => {
-  for (const label of ["CURRENT SIDE PATH", "STEM BUILDER", "STEM WORKSHOP"]) assert.match(launcherSource, new RegExp(label));
+  for (const label of ["SIDE PATH", "STEM BUILDER", "STEM WORKSHOP"]) assert.match(launcherSource, new RegExp(label));
+  assert.match(launcherSource, /sidePathType/);
   for (const destination of ["currentSidePath.url", "../index.html", "http://192.168.1.252:8000"]) assert.ok(launcherSource.includes(destination), `expected ${destination}`);
   assert.equal((launcherSource.match(/<a\s/g) ?? []).length, 3);
   assert.equal((launcherSource.match(/target="_blank"/g) ?? []).length, 3);

@@ -285,7 +285,9 @@ test("Run Today’s Class shows a compact live current plan", () => {
 test("Approved Research joins Today’s Lesson and gives students restricted launch controls", () => {
   for (const label of ["Today’s Lesson", "Approved Research", "Preview This Topic in Google", "Add to Today’s Lesson", "Teacher links", "Students never receive an open Google search box"]) assert.match(app, new RegExp(label));
   assert.match(app, /platform-school-start-launcher-inline/);
-  assert.match(app, /CURRENT SIDE PATH/);
+  assert.match(app, /Other Allowed Activities/);
+  assert.match(app, /const sidePathType = currentSidePath\?\.title \|\| currentSidePath\?\.type/);
+  assert.match(app, /<strong>SIDE PATH<\/strong>/);
   assert.match(app, /data-action="read-student-launches"/);
   assert.match(app, /installStudentReadAloudControls/);
   assert.match(app, /function studentTwoWeekCalendarMarkup/);
@@ -300,7 +302,7 @@ test("Approved Research joins Today’s Lesson and gives students restricted lau
   assert.match(app, /dataset\.action = "read-student-section"/);
   assert.match(css, /\.platform-student-section-listen/);
   assert.match(app, /🔊 Listen/);
-  assert.match(app, /Open directions/);
+  assert.match(app, /Wait for teacher/);
   assert.match(app, /resource\.mediaType === "side-path"/);
   assert.match(app, /if \(!reflectionStatus\.required\) return ""/);
   assert.match(app, /Due \$\{escapeHtml\(dueLabel\)\}/);
