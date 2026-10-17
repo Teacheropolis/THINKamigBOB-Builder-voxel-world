@@ -33,12 +33,12 @@ test("teacher workspace uses layered surfaces to emphasize functions", () => {
 
 test("teacher and student workspaces use consistent visual zones for quick scanning", () => {
   for (const zone of ["platform-zone-today", "platform-zone-present", "platform-zone-create", "platform-zone-review", "platform-zone-settings"]) assert.match(css + app, new RegExp(zone));
-  for (const label of ["Your Mission Map", "Goal", "Activity", "Calendar", "My Work"]) assert.match(app, new RegExp(label));
+  for (const label of ["Today’s Path", "Look", "Do", "Show", "Finish", "Come Back Later"]) assert.match(app, new RegExp(label));
   assert.doesNotMatch(app, /What I’m Doing Now/);
   assert.doesNotMatch(app, /<strong>Today<\/strong><small>Current goal and activity<\/small>/);
   for (const zone of ["platform-student-zone-now", "platform-student-zone-work", "platform-student-zone-review", "platform-student-zone-history"]) assert.match(app, new RegExp(zone));
   assert.match(css, /\.platform-student-quest-path \{[^}]*grid-template-columns: repeat\(4/);
-  for (const destination of ["current-goal-title", "student-todays-activities", "student-calendar-title", "stem-work-title"]) assert.match(app, new RegExp(`href="#${destination}"`));
+  for (const destination of ["current-goal-title", "student-todays-activities", "evidence-connections-title", "reflection-check-title"]) assert.match(app, new RegExp(`href="#${destination}"`));
   assert.match(app, /data-action="open-student-quest-step"/);
   assert.equal((app.match(/class="platform-student-trail-arrow/g) || []).length, 3);
   assert.match(css, /\.platform-student-home > \.platform-student-trail-stop-left \{ grid-column: 1 \/ 11/);
@@ -283,13 +283,13 @@ test("Run Today’s Class shows a compact live current plan", () => {
 });
 
 test("Approved Research joins Today’s Lesson and gives students restricted launch controls", () => {
-  for (const label of ["Today’s Activity", "Approved Research", "Preview This Topic in Google", "Add to Today’s Lesson", "Research for This Activity", "Students never receive an open Google search box"]) assert.match(app, new RegExp(label));
+  for (const label of ["Today’s Lesson", "Approved Research", "Preview This Topic in Google", "Add to Today’s Lesson", "Teacher links", "Students never receive an open Google search box"]) assert.match(app, new RegExp(label));
   assert.match(app, /platform-school-start-launcher-inline/);
   assert.match(app, /CURRENT SIDE PATH/);
   assert.match(app, /data-action="read-student-launches"/);
   assert.match(app, /installStudentReadAloudControls/);
   assert.match(app, /function studentTwoWeekCalendarMarkup/);
-  assert.match(app, /Past Week \+ This Week/);
+  assert.match(app, /<h2 id="student-calendar-title">Calendar<\/h2>/);
   assert.doesNotMatch(app, /<h2 id="choose-path-title">Choose Your Path<\/h2>/);
   assert.doesNotMatch(app, /<h3 id="future-path-title">Choose a Future Path<\/h3>/);
   assert.match(app, /data-action="open-student-calendar-day"/);

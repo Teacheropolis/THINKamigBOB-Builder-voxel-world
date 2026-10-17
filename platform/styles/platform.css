@@ -341,6 +341,7 @@ summary:focus-visible {
 .platform-student-section-heading { margin-bottom: 0.75rem; }
 .platform-student-section-heading > p:last-child { margin: 0.35rem 0 0; color: var(--platform-muted); }
 .platform-student-orientation { grid-column: 1 / -1; padding: clamp(1rem, 2.5vw, 1.5rem); border-left: 7px solid var(--platform-green) !important; box-shadow: none !important; }
+.platform-student-orientation { display: flex; align-items: baseline; gap: .5rem 1rem; padding-block: .75rem; }
 .platform-student-orientation h2 { font-size: clamp(1.65rem, 4vw, 2.4rem); }
 .platform-student-orientation > p:last-child { margin: 0.55rem 0 0; color: var(--platform-muted); }
 .platform-student-class { margin: 0.2rem 0 0; color: var(--platform-blue-dark); font-size: 1.05rem; font-weight: 750; }
@@ -362,6 +363,15 @@ summary:focus-visible {
 .platform-student-trail-arrow b { z-index: 1; display: grid; width: 3.5rem; height: 3.5rem; place-items: center; border: 4px solid #fff; border-radius: 50%; color: #fff; background: #16749b; box-shadow: 0 .45rem .9rem rgba(7,27,39,.28); font-size: 2rem; line-height: 1; }
 .platform-student-trail-arrow:hover b, .platform-student-trail-arrow:focus-visible b { background: #2d7d5b; transform: scale(1.08); }
 .platform-student-trail-arrow:focus-visible { border-radius: 1rem; outline: 4px solid #ffd85a; outline-offset: 3px; }
+.platform-student-finish { padding: clamp(1rem, 2.5vw, 1.4rem); }
+.platform-student-show { padding: clamp(1rem, 2.5vw, 1.4rem); }
+.platform-student-show > p { margin: .3rem 0 .75rem; }
+.platform-student-show .platform-evidence-log,
+.platform-student-show .platform-evidence-boundary { display: none; }
+.platform-student-later { grid-column: 1 / -1; padding: 1rem; border: 2px solid #91a3ab; border-radius: 1rem; background: rgba(247,251,252,.96); }
+.platform-student-later > summary { cursor: pointer; color: var(--platform-navy); font-size: 1.15rem; font-weight: 900; }
+.platform-student-later > p { margin: .2rem 0 .8rem; color: var(--platform-muted); font-weight: 750; }
+.platform-student-later > section { margin-top: 1rem; }
 .platform-student-empty-state, .platform-student-status { margin: 0.55rem 0 0; color: var(--platform-ink); font-weight: 800; }
 .platform-school-start-launcher { grid-column: 1 / -1; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-blue) !important; }
 .platform-school-start-launcher-inline { margin-top: 0.75rem; padding: 0.85rem; border: 1px solid #bdd1da !important; border-left: 5px solid var(--platform-blue) !important; border-radius: 0.65rem; background: #f3f8fa; }
