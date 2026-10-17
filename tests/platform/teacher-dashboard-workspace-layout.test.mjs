@@ -241,6 +241,10 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /platform-current-plan-timer-wheel/);
   for (const action of ["timer-subtract-minute", "timer-add-minute", "timer-start-or-resume", "timer-pause", "timer-end", "timer-reset"]) assert.match(app, new RegExp(`data-action="${action}"`));
   assert.match(app, /editAction = "open-current-plan-editor"/);
+  assert.match(app, /data-current-class-id=/);
+  assert.match(app, /modal\?\.dataset\.currentClassId \|\| currentTeacherClass/);
+  assert.match(app, /category === "activities"/);
+  assert.match(app, /category === "access"/);
   assert.match(app, /data-action="save-current-plan-message"/);
   assert.match(app, /data-action="return-current-plan"/);
   assert.ok((app.match(/data-action="return-to-current-class-plan"/g) || []).length >= 8);
