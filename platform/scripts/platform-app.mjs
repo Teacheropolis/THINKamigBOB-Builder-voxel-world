@@ -2399,21 +2399,29 @@ function studentTwoWeekCalendarMarkup() {
   const pastWeekStart = new Date(thisWeekStart);
   pastWeekStart.setDate(thisWeekStart.getDate() - 7);
   const evidence = evidenceFoundation.timeline();
-  const hasTodayWork = evidence.some((item) => /^(?:Today|Saved just now)/i.test(item.time));
-  const hasYesterdayWork = evidence.some((item) => /^Yesterday/i.test(item.time));
+  const todayWork = evidence.filter((item) => /^(?:Today|Saved just now)/i.test(item.time));
+  const yesterdayWork = evidence.filter((item) => /^Yesterday/i.test(item.time));
   const sameDay = (left, right) => left.toDateString() === right.toDateString();
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
+  const calendarDays = [];
   const weekMarkup = (label, start) => `<div class="platform-student-calendar-week"><h3>${label}</h3><div class="platform-student-calendar-days">${Array.from({ length: 7 }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
     const isToday = sameDay(date, today);
-    const hasWork = (isToday && hasTodayWork) || (sameDay(date, yesterday) && hasYesterdayWork);
+    const dayWork = isToday ? todayWork : sameDay(date, yesterday) ? yesterdayWork : [];
+    const activities = [...new Set(dayWork.map((item) => item.activity).filter(Boolean))];
+    const hasWork = activities.length > 0;
     const symbol = isToday ? "⭐" : hasWork ? "📎" : "—";
     const meaning = isToday ? (hasWork ? "Today, work saved" : "Today") : hasWork ? "Work saved" : "No saved work";
-    return `<div class="platform-student-calendar-day${isToday ? " is-today" : ""}" aria-label="${escapeHtml(date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }))}: ${meaning}"><strong>${escapeHtml(date.toLocaleDateString(undefined, { weekday: "short" }))}</strong><span>${date.getDate()}</span><b aria-hidden="true">${symbol}</b></div>`;
+    const dateLabel = date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+    const activityLabel = hasWork ? activities.join(", ") : "No saved work";
+    calendarDays.push(`${dateLabel}. ${hasWork ? `Main activity: ${activityLabel}` : activityLabel}.`);
+    return `<button class="platform-student-calendar-day${isToday ? " is-today" : ""}" type="button" data-action="open-student-calendar-day" data-calendar-date="${escapeHtml(dateLabel)}" data-calendar-activity="${escapeHtml(activityLabel)}" data-calendar-work="${hasWork}" data-calendar-today="${isToday}" aria-label="${escapeHtml(dateLabel)}: ${meaning}${hasWork ? `. Main activity: ${activityLabel}` : ""}"><strong>${escapeHtml(date.toLocaleDateString(undefined, { weekday: "short" }))}</strong><span>${date.getDate()}</span><b aria-hidden="true">${symbol}</b></button>`;
   }).join("")}</div></div>`;
-  return `<section class="platform-student-calendar platform-student-zone platform-student-zone-history" aria-labelledby="student-calendar-title"><p class="platform-student-section-label">My calendar</p><h2 id="student-calendar-title">Past Week + This Week</h2><p class="platform-student-calendar-key"><span>⭐ Today</span><span>📎 Work saved</span><span>— No saved work</span></p><div class="platform-student-calendar-weeks">${weekMarkup("Past Week", pastWeekStart)}${weekMarkup("This Week", thisWeekStart)}</div></section>`;
+  const weeks = `${weekMarkup("Past Week", pastWeekStart)}${weekMarkup("This Week", thisWeekStart)}`;
+  const todayActivity = todayWork.map((item) => item.activity).find(Boolean) || "No saved work";
+  return `<section class="platform-student-calendar platform-student-zone platform-student-zone-history" aria-labelledby="student-calendar-title"><p class="platform-student-section-label">My calendar</p><h2 id="student-calendar-title">Past Week + This Week</h2><p class="platform-student-calendar-key"><span>⭐ Today</span><span>📎 Work saved</span><span>— No saved work</span></p><p class="platform-sr-only">${escapeHtml(calendarDays.join(" "))}</p><div class="platform-student-calendar-weeks">${weeks}</div><div class="platform-student-calendar-detail" data-student-calendar-detail role="status"><strong>⭐ Today</strong><span>${escapeHtml(todayActivity)}</span></div></section>`;
 }
 
 function studentDashboardView(state) {
@@ -5394,6 +5402,16 @@ function closeQuickClassSchedule() {
 function handleClick(event) {
   const action = event.target.closest("[data-action]");
   if (!action) return;
+  if (action.dataset.action === "open-student-calendar-day") {
+    const detail = action.closest(".platform-student-calendar")?.querySelector("[data-student-calendar-detail]");
+    if (!detail) return;
+    const symbol = action.dataset.calendarToday === "true" ? "⭐" : action.dataset.calendarWork === "true" ? "📎" : "—";
+    detail.querySelector("strong").textContent = `${symbol} ${action.dataset.calendarDate}`;
+    detail.querySelector("span").textContent = action.dataset.calendarWork === "true" ? `Main activity: ${action.dataset.calendarActivity}` : "No saved work";
+    action.closest(".platform-student-calendar-days")?.querySelectorAll(".is-selected").forEach((day) => day.classList.remove("is-selected"));
+    action.classList.add("is-selected");
+    return;
+  }
   if (action.dataset.action === "read-student-section") {
     const section = action.closest("section, article");
     if (!section || !("speechSynthesis" in window)) { action.textContent = "Listening unavailable"; return; }

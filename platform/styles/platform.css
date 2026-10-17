@@ -371,6 +371,11 @@ summary:focus-visible {
 .platform-student-calendar-day span { font-size: 1rem; font-weight: 900; }
 .platform-student-calendar-day b { font-size: 1rem; line-height: 1; }
 .platform-student-calendar-day.is-today { border: 3px solid var(--platform-gold); background: #fff2c7; }
+.platform-student-calendar-day:hover, .platform-student-calendar-day:focus-visible, .platform-student-calendar-day.is-selected { border-color: var(--platform-blue-dark); background: #e6f4f8; }
+.platform-student-calendar-detail { display: flex; align-items: center; gap: 0.55rem 1rem; min-height: 3rem; margin-top: 0.75rem; padding: 0.65rem 0.8rem; border-left: 5px solid var(--platform-green); border-radius: 0.45rem; background: #edf7f1; }
+.platform-student-calendar-detail strong { color: var(--platform-green); }
+.platform-student-calendar-detail span { font-weight: 800; }
+.platform-sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
 .platform-student-home-card { min-width: 0; padding: 1rem; border: 1px solid var(--platform-border); border-radius: 0.75rem; background: var(--platform-soft); }
 .platform-student-home-card > p:last-child { margin: 0.35rem 0 0; color: var(--platform-muted); font-size: 0.85rem; line-height: 1.45; }
 .platform-student-win { border-top: 4px solid #c28b12; }
