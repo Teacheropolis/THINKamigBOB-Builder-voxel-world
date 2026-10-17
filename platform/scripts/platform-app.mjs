@@ -1322,7 +1322,11 @@ function shell(content, { title, eyebrow = "Platform Foundation", subtitle = "",
     <header class="platform-header">
       <a class="platform-brand" href="#${ROUTES.WELCOME}" aria-label="THINKamigBOB Platform home">
         <span class="platform-brand-mark" aria-hidden="true">BOB</span>
-        <span><strong>THINKamigBOB</strong><small>STEM Learning Platform</small></span>
+        <span class="platform-brand-copy">
+          <strong>THINKamigBOB</strong>
+          <small>STEM Learning Platform</small>
+          ${teacherContext ? `<span class="platform-amig-meaning" aria-label="AMIG means Ask, Make, Improve, Grow"><span><b>A</b> Ask</span><i aria-hidden="true">•</i><span><b>M</b> Make</span><i aria-hidden="true">•</i><span><b>I</b> Improve</span><i aria-hidden="true">•</i><span><b>G</b> Grow</span></span>` : ""}
+        </span>
       </a>
       ${teacherContext ? `
         <nav class="platform-teacher-menu" aria-label="Teacher tools">

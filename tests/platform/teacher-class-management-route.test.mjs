@@ -20,6 +20,7 @@ test("teacher Today view links to protected class management", () => {
   assert.match(app, /class="platform-teacher-menu"/);
   assert.match(app, /platform-teacher-menu-heading">Manage Classes<\/strong>/);
   assert.match(app, /platform-teacher-menu-heading">Teacher Command Center<\/strong>/);
+  assert.match(app, /AMIG means Ask, Make, Improve, Grow/);
   assert.match(app, /href="#\$\{ROUTES\.TEACHER_DASHBOARD\}">Run Today’s Class<\/a>/);
   assert.doesNotMatch(today, /platform-manage-classes-card/);
   assert.doesNotMatch(today, /platform-teacher-nav/);

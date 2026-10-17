@@ -118,9 +118,14 @@ summary:focus-visible {
   font-weight: 800;
 }
 
+.platform-brand-copy { display: grid; gap: 0.08rem; }
 .platform-brand strong, .platform-brand small { display: block; }
 .platform-brand strong { font-size: clamp(1.05rem, 3vw, 1.35rem); letter-spacing: 0.01em; }
 .platform-brand small { color: #cfe4ee; font-size: 0.72rem; }
+.platform-amig-meaning { display: flex; align-items: center; gap: 0.28rem; color: #f1e2b0; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.025em; line-height: 1.15; white-space: nowrap; }
+.platform-amig-meaning span { display: inline-flex; align-items: baseline; gap: 0.12rem; }
+.platform-amig-meaning b { color: #93d3ad; font-size: 0.65rem; }
+.platform-amig-meaning i { color: #86a7b6; font-style: normal; }
 
 .platform-main {
   width: min(1180px, calc(100% - 2rem));
@@ -1984,7 +1989,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
   .platform-large-voice-controls { grid-template-columns: 1fr; }
   .platform-student-voice-meter { width: min(18rem, calc(100vw - 1rem)); }
   .platform-header { align-items: flex-start; }
-  .platform-brand small { display: none; }
+  .platform-brand small, .platform-amig-meaning { display: none; }
   .platform-main { width: min(100% - 1.25rem, 1180px); }
   .platform-roster-grid, .platform-placeholder-grid { grid-template-columns: 1fr; }
   .platform-actions, .platform-button { width: 100%; }
