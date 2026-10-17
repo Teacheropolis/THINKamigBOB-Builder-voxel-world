@@ -284,12 +284,14 @@ summary:focus-visible {
 #platform-main.platform-main:has(> .platform-student-home) > .platform-page-heading {
   display: grid;
   align-content: center;
+  justify-items: center;
   min-height: clamp(8.5rem, 16vw, 11.5rem);
   padding: 1.5rem clamp(4.75rem, 10vw, 8rem);
   border: 0;
   border-radius: 0;
   background: transparent url("../assets/images/student-platform/industrial-dashboard-nameplate.png") center / 100% 100% no-repeat;
   box-shadow: none;
+  text-align: center;
 }
 #platform-main.platform-main:has(> .platform-student-home) > .platform-page-heading .platform-eyebrow {
   color: #c58a52;
