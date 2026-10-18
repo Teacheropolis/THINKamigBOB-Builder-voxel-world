@@ -7198,6 +7198,12 @@ async function toggleClassroomDisplayFullscreen(button) {
   const displayDocument = button?.ownerDocument;
   if (!displayWindow || !displayDocument) return;
   const status = displayDocument.querySelector("[data-classroom-display-layout-status]");
+  if (displayDocument.body.classList.contains("platform-classroom-presentation-mode")) {
+    displayDocument.body.classList.remove("platform-classroom-presentation-mode");
+    button.textContent = "Full Screen";
+    if (status) status.textContent = "Full-screen presentation mode closed.";
+    return;
+  }
   if (displayDocument.fullscreenElement) {
     await displayDocument.exitFullscreen();
     button.textContent = "Full Screen";
@@ -7209,11 +7215,13 @@ async function toggleClassroomDisplayFullscreen(button) {
     button.textContent = "Exit Full Screen";
     if (status) status.textContent = "Classroom Display is full screen.";
   } catch {
+    displayDocument.body.classList.add("platform-classroom-presentation-mode");
+    button.textContent = "Exit Full Screen";
     const screen = displayWindow.screen;
     try {
       displayWindow.moveTo(Number(screen.availLeft || 0), Number(screen.availTop || 0));
       displayWindow.resizeTo(Number(screen.availWidth || screen.width), Number(screen.availHeight || screen.height));
-      if (status) status.textContent = "The browser blocked full screen, so the Classroom Display was maximized.";
+      if (status) status.textContent = "The browser blocked native full screen. Presentation mode is filling the display window.";
     } catch {
       if (status) status.textContent = "Full screen was blocked. Use the Chromebook full-screen key for this window.";
     }

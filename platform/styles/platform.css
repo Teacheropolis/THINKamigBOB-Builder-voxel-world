@@ -1086,7 +1086,9 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-timer-view-choice button[aria-pressed="true"] { color: #fff; background: var(--platform-blue-dark); box-shadow: inset 0 0 0 2px #fff; }
 .platform-smartboard-tool[data-timer-view="pomodoro"] { background: #f3f8f4; }
 .platform-smartboard-tool [data-timer-view-status] { color: inherit; font-weight: 750; }
-.platform-floating-timer-face { display: grid !important; width: min(17rem, 78cqw); aspect-ratio: 1; justify-self: center; place-items: center; border-radius: 50%; background: var(--platform-blue); box-shadow: 0 0.7rem 1.4rem rgba(16, 47, 69, 0.24); }
+.platform-floating-timer-face { position: relative; display: grid !important; width: min(17rem, 78cqw); aspect-ratio: 1; justify-self: center; place-items: center; border-radius: 50%; background: var(--platform-blue); box-shadow: 0 0.7rem 1.4rem rgba(16, 47, 69, 0.24); }
+.platform-floating-timer-face::before { position: absolute; inset: 15%; border: 2px solid rgba(255,255,255,0.28); border-radius: 50%; background: var(--platform-navy); content: ""; }
+.platform-floating-timer-face > output { position: relative; z-index: 1; color: #fff !important; text-shadow: 0 0.15rem 0.25rem rgba(0,0,0,0.45); }
 .platform-smartboard-tool[data-timer-view="pomodoro"] .platform-floating-timer-face { background: conic-gradient(from -90deg, #454f55 0 var(--timer-elapsed), transparent var(--timer-elapsed) 100%), conic-gradient(from -90deg, #17698e 0 var(--timer-main-start), #2d7d5b var(--timer-main-start) var(--timer-warning-start), #d4a017 var(--timer-warning-start) var(--timer-red-start), #b94a45 var(--timer-red-start) 100%); }
 .platform-student-timer-display .platform-smartboard-tool[data-smartboard-tool="timer"] .platform-smartboard-timer { color: #fff; font-size: clamp(2rem, 17cqw, 5rem); }
 .platform-floating-timer-controls { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1127,6 +1129,9 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-classroom-window-controls { position: fixed; z-index: 320; top: 0.6rem; left: 0.6rem; color: #fff; }
 .platform-classroom-window-controls > summary { min-width: 7rem; padding: 0.65rem 0.8rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; color: #fff; background: rgba(16, 47, 69, 0.96); font-weight: 900; text-align: center; list-style: none; cursor: pointer; }
 .platform-classroom-window-controls > summary::-webkit-details-marker { display: none; }
+.platform-classroom-presentation-mode { overflow: hidden !important; background: var(--platform-navy); }
+.platform-classroom-presentation-mode #platform-second-window-display { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; max-width: none !important; max-height: none !important; }
+.platform-classroom-presentation-mode .platform-classroom-window-controls { z-index: 500; }
 .platform-classroom-window-options { display: flex; align-items: center; gap: 0.45rem; max-width: calc(100vw - 1.2rem); margin-top: 0.35rem; padding: 0.4rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; background: rgba(16, 47, 69, 0.96); box-shadow: 0 0.45rem 1rem rgba(0,0,0,0.28); }
 .platform-classroom-window-controls button { min-height: 2.6rem; padding: 0.4rem 0.8rem; border: 2px solid #fff; color: var(--platform-navy); background: #fff8e7; font-weight: 900; white-space: nowrap; }
 .platform-classroom-window-controls button:first-child { color: #fff; background: var(--platform-blue); }
