@@ -46,6 +46,7 @@ export function createActivityDirections({ storage, now = () => Date.now() }) {
     return read(classId);
   };
   const setTitle = (classId, title) => write(classId, { ...read(classId), title });
+  const replaceCards = (classId, cards) => write(classId, { ...read(classId), cards: Array.isArray(cards) ? cards : [] });
   const saveCard = (classId, input = {}) => {
     const current = read(classId);
     const card = normalizeCard({ ...input, id: input.id || `direction-${now()}`, createdAt: input.createdAt || now(), updatedAt: now() });
@@ -84,5 +85,5 @@ export function createActivityDirections({ storage, now = () => Date.now() }) {
     const current = read(classId); write(classId, { ...current, cards: current.cards.filter((item) => item.id !== cardId) }); return { ok: true };
   };
   const releasedForStudents = (classId) => read(classId).cards.filter((item) => item.status === "released");
-  return Object.freeze({ read, setTitle, saveCard, release, withdraw, duplicate, move, remove, releasedForStudents });
+  return Object.freeze({ read, setTitle, replaceCards, saveCard, release, withdraw, duplicate, move, remove, releasedForStudents });
 }

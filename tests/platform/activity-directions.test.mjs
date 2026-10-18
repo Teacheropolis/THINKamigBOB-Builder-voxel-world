@@ -46,12 +46,22 @@ test("a direction card can contain multiple mixed resources", () => {
   assert.equal(store.read("a").cards[0].resources[1].title, "Bridge video");
 });
 
+test("secure classroom steps can replace the browser projection", () => {
+  const store = createActivityDirections({ storage: memoryStorage() });
+  store.setTitle("class-a", "Bridge Challenge");
+  store.replaceCards("class-a", [{ id: "secure-step-1", title: "Test", directions: "Test the bridge.", status: "released", resources: [] }]);
+  assert.equal(store.read("class-a").title, "Bridge Challenge");
+  assert.equal(store.releasedForStudents("class-a")[0].id, "secure-step-1");
+});
+
 test("teacher and student views expose the live directions timeline", () => {
   const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
   const css = readFileSync(new URL("../../platform/styles/platform.css", import.meta.url), "utf8");
   for (const text of ["Lesson Steps", "Lesson Steps, Activities, and Resources", "Add Lesson Step", "Add or Edit a Lesson Step", "Add an Activity or Resource", "Student visibility", "Release", "Withdraw", "Duplicate", "Move Up", "Move Down"]) assert.match(app, new RegExp(text));
   assert.doesNotMatch(app.slice(app.indexOf("function todaysLessonTeacherMarkup"), app.indexOf("function todaysLessonStudentMarkup")), /classResourceTeacherMarkup/);
   assert.match(app, /activityDirections\.releasedForStudents/);
+  assert.match(app, /classroomLesson\.saveStep/);
+  assert.match(app, /classroomLesson\.studentSteps/);
   assert.match(app, /ACTIVITY_DIRECTIONS_STORAGE_KEY/);
   assert.match(css, /platform-activity-directions/);
   assert.equal(ACTIVITY_DIRECTIONS_STORAGE_KEY, "thinkamigbob.activity-directions.v1");

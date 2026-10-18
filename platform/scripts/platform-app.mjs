@@ -49,6 +49,7 @@ import { createEvidenceGovernanceSimulation, GOVERNANCE_SIMULATION_STATUS } from
 import { createGoogleConnectionPreview, GOOGLE_CONNECTION_PREVIEW_STATUS, GOOGLE_DRIVE_FILE_SCOPE } from "./evidence-google-connection-preview.mjs";
 import { assessGoogleOAuthReadiness, GOOGLE_OAUTH_ENDPOINTS } from "./evidence-google-oauth-readiness.mjs";
 import { createProductionIdentityClient, parseStudentLabels, productionIdentityConfiguration } from "./platform-production-identity.mjs";
+import { createClassroomLessonClient } from "./classroom-lesson-client.mjs";
 import { createBrowserMessageLibrary } from "./message-library.mjs";
 import { createBrowserClassSetupProfiles } from "./class-setup-profiles.mjs";
 import { CLASS_RESOURCE_STORAGE_KEY, createClassResourceSharing, RESOURCE_RELEASES, RESOURCE_TYPES } from "./class-resource-sharing.mjs?v=preview-20261004-7";
@@ -117,6 +118,67 @@ const evidenceGovernanceSimulation = createEvidenceGovernanceSimulation({ storag
 const googleConnectionPreview = createGoogleConnectionPreview({ storage: window.sessionStorage });
 const productionIdentityConfig = productionIdentityConfiguration();
 const productionIdentity = createProductionIdentityClient({ enabled: productionIdentityConfig.enabled, origin: window.location.origin });
+const classroomLesson = createClassroomLessonClient({ serviceOrigin: window.location.origin });
+let classroomLessonServiceNotice = "";
+
+function lessonResourceForService(resource = {}, fallbackTitle = "Lesson resource") {
+  const mediaType = String(resource.mediaType || "webpage");
+  const type = mediaType === "image" ? "image" : mediaType === "youtube" ? "video" : "link";
+  let url = String(resource.url || "").trim();
+  try { url = new URL(url, window.location.href).href; } catch {}
+  return { type, label: String(resource.title || fallbackTitle).trim().slice(0, 100), url };
+}
+
+function lessonResourceFromService(resource = {}) {
+  const url = String(resource.url || "");
+  const mediaType = resource.type === "image" ? "image" : resource.type === "video" && /(?:youtube\.com|youtu\.be)/i.test(url) ? "youtube" : "webpage";
+  return { mediaType, title: String(resource.label || ""), url };
+}
+
+function lessonStepForService(card, order = 0) {
+  return {
+    id: card.id,
+    title: card.title,
+    directions: card.directions,
+    resources: (card.resources || []).map((resource) => lessonResourceForService(resource, card.title)),
+    status: card.status === "released" ? "released" : "draft",
+    order,
+  };
+}
+
+function lessonStepFromService(step = {}) {
+  return {
+    id: step.id,
+    title: step.title,
+    directions: step.directions,
+    resources: (step.resources || []).map(lessonResourceFromService),
+    status: step.status === "released" ? "released" : "draft",
+    createdAt: Number(step.updatedAt) || Date.now(),
+    updatedAt: Number(step.updatedAt) || Date.now(),
+    releasedAt: Number(step.releasedAt) || null,
+  };
+}
+
+async function saveLessonStepToService(classId, card) {
+  if (!productionIdentityConfig.enabled || !classId || !card) return { ok: true, localPreview: true };
+  const cards = activityDirections.read(classId).cards;
+  const order = Math.max(0, cards.findIndex((item) => item.id === card.id));
+  const result = await classroomLesson.saveStep({ classId, step: lessonStepForService(card, order) });
+  classroomLessonServiceNotice = result.ok ? "Saved securely for this class." : "Saved in this browser, but the classroom service could not be reached.";
+  return result;
+}
+
+async function loadLessonStepsFromService(state = session.read()) {
+  if (!productionIdentityConfig.enabled) return { ok: true, localPreview: true };
+  const classId = state.role === PLATFORM_ROLES.STUDENT ? state.classId : currentTeacherClass(state.teacherId)?.id;
+  if (!classId) return { ok: false, error: "class-not-selected" };
+  const result = state.role === PLATFORM_ROLES.STUDENT ? await classroomLesson.studentSteps() : await classroomLesson.teacherSteps(classId);
+  if (!result.ok) { classroomLessonServiceNotice = "The secure classroom service is temporarily unavailable."; return result; }
+  const steps = Array.isArray(result.steps) ? result.steps : [];
+  activityDirections.replaceCards(classId, steps.map(lessonStepFromService));
+  classroomLessonServiceNotice = state.role === PLATFORM_ROLES.STUDENT ? "Teacher directions loaded." : "Lesson steps loaded securely.";
+  return result;
+}
 let oneTimeClassroomCodes = null;
 let evidenceDraft = null;
 let evidenceNotice = "";
@@ -1070,7 +1132,7 @@ function activityDirectionsTeacherMarkup(classId) {
         <fieldset class="platform-direction-resource-editor"><legend>Activities and resources for this step</legend><p>Attach slides, images, video, webpages, Builder, a mission activity, or a Side Path. Students will find each item directly under these directions.</p><div data-direction-resource-list></div><button type="button" data-action="add-direction-resource">+ Add an Activity or Resource</button></fieldset>
         <label>Student visibility<select name="visibility"><option value="draft">Keep private draft</option><option value="released">Show to students</option></select></label>
         <div class="platform-direction-actions"><button type="button" data-action="save-direction-card">Save Lesson Step</button><button type="reset" data-action="cancel-direction-edit">Clear</button></div>
-        <p data-activity-direction-status role="status">Choose whether students can see this step, then save it.</p>
+        <p data-activity-direction-status role="status">${escapeHtml(classroomLessonServiceNotice || "Choose whether students can see this step, then save it.")}</p>
       </form>
     </details>
   </section>`;
@@ -5540,7 +5602,7 @@ function closeQuickClassSchedule() {
   if (panel) panel.hidden = true;
 }
 
-function handleClick(event) {
+async function handleClick(event) {
   const action = event.target.closest("[data-action]");
   if (!action) return;
   if (action.dataset.action === "open-student-quest-step") {
@@ -6571,6 +6633,9 @@ function handleClick(event) {
       if (!result.ok) { const output = form.querySelector("[data-activity-direction-status]"); if (output) output.textContent = result.reason === "missing-media" ? "Add a secure https link for the selected media." : "Add both a card title and student directions."; return; }
       const visibility = form.elements.visibility?.value || (action.dataset.action === "save-release-direction-card" ? "released" : "draft");
       if (visibility === "released") activityDirections.release(classId, result.card.id); else activityDirections.withdraw(classId, result.card.id);
+      const savedCard = activityDirections.read(classId).cards.find((item) => item.id === result.card.id);
+      action.disabled = true;
+      await saveLessonStepToService(classId, savedCard);
     }
     if (action.dataset.action === "edit-direction-card") {
       const card = activityDirections.read(classId).cards.find((item) => item.id === id);
@@ -6580,8 +6645,16 @@ function handleClick(event) {
       const resourceList = form.querySelector("[data-direction-resource-list]"); if (resourceList) resourceList.innerHTML = (card.resources || []).map(directionResourceEditorRow).join("");
       form.closest("details").open = true; form.elements.title.focus(); return;
     }
-    if (action.dataset.action === "release-direction-card") activityDirections.release(classId, id);
-    if (action.dataset.action === "withdraw-direction-card") activityDirections.withdraw(classId, id);
+    if (action.dataset.action === "release-direction-card") {
+      activityDirections.release(classId, id);
+      action.disabled = true;
+      await saveLessonStepToService(classId, activityDirections.read(classId).cards.find((item) => item.id === id));
+    }
+    if (action.dataset.action === "withdraw-direction-card") {
+      activityDirections.withdraw(classId, id);
+      action.disabled = true;
+      await saveLessonStepToService(classId, activityDirections.read(classId).cards.find((item) => item.id === id));
+    }
     if (action.dataset.action === "duplicate-direction-card") activityDirections.duplicate(classId, id);
     if (action.dataset.action === "move-direction-card") activityDirections.move(classId, id, Number(action.dataset.directionOffset));
     if (action.dataset.action === "remove-direction-card") activityDirections.remove(classId, id);
@@ -8228,6 +8301,7 @@ async function startPlatform() {
     if (result.ok && result.value.teacher?.id) session.signInTeacher(result.value.teacher.id);
     else if (result.ok && result.value.student?.id && result.value.student?.classId) session.signInStudent(result.value.student.classId, result.value.student.id);
     else if (result.ok) session.signOut();
+    if (result.ok && (result.value.teacher?.id || result.value.student?.id)) await loadLessonStepsFromService(session.read());
   }
   render();
   enterStandaloneClassroomDisplayMode();
