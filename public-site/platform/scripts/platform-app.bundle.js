@@ -3964,9 +3964,11 @@ function captainsLogStudentWeekMarkup(classId, studentId) {
   const choiceRequired = Math.max(0, required - assignedEntries.length);
   const choiceCompleted = choiceEntries.filter((item) => completedIds.has(item.promptId)).length;
   const choiceRemaining = Math.max(0, choiceRequired - choiceCompleted);
-  const choiceGroup = choiceEntries.length && choiceRequired ? `<li class="platform-captains-log-choice-task${choiceRemaining === 0 ? " is-complete" : ""}"><span aria-hidden="true">${choiceRemaining === 0 ? "\u2713" : "\u25C7"}</span><div><strong>${choiceRemaining === 0 ? "Choice complete" : `Choose ${choiceRemaining} of these ${choiceEntries.length} prompts`}</strong><ul>${choiceEntries.map((item) => {
-    const isDone = completedIds.has(item.promptId), number = CAPTAINS_LOG_WEEKDAYS.indexOf(item.slot) + 1;
-    return `<li class="${isDone ? "is-complete" : ""}"><strong>Prompt ${number}${isDone ? " \xB7 Used" : ""}</strong><p>${escapeHtml2(item.prompt)}</p></li>`;
+  const choiceTaskNumbers = Array.from({ length: choiceRequired }, (_, index) => assignedEntries.length + index + 1);
+  const choiceTaskLabel = choiceTaskNumbers.length === 1 ? `Prompt ${choiceTaskNumbers[0]}` : `Prompts ${choiceTaskNumbers.slice(0, -1).join(", ")}${choiceTaskNumbers.length > 2 ? "," : ""} and ${choiceTaskNumbers.at(-1)}`;
+  const choiceGroup = choiceEntries.length && choiceRequired ? `<li class="platform-captains-log-choice-task${choiceRemaining === 0 ? " is-complete" : ""}"><span aria-hidden="true">${choiceRemaining === 0 ? "\u2713" : "\u25C7"}</span><div><strong>${choiceTaskLabel} - choose ${choiceRequired} from these choices</strong>${choiceRemaining === 0 ? `<small>\u2713 Choice complete</small>` : choiceCompleted ? `<small>${choiceCompleted} chosen \xB7 ${choiceRemaining} left</small>` : ""}<ul>${choiceEntries.map((item, index) => {
+    const isDone = completedIds.has(item.promptId);
+    return `<li class="${isDone ? "is-complete" : ""}"><strong>Choice ${String.fromCharCode(65 + index)}${isDone ? " \xB7 Used" : ""}</strong><p>${escapeHtml2(item.prompt)}</p></li>`;
   }).join("")}</ul></div></li>` : "";
   return `<section class="platform-captains-log-week-map" aria-labelledby="captains-log-week-map-title"><div><h3 id="captains-log-week-map-title">Your Week</h3><p><strong>${done} of ${required} done</strong> \xB7 ${remaining} left</p></div><p class="platform-captains-log-week-instruction">Complete the assigned prompts and ${choiceRequired ? `choose ${choiceRequired} more` : "follow the assigned days"}.</p><ol>${assignedPrompts}${choiceGroup}</ol><div class="platform-captains-log-student-timeline"><strong>Suggested plan</strong>${timeline.map((item) => `<p>${escapeHtml2(item)}</p>`).join("")}</div></section>`;
 }
