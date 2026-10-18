@@ -122,10 +122,9 @@ summary:focus-visible {
 .platform-brand strong, .platform-brand small { display: block; }
 .platform-brand strong { font-size: clamp(1.05rem, 3vw, 1.35rem); letter-spacing: 0.01em; }
 .platform-brand small { color: #cfe4ee; font-size: 0.72rem; }
-.platform-amig-meaning { display: flex; align-items: center; gap: 0.28rem; color: #f1e2b0; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.025em; line-height: 1.15; white-space: nowrap; }
-.platform-amig-meaning span { display: inline-flex; align-items: baseline; gap: 0.12rem; }
-.platform-amig-meaning b { color: #93d3ad; font-size: 0.65rem; }
-.platform-amig-meaning i { color: #86a7b6; font-style: normal; }
+.platform-amig-meaning { display: flex; align-items: center; gap: 0.36rem; color: #fff; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.025em; line-height: 1.15; white-space: nowrap; }
+.platform-amig-meaning b { color: var(--platform-gold); font-size: 0.68rem; letter-spacing: 0.08em; }
+.platform-amig-meaning i { color: #fff; font-style: normal; }
 
 .platform-main {
   width: min(1180px, calc(100% - 2rem));

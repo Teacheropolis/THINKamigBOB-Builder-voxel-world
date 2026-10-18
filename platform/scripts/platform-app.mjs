@@ -1325,7 +1325,7 @@ function shell(content, { title, eyebrow = "Platform Foundation", subtitle = "",
         <span class="platform-brand-copy">
           <strong>THINKamigBOB</strong>
           <small>STEM Learning Platform</small>
-          ${teacherContext ? `<span class="platform-amig-meaning" aria-label="AMIG means Ask, Make, Improve, Grow"><span><b>A</b> Ask</span><i aria-hidden="true">•</i><span><b>M</b> Make</span><i aria-hidden="true">•</i><span><b>I</b> Improve</span><i aria-hidden="true">•</i><span><b>G</b> Grow</span></span>` : ""}
+          ${teacherContext ? `<span class="platform-amig-meaning" aria-label="AMIG means Ask, Make, Improve, Grow"><b>AMIG</b><span>Ask <i aria-hidden="true">•</i> Make <i aria-hidden="true">•</i> Improve <i aria-hidden="true">•</i> Grow</span></span>` : ""}
         </span>
       </a>
       ${teacherContext ? `
