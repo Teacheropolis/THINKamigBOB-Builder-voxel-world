@@ -1250,14 +1250,14 @@ function studentClassLimerickMarkup(classId) {
   return `<details class="platform-student-class-limerick"><summary>🎩 Our Class Limerick</summary><div><p>${escapeHtml(result.limerick).replaceAll("\n", "<br>")}</p><button class="platform-student-listen-button" type="button" data-action="read-student-section" aria-pressed="false">Listen</button></div></details>`;
 }
 
-function todaysLessonStudentMarkup(classId, studentId, assignedResearch) {
+function todaysLessonStudentMarkup(classId, studentId, assignedResearch, locked = false) {
   const releasedSidePath = activityDirections.releasedForStudents(classId).flatMap((card) => card.resources ?? []).find((resource) => resource.mediaType === "side-path" && resource.url);
   const assignedSidePath = classResourceSharing.resourcesForStudent(classId, studentId).find((resource) => resource.type === "Side Path" && resource.url);
   const currentSidePath = releasedSidePath ?? assignedSidePath;
   const sidePathType = currentSidePath?.title || currentSidePath?.type || "Teacher choice";
   const sidePathLaunch = currentSidePath ? `<a class="platform-school-start-launch-link platform-school-start-launch-link-side-path" href="${escapeHtml(currentSidePath.url)}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SP</span><strong>SIDE PATH</strong><small>${escapeHtml(sidePathType)}</small></a>` : `<button class="platform-school-start-launch-link platform-school-start-launch-link-side-path is-unavailable" type="button" disabled aria-label="Side Path locked"><span aria-hidden="true">SP</span><strong>SIDE PATH</strong><small>🔒 Locked</small></button>`;
   const researchMarkup = assignedResearch.topic || assignedResearch.links.length ? `<section class="platform-assigned-research platform-assigned-research-student" aria-labelledby="assigned-research-student-title"><p class="platform-student-section-label">Teacher links</p><h3 id="assigned-research-student-title">Research</h3>${assignedResearch.topic ? `<p>${escapeHtml(assignedResearch.topic)}</p>` : ""}${assignedResearch.links.length ? `<div class="platform-assigned-research-links">${assignedResearch.links.map((link) => `<button type="button" data-action="open-assigned-research" data-research-url="${escapeHtml(link.url)}">${escapeHtml(link.title)}</button>`).join("")}</div>` : ""}</section>` : "";
-  return `<section class="platform-todays-lesson-student platform-student-zone platform-student-zone-now platform-student-trail-stop platform-student-trail-stop-right" id="student-todays-activities" aria-labelledby="student-todays-lesson-title"><div class="platform-student-step-heading"><img src="./assets/images/student-path/inventors-workshop-brass-badge.png" alt=""><div class="platform-student-step-title"><p class="platform-student-section-label">Step 2</p><h2 id="student-todays-lesson-title">Inventor’s Workshop</h2></div></div><p>Follow the mission orders. Use the machines you need.</p>${activityDirectionsStudentMarkup(classId)}<section class="platform-school-start-launcher platform-school-start-launcher-inline" aria-labelledby="school-start-launcher-title"><h3 id="school-start-launcher-title">Auxiliary Machines</h3><p class="platform-school-start-launcher-subheading">Extra Activities</p><div class="platform-school-start-launch-grid">${sidePathLaunch}<a class="platform-school-start-launch-link platform-school-start-launch-link-builder" href="../index.html" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SB</span><strong>STEM BUILDER</strong><small>Build</small></a><a class="platform-school-start-launch-link platform-school-start-launch-link-workshop" href="http://192.168.1.252:8000" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SW</span><strong>STEM WORKSHOP</strong><small>Open</small></a></div><button class="platform-student-listen-button" type="button" data-action="read-student-launches" data-side-path-assigned="${currentSidePath ? "true" : "false"}" aria-pressed="false">Listen</button></section>${researchMarkup}</section>`;
+  return `<section class="platform-todays-lesson-student platform-student-zone platform-student-zone-now platform-student-trail-stop platform-student-trail-stop-right${locked ? " is-captains-log-locked" : ""}" id="student-todays-activities" aria-labelledby="student-todays-lesson-title"${locked ? " aria-disabled=\"true\"" : ""}>${locked ? `<p class="platform-student-prompt-gate">🔒 Finish the Captain’s Log that is due before continuing. Listen and accessibility tools are still available.</p>` : ""}<div class="platform-student-step-heading"><img src="./assets/images/student-path/inventors-workshop-brass-badge.png" alt=""><div class="platform-student-step-title"><p class="platform-student-section-label">Step 2</p><h2 id="student-todays-lesson-title">Inventor’s Workshop</h2></div></div><p>Follow the mission orders. Use the machines you need.</p>${activityDirectionsStudentMarkup(classId)}<section class="platform-school-start-launcher platform-school-start-launcher-inline" aria-labelledby="school-start-launcher-title"><h3 id="school-start-launcher-title">Auxiliary Machines</h3><p class="platform-school-start-launcher-subheading">Extra Activities</p><div class="platform-school-start-launch-grid">${sidePathLaunch}<a class="platform-school-start-launch-link platform-school-start-launch-link-builder" href="../index.html" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SB</span><strong>STEM BUILDER</strong><small>Build</small></a><a class="platform-school-start-launch-link platform-school-start-launch-link-workshop" href="http://192.168.1.252:8000" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SW</span><strong>STEM WORKSHOP</strong><small>Open</small></a></div><button class="platform-student-listen-button" type="button" data-action="read-student-launches" data-side-path-assigned="${currentSidePath ? "true" : "false"}" aria-pressed="false">Listen</button></section>${researchMarkup}</section>`;
 }
 
 function captainsLogStudentWeekMarkup(classId, studentId) {
@@ -1278,9 +1278,11 @@ function captainsLogStudentWeekMarkup(classId, studentId) {
   if (!remaining) timeline.push("All done for this week!");
   else {
     if (todayAssigned.length) timeline.push(`Today: complete ${todayAssigned.length === 1 ? "the assigned prompt" : `${todayAssigned.length} assigned prompts`}.`);
-    else if (choiceNeeded > 0) timeline.push("Today: choose one prompt if you have time.");
+    else if (choiceNeeded > 0) timeline.push("Today: complete one choice prompt.");
     futureAssigned.forEach((item) => timeline.push(`${item.assignment ?? item.slot}: complete the assigned prompt.`));
-    if (choiceNeeded > (todayAssigned.length ? 0 : 1)) timeline.push(`Before Friday: choose ${choiceNeeded - (todayAssigned.length ? 0 : 1)} more different prompt${choiceNeeded - (todayAssigned.length ? 0 : 1) === 1 ? "" : "s"}.`);
+    const plannedToday = todayAssigned.length ? 0 : Math.min(1, choiceNeeded);
+    const reservedDays = new Set(futureAssigned.map((item) => item.assignment ?? item.slot));
+    CAPTAINS_LOG_WEEKDAYS.slice(Math.max(0, todayIndex + 1)).filter((day) => !reservedDays.has(day)).slice(0, Math.max(0, choiceNeeded - plannedToday)).forEach((day) => timeline.push(`${day}: complete one different choice prompt.`));
   }
   const assignedEntries = entries.filter((item) => (item.assignment ?? item.slot) !== "Daily student choice");
   const choiceEntries = entries.filter((item) => (item.assignment ?? item.slot) === "Daily student choice");
@@ -2696,12 +2698,18 @@ function studentTwoWeekCalendarMarkup() {
 }
 
 function studentDashboardView(state) {
+  weeklyReflections.recordStudentVisit(state.classId, state.studentId);
   const student = getStudentById(state.studentId);
   const classRecord = getClassById(state.classId);
   const classResourceState = classResourceSharing.read(state.classId);
   const activeClassResources = classResourceState.activeResources;
   const assignedResearch = readTeacherAssignedResearch(state.classId);
   const reflectionStatus = weeklyReflections.status(state.classId, state.studentId);
+  const captainLogObligations = weeklyReflections.captainLogObligations(state.classId, state.studentId);
+  const promptGate = captainLogObligations.due;
+  const timerState = currentScheduledLessonTimerState();
+  const timerVisual = presentationTimerVisualState(timerState);
+  const timerPhase = timerVisual.active ? timerVisual.phase : null;
   const activityWindowStart = reflectionActivityWindowStart(new Date());
   const sharedResourceActivities = (classResourceState.history ?? [])
     .filter((entry) => Number(entry.sharedAt) >= activityWindowStart && Number(entry.sharedAt) <= Date.now())
@@ -2724,6 +2732,12 @@ function studentDashboardView(state) {
       ${studentNameplateMarkup(state.studentId, studentName, className, rawStudentName)}
       ${studentClassLimerickMarkup(state.classId)}
 
+      <aside class="platform-student-pomodoro-status" data-student-pomodoro-status aria-live="polite">
+        <span class="platform-student-pomodoro-dot" data-student-pomodoro-color="${timerPhase?.color ?? "default"}" aria-hidden="true"></span>
+        <div><strong data-student-pomodoro-phase>${escapeHtml(timerPhase?.name ?? "Today’s Engineering Time")}</strong><small>Current class phase</small></div>
+        <b data-student-pomodoro-time>${formatLessonTime(timerState.remainingSeconds)}</b>
+      </aside>
+
       <section class="platform-student-quest-map" aria-labelledby="student-quest-map-title">
         <div class="platform-student-quest-map-heading">
           <h2 id="student-quest-map-title">Mission Route</h2>
@@ -2731,8 +2745,8 @@ function studentDashboardView(state) {
         </div>
         <nav class="platform-student-quest-path" aria-label="Mission steps in order">
           <a class="platform-student-quest-stop is-current" href="#current-goal-title" data-action="open-student-quest-step" data-student-quest="look" aria-current="step"><span class="platform-student-quest-number">1</span><img class="platform-student-quest-icon" src="./assets/images/student-path/mission-briefing-brass-badge.png" alt=""><strong>Mission Briefing</strong><small data-student-quest-status>You are here</small></a>
-          <a class="platform-student-quest-stop" href="#student-todays-activities" data-action="open-student-quest-step" data-student-quest="do"><span class="platform-student-quest-number">2</span><img class="platform-student-quest-icon" src="./assets/images/student-path/inventors-workshop-brass-badge.png" alt=""><strong>Inventor’s Workshop</strong><small data-student-quest-status>Next</small></a>
-          <a class="platform-student-quest-stop" href="#evidence-connections-title" data-action="open-student-quest-step" data-student-quest="show"><span class="platform-student-quest-number">3</span><img class="platform-student-quest-icon" src="./assets/images/student-path/evidence-vault-brass-badge.png" alt=""><strong>Evidence Vault</strong><small data-student-quest-status>Then</small></a>
+          <a class="platform-student-quest-stop${promptGate ? " is-prompt-locked" : ""}" href="${promptGate ? "#reflection-check-title" : "#student-todays-activities"}" data-action="open-student-quest-step" data-student-quest="do"${promptGate ? " data-prompt-locked=\"true\"" : ""}><span class="platform-student-quest-number">2</span><img class="platform-student-quest-icon" src="./assets/images/student-path/inventors-workshop-brass-badge.png" alt=""><strong>Inventor’s Workshop</strong><small data-student-quest-status>${promptGate ? "🔒 Finish Log First" : "Next"}</small></a>
+          <a class="platform-student-quest-stop${promptGate ? " is-prompt-locked" : ""}" href="${promptGate ? "#reflection-check-title" : "#evidence-connections-title"}" data-action="open-student-quest-step" data-student-quest="show"${promptGate ? " data-prompt-locked=\"true\"" : ""}><span class="platform-student-quest-number">3</span><img class="platform-student-quest-icon" src="./assets/images/student-path/evidence-vault-brass-badge.png" alt=""><strong>Evidence Vault</strong><small data-student-quest-status>${promptGate ? "🔒 Finish Log First" : "Then"}</small></a>
           <a class="platform-student-quest-stop" href="#reflection-check-title" data-action="open-student-quest-step" data-student-quest="finish"><span class="platform-student-quest-number">4</span><img class="platform-student-quest-icon" src="./assets/images/student-path/captains-log-brass-badge.png" alt=""><strong>Captain’s Log</strong><small data-student-quest-status>Last</small></a>
         </nav>
       </section>
@@ -2743,15 +2757,21 @@ function studentDashboardView(state) {
         <div data-pb002j-current-goal>
           <p class="platform-student-empty-state">Checking your goal…</p>
         </div>
+        <div class="platform-student-captains-log-brief" data-captains-log-obligation="${promptGate ? "due" : "clear"}">
+          <strong>Captain’s Log: ${reflectionStatus.remaining} prompt${reflectionStatus.remaining === 1 ? "" : "s"} left this week</strong>
+          <p>${promptGate ? captainLogObligations.choiceDue ? `Choose and finish ${captainLogObligations.choiceDue} prompt${captainLogObligations.choiceDue === 1 ? "" : "s"} today.` : "A prompt from a day you attended still needs to be finished." : reflectionStatus.remaining ? "Watch the class phase. Complete a prompt during the yellow phase or final 10 minutes." : "Your Captain’s Log is complete for this week."}</p>
+          ${reflectionStatus.remaining ? `<button type="button" data-action="start-due-captains-log">Start Captain’s Log</button>` : ""}
+        </div>
       </section>
 
       <a class="platform-student-trail-arrow platform-student-trail-arrow-right" href="#student-todays-activities" aria-label="Go to step 2, Inventor’s Workshop"><span>Next: Workshop</span><b aria-hidden="true">↘</b></a>
 
-      ${todaysLessonStudentMarkup(state.classId, state.studentId, assignedResearch)}
+      ${todaysLessonStudentMarkup(state.classId, state.studentId, assignedResearch, promptGate)}
 
       <a class="platform-student-trail-arrow platform-student-trail-arrow-left" href="#evidence-connections-title" aria-label="Go to step 3, Evidence Vault"><span>Next: Evidence Vault</span><b aria-hidden="true">↙</b></a>
 
-      <section class="platform-student-show platform-student-zone platform-student-zone-tools platform-student-trail-stop platform-student-trail-stop-left" aria-labelledby="evidence-connections-title" data-evidence-foundation>
+      <section class="platform-student-show platform-student-zone platform-student-zone-tools platform-student-trail-stop platform-student-trail-stop-left${promptGate ? " is-captains-log-locked" : ""}" aria-labelledby="evidence-connections-title" data-evidence-foundation${promptGate ? " aria-disabled=\"true\"" : ""}>
+        ${promptGate ? `<p class="platform-student-prompt-gate">🔒 Finish the Captain’s Log that is due before adding evidence.</p>` : ""}
         <p class="platform-student-section-label">Step 3</p>
         <div class="platform-student-step-heading"><img src="./assets/images/student-path/evidence-vault-brass-badge.png" alt=""><h2 id="evidence-connections-title">Evidence Vault</h2></div>
         <p>Add evidence.</p>
@@ -2761,6 +2781,13 @@ function studentDashboardView(state) {
       <a class="platform-student-trail-arrow platform-student-trail-arrow-right" href="#reflection-check-title" aria-label="Go to step 4, Captain’s Log"><span>Next: Captain’s Log</span><b aria-hidden="true">↘</b></a>
 
       ${finishMarkup}
+
+      <aside class="platform-student-captains-log-reminder" data-student-captains-log-reminder data-captains-log-due="${promptGate ? "true" : "false"}" role="dialog" aria-labelledby="captains-log-reminder-title" hidden>
+        <h2 id="captains-log-reminder-title">Captain’s Log time</h2>
+        <p>${reflectionStatus.remaining} prompt${reflectionStatus.remaining === 1 ? " is" : "s are"} still needed this week. Start the prompt that is due.</p>
+        <div><button type="button" data-action="start-due-captains-log">Start Captain’s Log</button><button type="button" data-action="dismiss-captains-log-reminder">Not yet</button></div>
+      </aside>
+      <aside class="platform-student-captains-log-wrap-warning" data-student-captains-log-wrap-warning role="status" hidden><strong>About 6 minutes left</strong><span>Finish your answer and Bob’s questions.</span></aside>
 
       <details class="platform-student-later">
         <summary>Archive Room</summary>
@@ -3240,6 +3267,23 @@ function syncLessonTimerPresentation() {
   document.querySelectorAll("[data-current-plan-timer]").forEach((element) => {
     element.textContent = `${state.status} · ${formatLessonTime(state.remainingSeconds)}`;
   });
+  document.querySelectorAll("[data-student-pomodoro-status]").forEach((element) => {
+    const studentPhase = presentationPhase ?? phase;
+    const phaseName = element.querySelector("[data-student-pomodoro-phase]");
+    const phaseTime = element.querySelector("[data-student-pomodoro-time]");
+    const phaseDot = element.querySelector("[data-student-pomodoro-color]");
+    if (phaseName) phaseName.textContent = studentPhase?.name ?? "Today’s Engineering Time";
+    if (phaseTime) phaseTime.textContent = formatLessonTime(state.remainingSeconds);
+    if (phaseDot) phaseDot.dataset.studentPomodoroColor = studentPhase?.color ?? "default";
+  });
+  if (appState.role === PLATFORM_ROLES.STUDENT) {
+    const reminder = document.querySelector("[data-student-captains-log-reminder]");
+    const yellowOrFinalTen = state.status === LESSON_TIMER_STATES.RUNNING && (presentationPhase?.key === "warning" || phase?.key === "warning" || state.remainingSeconds <= 600);
+    if (reminder?.dataset.captainsLogDue === "true" && yellowOrFinalTen && reminder.dataset.dismissed !== "true") reminder.hidden = false;
+    const wrapWarning = document.querySelector("[data-student-captains-log-wrap-warning]");
+    const logOpen = Boolean(document.querySelector(".platform-student-reflection-form[open]"));
+    if (wrapWarning) wrapWarning.hidden = !(logOpen && state.status === LESSON_TIMER_STATES.RUNNING && state.remainingSeconds <= 360 && state.remainingSeconds > 0);
+  }
 
   const controlRules = {
     "timer-start": state.status === LESSON_TIMER_STATES.READY,
@@ -5806,8 +5850,36 @@ function closeQuickClassSchedule() {
 }
 
 async function handleClick(event) {
+  const lockedRegion = event.target.closest(".is-captains-log-locked");
+  const lockedControl = event.target.closest("a, button, input, select, textarea");
+  const lockedAction = lockedControl?.dataset.action ?? "";
+  const allowedWhileLocked = lockedAction.startsWith("read-") || lockedControl?.classList.contains("platform-student-listen-button");
+  if (lockedRegion && lockedControl && !allowedWhileLocked) {
+    event.preventDefault();
+    document.querySelector("#reflection-check-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
   const action = event.target.closest("[data-action]");
   if (!action) return;
+  if (action.dataset.promptLocked === "true") {
+    event.preventDefault();
+    document.querySelector("#reflection-check-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  if (action.dataset.action === "start-due-captains-log") {
+    const reminder = document.querySelector("[data-student-captains-log-reminder]");
+    if (reminder) reminder.hidden = true;
+    const form = document.querySelector(".platform-student-reflection-form");
+    if (form) form.open = true;
+    document.querySelector("#reflection-check-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => form?.querySelector("select, textarea, input")?.focus(), 350);
+    return;
+  }
+  if (action.dataset.action === "dismiss-captains-log-reminder") {
+    const reminder = action.closest("[data-student-captains-log-reminder]");
+    if (reminder) { reminder.hidden = true; reminder.dataset.dismissed = "true"; }
+    return;
+  }
   if (action.dataset.action === "generate-namebobs") {
     const form = action.closest('[data-form="production-classroom-setup"]');
     const textarea = form?.elements.studentLabels;

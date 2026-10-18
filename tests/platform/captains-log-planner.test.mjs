@@ -86,9 +86,37 @@ test("prompts can be assigned to a weekday or offered as a daily student choice"
     Thursday: { enabled: false, promptId: "off", prompt: "Disabled prompt here.", assignment: "Thursday" },
     Friday: { enabled: false, promptId: "off-two", prompt: "Another disabled prompt.", assignment: "Friday" },
   } });
+  reflections.recordStudentVisit("class-1", "student-1");
   assert.deepEqual(reflections.captainLogChoices("class-1", "student-1").map((item) => item.promptId), ["monday-only", "daily-one", "daily-two"]);
   reflections.submit("class-1", "student-1", { activity: "Bridge", promptId: "daily-one", progress: "🧪 Testing", explanation: "I tested the bridge today.", improved: "Yes", badge: "🏗 Builder – I built, tested, or improved a design.", help: "😊 No, I'm doing fine.", helpOther: "Maybe", rating: "4 = Good 😊", followUps: [{ dok: 2, question: "What detail supports your answer?", answer: "The bridge held ten blocks." }] });
   assert.deepEqual(reflections.captainLogChoices("class-1", "student-1").map((item) => item.promptId), ["monday-only", "daily-two"]);
+});
+
+test("an unfinished assigned prompt locks later work only when the student attended that day", () => {
+  let current = new Date("2026-10-19T12:00:00Z");
+  const reflections = createWeeklyReflections({ storage: memoryStorage(), now: () => current });
+  reflections.saveCaptainLogWeekPlan("class-1", { week: 1, required: 2, days: {
+    Monday: { enabled: true, promptId: "monday", prompt: "What did you make today?", assignment: "Monday" },
+    Tuesday: { enabled: true, promptId: "choice", prompt: "What will you improve next?", assignment: "Daily student choice" },
+    Wednesday: { enabled: false, promptId: "off-1", prompt: "Disabled prompt here.", assignment: "Wednesday" },
+    Thursday: { enabled: false, promptId: "off-2", prompt: "Another disabled prompt.", assignment: "Thursday" },
+    Friday: { enabled: false, promptId: "off-3", prompt: "One more disabled prompt.", assignment: "Friday" },
+  } });
+  assert.equal(reflections.captainLogObligations("class-1", "absent-student").due, false);
+  reflections.recordStudentVisit("class-1", "present-student");
+  current = new Date("2026-10-20T12:00:00Z");
+  const obligation = reflections.captainLogObligations("class-1", "present-student");
+  assert.equal(obligation.due, true);
+  assert.equal(obligation.assigned[0].promptId, "monday");
+  assert.equal(reflections.captainLogObligations("class-1", "absent-student").due, false);
+});
+
+test("unfinished choice prompts become due on Friday", () => {
+  const reflections = createWeeklyReflections({ storage: memoryStorage(), now: () => new Date("2026-10-23T12:00:00Z") });
+  reflections.saveCaptainLogWeekPlan("class-1", { week: 1, required: 1, days: Object.fromEntries(CAPTAINS_LOG_ASSIGNMENT_OPTIONS.slice(0, 5).map((day, index) => [day, { enabled: index === 0, promptId: `choice-${index}`, prompt: `Choice prompt number ${index + 1}?`, assignment: "Daily student choice" }])) });
+  const obligation = reflections.captainLogObligations("class-1", "student-1");
+  assert.equal(obligation.due, true);
+  assert.equal(obligation.choiceDue, 1);
 });
 
 test("teacher prompt dropdowns do not display rotation week numbers", () => {
@@ -132,4 +160,9 @@ test("student dashboard shows the full weekly prompt map and an adaptive timelin
   assert.match(app, /Choice \$\{String\.fromCharCode/);
   assert.match(app, /Choice complete/);
   assert.match(app, /Check the plan above for your next prompt/);
+  assert.match(app, /Captain’s Log: \$\{reflectionStatus\.remaining\}/);
+  assert.match(app, /data-student-pomodoro-status/);
+  assert.match(app, /state\.remainingSeconds <= 600/);
+  assert.match(app, /state\.remainingSeconds <= 360/);
+  assert.match(app, /Listen and accessibility tools are still available/);
 });

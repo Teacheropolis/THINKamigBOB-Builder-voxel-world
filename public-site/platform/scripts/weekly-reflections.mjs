@@ -191,10 +191,36 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     if (!weekly?.days) return [captainLogPlan(classId)];
     const today = new Date(now()).toLocaleDateString("en-US", { weekday: "long" });
     const usedIds = new Set(responses(classId, studentId).map((item) => item.promptId).filter(Boolean));
-    return CAPTAINS_LOG_WEEKDAYS.map((slot) => weekly.days[slot]).filter((entry) => {
-      const assignment = entry?.assignment ?? slot;
-      return entry?.enabled && (assignment === today || assignment === "Daily student choice") && !usedIds.has(entry.promptId);
+    const visits = new Set(readAll().studentVisits?.[`${classWeek(classId)}|${studentId}`] ?? []);
+    const todayIndex = CAPTAINS_LOG_WEEKDAYS.indexOf(today);
+    return CAPTAINS_LOG_WEEKDAYS.map((slot) => ({ slot, ...weekly.days[slot] })).filter((entry) => {
+      const assignment = entry?.assignment ?? entry.slot;
+      const assignedDue = assignment !== "Daily student choice" && visits.has(assignment) && CAPTAINS_LOG_WEEKDAYS.indexOf(assignment) <= todayIndex;
+      return entry?.enabled && (assignedDue || assignment === "Daily student choice") && !usedIds.has(entry.promptId);
     });
+  };
+  const recordStudentVisit = (classId, studentId) => {
+    if (!classId || !studentId) return { ok: false };
+    const today = new Date(now()).toLocaleDateString("en-US", { weekday: "long" });
+    if (!CAPTAINS_LOG_WEEKDAYS.includes(today)) return { ok: true, days: [] };
+    const all = readAll(), key = `${classWeek(classId)}|${studentId}`;
+    const days = [...new Set([...(all.studentVisits?.[key] ?? []), today])];
+    all.studentVisits = { ...(all.studentVisits ?? {}), [key]: days };
+    write(all);
+    return { ok: true, days };
+  };
+  const captainLogObligations = (classId, studentId) => {
+    const plan = captainLogWeekPlan(classId), completedIds = new Set(responses(classId, studentId).map((item) => item.promptId).filter(Boolean));
+    const visits = new Set(readAll().studentVisits?.[`${classWeek(classId)}|${studentId}`] ?? []);
+    const today = new Date(now()).toLocaleDateString("en-US", { weekday: "long" }), todayIndex = CAPTAINS_LOG_WEEKDAYS.indexOf(today);
+    const entries = CAPTAINS_LOG_WEEKDAYS.map((slot) => ({ slot, ...plan.days[slot] })).filter((entry) => entry.enabled);
+    const assigned = entries.filter((entry) => (entry.assignment ?? entry.slot) !== "Daily student choice");
+    const choices = entries.filter((entry) => (entry.assignment ?? entry.slot) === "Daily student choice");
+    const overdueAssigned = assigned.filter((entry) => visits.has(entry.assignment ?? entry.slot) && CAPTAINS_LOG_WEEKDAYS.indexOf(entry.assignment ?? entry.slot) <= todayIndex && !completedIds.has(entry.promptId));
+    const choiceRequired = Math.max(0, Number(plan.required ?? requirement(classId)) - assigned.length);
+    const choiceCompleted = choices.filter((entry) => completedIds.has(entry.promptId)).length;
+    const fridayChoiceDue = today === "Friday" ? Math.max(0, choiceRequired - choiceCompleted) : 0;
+    return { due: overdueAssigned.length + fridayChoiceDue > 0, today, assigned: overdueAssigned, choiceDue: fridayChoiceDue, remaining: Math.max(0, Number(plan.required ?? requirement(classId)) - responses(classId, studentId).length) };
   };
   const saveCaptainLogPlan = (classId, value) => {
     const prompt = String(value?.prompt ?? "").trim();
@@ -261,5 +287,5 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     write(all);
     return { ok: true, status: status(classId, studentId) };
   };
-  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogChoices, captainLogWeekPlan, saveCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
+  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogChoices, captainLogObligations, recordStudentVisit, captainLogWeekPlan, saveCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
 }
