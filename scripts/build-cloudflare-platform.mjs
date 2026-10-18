@@ -17,7 +17,7 @@ const sourceIndex = await readFile(path.join(source, "index.html"), "utf8");
 const publicIndex = sourceIndex
   .replace('name="thinkamigbob-production-identity" content="disabled"', 'name="thinkamigbob-production-identity" content="enabled"')
   .replace('name="thinkamigbob-google-signin-client-id" content=""', `name="thinkamigbob-google-signin-client-id" content="${publicClientId}"`)
-  .replace('./scripts/platform-app.mjs?v=preview-20261017-309', './scripts/platform-app.bundle.js?v=cloudflare-20261017-1');
+  .replace('./scripts/platform-app.mjs?v=preview-20261017-309', './scripts/platform-app.bundle.js?v=cloudflare-20261017-2');
 
 if (!publicIndex.includes('name="thinkamigbob-student-access" content="disabled"')) {
   throw new Error("student-access-must-remain-disabled");
