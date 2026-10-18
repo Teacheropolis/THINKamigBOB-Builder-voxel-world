@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { firstNameFromRosterLine, generateNameBobs, retryNameBob } from "../../platform/scripts/namebob-generator.mjs";
+import { firstNameFromRosterLine, generateNameBobLimerick, generateNameBobs, retryNameBob } from "../../platform/scripts/namebob-generator.mjs";
 
 test("extracts first names from typed and common pasted roster lines", () => {
   assert.equal(firstNameFromRosterLine("Ava Smith"), "Ava");
@@ -8,7 +8,7 @@ test("extracts first names from typed and common pasted roster lines", () => {
   assert.equal(firstNameFromRosterLine("  Mia  "), "Mia");
 });
 
-test("generates editable labels using the first name and a rhyming Bob last name", () => {
+test("generates editable labels using the first name and a funny Bob last name", () => {
   const result = generateNameBobs("Ava\nLiam\nLily");
   assert.equal(result.labels.length, 3);
   assert.match(result.labels[0], /^Ava Bob/i);
@@ -17,15 +17,7 @@ test("generates editable labels using the first name and a rhyming Bob last name
   assert.equal(new Set(result.labels.map((label) => label.toLowerCase())).size, 3);
 });
 
-test("makes the Bob last name rhyme with the student's first name", () => {
-  const labels = generateNameBobs("Ava\nLiam\nMia\nLily").labels;
-  assert.match(labels[0].split(/\s+/).at(-1), /ava$/i);
-  assert.match(labels[1].split(/\s+/).at(-1), /iam$/i);
-  assert.match(labels[2].split(/\s+/).at(-1), /ia$/i);
-  assert.match(labels[3].split(/\s+/).at(-1), /ily$/i);
-});
-
-test("varies the rhyming Bob last names across a class", () => {
+test("varies the funny Bob last names across a class", () => {
   const names = ["Ava", "Liam", "Mia", "Noah", "Lily", "Riley", "Emma", "Mason", "Ella", "Logan", "Olivia", "Ethan", "Lucas", "Sofia", "Henry", "Aria", "Jack", "Nora", "Leo", "Ruby", "Owen", "Ivy", "Ezra", "Luna", "Theo", "Maya", "Finn", "Zoe", "Eli", "Isla"];
   const labels = generateNameBobs(names).labels;
   assert.equal(labels.every((label) => /bob/i.test(label)), true);
@@ -55,10 +47,27 @@ test("retries one student's label without changing the rest of the class", () =>
   assert.notEqual(result.labels[1], original[1]);
   assert.match(result.labels[1], /Liam/i);
   assert.match(result.labels[1], /Bob/i);
-  assert.match(result.labels[1].split(/\s+/).at(-1), /iam$/i);
   assert.equal(result.labels[2], original[2]);
   const lastNames = result.labels.map((label) => label.split(/\s+/).at(-1).toLowerCase());
   assert.equal(new Set(lastNames).size, result.labels.length);
+});
+
+test("creates a five-line funny limerick from a first name or complete Bob name", () => {
+  const labels = generateNameBobs("Ava\nLiam").labels;
+  const byFirstName = generateNameBobLimerick("Ava", labels);
+  const byBobName = generateNameBobLimerick(labels[1], labels);
+  assert.equal(byFirstName.ok, true);
+  assert.equal(byBobName.ok, true);
+  assert.match(byFirstName.limerick, new RegExp(labels[0], "i"));
+  assert.equal(byFirstName.limerick.split("\n").length, 5);
+  assert.match(byBobName.limerick, new RegExp(labels[1], "i"));
+});
+
+test("limerick reports when the student is not in the generated list", () => {
+  const labels = generateNameBobs("Ava\nLiam").labels;
+  const result = generateNameBobLimerick("Mia", labels);
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, "student-not-found");
 });
 
 test("retry reports when the entered student is not in the generated list", () => {

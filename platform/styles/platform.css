@@ -1457,6 +1457,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-namebob-retry > div { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .platform-namebob-retry input { flex: 1 1 12rem; margin: 0; }
 .platform-namebob-retry button { flex: 0 1 auto; background: #8a5a00; }
+.platform-namebob-limerick blockquote { white-space: pre-line; margin: 0.45rem 0 0; padding: 0.85rem 1rem; border-left: 0.35rem solid #8a5a00; border-radius: 0.35rem; background: #fffdf5; color: var(--platform-ink); font-weight: 650; line-height: 1.55; }
 #teacher-class-sharing > .platform-class-setup-sharing { grid-column: auto; }
 .platform-message-schedule > p { grid-column: 1 / -1; margin-top: 0; }
 .platform-student-display-controls { grid-column: 2 / 4; display: grid; grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.55fr); gap: 0.55rem 1rem; align-items: end; min-height: 0; border-top: 5px solid var(--platform-green); }

@@ -1667,55 +1667,55 @@ function createClassroomLessonClient({ serviceOrigin = "", fetchImpl = fetch } =
 }
 
 // platform/scripts/namebob-generator.mjs
-var RHYME_ONSETS = Object.freeze([
-  "Z",
-  "Br",
-  "Fizz",
-  "Whizz",
-  "Zoom",
-  "Kab",
-  "Tink",
-  "Wobbl",
-  "Giggl",
-  "Spark",
-  "Turb",
-  "Bumbl",
-  "Doodl",
-  "Razz",
-  "Jazz",
-  "Snazz",
-  "Gizm",
-  "Rock",
-  "Noodl",
-  "Pickl",
-  "Zing",
-  "Bing",
-  "Boing",
-  "Twinkl",
-  "Wiggl",
-  "Jiggl",
-  "Fizzl",
-  "Sizzl",
-  "Dazzl",
-  "Puzzl",
-  "Bounc",
-  "Whirl",
-  "Zipp",
-  "Bopp",
-  "Tipp",
-  "Flipp",
-  "Skipp",
-  "Chipp",
-  "Quirk",
-  "Sprinkl",
-  "Crinkl",
-  "Jingl",
-  "Tingl",
-  "Rumbl",
-  "Tumb",
-  "Bubbl",
-  "Wack",
-  "Zapp"
+var BOB_FORMS = Object.freeze([
+  "Bob",
+  "Bobarella",
+  "Bobzilla",
+  "Bobbio",
+  "Bobinator",
+  "Bobtastic",
+  "Bobaroo",
+  "Bobster",
+  "Bobonaut",
+  "Bobasaurus",
+  "Bobnado",
+  "Bobomatic",
+  "Bobmeister",
+  "Bobkins",
+  "Bobbity",
+  "Bobble",
+  "Bobadillo",
+  "Bobapalooza",
+  "Bobiverse",
+  "Bobventure",
+  "Bobberino",
+  "Bobbo",
+  "Bobbles",
+  "Bobalicious",
+  "Bobarooza",
+  "Bobmobile",
+  "Bobrocket",
+  "Bobwhiz",
+  "Boboodle",
+  "Boborama",
+  "Bobificent",
+  "Bobmazing",
+  "Bobbot",
+  "Bobarooey",
+  "Bobdoodle",
+  "Bobkaboom",
+  "Bobquake",
+  "Bobstorm",
+  "Bobshine",
+  "Bobwizard",
+  "Bobgadget",
+  "Bobspark",
+  "Bobzoom",
+  "Bobwhirl",
+  "Bobtopia",
+  "Bobcraft",
+  "Bobbolt",
+  "Bobberry"
 ]);
 function cleanName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").replace(/[^\p{L}'’-]/gu, "").slice(0, 24);
@@ -1741,13 +1741,6 @@ function labelContainsName(label, firstName) {
   const wanted = firstName.toLocaleLowerCase();
   return cleanName(String(label || "").split(/\s+/)[0]).toLocaleLowerCase() === wanted;
 }
-function rhymeEnding(firstName) {
-  const match = firstName.toLocaleLowerCase().match(/[aeiouy][a-z'’-]*$/i);
-  return (match?.[0] || firstName.slice(-2)).slice(-10);
-}
-function rhymingBobLastName(firstName, choice) {
-  return `Bob${RHYME_ONSETS[choice % RHYME_ONSETS.length]}${rhymeEnding(firstName)}`;
-}
 function generateNameBobs(value, { usedLabels = [], usedBobLastNames = [] } = {}) {
   const lines = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
   const firstNames = lines.map(firstNameFromRosterLine).filter(Boolean);
@@ -1757,8 +1750,8 @@ function generateNameBobs(value, { usedLabels = [], usedBobLastNames = [] } = {}
   for (const [index, firstName] of firstNames.entries()) {
     const seed = stableNumber(`${firstName}-${index}`);
     let label = "";
-    for (let attempt = 0; attempt < RHYME_ONSETS.length && !label; attempt += 1) {
-      const candidate = boundedLabel(`${firstName} ${rhymingBobLastName(firstName, seed + attempt)}`);
+    for (let attempt = 0; attempt < BOB_FORMS.length && !label; attempt += 1) {
+      const candidate = boundedLabel(`${firstName} ${BOB_FORMS[(seed + attempt) % BOB_FORMS.length]}`);
       if (!used.has(candidate.toLocaleLowerCase()) && !bobLastNames.has(bobLastName(candidate))) label = candidate;
     }
     if (!label) {
@@ -1784,6 +1777,37 @@ function retryNameBob(firstNameValue, currentLabels, { usedLabels = [] } = {}) {
   const retried = [...labels];
   retried[index] = generated.labels[0];
   return Object.freeze({ ok: true, firstName, label: retried[index], labels: Object.freeze(retried) });
+}
+var LIMERICKS = Object.freeze([
+  (name) => `There once was ${name} with a plan,
+Who built a remarkable fan.
+It spun round and round,
+Then bounced on the ground,
+So they strengthened the fan\u2014and it ran!`,
+  (name) => `${name} worked with a crew,
+On a rocket painted bright blue.
+It sputtered \u201Cka-POW!\u201D
+Then chased a small cow,
+So they built a much calmer one too!`,
+  (name) => `${name} invented a chair,
+That zoomed through the classroom air.
+It wiggled with glee,
+Then climbed up a tree,
+And parked on a very shocked bear!`,
+  (name) => `${name} made a machine,
+The funniest ever yet seen.
+It flashed a green light,
+Then launched out of sight,
+And landed in three jelly beans!`
+]);
+function generateNameBobLimerick(nameValue, currentLabels) {
+  const query = String(nameValue || "").trim().toLocaleLowerCase();
+  const labels = Array.from(currentLabels || [], (label2) => String(label2).trim()).filter(Boolean);
+  if (!query) return Object.freeze({ ok: false, reason: "student-name-required" });
+  const label = labels.find((candidate) => candidate.toLocaleLowerCase() === query || candidate.split(/\s+/)[0].toLocaleLowerCase() === query);
+  if (!label) return Object.freeze({ ok: false, reason: "student-not-found" });
+  const limerick = LIMERICKS[stableNumber(label) % LIMERICKS.length](label);
+  return Object.freeze({ ok: true, label, limerick });
 }
 
 // platform/scripts/message-library.mjs
@@ -3985,7 +4009,12 @@ function classroomSetupMarkup() {
         <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
         <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
       </div>
-      <p class="platform-namebob-help">Each label uses the student's first name and a funny rhyming Bob last name, such as Ava Bobbrava, Liam Bobwhizziam, or Mia Bobzia. Every student in the class gets a different Bob last name.</p>
+      <p class="platform-namebob-help">Each label uses the student's first name and a funny Bob last name, such as Ava Bobzilla, Liam Bobinator, or Mia Bobapalooza. Every student in the class gets a different Bob last name.</p>
+      <div class="platform-namebob-retry platform-namebob-limerick">
+        <label for="production-namebob-limerick">Make a funny limerick <small>Enter a first name or complete Bob name</small></label>
+        <div><input id="production-namebob-limerick" name="limerickName" maxlength="40"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava or Ava Bobzilla"><button type="button" data-action="generate-namebob-limerick"${productionIdentityConfig.enabled ? "" : " disabled"}>Make Limerick</button></div>
+        <blockquote data-namebob-limerick-output hidden></blockquote>
+      </div>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs\u2014or enter your own labels.</p>
       <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
       <p class="platform-error" data-error role="alert" hidden></p>
@@ -9635,6 +9664,26 @@ async function handleClick(event) {
     retryInput.value = "";
     if (status) status.textContent = `${result.firstName}'s new NameBob is ${result.label}. Retry again or keep it.`;
     retryInput.focus();
+    return;
+  }
+  if (action.dataset.action === "generate-namebob-limerick") {
+    const form = action.closest('[data-form="production-classroom-setup"]');
+    const textarea = form?.elements.studentLabels;
+    const limerickInput = form?.elements.limerickName;
+    const output = form?.querySelector("[data-namebob-limerick-output]");
+    const status = form?.querySelector("[data-namebob-status]");
+    if (!textarea || !limerickInput || !output) return;
+    const result = generateNameBobLimerick(limerickInput.value, textarea.value.split(/\r?\n/));
+    if (!result.ok) {
+      output.hidden = true;
+      if (status) status.textContent = result.reason === "student-not-found" ? "That student is not in the generated NameBob list. Check the spelling and try again." : "Enter a student's first name or complete Bob name.";
+      limerickInput.focus();
+      return;
+    }
+    output.textContent = result.limerick;
+    output.hidden = false;
+    if (status) status.textContent = `Funny limerick created for ${result.label}.`;
+    limerickInput.focus();
     return;
   }
   if (action.dataset.action === "open-student-quest-step") {

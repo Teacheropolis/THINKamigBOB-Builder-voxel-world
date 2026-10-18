@@ -50,7 +50,7 @@ import { createGoogleConnectionPreview, GOOGLE_CONNECTION_PREVIEW_STATUS, GOOGLE
 import { assessGoogleOAuthReadiness, GOOGLE_OAUTH_ENDPOINTS } from "./evidence-google-oauth-readiness.mjs";
 import { createProductionIdentityClient, parseStudentLabels, productionIdentityConfiguration } from "./platform-production-identity.mjs";
 import { createClassroomLessonClient } from "./classroom-lesson-client.mjs";
-import { generateNameBobs, retryNameBob } from "./namebob-generator.mjs";
+import { generateNameBobLimerick, generateNameBobs, retryNameBob } from "./namebob-generator.mjs";
 import { createBrowserMessageLibrary } from "./message-library.mjs";
 import { createBrowserClassSetupProfiles } from "./class-setup-profiles.mjs";
 import { CLASS_RESOURCE_STORAGE_KEY, createClassResourceSharing, RESOURCE_RELEASES, RESOURCE_TYPES } from "./class-resource-sharing.mjs?v=preview-20261004-7";
@@ -1590,7 +1590,12 @@ function classroomSetupMarkup() {
         <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
         <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
       </div>
-      <p class="platform-namebob-help">Each label uses the student's first name and a funny rhyming Bob last name, such as Ava Bobbrava, Liam Bobwhizziam, or Mia Bobzia. Every student in the class gets a different Bob last name.</p>
+      <p class="platform-namebob-help">Each label uses the student's first name and a funny Bob last name, such as Ava Bobzilla, Liam Bobinator, or Mia Bobapalooza. Every student in the class gets a different Bob last name.</p>
+      <div class="platform-namebob-retry platform-namebob-limerick">
+        <label for="production-namebob-limerick">Make a funny limerick <small>Enter a first name or complete Bob name</small></label>
+        <div><input id="production-namebob-limerick" name="limerickName" maxlength="40"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava or Ava Bobzilla"><button type="button" data-action="generate-namebob-limerick"${productionIdentityConfig.enabled ? "" : " disabled"}>Make Limerick</button></div>
+        <blockquote data-namebob-limerick-output hidden></blockquote>
+      </div>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs—or enter your own labels.</p>
       <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
       <p class="platform-error" data-error role="alert" hidden></p>
@@ -5667,6 +5672,26 @@ async function handleClick(event) {
     retryInput.value = "";
     if (status) status.textContent = `${result.firstName}'s new NameBob is ${result.label}. Retry again or keep it.`;
     retryInput.focus();
+    return;
+  }
+  if (action.dataset.action === "generate-namebob-limerick") {
+    const form = action.closest('[data-form="production-classroom-setup"]');
+    const textarea = form?.elements.studentLabels;
+    const limerickInput = form?.elements.limerickName;
+    const output = form?.querySelector("[data-namebob-limerick-output]");
+    const status = form?.querySelector("[data-namebob-status]");
+    if (!textarea || !limerickInput || !output) return;
+    const result = generateNameBobLimerick(limerickInput.value, textarea.value.split(/\r?\n/));
+    if (!result.ok) {
+      output.hidden = true;
+      if (status) status.textContent = result.reason === "student-not-found" ? "That student is not in the generated NameBob list. Check the spelling and try again." : "Enter a student's first name or complete Bob name.";
+      limerickInput.focus();
+      return;
+    }
+    output.textContent = result.limerick;
+    output.hidden = false;
+    if (status) status.textContent = `Funny limerick created for ${result.label}.`;
+    limerickInput.focus();
     return;
   }
   if (action.dataset.action === "open-student-quest-step") {

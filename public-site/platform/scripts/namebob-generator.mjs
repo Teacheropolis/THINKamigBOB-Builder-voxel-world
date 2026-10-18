@@ -1,9 +1,12 @@
-const RHYME_ONSETS = Object.freeze([
-  "Z", "Br", "Fizz", "Whizz", "Zoom", "Kab", "Tink", "Wobbl", "Giggl", "Spark",
-  "Turb", "Bumbl", "Doodl", "Razz", "Jazz", "Snazz", "Gizm", "Rock", "Noodl", "Pickl",
-  "Zing", "Bing", "Boing", "Twinkl", "Wiggl", "Jiggl", "Fizzl", "Sizzl", "Dazzl", "Puzzl",
-  "Bounc", "Whirl", "Zipp", "Bopp", "Tipp", "Flipp", "Skipp", "Chipp", "Quirk", "Sprinkl",
-  "Crinkl", "Jingl", "Tingl", "Rumbl", "Tumb", "Bubbl", "Wack", "Zapp",
+const BOB_FORMS = Object.freeze([
+  "Bob", "Bobarella", "Bobzilla", "Bobbio", "Bobinator", "Bobtastic",
+  "Bobaroo", "Bobster", "Bobonaut", "Bobasaurus", "Bobnado", "Bobomatic",
+  "Bobmeister", "Bobkins", "Bobbity", "Bobble", "Bobadillo", "Bobapalooza",
+  "Bobiverse", "Bobventure", "Bobberino", "Bobbo", "Bobbles", "Bobalicious",
+  "Bobarooza", "Bobmobile", "Bobrocket", "Bobwhiz", "Boboodle", "Boborama",
+  "Bobificent", "Bobmazing", "Bobbot", "Bobarooey", "Bobdoodle", "Bobkaboom",
+  "Bobquake", "Bobstorm", "Bobshine", "Bobwizard", "Bobgadget", "Bobspark",
+  "Bobzoom", "Bobwhirl", "Bobtopia", "Bobcraft", "Bobbolt", "Bobberry",
 ]);
 
 function cleanName(value) {
@@ -36,15 +39,6 @@ function labelContainsName(label, firstName) {
   return cleanName(String(label || "").split(/\s+/)[0]).toLocaleLowerCase() === wanted;
 }
 
-function rhymeEnding(firstName) {
-  const match = firstName.toLocaleLowerCase().match(/[aeiouy][a-z'’-]*$/i);
-  return (match?.[0] || firstName.slice(-2)).slice(-10);
-}
-
-function rhymingBobLastName(firstName, choice) {
-  return `Bob${RHYME_ONSETS[choice % RHYME_ONSETS.length]}${rhymeEnding(firstName)}`;
-}
-
 export function generateNameBobs(value, { usedLabels = [], usedBobLastNames = [] } = {}) {
   const lines = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
   const firstNames = lines.map(firstNameFromRosterLine).filter(Boolean);
@@ -55,8 +49,8 @@ export function generateNameBobs(value, { usedLabels = [], usedBobLastNames = []
   for (const [index, firstName] of firstNames.entries()) {
     const seed = stableNumber(`${firstName}-${index}`);
     let label = "";
-    for (let attempt = 0; attempt < RHYME_ONSETS.length && !label; attempt += 1) {
-      const candidate = boundedLabel(`${firstName} ${rhymingBobLastName(firstName, seed + attempt)}`);
+    for (let attempt = 0; attempt < BOB_FORMS.length && !label; attempt += 1) {
+      const candidate = boundedLabel(`${firstName} ${BOB_FORMS[(seed + attempt) % BOB_FORMS.length]}`);
       if (!used.has(candidate.toLocaleLowerCase()) && !bobLastNames.has(bobLastName(candidate))) label = candidate;
     }
     if (!label) {
@@ -83,4 +77,21 @@ export function retryNameBob(firstNameValue, currentLabels, { usedLabels = [] } 
   const retried = [...labels];
   retried[index] = generated.labels[0];
   return Object.freeze({ ok: true, firstName, label: retried[index], labels: Object.freeze(retried) });
+}
+
+const LIMERICKS = Object.freeze([
+  (name) => `There once was ${name} with a plan,\nWho built a remarkable fan.\nIt spun round and round,\nThen bounced on the ground,\nSo they strengthened the fan—and it ran!`,
+  (name) => `${name} worked with a crew,\nOn a rocket painted bright blue.\nIt sputtered “ka-POW!”\nThen chased a small cow,\nSo they built a much calmer one too!`,
+  (name) => `${name} invented a chair,\nThat zoomed through the classroom air.\nIt wiggled with glee,\nThen climbed up a tree,\nAnd parked on a very shocked bear!`,
+  (name) => `${name} made a machine,\nThe funniest ever yet seen.\nIt flashed a green light,\nThen launched out of sight,\nAnd landed in three jelly beans!`,
+]);
+
+export function generateNameBobLimerick(nameValue, currentLabels) {
+  const query = String(nameValue || "").trim().toLocaleLowerCase();
+  const labels = Array.from(currentLabels || [], (label) => String(label).trim()).filter(Boolean);
+  if (!query) return Object.freeze({ ok: false, reason: "student-name-required" });
+  const label = labels.find((candidate) => candidate.toLocaleLowerCase() === query || candidate.split(/\s+/)[0].toLocaleLowerCase() === query);
+  if (!label) return Object.freeze({ ok: false, reason: "student-not-found" });
+  const limerick = LIMERICKS[stableNumber(label) % LIMERICKS.length](label);
+  return Object.freeze({ ok: true, label, limerick });
 }
