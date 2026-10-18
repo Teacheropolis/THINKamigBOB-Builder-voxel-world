@@ -2815,7 +2815,10 @@ function openClassroomPresentationWindow() {
       const tool = classroomPresentationWindow.document.querySelector(`[data-smartboard-tool="${action.dataset.smartboardToolName}"]`);
       if (tool) {
         tool.hidden = !tool.hidden;
-        if (!tool.hidden) bringSmartboardToolForward(tool);
+        if (!tool.hidden) {
+          bringSmartboardToolForward(tool);
+          keepSmartboardToolsOnScreen(classroomPresentationWindow.document);
+        }
       }
     }
     if (action.dataset.action === "reset-smartboard-tools") resetSmartboardToolPositions(classroomPresentationWindow.document);
@@ -5680,7 +5683,10 @@ function handleClick(event) {
     const tool = display?.querySelector(`[data-smartboard-tool="${action.dataset.smartboardToolName}"]`);
     if (tool) {
       tool.hidden = !tool.hidden;
-      if (!tool.hidden) bringSmartboardToolForward(tool);
+      if (!tool.hidden) {
+        bringSmartboardToolForward(tool);
+        keepSmartboardToolsOnScreen(document);
+      }
     }
     return;
   }
@@ -7118,6 +7124,27 @@ function bringSmartboardToolForward(tool) {
   tool.style.zIndex = String(smartboardToolZIndex);
 }
 
+function keepSmartboardToolsOnScreen(documentRef = document) {
+  const view = documentRef.defaultView || window;
+  const margin = 8;
+  documentRef.querySelectorAll("[data-smartboard-tool]:not([hidden])").forEach((tool) => {
+    if (documentRef.fullscreenElement === tool) return;
+    tool.style.maxWidth = `${Math.max(220, view.innerWidth - margin * 2)}px`;
+    tool.style.maxHeight = `${Math.max(150, view.innerHeight - margin * 2)}px`;
+    let rect = tool.getBoundingClientRect();
+    if (rect.width > view.innerWidth - margin * 2) tool.style.width = `${view.innerWidth - margin * 2}px`;
+    if (rect.height > view.innerHeight - margin * 2) tool.style.height = `${view.innerHeight - margin * 2}px`;
+    rect = tool.getBoundingClientRect();
+    const left = Math.max(margin, Math.min(rect.left, view.innerWidth - rect.width - margin));
+    const top = Math.max(margin, Math.min(rect.top, view.innerHeight - rect.height - margin));
+    if (Math.abs(left - rect.left) > 0.5 || Math.abs(top - rect.top) > 0.5) {
+      tool.style.right = "auto";
+      tool.style.left = `${left}px`;
+      tool.style.top = `${top}px`;
+    }
+  });
+}
+
 function resetSmartboardToolPositions(documentRef = document) {
   documentRef.querySelectorAll("[data-smartboard-tool]").forEach((tool) => {
     const initialStyle = tool.dataset.smartboardDefaultStyle ?? SMARTBOARD_TOOL_DEFAULT_STYLES[tool.dataset.smartboardTool] ?? "";
@@ -7219,7 +7246,8 @@ function openSmartboardToolPopout(sourceTool) {
 }
 
 function installSmartboardToolGestures(eventTarget) {
-  installSmartboardToolPopoutButtons(eventTarget.nodeType === 9 ? eventTarget : eventTarget.ownerDocument);
+  const documentRef = eventTarget.nodeType === 9 ? eventTarget : eventTarget.ownerDocument;
+  installSmartboardToolPopoutButtons(documentRef);
   eventTarget.querySelectorAll?.("[data-smartboard-tool]").forEach((tool) => {
     if (!tool.dataset.smartboardDefaultStyle) tool.dataset.smartboardDefaultStyle = tool.getAttribute("style") || "";
   });
@@ -7277,6 +7305,11 @@ function installSmartboardToolGestures(eventTarget) {
   };
   eventTarget.addEventListener("pointerup", endGesture);
   eventTarget.addEventListener("pointercancel", endGesture);
+  const view = documentRef.defaultView || window;
+  if (!documentRef.documentElement.dataset.smartboardResizeGuard) {
+    documentRef.documentElement.dataset.smartboardResizeGuard = "true";
+    view.addEventListener("resize", () => keepSmartboardToolsOnScreen(documentRef));
+  }
 }
 
 installSmartboardToolGestures(root);
