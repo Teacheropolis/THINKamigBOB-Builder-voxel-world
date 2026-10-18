@@ -1667,55 +1667,55 @@ function createClassroomLessonClient({ serviceOrigin = "", fetchImpl = fetch } =
 }
 
 // platform/scripts/namebob-generator.mjs
-var BOB_FORMS = Object.freeze([
-  "Bob",
-  "Bobarella",
-  "Bobzilla",
-  "Bobbio",
-  "Bobinator",
-  "Bobtastic",
-  "Bobaroo",
-  "Bobster",
-  "Bobonaut",
-  "Bobasaurus",
-  "Bobnado",
-  "Bobomatic",
-  "Bobmeister",
-  "Bobkins",
-  "Bobbity",
-  "Bobble",
-  "Bobadillo",
-  "Bobapalooza",
-  "Bobiverse",
-  "Bobventure",
-  "Bobberino",
-  "Bobbo",
-  "Bobbles",
-  "Bobalicious",
-  "Bobarooza",
-  "Bobmobile",
-  "Bobrocket",
-  "Bobwhiz",
-  "Boboodle",
-  "Boborama",
-  "Bobificent",
-  "Bobmazing",
-  "Bobbot",
-  "Bobarooey",
-  "Bobdoodle",
-  "Bobkaboom",
-  "Bobquake",
-  "Bobstorm",
-  "Bobshine",
-  "Bobwizard",
-  "Bobgadget",
-  "Bobspark",
-  "Bobzoom",
-  "Bobwhirl",
-  "Bobtopia",
-  "Bobcraft",
-  "Bobbolt",
-  "Bobberry"
+var RHYME_ONSETS = Object.freeze([
+  "Z",
+  "Br",
+  "Fizz",
+  "Whizz",
+  "Zoom",
+  "Kab",
+  "Tink",
+  "Wobbl",
+  "Giggl",
+  "Spark",
+  "Turb",
+  "Bumbl",
+  "Doodl",
+  "Razz",
+  "Jazz",
+  "Snazz",
+  "Gizm",
+  "Rock",
+  "Noodl",
+  "Pickl",
+  "Zing",
+  "Bing",
+  "Boing",
+  "Twinkl",
+  "Wiggl",
+  "Jiggl",
+  "Fizzl",
+  "Sizzl",
+  "Dazzl",
+  "Puzzl",
+  "Bounc",
+  "Whirl",
+  "Zipp",
+  "Bopp",
+  "Tipp",
+  "Flipp",
+  "Skipp",
+  "Chipp",
+  "Quirk",
+  "Sprinkl",
+  "Crinkl",
+  "Jingl",
+  "Tingl",
+  "Rumbl",
+  "Tumb",
+  "Bubbl",
+  "Wack",
+  "Zapp"
 ]);
 function cleanName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").replace(/[^\p{L}'’-]/gu, "").slice(0, 24);
@@ -1741,6 +1741,13 @@ function labelContainsName(label, firstName) {
   const wanted = firstName.toLocaleLowerCase();
   return cleanName(String(label || "").split(/\s+/)[0]).toLocaleLowerCase() === wanted;
 }
+function rhymeEnding(firstName) {
+  const match = firstName.toLocaleLowerCase().match(/[aeiouy][a-z'’-]*$/i);
+  return (match?.[0] || firstName.slice(-2)).slice(-10);
+}
+function rhymingBobLastName(firstName, choice) {
+  return `Bob${RHYME_ONSETS[choice % RHYME_ONSETS.length]}${rhymeEnding(firstName)}`;
+}
 function generateNameBobs(value, { usedLabels = [], usedBobLastNames = [] } = {}) {
   const lines = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
   const firstNames = lines.map(firstNameFromRosterLine).filter(Boolean);
@@ -1750,9 +1757,8 @@ function generateNameBobs(value, { usedLabels = [], usedBobLastNames = [] } = {}
   for (const [index, firstName] of firstNames.entries()) {
     const seed = stableNumber(`${firstName}-${index}`);
     let label = "";
-    for (let attempt = 0; attempt < BOB_FORMS.length && !label; attempt += 1) {
-      const bobForm = BOB_FORMS[(seed + attempt) % BOB_FORMS.length];
-      const candidate = boundedLabel(`${firstName} ${bobForm}`);
+    for (let attempt = 0; attempt < RHYME_ONSETS.length && !label; attempt += 1) {
+      const candidate = boundedLabel(`${firstName} ${rhymingBobLastName(firstName, seed + attempt)}`);
       if (!used.has(candidate.toLocaleLowerCase()) && !bobLastNames.has(bobLastName(candidate))) label = candidate;
     }
     if (!label) {
@@ -3979,7 +3985,7 @@ function classroomSetupMarkup() {
         <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
         <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
       </div>
-      <p class="platform-namebob-help">Each label uses the student's first name and a funny Bob last name, such as Ava Bobzilla, Liam Bobinator, or Mia Bobapalooza. Every student in the class gets a different Bob last name.</p>
+      <p class="platform-namebob-help">Each label uses the student's first name and a funny rhyming Bob last name, such as Ava Bobbrava, Liam Bobwhizziam, or Mia Bobzia. Every student in the class gets a different Bob last name.</p>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs\u2014or enter your own labels.</p>
       <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
       <p class="platform-error" data-error role="alert" hidden></p>

@@ -8,7 +8,7 @@ test("extracts first names from typed and common pasted roster lines", () => {
   assert.equal(firstNameFromRosterLine("  Mia  "), "Mia");
 });
 
-test("generates editable labels using the first name and a funny Bob last name", () => {
+test("generates editable labels using the first name and a rhyming Bob last name", () => {
   const result = generateNameBobs("Ava\nLiam\nLily");
   assert.equal(result.labels.length, 3);
   assert.match(result.labels[0], /^Ava Bob/i);
@@ -17,11 +17,18 @@ test("generates editable labels using the first name and a funny Bob last name",
   assert.equal(new Set(result.labels.map((label) => label.toLowerCase())).size, 3);
 });
 
-test("varies the funny Bob last names across a class", () => {
+test("makes the Bob last name rhyme with the student's first name", () => {
+  const labels = generateNameBobs("Ava\nLiam\nMia\nLily").labels;
+  assert.match(labels[0].split(/\s+/).at(-1), /ava$/i);
+  assert.match(labels[1].split(/\s+/).at(-1), /iam$/i);
+  assert.match(labels[2].split(/\s+/).at(-1), /ia$/i);
+  assert.match(labels[3].split(/\s+/).at(-1), /ily$/i);
+});
+
+test("varies the rhyming Bob last names across a class", () => {
   const names = ["Ava", "Liam", "Mia", "Noah", "Lily", "Riley", "Emma", "Mason", "Ella", "Logan", "Olivia", "Ethan", "Lucas", "Sofia", "Henry", "Aria", "Jack", "Nora", "Leo", "Ruby", "Owen", "Ivy", "Ezra", "Luna", "Theo", "Maya", "Finn", "Zoe", "Eli", "Isla"];
   const labels = generateNameBobs(names).labels;
   assert.equal(labels.every((label) => /bob/i.test(label)), true);
-  assert.equal(labels.some((label) => /Bobarella|Bobzilla|Bobbio/i.test(label)), true);
   const forms = labels.map((label) => label.split(/\s+/).at(-1).toLowerCase());
   assert.ok(new Set(forms).size >= 10);
 });
@@ -48,6 +55,7 @@ test("retries one student's label without changing the rest of the class", () =>
   assert.notEqual(result.labels[1], original[1]);
   assert.match(result.labels[1], /Liam/i);
   assert.match(result.labels[1], /Bob/i);
+  assert.match(result.labels[1].split(/\s+/).at(-1), /iam$/i);
   assert.equal(result.labels[2], original[2]);
   const lastNames = result.labels.map((label) => label.split(/\s+/).at(-1).toLowerCase());
   assert.equal(new Set(lastNames).size, result.labels.length);
