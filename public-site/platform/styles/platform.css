@@ -2045,6 +2045,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-form hr { width: 100%; margin: 0.3rem 0; border: 0; border-top: 1px solid var(--platform-border); }
 .platform-classroom-setup form { display: grid; gap: 0.65rem; }
 .platform-classroom-setup textarea { resize: vertical; }
+.platform-field-help { display: block; margin-top: -0.35rem; color: var(--platform-muted); font-size: 0.78rem; line-height: 1.4; }
 .platform-code-sheet { margin-top: 1rem; padding: 1rem; border: 2px solid var(--platform-green); border-radius: 0.75rem; background: #fff; }
 .platform-code-warning { padding: 0.75rem; color: #633e00; background: #fff2cc; font-weight: 700; }
 .platform-class-code { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem; background: #edf4f6; }

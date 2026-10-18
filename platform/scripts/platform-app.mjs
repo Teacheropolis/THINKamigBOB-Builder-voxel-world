@@ -1598,8 +1598,9 @@ function classroomSetupMarkup() {
     <form data-form="production-classroom-setup" novalidate>
       <label for="production-classroom-name">Class name</label>
       <input id="production-classroom-name" name="name" maxlength="100"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Example: STEM Lab — Period 2">
-      <label for="production-student-labels">Student names or labels <small>1–40; one per line</small></label>
+      <label for="production-student-labels">Student Names <small>1–40; one per line</small></label>
       <textarea id="production-student-labels" name="studentLabels" rows="7"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Ava&#10;Liam&#10;Mia"></textarea>
+      <small class="platform-field-help">These names appear on student sign-in and each student’s home page.</small>
       <details class="platform-optional-class-tools">
         <summary><span>🎩 Optional: Make Funny NameBobs &amp; Limericks</span><small>Open only if you want playful student names.</small></summary>
         <div>
