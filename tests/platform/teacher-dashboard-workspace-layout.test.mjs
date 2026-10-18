@@ -113,6 +113,7 @@ test("teacher dashboard provides a responsive categorized teacher menu and statu
   assert.match(css, /@media \(max-width: 520px\)[\s\S]*\.platform-teacher-overview-status \{ width: 100%; \}/);
   for (const label of ["Review Today’s Plan", "Start Classroom Display", "Preview Student View — No Code", "AMIG Anchor Chart"]) assert.match(app, new RegExp(label));
   for (const phrase of ["AMIG learning cycle moves clockwise", "Notice and wonder", "Build and try", "Test and make it better", "Every try helps your ideas grow"]) assert.match(app, new RegExp(phrase));
+  assert.match(app, /Show AMIG Anchor Chart full screen/);
   assert.match(css, /\.platform-teacher-menu \{[^}]*display: flex/);
   assert.match(css, /\.platform-teacher-menu-category:hover > \.platform-teacher-menu-panel/);
   assert.match(css, /\.platform-teacher-menu-category\.is-active > summary/);

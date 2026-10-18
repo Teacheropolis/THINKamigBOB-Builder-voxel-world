@@ -2819,6 +2819,11 @@ function openClassroomPresentationWindow() {
     }
     if (action.dataset.action === "reset-smartboard-tools") resetSmartboardToolPositions(classroomPresentationWindow.document);
     if (action.dataset.action === "popout-smartboard-tool") openSmartboardToolPopout(action.closest("[data-smartboard-tool]"));
+    if (action.dataset.action === "fullscreen-smartboard-tool") {
+      const tool = action.closest("[data-smartboard-tool]");
+      if (classroomPresentationWindow.document.fullscreenElement) void classroomPresentationWindow.document.exitFullscreen();
+      else if (tool) void tool.requestFullscreen();
+    }
     if (action.dataset.action === "close-smartboard-tool") action.closest("[data-smartboard-tool]").hidden = true;
     if (action.dataset.action === "timer-start") lessonTimer.start();
     if (action.dataset.action === "timer-start-or-resume") lessonTimer.read().status === LESSON_TIMER_STATES.PAUSED ? lessonTimer.resume() : lessonTimer.start();
@@ -5647,7 +5652,10 @@ function handleClick(event) {
   }
   if (action.dataset.action === "fullscreen-smartboard-tool") {
     if (document.fullscreenElement) void document.exitFullscreen();
-    else void (action.closest("#platform-student-timer-display") || document.documentElement).requestFullscreen();
+    else {
+      const tool = action.closest('[data-smartboard-tool="amig"]');
+      void (tool || action.closest("#platform-student-timer-display") || document.documentElement).requestFullscreen();
+    }
     return;
   }
   if (action.dataset.action === "close-smartboard-tool") {
@@ -7080,14 +7088,20 @@ function installSmartboardToolPopoutButtons(documentRef = document) {
   documentRef.querySelectorAll("[data-smartboard-tool]").forEach((tool) => {
     const header = tool.querySelector("[data-smartboard-drag-handle]");
     const close = header?.querySelector('[data-action="close-smartboard-tool"]');
-    if (!header || !close || header.querySelector('[data-action="popout-smartboard-tool"]')) return;
+    if (!header || !close || header.querySelector('[data-action="popout-smartboard-tool"], [data-action="fullscreen-smartboard-tool"]')) return;
     const button = documentRef.createElement("button");
     button.type = "button";
-    button.dataset.action = "popout-smartboard-tool";
-    button.className = "platform-smartboard-popout-button";
-    button.setAttribute("aria-label", `Pop out ${tool.dataset.smartboardTool} tool`);
-    button.title = "Move this tool to its own window";
-    button.textContent = "Pop Out ↗";
+    const isAmigChart = tool.dataset.smartboardTool === "amig";
+    if (isAmigChart) {
+      button.dataset.action = "fullscreen-smartboard-tool";
+      button.className = "platform-smartboard-fullscreen-button";
+    } else {
+      button.dataset.action = "popout-smartboard-tool";
+      button.className = "platform-smartboard-popout-button";
+    }
+    button.setAttribute("aria-label", isAmigChart ? "Show AMIG Anchor Chart full screen" : `Pop out ${tool.dataset.smartboardTool} tool`);
+    button.title = isAmigChart ? "Fill the Classroom Display with this chart" : "Move this tool to its own window";
+    button.textContent = isAmigChart ? "Full Screen" : "Pop Out ↗";
     header.insertBefore(button, close);
   });
 }
