@@ -1717,6 +1717,14 @@ var BOB_FORMS = Object.freeze([
   "Bobbolt",
   "Bobberry"
 ]);
+var RHYMING_BOB_FORMS = Object.freeze({
+  savannah: Object.freeze(["Bobanana", "Bob Cabana", "BananaBob"]),
+  lydia: Object.freeze(["Bobbedia", "Giddy-a-Bob", "Bobblydia"]),
+  miley: Object.freeze(["SmileyBob", "WileyBob", "Bob Smiley"]),
+  siamara: Object.freeze(["Bob Tiara", "Bob-a-Rama", "TiaraBob"]),
+  mariela: Object.freeze(["Bobarella", "Bob Umbrella", "MarshmallowBobella"]),
+  faith: Object.freeze(["Bob-the-Eighth", "Great-Faith-Bob", "Bob of Great Faith"])
+});
 function cleanName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").replace(/[^\p{L}'’-]/gu, "").slice(0, 24);
 }
@@ -1741,6 +1749,12 @@ function labelContainsName(label, firstName) {
   const wanted = firstName.toLocaleLowerCase();
   return cleanName(String(label || "").split(/\s+/)[0]).toLocaleLowerCase() === wanted;
 }
+function rhymingBobForms(firstName) {
+  const exact = RHYMING_BOB_FORMS[firstName.toLocaleLowerCase()] || [];
+  const lower = firstName.toLocaleLowerCase();
+  const soundBased = lower.endsWith("y") || lower.endsWith("ie") ? ["SillyBob", "SmileyBob", "WigglyBob"] : lower.endsWith("a") ? ["Bob-a-Rama", "Bob Cabana", "Bobanana"] : lower.endsWith("an") ? ["Bob-the-Can-Do-Man", "Bob Fan", "Bob-a-Plan"] : lower.endsWith("er") ? ["SuperBob", "BuilderBob", "WhirringBob"] : ["Bobble-Doodle", "Bob Kaboom", "Bobbity-Bop"];
+  return [.../* @__PURE__ */ new Set([...exact, ...soundBased, ...BOB_FORMS])];
+}
 function generateNameBobs(value, { usedLabels = [], usedBobLastNames = [] } = {}) {
   const lines = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
   const firstNames = lines.map(firstNameFromRosterLine).filter(Boolean);
@@ -1749,9 +1763,11 @@ function generateNameBobs(value, { usedLabels = [], usedBobLastNames = [] } = {}
   const labels = [];
   for (const [index, firstName] of firstNames.entries()) {
     const seed = stableNumber(`${firstName}-${index}`);
+    const forms = rhymingBobForms(firstName);
     let label = "";
-    for (let attempt = 0; attempt < BOB_FORMS.length && !label; attempt += 1) {
-      const candidate = boundedLabel(`${firstName} ${BOB_FORMS[(seed + attempt) % BOB_FORMS.length]}`);
+    for (let attempt = 0; attempt < forms.length && !label; attempt += 1) {
+      const formIndex = attempt < 3 ? attempt : (seed + attempt) % forms.length;
+      const candidate = boundedLabel(`${firstName} ${forms[formIndex]}`);
       if (!used.has(candidate.toLocaleLowerCase()) && !bobLastNames.has(bobLastName(candidate))) label = candidate;
     }
     if (!label) {
@@ -1778,36 +1794,55 @@ function retryNameBob(firstNameValue, currentLabels, { usedLabels = [] } = {}) {
   retried[index] = generated.labels[0];
   return Object.freeze({ ok: true, firstName, label: retried[index], labels: Object.freeze(retried) });
 }
-var LIMERICKS = Object.freeze([
-  (name) => `There once was ${name} with a plan,
-Who built a remarkable fan.
-It spun round and round,
-Then bounced on the ground,
-So they strengthened the fan\u2014and it ran!`,
-  (name) => `${name} worked with a crew,
-On a rocket painted bright blue.
-It sputtered \u201Cka-POW!\u201D
-Then chased a small cow,
-So they built a much calmer one too!`,
-  (name) => `${name} invented a chair,
-That zoomed through the classroom air.
-It wiggled with glee,
-Then climbed up a tree,
-And parked on a very shocked bear!`,
+function joinedNames(names) {
+  if (names.length < 2) return names[0] || "the Bob crew";
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(", ")}, and ${names.at(-1)}`;
+}
+function generateClassNameBobLimerick(currentLabels) {
+  const labels = Array.from(currentLabels || [], (label) => boundedLabel(label)).filter(Boolean).slice(0, 40);
+  if (!labels.length) return Object.freeze({ ok: false, reason: "class-names-required", limerick: "", labels: Object.freeze([]) });
+  const stanzas = [];
+  for (let index = 0; index < labels.length; index += 4) {
+    const crew = labels.slice(index, index + 4);
+    const lead = crew[0];
+    const helpers = joinedNames(crew.slice(1));
+    const endings = [
+      [`${lead} arrived with a plan,`, `${helpers} all joined in and ran.`, "Their gizmo went POP!", "But the Bob crew would not stop,", "So they fixed it\u2014and cheered, \u201CYes, we can!\u201D"],
+      [`A workshop starred ${lead},`, `${helpers} built something clever to try.`, "It wobbled\u2014ker-plunk!", "Then launched a brass trunk,", "And the Bob crew yelled, \u201COne more try!\u201D"],
+      [`Our inventors began with ${lead},`, `${helpers} made the next great machine.`, "It rattled and spun,", "Then declared testing fun,", "What a brilliant Bob team to be seen!"]
+    ];
+    stanzas.push(endings[stableNumber(crew.join("|")) % endings.length].join("\n"));
+  }
+  return Object.freeze({ ok: true, labels: Object.freeze(labels), limerick: stanzas.join("\n\n") });
+}
+var STUDENT_LIMERICKS = Object.freeze([
+  (name) => `${name} came in with a plan,
+And built the best gadget they can.
+It rattled\u2014ker-pop!
+But they would not stop,
+Then fixed it and shouted, \u201CIt ran!\u201D`,
   (name) => `${name} made a machine,
 The funniest ever yet seen.
-It flashed a green light,
-Then launched out of sight,
-And landed in three jelly beans!`
+It flashed a bright light,
+Then zoomed out of sight,
+And landed on one jelly bean!`,
+  (name) => `${name} worked with a crew,
+On a rocket painted bright blue.
+It wobbled around,
+Then bounced on the ground,
+So they tested and built version two!`
 ]);
-function generateNameBobLimerick(nameValue, currentLabels) {
-  const query = String(nameValue || "").trim().toLocaleLowerCase();
-  const labels = Array.from(currentLabels || [], (label2) => String(label2).trim()).filter(Boolean);
-  if (!query) return Object.freeze({ ok: false, reason: "student-name-required" });
-  const label = labels.find((candidate) => candidate.toLocaleLowerCase() === query || candidate.split(/\s+/)[0].toLocaleLowerCase() === query);
-  if (!label) return Object.freeze({ ok: false, reason: "student-not-found" });
-  const limerick = LIMERICKS[stableNumber(label) % LIMERICKS.length](label);
-  return Object.freeze({ ok: true, label, limerick });
+function generateStudentNameBobLimerick(nameValue) {
+  const label = boundedLabel(nameValue);
+  if (!label || !/bob/i.test(label)) return Object.freeze({ ok: false, reason: "namebob-required", label: "", limerick: "" });
+  return Object.freeze({ ok: true, label, limerick: STUDENT_LIMERICKS[stableNumber(label) % STUDENT_LIMERICKS.length](label) });
+}
+function generateAllNameBobLimericks(currentLabels) {
+  const classResult = generateClassNameBobLimerick(currentLabels);
+  if (!classResult.ok) return Object.freeze({ ...classResult, studentLimericks: Object.freeze([]) });
+  const studentLimericks = classResult.labels.map((label) => generateStudentNameBobLimerick(label)).filter((result) => result.ok);
+  return Object.freeze({ ...classResult, studentLimericks: Object.freeze(studentLimericks) });
 }
 
 // platform/scripts/message-library.mjs
@@ -2525,6 +2560,8 @@ var productionIdentityConfig = productionIdentityConfiguration();
 var productionIdentity = createProductionIdentityClient({ enabled: productionIdentityConfig.enabled, origin: window.location.origin });
 var classroomLesson = createClassroomLessonClient({ serviceOrigin: window.location.origin });
 var classroomLessonServiceNotice = "";
+var productionStudentClassLabels = [];
+var productionStudentDisplayLabel = "";
 var PRODUCTION_CURRENT_CLASS_KEY = "thinkamigbob.production.current-class.v1";
 var productionTeacherClasses = [];
 function productionClassRecord(classroom = {}) {
@@ -2593,6 +2630,8 @@ async function loadLessonStepsFromService(state = session.read()) {
     return result;
   }
   const steps = Array.isArray(result.steps) ? result.steps : [];
+  if (state.role === PLATFORM_ROLES.STUDENT) productionStudentClassLabels = Array.isArray(result.studentLabels) ? result.studentLabels : [];
+  if (state.role === PLATFORM_ROLES.STUDENT) productionStudentDisplayLabel = String(result.studentLabel || "").trim();
   activityDirections.replaceCards(classId, steps.map(lessonStepFromService));
   classroomLessonServiceNotice = state.role === PLATFORM_ROLES.STUDENT ? "Teacher directions loaded." : "Lesson steps loaded securely.";
   return result;
@@ -3646,9 +3685,16 @@ function writeStudentNameplate(studentId, preferences) {
 function studentNameplateMarkup(studentId, studentName, className, rawStudentName) {
   const preferences = readStudentNameplate(studentId);
   const selected = (value, current) => value === current ? " selected" : "";
-  const limerick = generateNameBobLimerick(rawStudentName, [rawStudentName]);
+  const limerick = generateStudentNameBobLimerick(rawStudentName);
   const limerickMarkup = limerick.ok ? `<p class="platform-student-nameplate-limerick">${escapeHtml2(limerick.limerick).replaceAll("\n", "<br>")}</p>` : "";
   return `<section class="platform-student-orientation platform-student-nameplate-bg-${preferences.background} platform-student-nameplate-font-${preferences.font}" style="--student-name-color:${preferences.color}" data-student-nameplate data-student-id="${escapeHtml2(studentId)}" aria-labelledby="student-orientation-title"><h2 id="student-orientation-title">${studentName}</h2><p class="platform-student-class">${className}</p>${limerickMarkup}<details class="platform-student-nameplate-customizer"><summary>Customize my nameplate</summary><div><label>Fancy text<select data-student-nameplate-control="font"><option value="slab" style="font-family:'Roboto Slab',Rockwell,Georgia,serif"${selected("slab", preferences.font)}>Inventor</option><option value="classic" style="font-family:Georgia,'Times New Roman',serif;font-style:italic"${selected("classic", preferences.font)}>Classic</option><option value="cursive" style="font-family:'School Cursive',cursive"${selected("cursive", preferences.font)}>Cursive</option><option value="playful" style="font-family:'Comic Sans MS','Comic Sans',cursive"${selected("playful", preferences.font)}>Playful</option></select></label><label>Background<select data-student-nameplate-control="background"><option value="cream"${selected("cream", preferences.background)}>Cream</option><option value="brass"${selected("brass", preferences.background)}>Brass</option><option value="blue"${selected("blue", preferences.background)}>Blue Steel</option><option value="green"${selected("green", preferences.background)}>Workshop Green</option><option value="parchment"${selected("parchment", preferences.background)}>Old Map</option></select></label><label>Name color<input type="color" value="${preferences.color}" data-student-nameplate-control="color"></label></div><p>Changes save automatically.</p></details></section>`;
+}
+function studentClassLimerickMarkup(classId) {
+  const fixtureLabels = getRosterForClass(classId).map((student) => student.displayName);
+  const labels = productionStudentClassLabels.length ? productionStudentClassLabels : fixtureLabels;
+  const result = generateClassNameBobLimerick(labels);
+  if (!result.ok) return "";
+  return `<details class="platform-student-class-limerick"><summary>\u{1F3A9} Our Class Limerick</summary><div><p>${escapeHtml2(result.limerick).replaceAll("\n", "<br>")}</p><button class="platform-student-listen-button" type="button" data-action="read-student-section" aria-pressed="false">Listen</button></div></details>`;
 }
 function todaysLessonStudentMarkup(classId, studentId, assignedResearch) {
   const releasedSidePath = activityDirections.releasedForStudents(classId).flatMap((card) => card.resources ?? []).find((resource) => resource.mediaType === "side-path" && resource.url);
@@ -4011,10 +4057,10 @@ function classroomSetupMarkup() {
         <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
         <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
       </div>
-      <p class="platform-namebob-help">Each label uses the student's first name and a funny Bob last name, such as Ava Bobzilla, Liam Bobinator, or Mia Bobapalooza. Every student in the class gets a different Bob last name.</p>
+      <p class="platform-namebob-help">Each label keeps the student's first name and adds a funny rhyming Bob name, such as Savannah Bobanana, Miley SmileyBob, or Mariela Bobarella. Every student in the class gets a different Bob name.</p>
       <div class="platform-namebob-retry platform-namebob-limerick">
-        <label for="production-namebob-limerick">Make a funny limerick <small>Enter a first name or complete Bob name</small></label>
-        <div><input id="production-namebob-limerick" name="limerickName" maxlength="40"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava or Ava Bobzilla"><button type="button" data-action="generate-namebob-limerick"${productionIdentityConfig.enabled ? "" : " disabled"}>Make Limerick</button></div>
+        <label>Make funny limericks <small>Creates one for the whole class and one for every student</small></label>
+        <div><button type="button" data-action="generate-class-namebob-limerick"${productionIdentityConfig.enabled ? "" : " disabled"}>Make Class + Student Limericks</button></div>
         <blockquote data-namebob-limerick-output hidden></blockquote>
       </div>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs\u2014or enter your own labels.</p>
@@ -5010,13 +5056,14 @@ function studentDashboardView(state) {
   const reflectionOptions = (options) => `<option value="">Choose one</option>${options.map((option) => `<option value="${escapeHtml2(option)}">${escapeHtml2(option)}</option>`).join("")}`;
   const assignedReflection = studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions);
   const finishMarkup = assignedReflection || `<section class="platform-student-finish platform-student-zone platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><div class="platform-student-step-heading"><img src="./assets/images/student-path/captains-log-brass-badge.png" alt=""><h2 id="reflection-check-title">Captain\u2019s Log</h2></div><p>Mission complete for today!</p></section>`;
-  const rawStudentName = student?.displayName ?? "Student";
+  const rawStudentName = productionStudentDisplayLabel || student?.displayName || "Student";
   const studentName = escapeHtml2(rawStudentName);
   const className = escapeHtml2(classRecord?.displayName ?? "Class not selected");
   return shell(`
     <div class="platform-student-home">
       ${state.studentId === "student-preview-1" ? `<aside class="platform-student-preview-banner"><div><strong>Student Preview \u2014 No Sign-In Code</strong><p>You are viewing fictional student Ada Rivera in Preview STEM Class. Work completed here is only preview data in this browser.</p></div><a class="platform-button platform-button-secondary" href="#${ROUTES.WELCOME}">Exit Student Preview</a></aside>` : ""}
       ${studentNameplateMarkup(state.studentId, studentName, className, rawStudentName)}
+      ${studentClassLimerickMarkup(state.classId)}
 
       <section class="platform-student-quest-map" aria-labelledby="student-quest-map-title">
         <div class="platform-student-quest-map-heading">
@@ -9669,24 +9716,25 @@ async function handleClick(event) {
     retryInput.focus();
     return;
   }
-  if (action.dataset.action === "generate-namebob-limerick") {
+  if (action.dataset.action === "generate-class-namebob-limerick") {
     const form = action.closest('[data-form="production-classroom-setup"]');
     const textarea = form?.elements.studentLabels;
-    const limerickInput = form?.elements.limerickName;
     const output = form?.querySelector("[data-namebob-limerick-output]");
     const status = form?.querySelector("[data-namebob-status]");
-    if (!textarea || !limerickInput || !output) return;
-    const result = generateNameBobLimerick(limerickInput.value, textarea.value.split(/\r?\n/));
+    if (!textarea || !output) return;
+    const result = generateAllNameBobLimericks(textarea.value.split(/\r?\n/));
     if (!result.ok) {
       output.hidden = true;
-      if (status) status.textContent = result.reason === "student-not-found" ? "That student is not in the generated NameBob list. Check the spelling and try again." : "Enter a student's first name or complete Bob name.";
-      limerickInput.focus();
+      if (status) status.textContent = "Enter or paste the class names first.";
+      textarea.focus();
       return;
     }
-    output.textContent = result.limerick;
+    output.textContent = [`OUR CLASS LIMERICK
+${result.limerick}`, ...result.studentLimericks.map((item) => `${item.label}
+${item.limerick}`)].join("\n\n");
     output.hidden = false;
-    if (status) status.textContent = `Funny limerick created for ${result.label}.`;
-    limerickInput.focus();
+    if (status) status.textContent = `Created one class limerick and ${result.studentLimericks.length} student limericks.`;
+    action.focus();
     return;
   }
   if (action.dataset.action === "open-student-quest-step") {
@@ -9720,7 +9768,7 @@ async function handleClick(event) {
     return;
   }
   if (action.dataset.action === "read-student-section") {
-    const section = action.closest("section, article");
+    const section = action.closest("section, article, details");
     if (!section || !("speechSynthesis" in window)) {
       action.textContent = "Listening unavailable";
       return;
