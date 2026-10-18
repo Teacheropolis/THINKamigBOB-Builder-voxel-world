@@ -428,7 +428,7 @@ summary:focus-visible {
 .platform-student-nameplate-customizer select { min-width: 0; padding: .45rem; font-size: .82rem; }
 .platform-student-nameplate-customizer input[type="color"] { width: 100%; min-height: 2.3rem; padding: .15rem; }
 .platform-student-nameplate-customizer > p:last-child { margin: .35rem 0 0; color: var(--platform-muted); font-size: .72rem; font-weight: 750; text-align: right; }
-.platform-student-class-limerick { margin: 0; border: 2px solid #aa7911; border-radius: 1rem; background: linear-gradient(145deg, #fff8df, #f2d584); box-shadow: 0 .45rem 1rem rgba(7,27,39,.16); }
+.platform-student-class-limerick { grid-column: 1 / -1; width: 100%; margin: 0; border: 2px solid #aa7911; border-radius: 1rem; background: linear-gradient(145deg, #fff8df, #f2d584); box-shadow: 0 .45rem 1rem rgba(7,27,39,.16); }
 .platform-student-class-limerick > summary { cursor: pointer; padding: .8rem 1rem; color: var(--platform-navy); font-family: "Roboto Slab", Rockwell, Georgia, serif; font-size: 1rem; font-weight: 900; }
 .platform-student-class-limerick > div { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: 0 1rem 1rem; }
 .platform-student-class-limerick p { margin: 0; color: #4d320d; font-weight: 750; line-height: 1.55; }
@@ -853,7 +853,9 @@ summary:focus-visible {
 .platform-captains-log-thinking-help button { min-height: 2.25rem; padding: 0.4rem 0.65rem; border: 2px solid #18789d; border-radius: 0.5rem; background: #e9f6fb; color: #173247; font-size: 0.82rem; font-weight: 900; text-align: left; }
 .platform-captains-log-thinking-help p { margin: 0.4rem 0 0 !important; padding: 0.6rem 0.7rem; border-left: 4px solid #18789d; border-radius: 0.35rem; background: #f2fbff; color: #173247; font-size: 0.95rem; line-height: 1.45; }
 .platform-captains-log-thinking-help p[hidden] { display: none; }
-.platform-student-pomodoro-status { position: sticky; top: 0.5rem; z-index: 18; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.65rem; max-width: 48rem; margin: 0.65rem auto 1rem; padding: 0.65rem 0.9rem; border: 3px solid #b98413; border-radius: 999px; background: rgba(15,48,69,0.96); color: #fff; box-shadow: 0 8px 18px rgba(9,31,45,0.25); }
+.platform-student-pomodoro-status { grid-column: 1 / -1; position: sticky; top: 0.5rem; z-index: 18; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; justify-self: center; gap: 0.65rem; width: min(48rem,100%); margin: 0.65rem auto 1rem; padding: 0.65rem 0.9rem; border: 3px solid #b98413; border-radius: 1rem; background: rgba(15,48,69,0.96); color: #fff; box-shadow: 0 8px 18px rgba(9,31,45,0.25); }
+.platform-student-pomodoro-status > div { min-width: 0; }
+.platform-student-pomodoro-status strong, .platform-student-pomodoro-status small { overflow-wrap: normal; word-break: normal; }
 .platform-student-pomodoro-status small { display: block; color: #d9edf4; }
 .platform-student-pomodoro-status b { font-size: clamp(1.05rem,3vw,1.5rem); font-variant-numeric: tabular-nums; }
 .platform-student-pomodoro-dot { width: 1.15rem; height: 1.15rem; border: 2px solid #fff; border-radius: 50%; background: #6c8492; }
@@ -861,6 +863,7 @@ summary:focus-visible {
 .platform-student-pomodoro-dot[data-student-pomodoro-color="blue"] { background: #18789d; }
 .platform-student-pomodoro-dot[data-student-pomodoro-color="yellow"] { background: #e4ad18; }
 .platform-student-pomodoro-dot[data-student-pomodoro-color="red"] { background: #c94c45; }
+@media (max-width: 520px) { .platform-student-pomodoro-status { grid-template-columns: auto minmax(0,1fr); } .platform-student-pomodoro-status > b { grid-column: 2; } }
 .platform-student-captains-log-brief { margin-top: 0.85rem; padding: 0.8rem; border: 2px solid #b98413; border-radius: 0.7rem; background: #fff8dc; }
 .platform-student-captains-log-brief p { margin: 0.25rem 0 0.6rem; }
 .platform-student-captains-log-brief button { min-height: 2.5rem; }
