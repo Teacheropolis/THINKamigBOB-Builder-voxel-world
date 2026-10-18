@@ -2830,8 +2830,6 @@ function openClassroomPresentationWindow() {
           bringSmartboardToolForward(tool);
           keepSmartboardToolsOnScreen(classroomPresentationWindow.document);
         }
-        const tray = action.closest(".platform-smartboard-tool-tray");
-        if (tray) tray.open = false;
       }
     }
     if (action.dataset.action === "reset-smartboard-tools") resetSmartboardToolPositions(classroomPresentationWindow.document);
@@ -5700,8 +5698,6 @@ function handleClick(event) {
         bringSmartboardToolForward(tool);
         keepSmartboardToolsOnScreen(document);
       }
-      const tray = action.closest(".platform-smartboard-tool-tray");
-      if (tray) tray.open = false;
     }
     return;
   }

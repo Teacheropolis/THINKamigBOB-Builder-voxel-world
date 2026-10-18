@@ -121,6 +121,7 @@ test("teacher dashboard provides a responsive categorized teacher menu and statu
   assert.match(app, /keepSmartboardToolsOnScreen/);
   assert.match(css, /platform-smartboard-tool-tray > summary::after[^}]*content: "Expand"/);
   assert.match(css, /platform-smartboard-tool-tray\[open\] > summary::after[^}]*content: "Minimize"/);
+  assert.doesNotMatch(app, /tray\.open = false/);
   assert.match(app, /Screen Options/);
   assert.match(app, /Expected voice level on the classroom Voice Meter/);
   assert.match(app, /function smartboardToolSwitcherMarkup\(\) \{\s+return "";/);
