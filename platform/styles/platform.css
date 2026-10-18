@@ -1035,12 +1035,13 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-smartboard-tool[data-smartboard-tool="whiteboard"] header { background: var(--platform-blue-dark); }
 .platform-smartboard-tool[data-smartboard-tool="names"] { color: var(--platform-navy); border-color: var(--platform-blue); background: #f5f8f9; }
 .platform-smartboard-tool[data-smartboard-tool="names"] header { background: var(--platform-blue-dark); }
-.platform-smartboard-tool[data-smartboard-tool="amig"] { color: #102f45; border-color: #c99a27; background: linear-gradient(145deg, #fffdf5, #f6ead0); }
+.platform-smartboard-tool[data-smartboard-tool="amig"] { width: min(54rem, calc(100vw - 14rem)) !important; height: min(45rem, calc(100vh - 2rem)); max-height: calc(100vh - 2rem); grid-template-rows: auto auto minmax(0, 1fr) auto; overflow: hidden; color: #102f45; border-color: #c99a27; background: linear-gradient(145deg, #fffdf5, #f6ead0); }
 .platform-smartboard-tool[data-smartboard-tool="amig"] header { background: linear-gradient(90deg, #173e54, #0d2939); }
+.platform-amig-anchor-chart > .platform-floating-tool-switcher { display: none; }
 .platform-amig-anchor-chart .platform-amig-anchor-intro { display: flex; align-items: baseline; justify-content: center; gap: 0.8rem; padding: 0.35rem; color: #173e54; font-size: clamp(1.15rem, 2.4vw, 2rem); font-weight: 900; }
 .platform-amig-anchor-intro b { color: #a66f00; font-size: 1.25em; letter-spacing: 0.1em; text-shadow: 0 1px 0 #fff3bd; }
 .platform-amig-anchor-intro i { color: #2d7d5b; font-style: normal; }
-.platform-amig-cycle { position: relative; display: grid !important; width: min(37rem, 100%); aspect-ratio: 1; justify-self: center; place-items: center; }
+.platform-amig-cycle { position: relative; display: grid !important; width: auto; max-width: 100%; height: 100%; max-height: 100%; aspect-ratio: 1; justify-self: center; place-items: center; }
 .platform-amig-cycle-ring { position: absolute; inset: 16%; border: clamp(0.8rem, 2.4cqw, 1.25rem) solid #d4a017; border-radius: 50%; background: conic-gradient(from -35deg, #17698e 0 25%, #2d7d5b 25% 50%, #b17c09 50% 75%, #176b55 75% 100%); box-shadow: inset 0 0 0 0.35rem #fff7d7, 0 0 0 0.25rem #714b00; }
 .platform-amig-cycle-ring::after { position: absolute; top: -1.45rem; right: 12%; color: #173e54; background: #fff7d7; font-size: clamp(1.8rem, 5cqw, 3.1rem); font-weight: 900; line-height: 1; content: "↻"; }
 .platform-amig-cycle-center { position: relative; z-index: 1; display: grid; place-items: center; margin: 0; color: #173e54; line-height: 1.05; text-align: center; }
@@ -1286,7 +1287,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 @media (max-width: 700px) { .platform-resource-assignment-chooser { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .platform-quick-time-tools { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .platform-current-class-plan-heading { align-items: stretch; flex-direction: column; } .platform-live-lesson-tools, .platform-current-plan-live-voice { grid-template-columns: 1fr; } .platform-live-lesson-tool-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); } .platform-current-plan-voice, .platform-current-plan-live-voice-card { grid-column: 1; } .platform-live-voice-heading, .platform-live-voice-actions { grid-column: 1; } .platform-voice-history-summary { grid-template-columns: 1fr; } .platform-voice-progress-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .platform-voice-motivation { grid-template-columns: 1fr; } }
-@media (max-width: 700px) { .platform-smartboard-tool-tray { top: auto; right: 0.5rem; bottom: 0.5rem; left: 0.5rem; flex-direction: row; flex-wrap: wrap; width: auto; transform: none; } .platform-smartboard-tool-tray strong { flex-basis: 100%; } .platform-smartboard-tool-tray button { flex: 1 1 7rem; } }
+@media (max-width: 700px) { .platform-smartboard-tool-tray { top: auto; right: 0.5rem; bottom: 0.5rem; left: 0.5rem; flex-direction: row; flex-wrap: wrap; width: auto; transform: none; } .platform-smartboard-tool-tray strong { flex-basis: 100%; } .platform-smartboard-tool-tray button { flex: 1 1 7rem; } .platform-smartboard-tool[data-smartboard-tool="amig"] { width: calc(100vw - 1rem) !important; height: calc(100vh - 1rem); } }
 .platform-resource-slot-button { display: grid; width: 100%; min-height: 6.5rem; align-content: center; gap: 0.25rem; border: 2px dashed var(--platform-blue) !important; border-radius: 0.65rem; color: var(--platform-navy) !important; background: #fff !important; text-align: left; cursor: pointer; }
 .platform-resource-slot-button:hover, .platform-resource-slot-button:focus-visible { border-style: solid !important; background: #eef8fb !important; box-shadow: 0 0 0 3px rgba(22,105,142,0.14); }
 .platform-class-resource-editor[open] { margin-top: 1rem; padding-top: 1rem; border-top: 3px solid var(--platform-blue); }
