@@ -2325,14 +2325,15 @@ function createActivityDirections({ storage, now = () => Date.now() }) {
 // platform/scripts/weekly-reflections.mjs
 var WEEKLY_REFLECTION_STORAGE_KEY = "thinkamigbob.weekly-reflections.v1";
 var CAPTAINS_LOG_PRESET_PROMPTS = Object.freeze([
-  { id: "week-1-ask", week: 1, label: "Ask", prompt: "What surprised you or made you wonder today?" },
-  { id: "week-2-make", week: 2, label: "Make", prompt: "Which attempt gave you an unexpected result? What did it reveal?" },
-  { id: "week-3-improve", week: 3, label: "Improve", prompt: "Which part will you or could you improve, and what change will you try?" },
-  { id: "week-4-grow", week: 4, label: "Grow", prompt: "How did a challenge or uncertainty help your thinking grow?" },
-  { id: "week-5-evidence", week: 5, label: "Evidence", prompt: "What evidence shows a limitation or a new opportunity in your idea?" },
-  { id: "week-6-explain", week: 6, label: "Explain", prompt: "What outcome was different from your plan, and what did you learn from it?" },
-  { id: "week-7-next", week: 7, label: "Next Step", prompt: "What progress did you make, and how could even that success be improved?" }
+  { id: "week-1-ask", week: 1, label: "Ask", starting: "What surprised you today? What do you wonder?", growing: "What surprised you or made you wonder today?", stretching: "What unexpected result changed your thinking, and what new question did it create?", prompt: "What surprised you or made you wonder today?" },
+  { id: "week-2-make", week: 2, label: "Make", starting: "What did you try? What happened?", growing: "Which try gave you an unexpected result? What did it show you?", stretching: "Which attempt produced an unexpected result, and what did that result reveal about your design?", prompt: "Which try gave you an unexpected result? What did it show you?" },
+  { id: "week-3-improve", week: 3, label: "Improve", starting: "What will you or could you change next?", growing: "Which part will you or could you improve? What change will you try?", stretching: "Which part will you or could you improve, and why is that change the strongest next step?", prompt: "Which part will you or could you improve? What change will you try?" },
+  { id: "week-4-grow", week: 4, label: "Grow", starting: "What was hard? What did you learn?", growing: "How did a challenge help your thinking grow?", stretching: "How did a challenge or uncertainty change your thinking, and how might that learning transfer to future work?", prompt: "How did a challenge help your thinking grow?" },
+  { id: "week-5-evidence", week: 5, label: "Evidence", starting: "What did you see or measure? What did it show?", growing: "What evidence showed a problem or a new chance to improve?", stretching: "What evidence reveals a limitation or a new opportunity, and how does it support your conclusion?", prompt: "What evidence showed a problem or a new chance to improve?" },
+  { id: "week-6-explain", week: 6, label: "Explain", starting: "What was different from your plan? What did you learn?", growing: "What result was different from your plan, and what did you learn from it?", stretching: "How did the outcome differ from your plan, and what explanation is best supported by your observations?", prompt: "What result was different from your plan, and what did you learn from it?" },
+  { id: "week-7-next", week: 7, label: "Next Step", starting: "What went well? What could be even better?", growing: "What progress did you make, and how could it still improve?", stretching: "What progress did you make, and how could you refine even that success to produce a stronger result?", prompt: "What progress did you make, and how could it still improve?" }
 ]);
+var CAPTAINS_LOG_QUESTION_LEVELS = Object.freeze(["starting", "growing", "stretching"]);
 var CAPTAINS_LOG_SCHEDULE_OPTIONS = Object.freeze(["Today", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
 var CAPTAINS_LOG_WEEKDAYS = Object.freeze(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
 var CAPTAINS_LOG_ASSIGNMENT_OPTIONS = Object.freeze([...CAPTAINS_LOG_WEEKDAYS, "Daily student choice"]);
@@ -2358,7 +2359,7 @@ var REFLECTION_ACTIVITY_RATING_OPTIONS = Object.freeze([
   "2 = Difficult \u{1F615}",
   "1 = Frustrating \u{1F62B}"
 ]);
-function captainLogCoachingQuestions(value = {}, { elapsedSeconds = 0 } = {}) {
+function captainLogResponseLevel(value = {}, { elapsedSeconds = 0 } = {}) {
   const response = String(value.explanation ?? "").trim();
   const words2 = response.split(/\s+/).filter(Boolean);
   const writingSignals = [
@@ -2368,14 +2369,15 @@ function captainLogCoachingQuestions(value = {}, { elapsedSeconds = 0 } = {}) {
     words2.length > 4 && !/\b(?:because|so|but|and|then)\b/i.test(response)
   ].filter(Boolean).length;
   const slower = Number(elapsedSeconds) >= 240;
-  const needsSupport = slower || words2.length < 15 || writingSignals >= 2;
-  const questions = [
-    "What detail from your work best supports your answer?",
-    value.progress === "\u{1F3C6} Complete" ? "Why did your final idea work?" : value.improved === "Yes" ? "Why did your change make the idea better?" : "What could you change or test next?",
-    "How could you use what you learned in a new problem?"
-  ];
-  const count = slower && writingSignals >= 2 ? 1 : needsSupport ? 2 : words2.length >= 24 ? 3 : 2;
-  return questions.slice(0, count).map((question, index) => ({ dok: Math.min(4, index + 2), question }));
+  if (slower || words2.length < 15 || writingSignals >= 2) return "starting";
+  const reasoningSignals = [/[.!?].+[.!?]$/s.test(response), /\b(?:because|therefore|evidence|result|showed|compared|however|although)\b/i.test(response), words2.length >= 28].filter(Boolean).length;
+  return reasoningSignals >= 2 ? "stretching" : "growing";
+}
+function captainLogCoachingQuestions(value = {}, { elapsedSeconds = 0 } = {}) {
+  const level = captainLogResponseLevel(value, { elapsedSeconds });
+  const questions = level === "starting" ? ["What happened when you tried it?", value.improved === "Yes" ? "What got better?" : "What could you try next?"] : level === "growing" ? ["What detail from your work supports your answer?", value.progress === "\u{1F3C6} Complete" ? "Why did your final idea work?" : value.improved === "Yes" ? "Why did your change make the idea better?" : "What could you change or test next?"] : ["Which evidence best supports your explanation, and why?", value.progress === "\u{1F3C6} Complete" ? "What tradeoff remains in your final idea?" : "How could you compare your next change with this result?", "How could you apply what you learned to a different problem?"];
+  const count = level === "starting" && Number(elapsedSeconds) >= 240 ? 1 : questions.length;
+  return questions.slice(0, count).map((question, index) => ({ level, dok: level === "starting" ? index + 1 : level === "growing" ? index + 2 : index + 2, question }));
 }
 function normalizeResponse(value) {
   if (typeof value === "string") return value.trim().length >= 10 && value.trim().length <= 500 ? { reflection: value.trim() } : null;
@@ -2611,6 +2613,10 @@ function createWeeklyReflections({ storage, now = () => /* @__PURE__ */ new Date
     return { ok: all.captainLogLibrary.length !== before.length };
   };
   const responses = (classId, studentId) => readAll().responses?.[`${classWeek(classId)}|${studentId}`] ?? [];
+  const studentQuestionLevel = (classId, studentId) => {
+    const saved = readAll().studentQuestionLevels?.[`${classId}|${studentId}`]?.level;
+    return CAPTAINS_LOG_QUESTION_LEVELS.includes(saved) ? saved : "starting";
+  };
   const recordActivity = (classId, title) => {
     const cleanTitle = String(title ?? "").trim().slice(0, 120);
     if (!classId || !cleanTitle) return { ok: false };
@@ -2643,10 +2649,16 @@ function createWeeklyReflections({ storage, now = () => /* @__PURE__ */ new Date
     const followUps = Array.isArray(value.followUps) ? value.followUps.map((item) => ({ dok: Number(item.dok), question: String(item.question ?? "").trim(), answer: String(item.answer ?? "").trim() })).filter((item) => item.question && item.answer.length >= 5) : [];
     if (!followUps.length) return { ok: false };
     all.responses = { ...all.responses ?? {}, [key]: [...list, { ...response, followUps, submittedAt: new Date(now()).toISOString() }] };
+    const levelKey = `${classId}|${studentId}`, currentLevelState = all.studentQuestionLevels?.[levelKey] ?? { level: "starting", readinessStreak: 0 };
+    const currentIndex = Math.max(0, CAPTAINS_LOG_QUESTION_LEVELS.indexOf(currentLevelState.level));
+    const observedIndex = CAPTAINS_LOG_QUESTION_LEVELS.indexOf(captainLogResponseLevel(value, { elapsedSeconds: Number(value.elapsedSeconds ?? 0) }));
+    const readinessStreak = observedIndex > currentIndex ? Number(currentLevelState.readinessStreak ?? 0) + 1 : 0;
+    const nextIndex = readinessStreak >= 2 ? Math.min(CAPTAINS_LOG_QUESTION_LEVELS.length - 1, currentIndex + 1) : currentIndex;
+    all.studentQuestionLevels = { ...all.studentQuestionLevels ?? {}, [levelKey]: { level: CAPTAINS_LOG_QUESTION_LEVELS[nextIndex], readinessStreak: nextIndex > currentIndex ? 0 : readinessStreak, updatedAt: new Date(now()).toISOString() } };
     write(all);
     return { ok: true, status: status(classId, studentId) };
   };
-  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogChoices, captainLogObligations, recordStudentVisit, captainLogWeekPlan, saveCaptainLogWeekPlan, clearCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
+  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogChoices, captainLogObligations, recordStudentVisit, captainLogWeekPlan, saveCaptainLogWeekPlan, clearCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, studentQuestionLevel, status, submit };
 }
 
 // platform/scripts/automatic-visuals.mjs
@@ -4026,8 +4038,16 @@ function captainLogThinkingHelp(promptId = "") {
 function captainLogThinkingHelpMarkup(promptId) {
   return `<div class="platform-captains-log-thinking-help"><button type="button" data-action="toggle-captains-log-thinking-help" aria-expanded="false">Show what I need to think about</button><p hidden>${escapeHtml2(captainLogThinkingHelp(promptId))}</p></div>`;
 }
+function adaptiveCaptainLogPrompt(entry, level = "starting") {
+  const preset = CAPTAINS_LOG_PRESET_PROMPTS.find((item) => item.id === entry?.promptId);
+  return preset?.[level] ?? entry?.prompt ?? preset?.prompt ?? "";
+}
+function captainLogLevelLabel(level) {
+  return level === "stretching" ? "Stretching" : level === "growing" ? "Growing" : "Starting";
+}
 function captainsLogStudentWeekMarkup(classId, studentId) {
   const plan = weeklyReflections.captainLogWeekPlan(classId);
+  const questionLevel = weeklyReflections.studentQuestionLevel(classId, studentId);
   const completed = weeklyReflections.responses(classId, studentId);
   const completedIds = new Set(completed.map((item) => item.promptId).filter(Boolean));
   const entries = CAPTAINS_LOG_WEEKDAYS.map((slot) => ({ slot, ...plan.days[slot] })).filter((item) => item.enabled);
@@ -4057,7 +4077,7 @@ function captainsLogStudentWeekMarkup(classId, studentId) {
     const isDone = completedIds.has(item.promptId);
     const number = CAPTAINS_LOG_WEEKDAYS.indexOf(item.slot) + 1;
     const label = isDone ? "\u2713 Done" : assignment === today ? `Today \xB7 ${assignment}` : assignment;
-    return `<li class="${isDone ? "is-complete" : ""}"><span aria-hidden="true">${isDone ? "\u2713" : "\u25CF"}</span><div><strong>Prompt ${number} \xB7 ${escapeHtml2(label)}</strong><p>${escapeHtml2(item.prompt)}</p>${captainLogThinkingHelpMarkup(item.promptId)}</div></li>`;
+    return `<li class="${isDone ? "is-complete" : ""}"><span aria-hidden="true">${isDone ? "\u2713" : "\u25CF"}</span><div><strong>Prompt ${number} \xB7 ${escapeHtml2(label)}</strong><p>${escapeHtml2(adaptiveCaptainLogPrompt(item, questionLevel))}</p>${captainLogThinkingHelpMarkup(item.promptId)}</div></li>`;
   }).join("");
   const choiceRequired = Math.max(0, required - assignedEntries.length);
   const choiceCompleted = choiceEntries.filter((item) => completedIds.has(item.promptId)).length;
@@ -4066,9 +4086,9 @@ function captainsLogStudentWeekMarkup(classId, studentId) {
   const choiceTaskLabel = choiceTaskNumbers.length === 1 ? `Prompt ${choiceTaskNumbers[0]}` : `Prompts ${choiceTaskNumbers.slice(0, -1).join(", ")}${choiceTaskNumbers.length > 2 ? "," : ""} and ${choiceTaskNumbers.at(-1)}`;
   const choiceGroup = choiceEntries.length && choiceRequired ? `<li class="platform-captains-log-choice-task${choiceRemaining === 0 ? " is-complete" : ""}"><span aria-hidden="true">${choiceRemaining === 0 ? "\u2713" : "\u25C7"}</span><div><strong>${choiceTaskLabel} - choose ${choiceRequired} from these choices</strong>${choiceRemaining === 0 ? `<small>\u2713 Choice complete</small>` : choiceCompleted ? `<small>${choiceCompleted} chosen \xB7 ${choiceRemaining} left</small>` : ""}<ul>${choiceEntries.map((item, index) => {
     const isDone = completedIds.has(item.promptId);
-    return `<li class="${isDone ? "is-complete" : ""}"><strong>Choice ${String.fromCharCode(65 + index)}${isDone ? " \xB7 Used" : ""}</strong><p>${escapeHtml2(item.prompt)}</p>${captainLogThinkingHelpMarkup(item.promptId)}</li>`;
+    return `<li class="${isDone ? "is-complete" : ""}"><strong>Choice ${String.fromCharCode(65 + index)}${isDone ? " \xB7 Used" : ""}</strong><p>${escapeHtml2(adaptiveCaptainLogPrompt(item, questionLevel))}</p>${captainLogThinkingHelpMarkup(item.promptId)}</li>`;
   }).join("")}</ul></div></li>` : "";
-  return `<section class="platform-captains-log-week-map" aria-labelledby="captains-log-week-map-title"><div><h3 id="captains-log-week-map-title">Your Week</h3><p><strong>${done} of ${required} done</strong> \xB7 ${remaining} left</p></div><p class="platform-captains-log-week-instruction">Complete the assigned prompts and ${choiceRequired ? `choose ${choiceRequired} more` : "follow the assigned days"}.</p><ol>${assignedPrompts}${choiceGroup}</ol><div class="platform-captains-log-student-timeline"><strong>Suggested plan</strong>${timeline.map((item) => `<p>${escapeHtml2(item)}</p>`).join("")}</div></section>`;
+  return `<section class="platform-captains-log-week-map" aria-labelledby="captains-log-week-map-title"><div><h3 id="captains-log-week-map-title">Your Week</h3><p><strong>${done} of ${required} done</strong> \xB7 ${remaining} left</p></div><p class="platform-captains-log-level" data-captains-log-level="${questionLevel}">Bob\u2019s question level: <strong>${captainLogLevelLabel(questionLevel)}</strong></p><p class="platform-captains-log-week-instruction">Complete the assigned prompts and ${choiceRequired ? `choose ${choiceRequired} more` : "follow the assigned days"}.</p><ol>${assignedPrompts}${choiceGroup}</ol><div class="platform-captains-log-student-timeline"><strong>Suggested plan</strong>${timeline.map((item) => `<p>${escapeHtml2(item)}</p>`).join("")}</div></section>`;
 }
 function studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions, classId) {
   if (!reflectionStatus.required) return "";
@@ -4076,8 +4096,9 @@ function studentReflectionMarkup(reflectionStatus, teacherActivities, reflection
   const dueLabel = due.toLocaleDateString(void 0, { weekday: "long", month: "short", day: "numeric" });
   const plan = weeklyReflections.captainLogPlan(classId);
   const choices = weeklyReflections.captainLogChoices(classId, session.read().studentId);
+  const questionLevel = weeklyReflections.studentQuestionLevel(classId, session.read().studentId);
   const weekMap = captainsLogStudentWeekMarkup(classId, session.read().studentId);
-  const promptChoice = choices.length > 1 ? `<label class="platform-student-prompt-choice">Choose a prompt<select name="promptId" required><option value="">Choose one</option>${choices.map((item) => `<option value="${escapeHtml2(item.promptId)}">${escapeHtml2(item.prompt)}</option>`).join("")}</select></label>${captainLogThinkingHelpMarkup("")}` : `<input type="hidden" name="promptId" value="${escapeHtml2(choices[0]?.promptId ?? plan.promptId)}"><p class="platform-captains-log-prompt"><strong>${escapeHtml2(choices[0]?.prompt ?? plan.prompt)}</strong></p>${captainLogThinkingHelpMarkup(choices[0]?.promptId ?? plan.promptId)}`;
+  const promptChoice = choices.length > 1 ? `<label class="platform-student-prompt-choice">Choose a prompt<select name="promptId" required><option value="">Choose one</option>${choices.map((item) => `<option value="${escapeHtml2(item.promptId)}">${escapeHtml2(adaptiveCaptainLogPrompt(item, questionLevel))}</option>`).join("")}</select></label>${captainLogThinkingHelpMarkup("")}` : `<input type="hidden" name="promptId" value="${escapeHtml2(choices[0]?.promptId ?? plan.promptId)}"><p class="platform-captains-log-prompt"><strong>${escapeHtml2(adaptiveCaptainLogPrompt(choices[0] ?? plan, questionLevel))}</strong></p>${captainLogThinkingHelpMarkup(choices[0]?.promptId ?? plan.promptId)}`;
   const availableToday = weeklyReflections.captainLogAvailableToday(classId) && choices.length;
   return `<section class="platform-student-reflection platform-student-reflection-inline platform-student-zone platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><div class="platform-student-step-heading"><img src="./assets/images/student-path/captains-log-brass-badge.png" alt=""><h2 id="reflection-check-title">Captain\u2019s Log</h2></div><p class="platform-student-status" data-weekly-reflection-status>${reflectionStatus.remaining === 0 ? `Done! ${reflectionStatus.completed} finished this week.` : `Exit ticket \xB7 ${reflectionStatus.remaining} left this week \xB7 Due ${escapeHtml2(dueLabel)}.`}</p>${weekMap}${reflectionStatus.remaining === 0 ? "" : availableToday ? `<details class="platform-student-reflection-form"><summary>Open Captain\u2019s Log</summary><form data-form="weekly-reflection" data-coaching-started-at="${Date.now()}" novalidate>${promptChoice}<label for="weekly-reflection-activity">Activity Worked On Today</label><select id="weekly-reflection-activity" name="activityChoice" required><option value="">Choose an activity</option>${teacherActivities.map((activity) => `<option value="${escapeHtml2(activity)}">${escapeHtml2(activity)}</option>`).join("")}<option value="__other__">Other activity \u2014 type my own</option></select><label data-reflection-other-activity hidden>Type the activity name<input name="activityOther" maxlength="120"></label><label for="weekly-reflection-progress">Mission Progress</label><select id="weekly-reflection-progress" name="progress" required>${reflectionOptions(REFLECTION_PROGRESS_OPTIONS)}</select><label for="weekly-reflection-response">Your answer</label><textarea id="weekly-reflection-response" name="explanation" minlength="10" maxlength="500" required></textarea><button class="platform-reflection-speech-button" type="button" data-action="reflection-dictate" aria-pressed="false">Speak Answer</button><button class="platform-reflection-speech-stop" type="button" data-action="reflection-dictate-stop" hidden>Stop Speaking</button><p class="platform-reflection-speech-status" data-reflection-speech-status role="status">Type or speak.</p><label>Did you improve your idea?<select name="improved" required>${reflectionOptions(REFLECTION_IMPROVEMENT_OPTIONS)}</select></label><label>Badge<select name="badge" required>${reflectionOptions(REFLECTION_BADGE_OPTIONS)}</select></label><label>Need help next class?<select name="help" required>${reflectionOptions(REFLECTION_HELP_OPTIONS)}</select></label><label>Could you help someone?<select name="helpOther" required>${reflectionOptions(REFLECTION_HELP_OTHER_OPTIONS)}</select></label><label>How did it go?<select name="rating" required>${reflectionOptions(REFLECTION_ACTIVITY_RATING_OPTIONS)}</select></label><section class="platform-bob-coaching" data-bob-coaching hidden aria-labelledby="bob-coaching-title"><h3 id="bob-coaching-title">Bob\u2019s Next Questions</h3><p>Show a little more of your thinking.</p><div data-bob-coaching-questions></div></section><button type="submit" data-weekly-reflection-submit>Continue with Bob</button><p class="platform-error" data-weekly-reflection-error role="alert" hidden></p></form></details>` : `<p class="platform-student-status">No Captain\u2019s Log is due today. Check the plan above for your next prompt.</p>`}</section>`;
 }
@@ -6422,11 +6443,17 @@ async function handleSubmit(event) {
         form.reportValidity();
         return;
       }
-      const questions = captainLogCoachingQuestions({ explanation: data.get("explanation"), progress: data.get("progress"), improved: data.get("improved") }, { elapsedSeconds: Math.max(0, (Date.now() - Number(form.dataset.coachingStartedAt || Date.now())) / 1e3) });
+      const elapsedSeconds = Math.max(0, (Date.now() - Number(form.dataset.coachingStartedAt || Date.now())) / 1e3);
+      const questions = captainLogCoachingQuestions({ explanation: data.get("explanation"), progress: data.get("progress"), improved: data.get("improved") }, { elapsedSeconds });
       const region = form.querySelector("[data-bob-coaching]");
       const list = form.querySelector("[data-bob-coaching-questions]");
-      if (list) list.innerHTML = questions.map((item, index) => `<label data-coaching-question data-dok="${item.dok}" data-question="${escapeHtml2(item.question)}"><strong>${index + 1}. ${escapeHtml2(item.question)}</strong><textarea name="followUp" minlength="5" maxlength="300" required></textarea></label>`).join("");
-      if (region) region.hidden = false;
+      if (list) list.innerHTML = questions.map((item, index) => `<label data-coaching-question data-level="${item.level}" data-dok="${item.dok}" data-question="${escapeHtml2(item.question)}"><strong>${index + 1}. ${escapeHtml2(item.question)}</strong><textarea name="followUp" minlength="5" maxlength="300" required></textarea></label>`).join("");
+      if (region) {
+        region.hidden = false;
+        region.dataset.coachingLevel = questions[0]?.level ?? "starting";
+        region.querySelector("p").textContent = `${captainLogLevelLabel(questions[0]?.level)} questions chosen from your response.`;
+      }
+      form.dataset.coachingElapsedSeconds = String(elapsedSeconds);
       form.dataset.coachingReady = "true";
       const submitButton = form.querySelector("[data-weekly-reflection-submit]");
       if (submitButton) submitButton.textContent = "Submit Captain\u2019s Log";
@@ -6449,7 +6476,8 @@ async function handleSubmit(event) {
       help: data.get("help"),
       helpOther: data.get("helpOther"),
       rating: data.get("rating"),
-      followUps
+      followUps,
+      elapsedSeconds: Number(form.dataset.coachingElapsedSeconds ?? 0)
     });
     if (!result.ok) {
       const error = form.querySelector("[data-weekly-reflection-error]");

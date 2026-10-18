@@ -1,13 +1,14 @@
 export const WEEKLY_REFLECTION_STORAGE_KEY = "thinkamigbob.weekly-reflections.v1";
 export const CAPTAINS_LOG_PRESET_PROMPTS = Object.freeze([
-  { id: "week-1-ask", week: 1, label: "Ask", prompt: "What surprised you or made you wonder today?" },
-  { id: "week-2-make", week: 2, label: "Make", prompt: "Which attempt gave you an unexpected result? What did it reveal?" },
-  { id: "week-3-improve", week: 3, label: "Improve", prompt: "Which part will you or could you improve, and what change will you try?" },
-  { id: "week-4-grow", week: 4, label: "Grow", prompt: "How did a challenge or uncertainty help your thinking grow?" },
-  { id: "week-5-evidence", week: 5, label: "Evidence", prompt: "What evidence shows a limitation or a new opportunity in your idea?" },
-  { id: "week-6-explain", week: 6, label: "Explain", prompt: "What outcome was different from your plan, and what did you learn from it?" },
-  { id: "week-7-next", week: 7, label: "Next Step", prompt: "What progress did you make, and how could even that success be improved?" },
+  { id: "week-1-ask", week: 1, label: "Ask", starting: "What surprised you today? What do you wonder?", growing: "What surprised you or made you wonder today?", stretching: "What unexpected result changed your thinking, and what new question did it create?", prompt: "What surprised you or made you wonder today?" },
+  { id: "week-2-make", week: 2, label: "Make", starting: "What did you try? What happened?", growing: "Which try gave you an unexpected result? What did it show you?", stretching: "Which attempt produced an unexpected result, and what did that result reveal about your design?", prompt: "Which try gave you an unexpected result? What did it show you?" },
+  { id: "week-3-improve", week: 3, label: "Improve", starting: "What will you or could you change next?", growing: "Which part will you or could you improve? What change will you try?", stretching: "Which part will you or could you improve, and why is that change the strongest next step?", prompt: "Which part will you or could you improve? What change will you try?" },
+  { id: "week-4-grow", week: 4, label: "Grow", starting: "What was hard? What did you learn?", growing: "How did a challenge help your thinking grow?", stretching: "How did a challenge or uncertainty change your thinking, and how might that learning transfer to future work?", prompt: "How did a challenge help your thinking grow?" },
+  { id: "week-5-evidence", week: 5, label: "Evidence", starting: "What did you see or measure? What did it show?", growing: "What evidence showed a problem or a new chance to improve?", stretching: "What evidence reveals a limitation or a new opportunity, and how does it support your conclusion?", prompt: "What evidence showed a problem or a new chance to improve?" },
+  { id: "week-6-explain", week: 6, label: "Explain", starting: "What was different from your plan? What did you learn?", growing: "What result was different from your plan, and what did you learn from it?", stretching: "How did the outcome differ from your plan, and what explanation is best supported by your observations?", prompt: "What result was different from your plan, and what did you learn from it?" },
+  { id: "week-7-next", week: 7, label: "Next Step", starting: "What went well? What could be even better?", growing: "What progress did you make, and how could it still improve?", stretching: "What progress did you make, and how could you refine even that success to produce a stronger result?", prompt: "What progress did you make, and how could it still improve?" },
 ]);
+export const CAPTAINS_LOG_QUESTION_LEVELS = Object.freeze(["starting", "growing", "stretching"]);
 export const CAPTAINS_LOG_SCHEDULE_OPTIONS = Object.freeze(["Today", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
 export const CAPTAINS_LOG_WEEKDAYS = Object.freeze(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
 export const CAPTAINS_LOG_ASSIGNMENT_OPTIONS = Object.freeze([...CAPTAINS_LOG_WEEKDAYS, "Daily student choice"]);
@@ -30,7 +31,7 @@ export const REFLECTION_ACTIVITY_RATING_OPTIONS = Object.freeze([
   "5 = Awesome 🤩", "4 = Good 😊", "3 = Okay 😐", "2 = Difficult 😕", "1 = Frustrating 😫",
 ]);
 
-export function captainLogCoachingQuestions(value = {}, { elapsedSeconds = 0 } = {}) {
+export function captainLogResponseLevel(value = {}, { elapsedSeconds = 0 } = {}) {
   const response = String(value.explanation ?? "").trim();
   const words = response.split(/\s+/).filter(Boolean);
   const writingSignals = [
@@ -40,16 +41,20 @@ export function captainLogCoachingQuestions(value = {}, { elapsedSeconds = 0 } =
     words.length > 4 && !/\b(?:because|so|but|and|then)\b/i.test(response),
   ].filter(Boolean).length;
   const slower = Number(elapsedSeconds) >= 240;
-  const needsSupport = slower || words.length < 15 || writingSignals >= 2;
-  const questions = [
-    "What detail from your work best supports your answer?",
-    value.progress === "🏆 Complete"
-      ? "Why did your final idea work?"
-      : value.improved === "Yes" ? "Why did your change make the idea better?" : "What could you change or test next?",
-    "How could you use what you learned in a new problem?",
-  ];
-  const count = slower && writingSignals >= 2 ? 1 : needsSupport ? 2 : words.length >= 24 ? 3 : 2;
-  return questions.slice(0, count).map((question, index) => ({ dok: Math.min(4, index + 2), question }));
+  if (slower || words.length < 15 || writingSignals >= 2) return "starting";
+  const reasoningSignals = [/[.!?].+[.!?]$/s.test(response), /\b(?:because|therefore|evidence|result|showed|compared|however|although)\b/i.test(response), words.length >= 28].filter(Boolean).length;
+  return reasoningSignals >= 2 ? "stretching" : "growing";
+}
+
+export function captainLogCoachingQuestions(value = {}, { elapsedSeconds = 0 } = {}) {
+  const level = captainLogResponseLevel(value, { elapsedSeconds });
+  const questions = level === "starting"
+    ? ["What happened when you tried it?", value.improved === "Yes" ? "What got better?" : "What could you try next?"]
+    : level === "growing"
+      ? ["What detail from your work supports your answer?", value.progress === "🏆 Complete" ? "Why did your final idea work?" : value.improved === "Yes" ? "Why did your change make the idea better?" : "What could you change or test next?"]
+      : ["Which evidence best supports your explanation, and why?", value.progress === "🏆 Complete" ? "What tradeoff remains in your final idea?" : "How could you compare your next change with this result?", "How could you apply what you learned to a different problem?"];
+  const count = level === "starting" && Number(elapsedSeconds) >= 240 ? 1 : questions.length;
+  return questions.slice(0, count).map((question, index) => ({ level, dok: level === "starting" ? index + 1 : level === "growing" ? index + 2 : index + 2, question }));
 }
 
 function normalizeResponse(value) {
@@ -291,6 +296,10 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     return { ok: all.captainLogLibrary.length !== before.length };
   };
   const responses = (classId, studentId) => readAll().responses?.[`${classWeek(classId)}|${studentId}`] ?? [];
+  const studentQuestionLevel = (classId, studentId) => {
+    const saved = readAll().studentQuestionLevels?.[`${classId}|${studentId}`]?.level;
+    return CAPTAINS_LOG_QUESTION_LEVELS.includes(saved) ? saved : "starting";
+  };
   const recordActivity = (classId, title) => {
     const cleanTitle = String(title ?? "").trim().slice(0, 120);
     if (!classId || !cleanTitle) return { ok: false };
@@ -323,8 +332,14 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     const followUps = Array.isArray(value.followUps) ? value.followUps.map((item) => ({ dok: Number(item.dok), question: String(item.question ?? "").trim(), answer: String(item.answer ?? "").trim() })).filter((item) => item.question && item.answer.length >= 5) : [];
     if (!followUps.length) return { ok: false };
     all.responses = { ...(all.responses ?? {}), [key]: [...list, { ...response, followUps, submittedAt: new Date(now()).toISOString() }] };
+    const levelKey = `${classId}|${studentId}`, currentLevelState = all.studentQuestionLevels?.[levelKey] ?? { level: "starting", readinessStreak: 0 };
+    const currentIndex = Math.max(0, CAPTAINS_LOG_QUESTION_LEVELS.indexOf(currentLevelState.level));
+    const observedIndex = CAPTAINS_LOG_QUESTION_LEVELS.indexOf(captainLogResponseLevel(value, { elapsedSeconds: Number(value.elapsedSeconds ?? 0) }));
+    const readinessStreak = observedIndex > currentIndex ? Number(currentLevelState.readinessStreak ?? 0) + 1 : 0;
+    const nextIndex = readinessStreak >= 2 ? Math.min(CAPTAINS_LOG_QUESTION_LEVELS.length - 1, currentIndex + 1) : currentIndex;
+    all.studentQuestionLevels = { ...(all.studentQuestionLevels ?? {}), [levelKey]: { level: CAPTAINS_LOG_QUESTION_LEVELS[nextIndex], readinessStreak: nextIndex > currentIndex ? 0 : readinessStreak, updatedAt: new Date(now()).toISOString() } };
     write(all);
     return { ok: true, status: status(classId, studentId) };
   };
-  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogChoices, captainLogObligations, recordStudentVisit, captainLogWeekPlan, saveCaptainLogWeekPlan, clearCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
+  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogChoices, captainLogObligations, recordStudentVisit, captainLogWeekPlan, saveCaptainLogWeekPlan, clearCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, studentQuestionLevel, status, submit };
 }

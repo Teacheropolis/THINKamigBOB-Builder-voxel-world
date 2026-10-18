@@ -1293,8 +1293,18 @@ function captainLogThinkingHelpMarkup(promptId) {
   return `<div class="platform-captains-log-thinking-help"><button type="button" data-action="toggle-captains-log-thinking-help" aria-expanded="false">Show what I need to think about</button><p hidden>${escapeHtml(captainLogThinkingHelp(promptId))}</p></div>`;
 }
 
+function adaptiveCaptainLogPrompt(entry, level = "starting") {
+  const preset = CAPTAINS_LOG_PRESET_PROMPTS.find((item) => item.id === entry?.promptId);
+  return preset?.[level] ?? entry?.prompt ?? preset?.prompt ?? "";
+}
+
+function captainLogLevelLabel(level) {
+  return level === "stretching" ? "Stretching" : level === "growing" ? "Growing" : "Starting";
+}
+
 function captainsLogStudentWeekMarkup(classId, studentId) {
   const plan = weeklyReflections.captainLogWeekPlan(classId);
+  const questionLevel = weeklyReflections.studentQuestionLevel(classId, studentId);
   const completed = weeklyReflections.responses(classId, studentId);
   const completedIds = new Set(completed.map((item) => item.promptId).filter(Boolean));
   const entries = CAPTAINS_LOG_WEEKDAYS.map((slot) => ({ slot, ...plan.days[slot] })).filter((item) => item.enabled);
@@ -1324,15 +1334,15 @@ function captainsLogStudentWeekMarkup(classId, studentId) {
     const isDone = completedIds.has(item.promptId);
     const number = CAPTAINS_LOG_WEEKDAYS.indexOf(item.slot) + 1;
     const label = isDone ? "✓ Done" : assignment === today ? `Today · ${assignment}` : assignment;
-    return `<li class="${isDone ? "is-complete" : ""}"><span aria-hidden="true">${isDone ? "✓" : "●"}</span><div><strong>Prompt ${number} · ${escapeHtml(label)}</strong><p>${escapeHtml(item.prompt)}</p>${captainLogThinkingHelpMarkup(item.promptId)}</div></li>`;
+    return `<li class="${isDone ? "is-complete" : ""}"><span aria-hidden="true">${isDone ? "✓" : "●"}</span><div><strong>Prompt ${number} · ${escapeHtml(label)}</strong><p>${escapeHtml(adaptiveCaptainLogPrompt(item, questionLevel))}</p>${captainLogThinkingHelpMarkup(item.promptId)}</div></li>`;
   }).join("");
   const choiceRequired = Math.max(0, required - assignedEntries.length);
   const choiceCompleted = choiceEntries.filter((item) => completedIds.has(item.promptId)).length;
   const choiceRemaining = Math.max(0, choiceRequired - choiceCompleted);
   const choiceTaskNumbers = Array.from({ length: choiceRequired }, (_, index) => assignedEntries.length + index + 1);
   const choiceTaskLabel = choiceTaskNumbers.length === 1 ? `Prompt ${choiceTaskNumbers[0]}` : `Prompts ${choiceTaskNumbers.slice(0, -1).join(", ")}${choiceTaskNumbers.length > 2 ? "," : ""} and ${choiceTaskNumbers.at(-1)}`;
-  const choiceGroup = choiceEntries.length && choiceRequired ? `<li class="platform-captains-log-choice-task${choiceRemaining === 0 ? " is-complete" : ""}"><span aria-hidden="true">${choiceRemaining === 0 ? "✓" : "◇"}</span><div><strong>${choiceTaskLabel} - choose ${choiceRequired} from these choices</strong>${choiceRemaining === 0 ? `<small>✓ Choice complete</small>` : choiceCompleted ? `<small>${choiceCompleted} chosen · ${choiceRemaining} left</small>` : ""}<ul>${choiceEntries.map((item, index) => { const isDone = completedIds.has(item.promptId); return `<li class="${isDone ? "is-complete" : ""}"><strong>Choice ${String.fromCharCode(65 + index)}${isDone ? " · Used" : ""}</strong><p>${escapeHtml(item.prompt)}</p>${captainLogThinkingHelpMarkup(item.promptId)}</li>`; }).join("")}</ul></div></li>` : "";
-  return `<section class="platform-captains-log-week-map" aria-labelledby="captains-log-week-map-title"><div><h3 id="captains-log-week-map-title">Your Week</h3><p><strong>${done} of ${required} done</strong> · ${remaining} left</p></div><p class="platform-captains-log-week-instruction">Complete the assigned prompts and ${choiceRequired ? `choose ${choiceRequired} more` : "follow the assigned days"}.</p><ol>${assignedPrompts}${choiceGroup}</ol><div class="platform-captains-log-student-timeline"><strong>Suggested plan</strong>${timeline.map((item) => `<p>${escapeHtml(item)}</p>`).join("")}</div></section>`;
+  const choiceGroup = choiceEntries.length && choiceRequired ? `<li class="platform-captains-log-choice-task${choiceRemaining === 0 ? " is-complete" : ""}"><span aria-hidden="true">${choiceRemaining === 0 ? "✓" : "◇"}</span><div><strong>${choiceTaskLabel} - choose ${choiceRequired} from these choices</strong>${choiceRemaining === 0 ? `<small>✓ Choice complete</small>` : choiceCompleted ? `<small>${choiceCompleted} chosen · ${choiceRemaining} left</small>` : ""}<ul>${choiceEntries.map((item, index) => { const isDone = completedIds.has(item.promptId); return `<li class="${isDone ? "is-complete" : ""}"><strong>Choice ${String.fromCharCode(65 + index)}${isDone ? " · Used" : ""}</strong><p>${escapeHtml(adaptiveCaptainLogPrompt(item, questionLevel))}</p>${captainLogThinkingHelpMarkup(item.promptId)}</li>`; }).join("")}</ul></div></li>` : "";
+  return `<section class="platform-captains-log-week-map" aria-labelledby="captains-log-week-map-title"><div><h3 id="captains-log-week-map-title">Your Week</h3><p><strong>${done} of ${required} done</strong> · ${remaining} left</p></div><p class="platform-captains-log-level" data-captains-log-level="${questionLevel}">Bob’s question level: <strong>${captainLogLevelLabel(questionLevel)}</strong></p><p class="platform-captains-log-week-instruction">Complete the assigned prompts and ${choiceRequired ? `choose ${choiceRequired} more` : "follow the assigned days"}.</p><ol>${assignedPrompts}${choiceGroup}</ol><div class="platform-captains-log-student-timeline"><strong>Suggested plan</strong>${timeline.map((item) => `<p>${escapeHtml(item)}</p>`).join("")}</div></section>`;
 }
 
 function studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions, classId) {
@@ -1341,10 +1351,11 @@ function studentReflectionMarkup(reflectionStatus, teacherActivities, reflection
   const dueLabel = due.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
   const plan = weeklyReflections.captainLogPlan(classId);
   const choices = weeklyReflections.captainLogChoices(classId, session.read().studentId);
+  const questionLevel = weeklyReflections.studentQuestionLevel(classId, session.read().studentId);
   const weekMap = captainsLogStudentWeekMarkup(classId, session.read().studentId);
   const promptChoice = choices.length > 1
-    ? `<label class="platform-student-prompt-choice">Choose a prompt<select name="promptId" required><option value="">Choose one</option>${choices.map((item) => `<option value="${escapeHtml(item.promptId)}">${escapeHtml(item.prompt)}</option>`).join("")}</select></label>${captainLogThinkingHelpMarkup("")}`
-    : `<input type="hidden" name="promptId" value="${escapeHtml(choices[0]?.promptId ?? plan.promptId)}"><p class="platform-captains-log-prompt"><strong>${escapeHtml(choices[0]?.prompt ?? plan.prompt)}</strong></p>${captainLogThinkingHelpMarkup(choices[0]?.promptId ?? plan.promptId)}`;
+    ? `<label class="platform-student-prompt-choice">Choose a prompt<select name="promptId" required><option value="">Choose one</option>${choices.map((item) => `<option value="${escapeHtml(item.promptId)}">${escapeHtml(adaptiveCaptainLogPrompt(item, questionLevel))}</option>`).join("")}</select></label>${captainLogThinkingHelpMarkup("")}`
+    : `<input type="hidden" name="promptId" value="${escapeHtml(choices[0]?.promptId ?? plan.promptId)}"><p class="platform-captains-log-prompt"><strong>${escapeHtml(adaptiveCaptainLogPrompt(choices[0] ?? plan, questionLevel))}</strong></p>${captainLogThinkingHelpMarkup(choices[0]?.promptId ?? plan.promptId)}`;
   const availableToday = weeklyReflections.captainLogAvailableToday(classId) && choices.length;
   return `<section class="platform-student-reflection platform-student-reflection-inline platform-student-zone platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><div class="platform-student-step-heading"><img src="./assets/images/student-path/captains-log-brass-badge.png" alt=""><h2 id="reflection-check-title">Captain’s Log</h2></div><p class="platform-student-status" data-weekly-reflection-status>${reflectionStatus.remaining === 0 ? `Done! ${reflectionStatus.completed} finished this week.` : `Exit ticket · ${reflectionStatus.remaining} left this week · Due ${escapeHtml(dueLabel)}.`}</p>${weekMap}${reflectionStatus.remaining === 0 ? "" : availableToday ? `<details class="platform-student-reflection-form"><summary>Open Captain’s Log</summary><form data-form="weekly-reflection" data-coaching-started-at="${Date.now()}" novalidate>${promptChoice}<label for="weekly-reflection-activity">Activity Worked On Today</label><select id="weekly-reflection-activity" name="activityChoice" required><option value="">Choose an activity</option>${teacherActivities.map((activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activity)}</option>`).join("")}<option value="__other__">Other activity — type my own</option></select><label data-reflection-other-activity hidden>Type the activity name<input name="activityOther" maxlength="120"></label><label for="weekly-reflection-progress">Mission Progress</label><select id="weekly-reflection-progress" name="progress" required>${reflectionOptions(REFLECTION_PROGRESS_OPTIONS)}</select><label for="weekly-reflection-response">Your answer</label><textarea id="weekly-reflection-response" name="explanation" minlength="10" maxlength="500" required></textarea><button class="platform-reflection-speech-button" type="button" data-action="reflection-dictate" aria-pressed="false">Speak Answer</button><button class="platform-reflection-speech-stop" type="button" data-action="reflection-dictate-stop" hidden>Stop Speaking</button><p class="platform-reflection-speech-status" data-reflection-speech-status role="status">Type or speak.</p><label>Did you improve your idea?<select name="improved" required>${reflectionOptions(REFLECTION_IMPROVEMENT_OPTIONS)}</select></label><label>Badge<select name="badge" required>${reflectionOptions(REFLECTION_BADGE_OPTIONS)}</select></label><label>Need help next class?<select name="help" required>${reflectionOptions(REFLECTION_HELP_OPTIONS)}</select></label><label>Could you help someone?<select name="helpOther" required>${reflectionOptions(REFLECTION_HELP_OTHER_OPTIONS)}</select></label><label>How did it go?<select name="rating" required>${reflectionOptions(REFLECTION_ACTIVITY_RATING_OPTIONS)}</select></label><section class="platform-bob-coaching" data-bob-coaching hidden aria-labelledby="bob-coaching-title"><h3 id="bob-coaching-title">Bob’s Next Questions</h3><p>Show a little more of your thinking.</p><div data-bob-coaching-questions></div></section><button type="submit" data-weekly-reflection-submit>Continue with Bob</button><p class="platform-error" data-weekly-reflection-error role="alert" hidden></p></form></details>` : `<p class="platform-student-status">No Captain’s Log is due today. Check the plan above for your next prompt.</p>`}</section>`;
 }
@@ -3665,11 +3676,13 @@ async function handleSubmit(event) {
     const activityChoice = String(data.get("activityChoice") ?? "");
     if (form.dataset.coachingReady !== "true") {
       if (!form.checkValidity()) { form.reportValidity(); return; }
-      const questions = captainLogCoachingQuestions({ explanation: data.get("explanation"), progress: data.get("progress"), improved: data.get("improved") }, { elapsedSeconds: Math.max(0, (Date.now() - Number(form.dataset.coachingStartedAt || Date.now())) / 1000) });
+      const elapsedSeconds = Math.max(0, (Date.now() - Number(form.dataset.coachingStartedAt || Date.now())) / 1000);
+      const questions = captainLogCoachingQuestions({ explanation: data.get("explanation"), progress: data.get("progress"), improved: data.get("improved") }, { elapsedSeconds });
       const region = form.querySelector("[data-bob-coaching]");
       const list = form.querySelector("[data-bob-coaching-questions]");
-      if (list) list.innerHTML = questions.map((item, index) => `<label data-coaching-question data-dok="${item.dok}" data-question="${escapeHtml(item.question)}"><strong>${index + 1}. ${escapeHtml(item.question)}</strong><textarea name="followUp" minlength="5" maxlength="300" required></textarea></label>`).join("");
-      if (region) region.hidden = false;
+      if (list) list.innerHTML = questions.map((item, index) => `<label data-coaching-question data-level="${item.level}" data-dok="${item.dok}" data-question="${escapeHtml(item.question)}"><strong>${index + 1}. ${escapeHtml(item.question)}</strong><textarea name="followUp" minlength="5" maxlength="300" required></textarea></label>`).join("");
+      if (region) { region.hidden = false; region.dataset.coachingLevel = questions[0]?.level ?? "starting"; region.querySelector("p").textContent = `${captainLogLevelLabel(questions[0]?.level)} questions chosen from your response.`; }
+      form.dataset.coachingElapsedSeconds = String(elapsedSeconds);
       form.dataset.coachingReady = "true";
       const submitButton = form.querySelector("[data-weekly-reflection-submit]");
       if (submitButton) submitButton.textContent = "Submit Captain’s Log";
@@ -3690,6 +3703,7 @@ async function handleSubmit(event) {
       helpOther: data.get("helpOther"),
       rating: data.get("rating"),
       followUps,
+      elapsedSeconds: Number(form.dataset.coachingElapsedSeconds ?? 0),
     });
     if (!result.ok) {
       const error = form.querySelector("[data-weekly-reflection-error]");

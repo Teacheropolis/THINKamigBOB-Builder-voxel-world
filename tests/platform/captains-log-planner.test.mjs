@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync, readFileSync } from "node:fs";
-import { CAPTAINS_LOG_ASSIGNMENT_OPTIONS, CAPTAINS_LOG_PRESET_PROMPTS, captainLogCoachingQuestions, createWeeklyReflections } from "../../platform/scripts/weekly-reflections.mjs";
+import { CAPTAINS_LOG_ASSIGNMENT_OPTIONS, CAPTAINS_LOG_PRESET_PROMPTS, captainLogCoachingQuestions, captainLogResponseLevel, createWeeklyReflections } from "../../platform/scripts/weekly-reflections.mjs";
 
 function memoryStorage() {
   const values = new Map();
@@ -12,8 +12,10 @@ test("Captain's Log provides a seven-week AMIG prompt progression", () => {
   assert.equal(CAPTAINS_LOG_PRESET_PROMPTS.length, 7);
   assert.deepEqual(CAPTAINS_LOG_PRESET_PROMPTS.map((item) => item.week), [1, 2, 3, 4, 5, 6, 7]);
   assert.match(CAPTAINS_LOG_PRESET_PROMPTS[0].prompt, /surprised|wonder/i);
-  assert.match(CAPTAINS_LOG_PRESET_PROMPTS[6].prompt, /success be improved/i);
-  assert.ok(CAPTAINS_LOG_PRESET_PROMPTS.filter((item) => /unexpected|work better|challenge|uncertainty|limitation|different from your plan|improved/i.test(item.prompt)).length > CAPTAINS_LOG_PRESET_PROMPTS.length / 2);
+  assert.match(CAPTAINS_LOG_PRESET_PROMPTS[6].prompt, /progress|improve/i);
+  assert.match(CAPTAINS_LOG_PRESET_PROMPTS[0].starting, /surprised/i);
+  assert.match(CAPTAINS_LOG_PRESET_PROMPTS[0].stretching, /changed your thinking/i);
+  assert.ok(CAPTAINS_LOG_PRESET_PROMPTS.filter((item) => /unexpected|better|challenge|uncertainty|limitation|different from your plan|improve/i.test(JSON.stringify(item))).length > CAPTAINS_LOG_PRESET_PROMPTS.length / 2);
 });
 
 test("teacher can schedule a prompt and update the weekly requirement", () => {
@@ -161,9 +163,13 @@ test("teacher prompt dropdowns do not display rotation week numbers", () => {
 
 test("Bob uses deterministic writing and timing signals to adjust follow-up depth", () => {
   const supported = captainLogCoachingQuestions({ explanation: "i made bridge", progress: "🌱 Started", improved: "Not Yet" }, { elapsedSeconds: 300 });
+  const middle = captainLogCoachingQuestions({ explanation: "I changed the bridge base because it was weak, and then it held several more blocks during testing.", progress: "🔧 Improving", improved: "Yes" }, { elapsedSeconds: 150 });
   const extended = captainLogCoachingQuestions({ explanation: "I tested three bridge designs because I wanted evidence. The triangle supports held the most blocks, so I strengthened the center and tested it again with additional weight.", progress: "🏆 Complete", improved: "Yes" }, { elapsedSeconds: 90 });
   assert.equal(supported.length, 1);
+  assert.equal(middle.length, 2);
   assert.equal(extended.length, 3);
+  assert.equal(captainLogResponseLevel({ explanation: "I tried again and it worked better.", progress: "🧪 Testing", improved: "Yes" }, { elapsedSeconds: 100 }), "starting");
+  assert.deepEqual([supported[0].level, middle[0].level, extended[0].level], ["starting", "growing", "stretching"]);
   assert.deepEqual(extended.map((item) => item.dok), [2, 3, 4]);
 });
 
