@@ -1,0 +1,16 @@
+# Cloudflare Pages configuration downloaded from the live project and extended
+# with private Worker service bindings for the platform API gateway.
+name = "thinkamigbob-platform"
+pages_build_output_dir = "public-site"
+compatibility_date = "2026-08-12"
+
+[[services]]
+binding = "PLATFORM_IDENTITY"
+service = "thinkamigbob-platform-identity-staging"
+
+[[services]]
+binding = "EVIDENCE_API"
+service = "thinkamigbob-evidence-api-staging"
+
+[env]
+production = { }
