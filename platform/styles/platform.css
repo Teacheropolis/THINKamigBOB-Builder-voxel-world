@@ -1035,6 +1035,22 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-smartboard-tool[data-smartboard-tool="whiteboard"] header { background: var(--platform-blue-dark); }
 .platform-smartboard-tool[data-smartboard-tool="names"] { color: var(--platform-navy); border-color: var(--platform-blue); background: #f5f8f9; }
 .platform-smartboard-tool[data-smartboard-tool="names"] header { background: var(--platform-blue-dark); }
+.platform-smartboard-tool[data-smartboard-tool="amig"] { color: #102f45; border-color: #c99a27; background: linear-gradient(145deg, #fffdf5, #f6ead0); }
+.platform-smartboard-tool[data-smartboard-tool="amig"] header { background: linear-gradient(90deg, #173e54, #0d2939); }
+.platform-amig-anchor-chart .platform-amig-anchor-intro { display: flex; align-items: baseline; justify-content: center; gap: 0.8rem; padding: 0.35rem; color: #173e54; font-size: clamp(1.15rem, 2.4vw, 2rem); font-weight: 900; }
+.platform-amig-anchor-intro b { color: #a66f00; font-size: 1.25em; letter-spacing: 0.1em; text-shadow: 0 1px 0 #fff3bd; }
+.platform-amig-anchor-intro i { color: #2d7d5b; font-style: normal; }
+.platform-amig-anchor-steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.platform-amig-anchor-steps li { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0.75rem; min-height: 7rem; padding: 0.9rem; border: 3px solid var(--amig-step-color); border-radius: 1rem; background: #fff; box-shadow: inset 0 0.3rem 0 rgba(255,255,255,0.75), 0 0.35rem 0.8rem rgba(16,47,69,0.12); }
+.platform-amig-anchor-steps li > b { display: grid; width: 3.6rem; height: 3.6rem; place-items: center; border: 4px double #6d4900; border-radius: 50%; color: #342200; background: radial-gradient(circle at 35% 30%, #ffe891, #d4a017 55%, #875900); font-size: 2rem; text-shadow: 0 1px 0 #fff0a8; }
+.platform-amig-anchor-steps li > div { display: block; }
+.platform-amig-anchor-steps h3 { margin: 0; color: var(--amig-step-color); font-size: clamp(1.35rem, 2.8vw, 2.1rem); }
+.platform-amig-anchor-steps p { margin: 0.15rem 0 0; font-size: clamp(0.92rem, 1.7vw, 1.3rem); font-weight: 750; line-height: 1.3; }
+.platform-amig-anchor-steps [data-amig-step="ask"] { --amig-step-color: #17698e; }
+.platform-amig-anchor-steps [data-amig-step="make"] { --amig-step-color: #2d7d5b; }
+.platform-amig-anchor-steps [data-amig-step="improve"] { --amig-step-color: #9b6b00; }
+.platform-amig-anchor-steps [data-amig-step="grow"] { --amig-step-color: #176b55; }
+.platform-amig-anchor-reminder { margin: 0; padding: 0.55rem; border-radius: 0.7rem; color: #fff; background: #176b55; font-size: clamp(1rem, 2vw, 1.35rem); font-weight: 900; text-align: center; }
 .platform-name-picker-wheel-wrap { position: relative; display: grid !important; width: min(15rem, 70cqw); justify-self: center; place-items: center; }
 .platform-name-picker-wheel { display: grid !important; width: 100%; aspect-ratio: 1; place-items: center; border: 0.55rem solid #fff; border-radius: 50%; background: repeating-conic-gradient(from -18deg, var(--platform-blue) 0 40deg, var(--platform-gold) 40deg 80deg, var(--platform-green) 80deg 120deg, #8798a1 120deg 160deg); box-shadow: 0 0.75rem 1.5rem rgba(7, 27, 39, 0.24); transform: rotate(var(--name-picker-rotation)); transition: transform 1s cubic-bezier(0.18, 0.72, 0.2, 1); }
 .platform-name-picker-wheel::before { position: absolute; width: 44%; aspect-ratio: 1; border: 0.3rem solid #d1dde2; border-radius: 50%; background: #fff; content: ""; }
@@ -1087,6 +1103,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-smartboard-tool-tray [data-smartboard-tool-name="stopwatch"] { background: var(--platform-blue); }
 .platform-smartboard-tool-tray [data-smartboard-tool-name="message"] { background: var(--platform-blue-dark); }
 .platform-smartboard-tool-tray [data-smartboard-tool-name="voice"] { background: var(--platform-green); }
+.platform-smartboard-tool-tray [data-smartboard-tool-name="amig"] { color: #173e54; background: var(--platform-gold); }
 .platform-smartboard-tool-tray .platform-smartboard-reset-tools { min-height: 2.35rem; color: var(--platform-navy); background: #fff; font-size: 0.75rem; }
 .platform-smartboard-voice-tool output { display: block; color: var(--platform-navy); font-size: 2.5rem; font-weight: 900; text-align: center; }
 .platform-missions-first-reminder { margin: 0; padding: 0.65rem 0.75rem; border-left: 4px solid #c28b12; color: var(--platform-ink) !important; background: #fff8e4; font-size: 0.78rem; font-weight: 750; line-height: 1.35; }
