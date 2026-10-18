@@ -161,9 +161,12 @@ export function createPlatformIdentityWorker({ verifierFactory = (options) => cr
           "google-signing-keys-unavailable",
           "google-signing-key-not-found",
         ]);
-        const reason = safeIdentityReasons.has(error?.message)
-          ? error.message
-          : status >= 500 ? "internal-error" : "identity-rejected";
+        const rawReason = String(error?.message || "");
+        const reason = safeIdentityReasons.has(rawReason)
+          ? rawReason
+          : rawReason && /^[A-Za-z0-9 .:_-]{1,120}$/.test(rawReason)
+            ? rawReason
+            : status >= 500 ? "internal-error" : "identity-rejected";
         console.error(JSON.stringify({ event: "platform-identity-error", path: url.pathname, status, reason }));
         return json(status, { error: status === 413 ? "request-too-large" : "identity-not-verified" });
       }

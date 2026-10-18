@@ -12,6 +12,7 @@ const approvedAssetSha256 = "ba2bf5d6bc7807a933342ef0af531de0c62de4fb3b9412aa996
 const outputAllowlist = Object.freeze([
   "_headers",
   "_redirects",
+  "_routes.json",
   "assets/student-platform-industrial-background.png",
   "index.html",
   "robots.txt",
@@ -151,7 +152,7 @@ footer {
 }
 `;
 
-const headers = `/*
+const headers = `/index.html
   Cache-Control: no-store
   Content-Security-Policy: default-src 'self'; base-uri 'none'; connect-src 'none'; font-src 'self'; form-action 'none'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'none'; style-src 'self'; upgrade-insecure-requests
   Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=(), usb=()
@@ -159,10 +160,22 @@ const headers = `/*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   X-Robots-Tag: noindex, nofollow, noarchive
+
+/platform/*
+  Cache-Control: no-store
+  Content-Security-Policy: default-src 'self'; base-uri 'none'; connect-src 'self'; font-src 'self' https://fonts.gstatic.com; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; object-src 'none'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; upgrade-insecure-requests
+  Permissions-Policy: camera=(self), geolocation=(), microphone=(self), payment=(), usb=()
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-Robots-Tag: noindex, nofollow, noarchive
 `;
 
-const redirects = `/* /index.html 200
-`;
+// Cloudflare Pages serves index.html for the site root without a catch-all
+// redirect. A catch-all here also captures /platform/ and replaces the real
+// application with the public holding page.
+const redirects = "";
+const routes = `{\n  "version": 1,\n  "include": ["/api/*"],\n  "exclude": []\n}\n`;
 
 const robots = `User-agent: *
 Disallow: /
@@ -237,16 +250,20 @@ async function build() {
   await write("styles/platform-public.css", publicCss);
   await write("_headers", headers);
   await write("_redirects", redirects);
+  await write("_routes.json", routes);
   await write("robots.txt", robots);
   await mkdir(join(temporaryDirectory, "assets"), { recursive: true });
   await cp(sourceAssetPath, join(temporaryDirectory, "assets/student-platform-industrial-background.png"));
 
   await validateArtifact();
+  // The Cloudflare project runs this safety build automatically. Preserve the
+  // separately generated and reviewed Platform application instead of
+  // replacing it with only the public holding page.
+  await cp(join(outputDirectory, "platform"), join(temporaryDirectory, "platform"), { recursive: true });
   await rm(outputDirectory, { recursive: true, force: true });
   await rename(temporaryDirectory, outputDirectory);
-
-  const manifest = await listFiles(outputDirectory);
-  process.stdout.write(`Public artifact built from explicit allowlist:\n${manifest.map((path) => `- ${path}`).join("\n")}\n`);
 }
 
 await build();
+const manifest = await listFiles(outputDirectory);
+process.stdout.write(`Public site and Platform built:\n${manifest.map((path) => `- ${path}`).join("\n")}\n`);
