@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { CAPTAINS_LOG_ASSIGNMENT_OPTIONS, CAPTAINS_LOG_PRESET_PROMPTS, captainLogCoachingQuestions, createWeeklyReflections } from "../../platform/scripts/weekly-reflections.mjs";
 
 function memoryStorage() {
@@ -201,6 +201,7 @@ test("student dashboard shows the full weekly prompt map and an adaptive timelin
   assert.match(app, /lastStudentPhaseKey/);
   assert.match(app, /studentPhasePopupTimeout/);
   assert.match(css, /url\("\.\.\/assets\/images\/student-platform\/student-platform-industrial-background\.png"\)/);
+  assert.equal(existsSync(new URL("../../platform/assets/images/student-platform/student-platform-industrial-background.png", import.meta.url)), true);
   assert.match(app, /state\.remainingSeconds <= 600/);
   assert.match(app, /state\.remainingSeconds <= 360/);
   assert.match(app, /Listen and accessibility tools are still available/);
