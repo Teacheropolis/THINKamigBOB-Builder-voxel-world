@@ -39,6 +39,17 @@ function sameSecret(left, right) {
   return a.length > 0 && a.length === b.length && timingSafeEqual(a, b);
 }
 
+function googleCsrfAccepted(request, form) {
+  const cookieHeader = String(request.headers.get("cookie") || "");
+  const cookieToken = cookie(request, "g_csrf_token");
+  const formToken = form.get("g_csrf_token");
+  if (sameSecret(cookieToken, formToken)) return true;
+  const cookieWasBlocked = !cookieHeader.split(";").some((part) => part.trim().startsWith("g_csrf_token="));
+  return cookieWasBlocked
+    && Boolean(formToken)
+    && request.headers.get("origin") === "https://accounts.google.com";
+}
+
 async function internal(binding, path, body, request, method = "POST") {
   const headers = new Headers({ "content-type": "application/json", accept: "application/json" });
   const sessionCookie = request.headers.get("cookie");
@@ -80,7 +91,7 @@ export function createPlatformIdentityWorker({ verifierFactory = (options) => cr
 
         if (url.pathname === GOOGLE_PATH && request.method === "POST") {
           const form = new URLSearchParams(await boundedText(request));
-          if (!sameSecret(cookie(request, "g_csrf_token"), form.get("g_csrf_token"))) return json(403, { error: "google-signin-csrf-check-failed" });
+          if (!googleCsrfAccepted(request, form)) return json(403, { error: "google-signin-csrf-check-failed" });
           const identity = await verifierFactory({ clientId: env.GOOGLE_SIGNIN_CLIENT_ID }).verify(form.get("credential"));
           if (!allowedTeacherEmails(env).has(identity.email)) return json(403, { error: "teacher-account-not-approved" });
           const result = await internal(env.PLATFORM_AUTH, PLATFORM_IDENTITY_INTERNAL_PATHS.teacherSession, identity, request);
@@ -141,7 +152,19 @@ export function createPlatformIdentityWorker({ verifierFactory = (options) => cr
         return json(405, { error: "method-not-allowed" });
       } catch (error) {
         const status = Number(error?.status) || 401;
-        console.error(JSON.stringify({ event: "platform-identity-error", path: url.pathname, status, reason: status >= 500 ? "internal-error" : "identity-rejected" }));
+        const safeIdentityReasons = new Set([
+          "google-signin-client-required",
+          "invalid-google-id-token",
+          "unsupported-google-token-signature",
+          "google-discovery-unavailable",
+          "invalid-google-discovery",
+          "google-signing-keys-unavailable",
+          "google-signing-key-not-found",
+        ]);
+        const reason = safeIdentityReasons.has(error?.message)
+          ? error.message
+          : status >= 500 ? "internal-error" : "identity-rejected";
+        console.error(JSON.stringify({ event: "platform-identity-error", path: url.pathname, status, reason }));
         return json(status, { error: status === 413 ? "request-too-large" : "identity-not-verified" });
       }
     },

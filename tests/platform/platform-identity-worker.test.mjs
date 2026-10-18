@@ -49,6 +49,15 @@ test("teacher Google entry verifies double-submit CSRF and sets a secure platfor
   assert.equal(denied.status, 403);
 });
 
+test("teacher Google entry tolerates a browser-blocked CSRF cookie only for Google's signed redirect", async () => {
+  const worker = createPlatformIdentityWorker({ verifierFactory: () => ({ async verify(value) { assert.equal(value, "signed-google-token"); return { subject: "google-1", email: "teacher@example.org", hostedDomain: null }; } }) });
+  const body = new URLSearchParams({ credential: "signed-google-token", g_csrf_token: "csrf-1" });
+  const accepted = await worker.fetch(new Request(`${origin}/api/auth/v1/google`, { method: "POST", headers: { origin: "https://accounts.google.com", "content-type": "application/x-www-form-urlencoded" }, body }), environment());
+  assert.equal(accepted.status, 303);
+  const rejected = await worker.fetch(new Request(`${origin}/api/auth/v1/google`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body }), environment());
+  assert.equal(rejected.status, 403);
+});
+
 test("teacher entry is allowlisted and student entry can remain independently locked", async () => {
   const worker = createPlatformIdentityWorker({ verifierFactory: () => ({ async verify() { return { subject: "google-2", email: "other@gmail.com", hostedDomain: null }; } }) });
   const body = new URLSearchParams({ credential: "signed-google-token", g_csrf_token: "csrf-1" });
