@@ -25,6 +25,12 @@ test("avoids labels used in earlier classes and resolves repeated first names", 
   assert.notEqual(result.labels[0].toLowerCase(), result.labels[1].toLowerCase());
 });
 
+test("uses a different beginning word for every student in a class", () => {
+  const result = generateNameBobs("Lily\nRiley\nAvery\nLucy\nMolly\nEmily");
+  const beginnings = result.labels.map((label) => label.split(/\s+/)[0].toLowerCase());
+  assert.equal(new Set(beginnings).size, result.labels.length);
+});
+
 test("retries one student's label without changing the rest of the class", () => {
   const original = generateNameBobs("Ava\nLiam\nMia").labels;
   const result = retryNameBob("Liam", original);
@@ -33,6 +39,8 @@ test("retries one student's label without changing the rest of the class", () =>
   assert.notEqual(result.labels[1], original[1]);
   assert.match(result.labels[1], /LiamBob/i);
   assert.equal(result.labels[2], original[2]);
+  const beginnings = result.labels.map((label) => label.split(/\s+/)[0].toLowerCase());
+  assert.equal(new Set(beginnings).size, result.labels.length);
 });
 
 test("retry reports when the entered student is not in the generated list", () => {

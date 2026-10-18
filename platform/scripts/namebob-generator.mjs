@@ -49,10 +49,15 @@ function boundedLabel(value) {
   return String(value).replace(/\s+/g, " ").trim().slice(0, 40).trim();
 }
 
-export function generateNameBobs(value, { usedLabels = [] } = {}) {
+function beginningWord(value) {
+  return String(value || "").trim().split(/\s+/)[0].toLocaleLowerCase();
+}
+
+export function generateNameBobs(value, { usedLabels = [], usedBeginningWords = [] } = {}) {
   const lines = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
   const firstNames = lines.map(firstNameFromRosterLine).filter(Boolean);
   const used = new Set(usedLabels.map((label) => String(label).trim().toLocaleLowerCase()).filter(Boolean));
+  const beginnings = new Set(usedBeginningWords.map(beginningWord).filter(Boolean));
   const labels = [];
 
   for (const [index, firstName] of firstNames.entries()) {
@@ -65,15 +70,16 @@ export function generateNameBobs(value, { usedLabels = [] } = {}) {
         ? `${rhyme} ${firstName}Bob`
         : `${firstName}Bob ${rhyme}`;
       const bounded = boundedLabel(candidate);
-      if (!used.has(bounded.toLocaleLowerCase())) label = bounded;
+      if (!used.has(bounded.toLocaleLowerCase()) && !beginnings.has(beginningWord(bounded))) label = bounded;
     }
     if (!label) {
       let number = 2;
       const base = boundedLabel(`${firstName}Bob`);
       label = base;
-      while (used.has(label.toLocaleLowerCase())) label = boundedLabel(`${base} ${number++}`);
+      while (used.has(label.toLocaleLowerCase()) || beginnings.has(beginningWord(label))) label = boundedLabel(`${base}${number++} ${madeUpRhyme(firstName, number)}`);
     }
     used.add(label.toLocaleLowerCase());
+    beginnings.add(beginningWord(label));
     labels.push(label);
   }
   return Object.freeze({ labels: Object.freeze(labels), sourceCount: lines.filter((line) => String(line).trim()).length });
@@ -86,7 +92,8 @@ export function retryNameBob(firstNameValue, currentLabels, { usedLabels = [] } 
   const marker = `${firstName}bob`.toLocaleLowerCase();
   const index = labels.findIndex((label) => label.toLocaleLowerCase().includes(marker));
   if (index < 0) return Object.freeze({ ok: false, reason: "student-not-found", labels: Object.freeze(labels) });
-  const generated = generateNameBobs(firstName, { usedLabels: [...usedLabels, ...labels] });
+  const otherLabels = labels.filter((_, labelIndex) => labelIndex !== index);
+  const generated = generateNameBobs(firstName, { usedLabels: [...usedLabels, ...labels], usedBeginningWords: otherLabels });
   if (!generated.labels[0]) return Object.freeze({ ok: false, reason: "retry-unavailable", labels: Object.freeze(labels) });
   const retried = [...labels];
   retried[index] = generated.labels[0];
