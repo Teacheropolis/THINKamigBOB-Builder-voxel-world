@@ -9,6 +9,7 @@ export const CAPTAINS_LOG_PRESET_PROMPTS = Object.freeze([
   { id: "week-7-next", week: 7, label: "Next Step", prompt: "What are you proud of, and what will you try next?" },
 ]);
 export const CAPTAINS_LOG_SCHEDULE_OPTIONS = Object.freeze(["Today", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
+export const CAPTAINS_LOG_WEEKDAYS = Object.freeze(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
 export const REFLECTION_PROGRESS_OPTIONS = Object.freeze(["🌱 Started", "🧪 Testing", "🔧 Improving", "🏆 Complete"]);
 export const REFLECTION_IMPROVEMENT_OPTIONS = Object.freeze(["Yes", "Not Yet"]);
 export const REFLECTION_BADGE_OPTIONS = Object.freeze([
@@ -77,11 +78,55 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     return { ok: true, required };
   };
   const captainLogPlan = (classId) => {
+    const weekly = readAll().captainLogWeekPlans?.[classId];
+    if (weekly?.days) {
+      const today = new Date(now()).toLocaleDateString("en-US", { weekday: "long" });
+      return weekly.days[today] ?? weekly.days[CAPTAINS_LOG_WEEKDAYS.find((day) => weekly.days[day]?.enabled)] ?? { prompt: "", promptId: "custom", week: weekly.week ?? 1, schedule: today, required: requirement(classId) };
+    }
     const saved = readAll().captainLogPlans?.[classId];
     const fallback = CAPTAINS_LOG_PRESET_PROMPTS[0];
     return saved && typeof saved.prompt === "string" ? saved : { prompt: fallback.prompt, promptId: fallback.id, week: 1, schedule: "Today", required: requirement(classId), updatedAt: null };
   };
+  const captainLogWeekPlan = (classId) => {
+    const saved = readAll().captainLogWeekPlans?.[classId];
+    if (saved?.days) return saved;
+    const legacy = readAll().captainLogPlans?.[classId];
+    const days = Object.fromEntries(CAPTAINS_LOG_WEEKDAYS.map((day, index) => {
+      const preset = CAPTAINS_LOG_PRESET_PROMPTS[index];
+      return [day, { enabled: legacy ? day === legacy.schedule || legacy.schedule === "Today" && index === 0 : true, promptId: legacy?.promptId ?? preset.id, prompt: legacy?.prompt ?? preset.prompt }];
+    }));
+    return { week: legacy?.week ?? 1, days };
+  };
+  const saveCaptainLogWeekPlan = (classId, value) => {
+    const week = Number(value?.week), days = {};
+    if (!classId || !Number.isInteger(week) || week < 1 || week > 7) return { ok: false };
+    for (const day of CAPTAINS_LOG_WEEKDAYS) {
+      const entry = value?.days?.[day] ?? {}, prompt = String(entry.prompt ?? "").trim();
+      if (entry.enabled && (prompt.length < 5 || prompt.length > 240)) return { ok: false };
+      days[day] = { enabled: Boolean(entry.enabled), promptId: String(entry.promptId ?? "custom"), prompt };
+    }
+    const all = readAll(), plan = { week, days, updatedAt: new Date(now()).toISOString() };
+    all.captainLogWeekPlans = { ...(all.captainLogWeekPlans ?? {}), [classId]: plan };
+    all.requirements = { ...(all.requirements ?? {}), [classWeek(classId)]: CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length };
+    write(all);
+    return { ok: true, plan };
+  };
+  const copyCaptainLogWeekPlan = (sourceClassId, targetClassIds, selectedDays = CAPTAINS_LOG_WEEKDAYS) => {
+    const source = captainLogWeekPlan(sourceClassId), targets = [...new Set(targetClassIds)].filter((id) => id && id !== sourceClassId);
+    const chosen = selectedDays.filter((day) => CAPTAINS_LOG_WEEKDAYS.includes(day));
+    if (!sourceClassId || !targets.length || !chosen.length) return { ok: false, copied: 0 };
+    const all = readAll(); all.captainLogWeekPlans = { ...(all.captainLogWeekPlans ?? {}) }; all.requirements = { ...(all.requirements ?? {}) };
+    targets.forEach((targetId) => {
+      const existing = captainLogWeekPlan(targetId), days = { ...existing.days };
+      chosen.forEach((day) => { days[day] = { ...source.days[day] }; });
+      all.captainLogWeekPlans[targetId] = { week: source.week, days, updatedAt: new Date(now()).toISOString() };
+      all.requirements[classWeek(targetId)] = CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length;
+    });
+    write(all); return { ok: true, copied: targets.length };
+  };
   const captainLogAvailableToday = (classId) => {
+    const weekly = readAll().captainLogWeekPlans?.[classId];
+    if (weekly?.days) return Boolean(weekly.days[new Date(now()).toLocaleDateString("en-US", { weekday: "long" })]?.enabled);
     const schedule = captainLogPlan(classId).schedule;
     return schedule === "Today" || schedule === new Date(now()).toLocaleDateString("en-US", { weekday: "long" });
   };
@@ -148,5 +193,5 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     write(all);
     return { ok: true, status: status(classId, studentId) };
   };
-  return { requirement, setRequirement, captainLogPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
+  return { requirement, setRequirement, captainLogPlan, captainLogWeekPlan, saveCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
 }
