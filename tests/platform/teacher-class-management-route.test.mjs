@@ -47,3 +47,14 @@ test("Create a Classroom lives on the dedicated Manage Classes screen", () => {
   assert.match(classes, /platform-command-layout-no-sidebar/);
   assert.doesNotMatch(classes, /platform-teacher-nav/);
 });
+
+test("Manage Classes presents a simple four-step teacher workflow", () => {
+  const classes = between("function teacherClassesView(state)", "function studentDashboardView(state)");
+  for (const label of ["Class &amp; Students", "Schedule", "Reuse Setup", "Connections"]) assert.match(classes, new RegExp(label));
+  assert.ok(classes.indexOf("classroomSetupMarkup") < classes.indexOf("classTimerScheduleMarkup"));
+  assert.ok(classes.indexOf("classTimerScheduleMarkup") < classes.indexOf("classSetupSharingMarkup"));
+  assert.match(app, /Optional: Make Funny NameBobs &amp; Limericks/);
+  assert.match(app, /Optional Timer &amp; Message Settings/);
+  assert.match(classes, /<details class="platform-manage-advanced"/);
+  assert.match(css, /\.platform-manage-class-flow \{ display: grid;/);
+});

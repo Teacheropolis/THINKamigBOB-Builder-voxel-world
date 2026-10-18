@@ -1014,9 +1014,10 @@ const TEACHER_WEBPAGE_CATALOG = Object.freeze([
 function classSetupSharingMarkup(teacherId, location) {
   const classes = getClassesForTeacher(teacherId);
   const current = currentTeacherClass(teacherId);
-  return `<section class="platform-class-setup-sharing" data-class-sharing-location="${location}" aria-labelledby="class-sharing-${location}">
-    <p class="platform-command-label">Reuse classroom settings</p>
+  return `<section class="platform-class-setup-sharing${location === "manage" ? " platform-manage-step" : ""}" data-class-sharing-location="${location}"${location === "manage" ? ' data-manage-step="3"' : ""} aria-labelledby="class-sharing-${location}">
+    ${location === "manage" ? `<div class="platform-manage-step-heading"><span aria-hidden="true">3</span><div>` : ""}<p class="platform-command-label">Reuse classroom settings</p>
     <h3 id="class-sharing-${location}">Share Classroom Setup</h3>
+    ${location === "manage" ? `<p>Save time by copying only the settings you choose.</p></div></div>` : ""}
     <label>Current class<select data-current-teacher-class>${classes.map((item) => `<option value="${item.id}"${item.id === current?.id ? " selected" : ""}>${escapeHtml(item.periodLabel)} — ${escapeHtml(item.displayName)}</option>`).join("")}</select></label>
     <fieldset><legend>Apply to</legend>${classes.filter((item) => item.id !== current?.id).map((item) => `<label><input type="checkbox" data-class-setup-target value="${item.id}"> ${escapeHtml(item.periodLabel)} — ${escapeHtml(item.displayName)}</label>`).join("")}<label><input type="checkbox" data-class-setup-all> All other classes</label></fieldset>
     <fieldset><legend>Copy only</legend><label><input type="checkbox" data-class-setup-component="timer" checked> Timer schedule, Pomodoro phases, and sounds</label><label><input type="checkbox" data-class-setup-component="memo" checked> Teacher Memo and presentation formatting</label><label><input type="checkbox" data-class-setup-component="resources" checked> Today’s resource slots and audiences</label><label><input type="checkbox" data-class-setup-component="reflection" checked> What I Learned Today Requirement</label></fieldset>
@@ -1592,28 +1593,31 @@ function studentEntryView() {
 
 function classroomSetupMarkup() {
   const classroom = oneTimeClassroomCodes;
-  return `<section id="teacher-create-classroom" class="platform-command-card platform-classroom-setup" aria-labelledby="classroom-setup-title" data-classroom-setup>
-    <p class="platform-command-label">Production classroom foundation</p>
-    <h3 id="classroom-setup-title">Create a Classroom</h3>
-    <p>Type or paste one student name or label per line. You may use the entries as written or turn first names into funny, memorable NameBobs.</p>
+  return `<section id="teacher-create-classroom" class="platform-command-card platform-classroom-setup platform-manage-step" aria-labelledby="classroom-setup-title" data-classroom-setup data-manage-step="1">
+    <div class="platform-manage-step-heading"><span aria-hidden="true">1</span><div><p class="platform-command-label">Start here</p><h3 id="classroom-setup-title">Create a Class &amp; Add Students</h3><p>Give the class a name, then type or paste one student name per line.</p></div></div>
     <form data-form="production-classroom-setup" novalidate>
       <label for="production-classroom-name">Class name</label>
       <input id="production-classroom-name" name="name" maxlength="100"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Example: STEM Lab — Period 2">
       <label for="production-student-labels">Student names or labels <small>1–40; one per line</small></label>
       <textarea id="production-student-labels" name="studentLabels" rows="7"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Ava&#10;Liam&#10;Mia"></textarea>
-      <div class="platform-namebob-actions"><button type="button" data-action="generate-namebobs"${productionIdentityConfig.enabled ? "" : " disabled"}>Generate Funny NameBobs</button><span>Optional — the generated list stays editable.</span></div>
-      <div class="platform-namebob-retry">
-        <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
-        <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
-      </div>
-      <p class="platform-namebob-help">Each label keeps the student's first name and adds a funny rhyming Bob name, such as Savannah Bobanana, Miley SmileyBob, or Mariela Bobarella. Every student in the class gets a different Bob name.</p>
-      <div class="platform-namebob-retry platform-namebob-limerick">
-        <label>Make funny limericks <small>Creates one for the whole class and one for every student</small></label>
-        <div><button type="button" data-action="generate-class-namebob-limerick"${productionIdentityConfig.enabled ? "" : " disabled"}>Make Class + Student Limericks</button></div>
-        <blockquote data-namebob-limerick-output hidden></blockquote>
-      </div>
+      <details class="platform-optional-class-tools">
+        <summary><span>🎩 Optional: Make Funny NameBobs &amp; Limericks</span><small>Open only if you want playful student names.</small></summary>
+        <div>
+          <div class="platform-namebob-actions"><button type="button" data-action="generate-namebobs"${productionIdentityConfig.enabled ? "" : " disabled"}>Generate Funny NameBobs</button><span>The generated list stays editable.</span></div>
+          <div class="platform-namebob-retry">
+            <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
+            <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
+          </div>
+          <p class="platform-namebob-help">Each label keeps the student's first name and adds a funny rhyming Bob name, such as Savannah Bobanana, Miley SmileyBob, or Mariela Bobarella. Every student in the class gets a different Bob name.</p>
+          <div class="platform-namebob-retry platform-namebob-limerick">
+            <label>Make funny limericks <small>Creates one for the whole class and one for every student</small></label>
+            <div><button type="button" data-action="generate-class-namebob-limerick"${productionIdentityConfig.enabled ? "" : " disabled"}>Make Class + Student Limericks</button></div>
+            <blockquote data-namebob-limerick-output hidden></blockquote>
+          </div>
+        </div>
+      </details>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs—or enter your own labels.</p>
-      <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
+      <button class="platform-manage-primary-action" type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Student Codes</button>
       <p class="platform-error" data-error role="alert" hidden></p>
       <p class="platform-entry-status" role="status" aria-live="polite">${productionIdentityConfig.enabled ? "Ready. Codes will be shown once after the class is created." : "Setup preview only. Production identity stays off on localhost and no classroom will be created."}</p>
     </form>
@@ -1727,16 +1731,17 @@ function classTimerScheduleMarkup(classId = "class-preview-1", { showBackToToday
   const library = messageLibrary.read();
   const timeZones = ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu"];
   const soundOptions = (selected) => TIMER_SOUND_OPTIONS.map((sound) => `<option value="${sound}"${selected === sound ? " selected" : ""}>${sound}</option>`).join("");
-  return `<section id="teacher-class-schedule" class="platform-classroom-setup platform-class-timer-schedule" aria-labelledby="class-timer-schedule-title">
-    <p class="platform-command-label">Automatic class timer</p>
-    <h3 id="class-timer-schedule-title">Class Schedule</h3>
-    <p>Start the class timer from the scheduled time, even if the dashboard opens after class begins.</p>
+  return `<section id="teacher-class-schedule" class="platform-classroom-setup platform-class-timer-schedule platform-manage-step" aria-labelledby="class-timer-schedule-title" data-manage-step="2">
+    <div class="platform-manage-step-heading"><span aria-hidden="true">2</span><div><p class="platform-command-label">Set it once</p><h3 id="class-timer-schedule-title">Class Schedule</h3><p>Choose when this class meets. Detailed timer options are available below.</p></div></div>
     <form data-form="class-timer-schedule" novalidate>
       <label class="platform-evidence-drive-confirmation"><input type="checkbox" name="enabled" value="yes"${schedule.enabled ? " checked" : ""}> Automatically run the timer on scheduled school days.</label>
       <fieldset><legend>Weekdays</legend>${WEEKDAYS.map((day) => `<label><input type="checkbox" name="weekdays" value="${day}"${schedule.weekdays.includes(day) ? " checked" : ""}> ${day}</label>`).join("")}</fieldset>
       <label>Class start time<input type="time" name="startTime" value="${schedule.startTime}" required></label>
       <label>Class duration in minutes<input type="number" name="durationMinutes" min="${MIN_LESSON_MINUTES}" max="${MAX_LESSON_MINUTES}" step="1" value="${schedule.durationMinutes}" required></label>
       <label>Time zone<select name="timeZone">${timeZones.map((zone) => `<option value="${zone}"${schedule.timeZone === zone ? " selected" : ""}>${zone.replaceAll("_", " ")}</option>`).join("")}</select></label>
+      <details class="platform-optional-class-tools platform-schedule-options">
+        <summary><span>Optional Timer &amp; Message Settings</span><small>Pomodoro stages, sounds, and scheduled messages</small></summary>
+        <div>
       <div class="platform-pomodoro-choice">
         <label class="platform-evidence-drive-confirmation"><input type="checkbox" name="pomodoroEnabled" value="yes"${schedule.pomodoroEnabled ? " checked" : ""}> <strong>Use a color-coded Pomodoro class timer</strong></label>
         <p>Break the class into four visible stages: <strong>Blue</strong> for the opening, <strong>green</strong> for work time, <strong>gold</strong> for the warning, and <strong>red</strong> for wrap-up. The colors and stage names appear on the Teacher Command Center, floating timer, and Classroom Display.</p>
@@ -1769,6 +1774,8 @@ function classTimerScheduleMarkup(classId = "class-preview-1", { showBackToToday
         ${WEEKDAYS.map((day) => `<label>${day}<select data-message-assignment="${day}"><option value="">No automatic message</option>${library.messages.map((message) => `<option value="${message.id}"${library.assignments[`${classId}|${day}`] === message.id ? " selected" : ""}>${escapeHtml(message.title)}</option>`).join("")}</select></label>`).join("")}
         <button type="button" data-action="save-message-assignments" data-class-id="${escapeHtml(classId)}">Save Message Schedule</button>
       </fieldset>
+        </div>
+      </details>
       <button type="submit">Save Class Schedule</button>
       ${showBackToToday ? `<a class="platform-button platform-button-secondary" href="#${ROUTES.TEACHER_DASHBOARD}">Back to Today</a>` : ""}
       <p class="platform-error" data-class-timer-schedule-error role="alert" hidden></p>
@@ -2072,7 +2079,7 @@ function teacherDashboardView(state) {
             <label>Today’s plan<select name="mission" data-readiness-setting="mission"><option value="previous"${readiness.mission === "previous" ? " selected" : ""}>Continue current settings</option><option value="new"${readiness.mission === "new" ? " selected" : ""}>Start a new mission</option><option value="none"${readiness.mission === "none" ? " selected" : ""}>No mission needed today</option></select></label>
             <fieldset class="platform-planning-range"><legend>How long should this plan be used?</legend><label><input type="radio" name="planningRange" value="today" checked> Today only</label><label><input type="radio" name="planningRange" value="week"> This school week (5 days)</label><label><input type="radio" name="planningRange" value="seven-weeks"> Seven school weeks (35 days)</label><p>You can change any day later. Activities and directions may still be added as students learn.</p></fieldset>
             ${todaysGoalInputsMarkup(classRecord?.id)}
-            <div class="platform-actions"><button type="button" data-action="save-class-readiness">Apply Today’s Plan</button><button type="button" data-action="close-class-readiness">Minimize</button></div>
+            <div class="platform-actions"><button type="button" data-action="save-class-readiness" aria-label="Save Today’s Plan Setting">Apply Today’s Plan</button><button type="button" data-action="close-class-readiness">Minimize</button></div>
             <div class="platform-todays-mission-confirmation" data-readiness-no-mission-confirmation hidden role="dialog" aria-modal="true" aria-labelledby="readiness-no-mission-title"><div class="platform-todays-mission-confirmation-panel"><h4 id="readiness-no-mission-title">Remove today’s mission?</h4><p>The selected mission is <strong data-readiness-current-mission>${escapeHtml(missionState.title || "No mission selected")}</strong>. Are you sure you want no mission for this class today?</p><div class="platform-todays-mission-confirmation-actions"><button type="button" data-action="keep-readiness-mission">Keep Selected Mission</button><button type="button" data-action="confirm-readiness-no-mission">Use No Mission Today</button></div></div></div>
             <button class="platform-return-current-plan" type="button" data-action="return-to-current-class-plan">Return to Today’s Class Plan</button>
           </form>
@@ -2527,22 +2534,24 @@ function teacherClassesView(state) {
       <main class="platform-class-management" aria-labelledby="class-management-title">
         <section class="platform-teacher-overview platform-class-management-intro platform-visual-zone platform-zone-settings">
           <div>
-            <p class="platform-command-label">Classroom access</p>
+            <p class="platform-command-label">Teacher workspace</p>
             <h2 id="class-management-title">Manage Classes</h2>
-            <p>Create a classroom and prepare private student entry codes. Codes are shown once and should be handled as private classroom information.</p>
+            <p>Set up one class at a time. Follow the steps below; optional tools stay out of the way until you need them.</p>
           </div>
         </section>
+        <nav class="platform-manage-class-flow" aria-label="Manage classes steps">
+          <a href="#teacher-create-classroom"><span>1</span><strong>Class &amp; Students</strong><small>Create a roster</small></a>
+          <a href="#teacher-class-schedule"><span>2</span><strong>Schedule</strong><small>Set days and times</small></a>
+          <a href="#teacher-class-sharing"><span>3</span><strong>Reuse Setup</strong><small>Copy to other classes</small></a>
+          <a href="#teacher-setup-tools"><span>4</span><strong>Connections</strong><small>Optional safeguards</small></a>
+        </nav>
+        ${classroomSetupMarkup()}
         ${classTimerScheduleMarkup(classRecord?.id)}
         <div id="teacher-class-sharing" tabindex="-1">${classSetupSharingMarkup(state.teacherId, "manage")}</div>
-        ${classroomSetupMarkup()}
-        <section class="platform-workspace-heading" id="teacher-setup-tools">
-          <p class="platform-command-label">Class and evidence administration</p>
-          <h2>Connections and safeguards</h2>
-          <p>Manage Drive connection and evidence policies alongside classroom setup.</p>
-        </section>
-        <div class="platform-today-primary-grid platform-class-management-setup">
-          ${teacherSetupMarkup()}
-        </div>
+        <details class="platform-manage-advanced" id="teacher-setup-tools">
+          <summary><span><b>4</b><strong>Connections &amp; Safeguards</strong></span><small>Optional school setup for Drive and evidence policies</small></summary>
+          <div class="platform-today-primary-grid platform-class-management-setup">${teacherSetupMarkup()}</div>
+        </details>
       </main>
     </div>
   `, {

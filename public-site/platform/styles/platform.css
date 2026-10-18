@@ -746,10 +746,36 @@ summary:focus-visible {
 .platform-pb002j-teacher-card { grid-column: 1 / -1; min-height: 0; border-top: 6px solid #c28b12; }
 .platform-evidence-launch-card { grid-column: 1 / -1; }
 .platform-class-management { min-width: 0; }
+.platform-class-management { display: grid; gap: 1rem; }
 .platform-class-management-intro { grid-template-columns: minmax(0, 1fr) auto; }
 .platform-class-management-intro .platform-button { align-self: center; white-space: nowrap; }
 .platform-class-management .platform-classroom-setup { min-height: 0; padding: clamp(1rem, 2.5vw, 1.5rem); border: 1px solid var(--platform-border); border-top: 6px solid var(--platform-blue); border-radius: 0.85rem; background: var(--platform-surface); }
-.platform-class-timer-schedule { margin-top: 1rem; }
+.platform-manage-class-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.7rem; }
+.platform-manage-class-flow a { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); gap: 0.1rem 0.6rem; align-items: center; min-height: 4.5rem; padding: 0.7rem; border: 2px solid #c7d9df; border-radius: 0.75rem; color: var(--platform-navy); background: #fff; text-decoration: none; box-shadow: 0 0.2rem 0.55rem rgba(7, 27, 39, 0.08); }
+.platform-manage-class-flow a:hover, .platform-manage-class-flow a:focus-visible { border-color: var(--platform-blue); background: #f3fafc; transform: translateY(-1px); }
+.platform-manage-class-flow a > span, .platform-manage-step-heading > span, .platform-manage-advanced summary b { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: 50%; color: #fff; background: var(--platform-blue-dark); font-size: 1rem; font-weight: 900; }
+.platform-manage-class-flow strong, .platform-manage-class-flow small { grid-column: 2; }
+.platform-manage-class-flow strong { font-size: 0.83rem; }
+.platform-manage-class-flow small { color: var(--platform-muted); font-size: 0.68rem; }
+.platform-manage-step { scroll-margin-top: 5.5rem; }
+.platform-manage-step-heading { display: grid; grid-template-columns: 2.75rem minmax(0, 1fr); gap: 0.75rem; align-items: start; margin-bottom: 0.9rem; }
+.platform-manage-step-heading > div { min-width: 0; }
+.platform-manage-step-heading h3, .platform-manage-step-heading p { margin: 0; }
+.platform-manage-step-heading .platform-command-label { margin-bottom: 0.2rem; }
+.platform-manage-primary-action { min-height: 3.15rem; font-size: 1rem; }
+.platform-optional-class-tools { border: 1px solid #d4c48e; border-radius: 0.75rem; background: #fffaf0; }
+.platform-optional-class-tools > summary { display: grid; gap: 0.15rem; padding: 0.8rem 0.9rem; color: var(--platform-navy); cursor: pointer; }
+.platform-optional-class-tools > summary span { font-weight: 900; }
+.platform-optional-class-tools > summary small { color: var(--platform-muted); }
+.platform-optional-class-tools > div { display: grid; gap: 0.75rem; padding: 0 0.9rem 0.9rem; }
+.platform-schedule-options { margin-top: 0.25rem; border-color: #c7d9df; background: #f7fbfc; }
+.platform-manage-advanced { scroll-margin-top: 5.5rem; border: 2px solid #c7d9df; border-radius: 0.85rem; background: #f7fbfc; }
+.platform-manage-advanced > summary { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.1rem 0.75rem; align-items: center; padding: 1rem; cursor: pointer; }
+.platform-manage-advanced > summary span { display: flex; align-items: center; gap: 0.75rem; }
+.platform-manage-advanced > summary small { grid-column: 2; color: var(--platform-muted); }
+.platform-manage-advanced > div { padding: 0 1rem 1rem; }
+.platform-class-management #teacher-class-sharing > .platform-class-setup-sharing { border-top: 6px solid var(--platform-green); background: #f4faf7; }
+.platform-class-management .platform-class-timer-schedule { margin-top: 0; }
 .platform-weekly-reflection-setup { margin-top: 1rem; }
 .platform-weekly-reflection-setup form { display: grid; grid-template-columns: minmax(12rem, 1fr) auto; gap: 0.75rem; align-items: end; }
 .platform-weekly-reflection-setup form label { display: grid; gap: 0.35rem; font-weight: 750; }
@@ -2054,6 +2080,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
   .platform-today-primary-grid { grid-template-columns: 1fr 1fr; }
   .platform-teacher-overview { grid-template-columns: 1fr; }
   .platform-class-management-intro { grid-template-columns: 1fr; }
+  .platform-manage-class-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .platform-command-card-mission { grid-column: 1 / -1; }
   .platform-command-card-voice-meter { grid-template-columns: 1fr; }
   .platform-command-card-voice-meter > * { grid-column: 1 !important; }
@@ -2068,6 +2095,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 }
 
 @media (max-width: 680px) {
+  .platform-manage-class-flow { grid-template-columns: 1fr; }
   .platform-class-readiness-panel { grid-template-columns: 1fr; }
   .platform-class-resource-tray, .platform-student-activity-tray { grid-template-columns: 1fr; }
   .platform-class-resource-saved article { grid-template-columns: 1fr; }
