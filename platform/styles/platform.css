@@ -1138,6 +1138,15 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-classroom-exit-presentation:hover, .platform-classroom-exit-presentation:focus-visible { opacity: 1; }
 .platform-classroom-exit-presentation[hidden] { display: none !important; }
 .platform-standalone-classroom-display { margin: 0; overflow: hidden; background: var(--platform-navy); }
+.platform-standalone-classroom-display .platform-skip-link { display: none !important; }
+.platform-standalone-classroom-display.platform-classroom-presentation-mode #platform-student-timer-display {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+}
 .platform-classroom-window-options { display: flex; align-items: center; gap: 0.45rem; max-width: calc(100vw - 1.2rem); margin-top: 0.35rem; padding: 0.4rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; background: rgba(16, 47, 69, 0.96); box-shadow: 0 0.45rem 1rem rgba(0,0,0,0.28); }
 .platform-classroom-window-controls button { min-height: 2.6rem; padding: 0.4rem 0.8rem; border: 2px solid #fff; color: var(--platform-navy); background: #fff8e7; font-weight: 900; white-space: nowrap; }
 .platform-classroom-window-controls button:first-of-type { color: #fff; background: var(--platform-blue); }
