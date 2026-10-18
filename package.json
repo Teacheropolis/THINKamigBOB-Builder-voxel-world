@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "build:cloudflare": "node scripts/build-cloudflare-platform.mjs && esbuild platform/scripts/platform-app.mjs --bundle --format=esm --platform=browser --target=es2022 --outfile=public-site/platform/scripts/platform-app.bundle.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
+  }
+}
