@@ -1666,6 +1666,77 @@ function createClassroomLessonClient({ serviceOrigin = "", fetchImpl = fetch } =
   });
 }
 
+// platform/scripts/namebob-generator.mjs
+var RHYME_FAMILIES = Object.freeze([
+  [/ava$/i, ["Brava", "Java", "Zava"]],
+  [/ella$/i, ["Stella", "Bella", "Zella"]],
+  [/emma$/i, ["Gemma", "Zemma", "Tremma"]],
+  [/lily$/i, ["Silly", "Chilly", "Frilly"]],
+  [/(?:lee|leigh|li|ly)$/i, ["Glee", "Zippy", "Whirly"]],
+  [/(?:ay|ae)$/i, ["Play", "Hooray", "Gear-Spray"]],
+  [/(?:den|dan|don)$/i, ["Zingden", "Whirlin'", "Gearin'"]],
+  [/(?:son|sen)$/i, ["Awesome", "Gearson", "Cheerson"]],
+  [/(?:er|or)$/i, ["Whirrer", "Gearer", "Explorer"]],
+  [/(?:in|en|yn)$/i, ["Grinnin'", "Spinnin'", "Winnin'"]],
+  [/(?:ie|y)$/i, ["Zippy", "Happy", "Snappy"]],
+  [/(?:a|ah)$/i, ["Ta-Da", "Hurrah", "Zing-Ah"]],
+  [/(?:o|oh)$/i, ["Go-Go", "Yo-Yo", "Glow"]]
+]);
+var MADE_UP_ONSETS = Object.freeze(["Z", "Fizz", "Whizz", "B", "Gear", "Tink"]);
+function cleanName(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").replace(/[^\p{L}'’-]/gu, "").slice(0, 24);
+}
+function firstNameFromRosterLine(value) {
+  const line = String(value || "").trim();
+  if (!line) return "";
+  const commaParts = line.split(",").map((part) => part.trim()).filter(Boolean);
+  const likelyFirst = commaParts.length > 1 ? commaParts[1] : line.split(/\t|\s+/)[0];
+  const name = cleanName(String(likelyFirst || "").split(/\s+/)[0]);
+  return name ? name.charAt(0).toLocaleUpperCase() + name.slice(1).toLocaleLowerCase() : "";
+}
+function stableNumber(value) {
+  return [...String(value)].reduce((total, character) => total * 31 + character.codePointAt(0) >>> 0, 7);
+}
+function madeUpRhyme(name, choice) {
+  const match = name.match(/[aeiouy][a-z'’-]*$/i);
+  const ending = match?.[0] || name.slice(-2);
+  return `${MADE_UP_ONSETS[choice % MADE_UP_ONSETS.length]}${ending.toLocaleLowerCase()}`;
+}
+function rhymesFor(name) {
+  const family = RHYME_FAMILIES.find(([pattern]) => pattern.test(name));
+  if (family) return family[1];
+  return MADE_UP_ONSETS.map((_, index) => madeUpRhyme(name, index));
+}
+function boundedLabel(value) {
+  return String(value).replace(/\s+/g, " ").trim().slice(0, 40).trim();
+}
+function generateNameBobs(value, { usedLabels = [] } = {}) {
+  const lines = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
+  const firstNames = lines.map(firstNameFromRosterLine).filter(Boolean);
+  const used = new Set(usedLabels.map((label) => String(label).trim().toLocaleLowerCase()).filter(Boolean));
+  const labels = [];
+  for (const [index, firstName] of firstNames.entries()) {
+    const rhymes = rhymesFor(firstName);
+    const seed = stableNumber(`${firstName}-${index}`);
+    let label = "";
+    for (let attempt = 0; attempt < 24 && !label; attempt += 1) {
+      const rhyme = rhymes[(seed + attempt) % rhymes.length];
+      const candidate = attempt % 2 === 0 ? `${rhyme} ${firstName}Bob` : `${firstName}Bob ${rhyme}`;
+      const bounded = boundedLabel(candidate);
+      if (!used.has(bounded.toLocaleLowerCase())) label = bounded;
+    }
+    if (!label) {
+      let number = 2;
+      const base = boundedLabel(`${firstName}Bob`);
+      label = base;
+      while (used.has(label.toLocaleLowerCase())) label = boundedLabel(`${base} ${number++}`);
+    }
+    used.add(label.toLocaleLowerCase());
+    labels.push(label);
+  }
+  return Object.freeze({ labels: Object.freeze(labels), sourceCount: lines.filter((line) => String(line).trim()).length });
+}
+
 // platform/scripts/message-library.mjs
 var MESSAGE_LIBRARY_KEY = "thinkamigbob.message-library.v1";
 var MESSAGE_LIBRARY_LIMIT = 20;
@@ -1960,12 +2031,12 @@ function createClassResourceSharing({ storage, now = () => Date.now() }) {
   };
   const saveGroupSet = (classId, name) => {
     const current = classState(classId);
-    const cleanName = String(name || "").trim().slice(0, 60);
-    if (!cleanName) return { ok: false, reason: "missing-name" };
+    const cleanName2 = String(name || "").trim().slice(0, 60);
+    if (!cleanName2) return { ok: false, reason: "missing-name" };
     const groups = current.audienceRows.filter((row) => ["teacher-group", "random-group"].includes(row.audienceType)).map((row) => ({ name: row.audienceLabel, audienceIds: [...row.audienceIds] }));
     if (!groups.length) return { ok: false, reason: "missing-groups" };
-    const preset = { id: `group-set-${now()}`, name: cleanName, groups };
-    const savedGroupSets = [preset, ...current.savedGroupSets.filter((item) => item.name !== cleanName)].slice(0, 20);
+    const preset = { id: `group-set-${now()}`, name: cleanName2, groups };
+    const savedGroupSets = [preset, ...current.savedGroupSets.filter((item) => item.name !== cleanName2)].slice(0, 20);
     update(classId, { savedGroupSets });
     return { ok: true, preset };
   };
@@ -3854,12 +3925,15 @@ function classroomSetupMarkup() {
   return `<section id="teacher-create-classroom" class="platform-command-card platform-classroom-setup" aria-labelledby="classroom-setup-title" data-classroom-setup>
     <p class="platform-command-label">Production classroom foundation</p>
     <h3 id="classroom-setup-title">Create a Classroom</h3>
-    <p>Enter one student label per line. Students use the generated codes without Google accounts.</p>
+    <p>Type or paste one student name or label per line. You may use the entries as written or turn first names into funny, memorable NameBobs.</p>
     <form data-form="production-classroom-setup" novalidate>
       <label for="production-classroom-name">Class name</label>
       <input id="production-classroom-name" name="name" maxlength="100"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Example: STEM Lab \u2014 Period 2">
-      <label for="production-student-labels">Student labels <small>1\u201340; one per line</small></label>
-      <textarea id="production-student-labels" name="studentLabels" rows="7"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Student 01&#10;Student 02&#10;Student 03"></textarea>
+      <label for="production-student-labels">Student names or labels <small>1\u201340; one per line</small></label>
+      <textarea id="production-student-labels" name="studentLabels" rows="7"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Ava&#10;Liam&#10;Mia"></textarea>
+      <div class="platform-namebob-actions"><button type="button" data-action="generate-namebobs"${productionIdentityConfig.enabled ? "" : " disabled"}>Generate Funny NameBobs</button><span>Optional \u2014 the generated list stays editable.</span></div>
+      <p class="platform-namebob-help">Examples: Brava AvaBob or LiamBob Fizziam. Names already used in your other classes are automatically avoided.</p>
+      <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs\u2014or enter your own labels.</p>
       <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
       <p class="platform-error" data-error role="alert" hidden></p>
       <p class="platform-entry-status" role="status" aria-live="polite">${productionIdentityConfig.enabled ? "Ready. Codes will be shown once after the class is created." : "Setup preview only. Production identity stays off on localhost and no classroom will be created."}</p>
@@ -6038,7 +6112,7 @@ async function submitProductionClassroom(form, data) {
     return showFormError(form, messages[parsed.reason]);
   }
   const result = await productionIdentity.createClassroom({ name, studentLabels: parsed.labels });
-  if (!result.ok) return showFormError(form, "The classroom could not be created. Sign in again or try later.");
+  if (!result.ok) return showFormError(form, result.reason === "student-label-already-used" ? "One or more student labels are already used in another class. Generate the NameBobs again or edit the repeated label." : "The classroom could not be created. Sign in again or try later.");
   oneTimeClassroomCodes = result.value.classroom;
   setProductionTeacherClasses([productionClassRecord(result.value.classroom), ...productionTeacherClasses], result.value.classroom.classId);
   const region = document.querySelector("[data-classroom-setup]");
@@ -9474,6 +9548,23 @@ function closeQuickClassSchedule() {
 async function handleClick(event) {
   const action = event.target.closest("[data-action]");
   if (!action) return;
+  if (action.dataset.action === "generate-namebobs") {
+    const form = action.closest('[data-form="production-classroom-setup"]');
+    const textarea = form?.elements.studentLabels;
+    const status = form?.querySelector("[data-namebob-status]");
+    if (!textarea) return;
+    const usedLabels = productionTeacherClasses.flatMap((classroom) => Array.isArray(classroom.studentLabels) ? classroom.studentLabels : []);
+    const generated = generateNameBobs(textarea.value, { usedLabels });
+    if (!generated.labels.length) {
+      if (status) status.textContent = "Enter or paste at least one student first name.";
+      textarea.focus();
+      return;
+    }
+    textarea.value = generated.labels.join("\n");
+    if (status) status.textContent = `${generated.labels.length} unique NameBob${generated.labels.length === 1 ? "" : "s"} generated. Review or edit them before creating the class.`;
+    textarea.focus();
+    return;
+  }
   if (action.dataset.action === "open-student-quest-step") {
     const map = action.closest(".platform-student-quest-map");
     map?.querySelectorAll(".platform-student-quest-stop").forEach((stop, index) => {

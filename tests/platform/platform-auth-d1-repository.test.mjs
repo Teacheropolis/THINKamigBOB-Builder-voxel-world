@@ -122,7 +122,7 @@ test("teacher identities and student entry use stable private database mappings"
 test("classroom setup returns codes once and batches only keyed hashes", async () => {
   const statements = [];
   const database = {
-    prepare(sql) { return { bind(...values) { const statement = { sql, values }; statements.push(statement); return statement; } }; },
+    prepare(sql) { return { bind(...values) { const statement = { sql, values, async all() { return { results: [] }; } }; statements.push(statement); return statement; } }; },
     async batch(values) { assert.equal(values.length, 5); return values.map(() => ({ success: true })); },
   };
   let sequence = 0;
@@ -139,6 +139,19 @@ test("classroom setup returns codes once and batches only keyed hashes", async (
   assert.equal(audit.values[1], "CLASSROOM_CREATED");
   assert.equal(stored.includes(classroom.students[0].displayLabel), true);
   assert.equal(JSON.stringify(audit).includes(classroom.students[0].displayLabel), false);
+});
+
+test("student display labels remain unique across every active class owned by a teacher", async () => {
+  const database = {
+    withSession() { return this; },
+    prepare(sql) { return { bind() { return { async all() { return { results: sql.includes("normalized_label") ? [{ normalized_label: "brava avabob" }] : [] }; } }; } }; },
+    async batch() { throw new Error("duplicate labels must fail before writes"); },
+  };
+  const repository = createPlatformAuthD1Repository({ database, classroomCodeKey: Buffer.alloc(32, 5) });
+  await assert.rejects(
+    repository.createClassroom({ teacherId: "teacher-1", name: "STEM Lab", studentLabels: ["Brava AvaBob"] }),
+    (error) => error.message === "student-label-already-used" && error.status === 409,
+  );
 });
 
 test("audit retention deletes only a bounded set older than the approved cutoff", async () => {

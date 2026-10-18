@@ -50,6 +50,7 @@ import { createGoogleConnectionPreview, GOOGLE_CONNECTION_PREVIEW_STATUS, GOOGLE
 import { assessGoogleOAuthReadiness, GOOGLE_OAUTH_ENDPOINTS } from "./evidence-google-oauth-readiness.mjs";
 import { createProductionIdentityClient, parseStudentLabels, productionIdentityConfiguration } from "./platform-production-identity.mjs";
 import { createClassroomLessonClient } from "./classroom-lesson-client.mjs";
+import { generateNameBobs } from "./namebob-generator.mjs";
 import { createBrowserMessageLibrary } from "./message-library.mjs";
 import { createBrowserClassSetupProfiles } from "./class-setup-profiles.mjs";
 import { CLASS_RESOURCE_STORAGE_KEY, createClassResourceSharing, RESOURCE_RELEASES, RESOURCE_TYPES } from "./class-resource-sharing.mjs?v=preview-20261004-7";
@@ -1578,12 +1579,15 @@ function classroomSetupMarkup() {
   return `<section id="teacher-create-classroom" class="platform-command-card platform-classroom-setup" aria-labelledby="classroom-setup-title" data-classroom-setup>
     <p class="platform-command-label">Production classroom foundation</p>
     <h3 id="classroom-setup-title">Create a Classroom</h3>
-    <p>Enter one student label per line. Students use the generated codes without Google accounts.</p>
+    <p>Type or paste one student name or label per line. You may use the entries as written or turn first names into funny, memorable NameBobs.</p>
     <form data-form="production-classroom-setup" novalidate>
       <label for="production-classroom-name">Class name</label>
       <input id="production-classroom-name" name="name" maxlength="100"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Example: STEM Lab — Period 2">
-      <label for="production-student-labels">Student labels <small>1–40; one per line</small></label>
-      <textarea id="production-student-labels" name="studentLabels" rows="7"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Student 01&#10;Student 02&#10;Student 03"></textarea>
+      <label for="production-student-labels">Student names or labels <small>1–40; one per line</small></label>
+      <textarea id="production-student-labels" name="studentLabels" rows="7"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Ava&#10;Liam&#10;Mia"></textarea>
+      <div class="platform-namebob-actions"><button type="button" data-action="generate-namebobs"${productionIdentityConfig.enabled ? "" : " disabled"}>Generate Funny NameBobs</button><span>Optional — the generated list stays editable.</span></div>
+      <p class="platform-namebob-help">Examples: Brava AvaBob or LiamBob Fizziam. Names already used in your other classes are automatically avoided.</p>
+      <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs—or enter your own labels.</p>
       <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
       <p class="platform-error" data-error role="alert" hidden></p>
       <p class="platform-entry-status" role="status" aria-live="polite">${productionIdentityConfig.enabled ? "Ready. Codes will be shown once after the class is created." : "Setup preview only. Production identity stays off on localhost and no classroom will be created."}</p>
@@ -3711,7 +3715,7 @@ async function submitProductionClassroom(form, data) {
     return showFormError(form, messages[parsed.reason]);
   }
   const result = await productionIdentity.createClassroom({ name, studentLabels: parsed.labels });
-  if (!result.ok) return showFormError(form, "The classroom could not be created. Sign in again or try later.");
+  if (!result.ok) return showFormError(form, result.reason === "student-label-already-used" ? "One or more student labels are already used in another class. Generate the NameBobs again or edit the repeated label." : "The classroom could not be created. Sign in again or try later.");
   oneTimeClassroomCodes = result.value.classroom;
   setProductionTeacherClasses([productionClassRecord(result.value.classroom), ...productionTeacherClasses], result.value.classroom.classId);
   const region = document.querySelector("[data-classroom-setup]");
@@ -5625,6 +5629,23 @@ function closeQuickClassSchedule() {
 async function handleClick(event) {
   const action = event.target.closest("[data-action]");
   if (!action) return;
+  if (action.dataset.action === "generate-namebobs") {
+    const form = action.closest('[data-form="production-classroom-setup"]');
+    const textarea = form?.elements.studentLabels;
+    const status = form?.querySelector("[data-namebob-status]");
+    if (!textarea) return;
+    const usedLabels = productionTeacherClasses.flatMap((classroom) => Array.isArray(classroom.studentLabels) ? classroom.studentLabels : []);
+    const generated = generateNameBobs(textarea.value, { usedLabels });
+    if (!generated.labels.length) {
+      if (status) status.textContent = "Enter or paste at least one student first name.";
+      textarea.focus();
+      return;
+    }
+    textarea.value = generated.labels.join("\n");
+    if (status) status.textContent = `${generated.labels.length} unique NameBob${generated.labels.length === 1 ? "" : "s"} generated. Review or edit them before creating the class.`;
+    textarea.focus();
+    return;
+  }
   if (action.dataset.action === "open-student-quest-step") {
     const map = action.closest(".platform-student-quest-map");
     map?.querySelectorAll(".platform-student-quest-stop").forEach((stop, index) => {

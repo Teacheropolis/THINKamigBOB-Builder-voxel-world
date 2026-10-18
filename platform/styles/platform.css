@@ -1449,6 +1449,10 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-rainbow-button-text { color: #fff; background: linear-gradient(90deg, #ff6b6b, #ffd43b, #69db7c, #4dabf7, #b197fc, #ff6bcb, #ff6b6b); background-size: 240% 100%; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: brightness(1.15) saturate(1.15); text-shadow: 0 0 0.8rem rgba(255, 255, 255, 0.3); animation: platform-rainbow-text-pulse 3.2s ease-in-out infinite; }
 @keyframes platform-rainbow-text-pulse { 0%, 100% { background-position: 0% 50%; filter: brightness(1.05) saturate(1.05); } 50% { background-position: 100% 50%; filter: brightness(1.45) saturate(1.35); } }
 #teacher-message-board, #teacher-class-sharing, #teacher-class-schedule, #teacher-shared-message-library, #teacher-create-classroom, #teacher-setup-tools { scroll-margin-top: 5.5rem; }
+.platform-namebob-actions { display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap; }
+.platform-namebob-actions button { background: #8a5a00; }
+.platform-namebob-actions span, .platform-namebob-help { color: var(--platform-muted); font-size: 0.82rem; }
+.platform-namebob-help { margin: -0.25rem 0 0; }
 #teacher-class-sharing > .platform-class-setup-sharing { grid-column: auto; }
 .platform-message-schedule > p { grid-column: 1 / -1; margin-top: 0; }
 .platform-student-display-controls { grid-column: 2 / 4; display: grid; grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.55fr); gap: 0.55rem 1rem; align-items: end; min-height: 0; border-top: 5px solid var(--platform-green); }

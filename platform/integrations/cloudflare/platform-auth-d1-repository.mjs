@@ -164,6 +164,12 @@ export function createPlatformAuthD1Repository({ database, classroomCodeKey, now
       if (!Array.isArray(studentLabels) || studentLabels.length < 1 || studentLabels.length > 40) throw new Error("bounded-student-roster-required");
       const labels = studentLabels.map(displayLabel);
       if (new Set(labels.map((label) => label.toLowerCase())).size !== labels.length) throw new Error("unique-student-labels-required");
+      const existingLabels = await primary(db).prepare(`SELECT LOWER(s.display_label) AS normalized_label
+        FROM platform_student_entries s
+        JOIN platform_class_teachers t ON t.class_id = s.class_id
+        WHERE t.teacher_id = ?1 AND t.status = 'active' AND s.status = 'active'`).bind(owner).all();
+      const usedLabels = new Set((existingLabels?.results || []).map((row) => String(row.normalized_label || "")));
+      if (labels.some((label) => usedLabels.has(label.toLowerCase()))) throw Object.assign(new Error("student-label-already-used"), { status: 409 });
       const classId = `class-${random(18).toString("base64url")}`;
       const classCode = accessCode(random, 8);
       const classCodeHash = createHmac("sha256", lookupKey).update(`class-code:${classCode}`).digest("base64url");
@@ -183,7 +189,8 @@ export function createPlatformAuthD1Repository({ database, classroomCodeKey, now
     },
 
     async listTeacherClassrooms({ teacherId }) {
-      const result = await primary(db).prepare(`SELECT c.class_id, c.class_name, c.status, COUNT(s.student_id) AS student_count
+      const result = await primary(db).prepare(`SELECT c.class_id, c.class_name, c.status, COUNT(s.student_id) AS student_count,
+          GROUP_CONCAT(CASE WHEN s.status = 'active' THEN s.display_label END, CHAR(31)) AS student_labels
         FROM platform_class_entry c
         JOIN platform_class_teachers t ON t.class_id = c.class_id
         LEFT JOIN platform_student_entries s ON s.class_id = c.class_id AND s.status = 'active'
@@ -191,7 +198,7 @@ export function createPlatformAuthD1Repository({ database, classroomCodeKey, now
         GROUP BY c.class_id, c.class_name, c.status
         ORDER BY c.created_at DESC
         LIMIT 50`).bind(clean(teacherId, "teacher-id")).all();
-      return Object.freeze((result?.results || []).map((row) => Object.freeze({ id: String(row.class_id), name: String(row.class_name), status: String(row.status), studentCount: Number(row.student_count) || 0 })));
+      return Object.freeze((result?.results || []).map((row) => Object.freeze({ id: String(row.class_id), name: String(row.class_name), status: String(row.status), studentCount: Number(row.student_count) || 0, studentLabels: String(row.student_labels || "").split(String.fromCharCode(31)).filter(Boolean) })));
     },
 
     async findOrCreateGoogleTeacher({ subject, hostedDomain = null }) {
