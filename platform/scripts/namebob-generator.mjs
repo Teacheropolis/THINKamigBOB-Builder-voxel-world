@@ -78,3 +78,17 @@ export function generateNameBobs(value, { usedLabels = [] } = {}) {
   }
   return Object.freeze({ labels: Object.freeze(labels), sourceCount: lines.filter((line) => String(line).trim()).length });
 }
+
+export function retryNameBob(firstNameValue, currentLabels, { usedLabels = [] } = {}) {
+  const firstName = firstNameFromRosterLine(firstNameValue);
+  const labels = Array.from(currentLabels || [], (label) => String(label).trim()).filter(Boolean);
+  if (!firstName) return Object.freeze({ ok: false, reason: "student-name-required", labels: Object.freeze(labels) });
+  const marker = `${firstName}bob`.toLocaleLowerCase();
+  const index = labels.findIndex((label) => label.toLocaleLowerCase().includes(marker));
+  if (index < 0) return Object.freeze({ ok: false, reason: "student-not-found", labels: Object.freeze(labels) });
+  const generated = generateNameBobs(firstName, { usedLabels: [...usedLabels, ...labels] });
+  if (!generated.labels[0]) return Object.freeze({ ok: false, reason: "retry-unavailable", labels: Object.freeze(labels) });
+  const retried = [...labels];
+  retried[index] = generated.labels[0];
+  return Object.freeze({ ok: true, firstName, label: retried[index], labels: Object.freeze(retried) });
+}

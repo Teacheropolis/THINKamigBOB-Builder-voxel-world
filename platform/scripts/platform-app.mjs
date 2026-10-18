@@ -50,7 +50,7 @@ import { createGoogleConnectionPreview, GOOGLE_CONNECTION_PREVIEW_STATUS, GOOGLE
 import { assessGoogleOAuthReadiness, GOOGLE_OAUTH_ENDPOINTS } from "./evidence-google-oauth-readiness.mjs";
 import { createProductionIdentityClient, parseStudentLabels, productionIdentityConfiguration } from "./platform-production-identity.mjs";
 import { createClassroomLessonClient } from "./classroom-lesson-client.mjs";
-import { generateNameBobs } from "./namebob-generator.mjs";
+import { generateNameBobs, retryNameBob } from "./namebob-generator.mjs";
 import { createBrowserMessageLibrary } from "./message-library.mjs";
 import { createBrowserClassSetupProfiles } from "./class-setup-profiles.mjs";
 import { CLASS_RESOURCE_STORAGE_KEY, createClassResourceSharing, RESOURCE_RELEASES, RESOURCE_TYPES } from "./class-resource-sharing.mjs?v=preview-20261004-7";
@@ -1586,6 +1586,10 @@ function classroomSetupMarkup() {
       <label for="production-student-labels">Student names or labels <small>1–40; one per line</small></label>
       <textarea id="production-student-labels" name="studentLabels" rows="7"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Ava&#10;Liam&#10;Mia"></textarea>
       <div class="platform-namebob-actions"><button type="button" data-action="generate-namebobs"${productionIdentityConfig.enabled ? "" : " disabled"}>Generate Funny NameBobs</button><span>Optional — the generated list stays editable.</span></div>
+      <div class="platform-namebob-retry">
+        <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
+        <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
+      </div>
       <p class="platform-namebob-help">Examples: Brava AvaBob or LiamBob Fizziam. Names already used in your other classes are automatically avoided.</p>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs—or enter your own labels.</p>
       <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
@@ -5644,6 +5648,25 @@ async function handleClick(event) {
     textarea.value = generated.labels.join("\n");
     if (status) status.textContent = `${generated.labels.length} unique NameBob${generated.labels.length === 1 ? "" : "s"} generated. Review or edit them before creating the class.`;
     textarea.focus();
+    return;
+  }
+  if (action.dataset.action === "retry-namebob") {
+    const form = action.closest('[data-form="production-classroom-setup"]');
+    const textarea = form?.elements.studentLabels;
+    const retryInput = form?.elements.retryName;
+    const status = form?.querySelector("[data-namebob-status]");
+    if (!textarea || !retryInput) return;
+    const usedLabels = productionTeacherClasses.flatMap((classroom) => Array.isArray(classroom.studentLabels) ? classroom.studentLabels : []);
+    const result = retryNameBob(retryInput.value, textarea.value.split(/\r?\n/), { usedLabels });
+    if (!result.ok) {
+      if (status) status.textContent = result.reason === "student-not-found" ? "That first name is not in the generated list. Check the spelling and try again." : "Enter one student's first name to retry it.";
+      retryInput.focus();
+      return;
+    }
+    textarea.value = result.labels.join("\n");
+    retryInput.value = "";
+    if (status) status.textContent = `${result.firstName}'s new NameBob is ${result.label}. Retry again or keep it.`;
+    retryInput.focus();
     return;
   }
   if (action.dataset.action === "open-student-quest-step") {

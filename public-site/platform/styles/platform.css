@@ -1453,6 +1453,10 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-namebob-actions button { background: #8a5a00; }
 .platform-namebob-actions span, .platform-namebob-help { color: var(--platform-muted); font-size: 0.82rem; }
 .platform-namebob-help { margin: -0.25rem 0 0; }
+.platform-namebob-retry { display: grid; gap: 0.35rem; padding: 0.75rem; border: 1px solid rgba(138, 90, 0, 0.28); border-radius: 0.75rem; background: rgba(255, 248, 224, 0.7); }
+.platform-namebob-retry > div { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.platform-namebob-retry input { flex: 1 1 12rem; margin: 0; }
+.platform-namebob-retry button { flex: 0 1 auto; background: #8a5a00; }
 #teacher-class-sharing > .platform-class-setup-sharing { grid-column: auto; }
 .platform-message-schedule > p { grid-column: 1 / -1; margin-top: 0; }
 .platform-student-display-controls { grid-column: 2 / 4; display: grid; grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.55fr); gap: 0.55rem 1rem; align-items: end; min-height: 0; border-top: 5px solid var(--platform-green); }

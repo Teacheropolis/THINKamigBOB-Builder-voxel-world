@@ -1736,6 +1736,19 @@ function generateNameBobs(value, { usedLabels = [] } = {}) {
   }
   return Object.freeze({ labels: Object.freeze(labels), sourceCount: lines.filter((line) => String(line).trim()).length });
 }
+function retryNameBob(firstNameValue, currentLabels, { usedLabels = [] } = {}) {
+  const firstName = firstNameFromRosterLine(firstNameValue);
+  const labels = Array.from(currentLabels || [], (label) => String(label).trim()).filter(Boolean);
+  if (!firstName) return Object.freeze({ ok: false, reason: "student-name-required", labels: Object.freeze(labels) });
+  const marker = `${firstName}bob`.toLocaleLowerCase();
+  const index = labels.findIndex((label) => label.toLocaleLowerCase().includes(marker));
+  if (index < 0) return Object.freeze({ ok: false, reason: "student-not-found", labels: Object.freeze(labels) });
+  const generated = generateNameBobs(firstName, { usedLabels: [...usedLabels, ...labels] });
+  if (!generated.labels[0]) return Object.freeze({ ok: false, reason: "retry-unavailable", labels: Object.freeze(labels) });
+  const retried = [...labels];
+  retried[index] = generated.labels[0];
+  return Object.freeze({ ok: true, firstName, label: retried[index], labels: Object.freeze(retried) });
+}
 
 // platform/scripts/message-library.mjs
 var MESSAGE_LIBRARY_KEY = "thinkamigbob.message-library.v1";
@@ -3932,6 +3945,10 @@ function classroomSetupMarkup() {
       <label for="production-student-labels">Student names or labels <small>1\u201340; one per line</small></label>
       <textarea id="production-student-labels" name="studentLabels" rows="7"${productionIdentityConfig.enabled ? "" : " disabled"} required placeholder="Ava&#10;Liam&#10;Mia"></textarea>
       <div class="platform-namebob-actions"><button type="button" data-action="generate-namebobs"${productionIdentityConfig.enabled ? "" : " disabled"}>Generate Funny NameBobs</button><span>Optional \u2014 the generated list stays editable.</span></div>
+      <div class="platform-namebob-retry">
+        <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
+        <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
+      </div>
       <p class="platform-namebob-help">Examples: Brava AvaBob or LiamBob Fizziam. Names already used in your other classes are automatically avoided.</p>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs\u2014or enter your own labels.</p>
       <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
@@ -9563,6 +9580,25 @@ async function handleClick(event) {
     textarea.value = generated.labels.join("\n");
     if (status) status.textContent = `${generated.labels.length} unique NameBob${generated.labels.length === 1 ? "" : "s"} generated. Review or edit them before creating the class.`;
     textarea.focus();
+    return;
+  }
+  if (action.dataset.action === "retry-namebob") {
+    const form = action.closest('[data-form="production-classroom-setup"]');
+    const textarea = form?.elements.studentLabels;
+    const retryInput = form?.elements.retryName;
+    const status = form?.querySelector("[data-namebob-status]");
+    if (!textarea || !retryInput) return;
+    const usedLabels = productionTeacherClasses.flatMap((classroom) => Array.isArray(classroom.studentLabels) ? classroom.studentLabels : []);
+    const result = retryNameBob(retryInput.value, textarea.value.split(/\r?\n/), { usedLabels });
+    if (!result.ok) {
+      if (status) status.textContent = result.reason === "student-not-found" ? "That first name is not in the generated list. Check the spelling and try again." : "Enter one student's first name to retry it.";
+      retryInput.focus();
+      return;
+    }
+    textarea.value = result.labels.join("\n");
+    retryInput.value = "";
+    if (status) status.textContent = `${result.firstName}'s new NameBob is ${result.label}. Retry again or keep it.`;
+    retryInput.focus();
     return;
   }
   if (action.dataset.action === "open-student-quest-step") {
