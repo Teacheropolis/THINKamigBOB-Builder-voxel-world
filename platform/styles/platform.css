@@ -778,6 +778,8 @@ summary:focus-visible {
 .platform-manage-advanced > .platform-back-to-today { margin: 0 1rem 1rem; }
 .platform-class-management #teacher-class-sharing > .platform-class-setup-sharing { border-top: 6px solid var(--platform-green); background: #f4faf7; }
 .platform-class-management .platform-class-timer-schedule { margin-top: 0; }
+.platform-manage-reflection { margin-top: -0.45rem; padding-left: 3.5rem; }
+.platform-manage-reflection .platform-weekly-reflection-setup { margin-top: 0; border-top: 5px solid var(--platform-gold); background: #fffaf0; }
 .platform-weekly-reflection-setup { margin-top: 1rem; }
 .platform-weekly-reflection-setup form { display: grid; grid-template-columns: minmax(12rem, 1fr) auto; gap: 0.75rem; align-items: end; }
 .platform-weekly-reflection-setup form label { display: grid; gap: 0.35rem; font-weight: 750; }
@@ -2099,6 +2101,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 
 @media (max-width: 680px) {
   .platform-manage-class-flow { grid-template-columns: 1fr; }
+  .platform-manage-reflection { padding-left: 0; }
   .platform-class-readiness-panel { grid-template-columns: 1fr; }
   .platform-class-resource-tray, .platform-student-activity-tray { grid-template-columns: 1fr; }
   .platform-class-resource-saved article { grid-template-columns: 1fr; }

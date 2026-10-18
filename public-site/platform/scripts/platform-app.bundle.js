@@ -3554,7 +3554,6 @@ function classSetupSharingMarkup(teacherId, location) {
     <label>Current class<select data-current-teacher-class>${classes2.map((item) => `<option value="${item.id}"${item.id === current?.id ? " selected" : ""}>${escapeHtml2(item.periodLabel)} \u2014 ${escapeHtml2(item.displayName)}</option>`).join("")}</select></label>
     <fieldset><legend>Apply to</legend>${classes2.filter((item) => item.id !== current?.id).map((item) => `<label><input type="checkbox" data-class-setup-target value="${item.id}"> ${escapeHtml2(item.periodLabel)} \u2014 ${escapeHtml2(item.displayName)}</label>`).join("")}<label><input type="checkbox" data-class-setup-all> All other classes</label></fieldset>
     <fieldset><legend>Copy only</legend><label><input type="checkbox" data-class-setup-component="timer" checked> Timer schedule, Pomodoro phases, and sounds</label><label><input type="checkbox" data-class-setup-component="memo" checked> Teacher Memo and presentation formatting</label><label><input type="checkbox" data-class-setup-component="resources" checked> Today\u2019s resource slots and audiences</label><label><input type="checkbox" data-class-setup-component="reflection" checked> What I Learned Today Requirement</label></fieldset>
-    ${weeklyReflectionTeacherMarkup(current?.id)}
     <button type="button" data-action="apply-class-setup">Apply Selected Setup</button>
     <p data-class-setup-status role="status" aria-live="polite">Nothing is copied until you confirm.</p>
     ${location === "manage" ? `<a class="platform-button platform-button-secondary platform-back-to-today" href="#${ROUTES.TEACHER_DASHBOARD}">\u2190 Back to Today</a>` : ""}
@@ -5039,12 +5038,13 @@ function teacherClassesView(state) {
         </section>
         <nav class="platform-manage-class-flow" aria-label="Manage classes steps">
           <a href="#teacher-create-classroom"><span>1</span><strong>Class &amp; Students</strong><small>Create a roster</small></a>
-          <a href="#teacher-class-schedule"><span>2</span><strong>Schedule</strong><small>Set days and times</small></a>
+          <a href="#teacher-class-schedule"><span>2</span><strong>Schedule &amp; Reflection</strong><small>Set times and weekly logs</small></a>
           <a href="#teacher-class-sharing"><span>3</span><strong>Reuse Setup</strong><small>Copy to other classes</small></a>
           <a href="#teacher-setup-tools"><span>4</span><strong>Connections</strong><small>Optional safeguards</small></a>
         </nav>
         ${classroomSetupMarkup()}
         ${classTimerScheduleMarkup(classRecord?.id)}
+        <div class="platform-manage-reflection">${weeklyReflectionTeacherMarkup(classRecord?.id)}<a class="platform-button platform-button-secondary platform-back-to-today" href="#${ROUTES.TEACHER_DASHBOARD}">\u2190 Back to Today</a></div>
         <div id="teacher-class-sharing" tabindex="-1">${classSetupSharingMarkup(state.teacherId, "manage")}</div>
         <details class="platform-manage-advanced" id="teacher-setup-tools">
           <summary><span><b>4</b><strong>Connections &amp; Safeguards</strong></span><small>Optional school setup for Drive and evidence policies</small></summary>
