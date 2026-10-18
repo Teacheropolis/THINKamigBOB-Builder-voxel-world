@@ -8,6 +8,13 @@ test("production identity stays off on localhost even when requested", () => {
   assert.equal(productionIdentityConfiguration({ documentRef, locationRef: { protocol: "https:", hostname: "platform.example.org" } }).googleEnabled, true);
 });
 
+test("student access remains separate from secure teacher sign-in", () => {
+  const documentRef = { querySelector(selector) { return { content: selector.includes("client-id") ? "client-1" : selector.includes("student-access") ? "disabled" : "enabled" }; } };
+  const configuration = productionIdentityConfiguration({ documentRef, locationRef: { protocol: "https:", hostname: "platform.example.org" } });
+  assert.equal(configuration.googleEnabled, true);
+  assert.equal(configuration.studentEnabled, false);
+});
+
 test("disabled client fails closed without making a network request", async () => {
   let calls = 0;
   const client = createProductionIdentityClient({ enabled: false, origin: "https://platform.example.org", fetchImpl: async () => { calls += 1; } });

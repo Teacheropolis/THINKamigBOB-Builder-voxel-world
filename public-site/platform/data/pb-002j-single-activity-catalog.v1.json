@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "pb002j-classwide-prototype",
+  "catalogVersion": 1,
+  "activities": [
+    {
+      "id": "pb002j-am-g05-005",
+      "version": 2,
+      "title": "Design a Space Bedroom",
+      "grade": 5,
+      "goal": {
+        "id": "pb002j-goal-g05-001",
+        "title": "Build a Shelter"
+      },
+      "directions": {
+        "url": "https://docs.google.com/presentation/d/1GzkVODaIdAweiSCuFxJC3NOAQEE8GmwdMO7z05Inx64/edit?usp=drivesdk",
+        "approvedSourceSha256": "806c738a58f6b85c525b35865cf3711435fee4d4210f14213dcf99c653203dc7"
+      },
+      "engineeringLevels": [
+        "habitat-designer",
+        "human-factors-engineer",
+        "master-space-habitat-designer"
+      ],
+      "creationRoutes": [
+        "paper-planning-and-drawing",
+        "teacher-approved-physical-model"
+      ],
+      "preparationRequirements": [
+        "directions-access-confirmed",
+        "basic-design-supplies-ready",
+        "student-google-access-confirmed",
+        "evidence-location-confirmed",
+        "classroom-rules-reviewed"
+      ],
+      "evidence": {
+        "destination": "Student Engineering Notebook / Evidence Portfolio",
+        "connection": "external-navigation-only"
+      },
+      "builderAvailable": false,
+      "workshopAvailable": false,
+      "availabilityApproved": true
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "destinationId": "evidence-drive-pilot-teacheropolis",
+  "folderId": "1LEb7tIqisBKNEvtLhGGRpW3PKB8OIY74",
+  "folderUrl": "https://drive.google.com/drive/folders/1LEb7tIqisBKNEvtLhGGRpW3PKB8OIY74",
+  "folderName": "THINKamigBOB Student Evidence Pilot",
+  "accountLabel": "teacheropolis@gmail.com",
+  "provenance": "USER_SUPPLIED",
+  "appsScriptProjectId": "1xNhYFr8jOcHIM9zqx5OgcRDTydlC4ncMHvRDpJiH35aBI5aUOev5JopR",
+  "uploadEndpoint": "https://script.google.com/macros/s/AKfycbyKaeDz1c4xGSItQ-kHZpqqVe3dCinC7_1Jn88GQSJcoFybCv3vGHGti7F-HRrgdfntcw/exec",
+  "connectionStatus": "PERSISTENT_FICTIONAL_REVIEW_VALIDATED",
+  "validationEvidence": {
+    "deploymentVersion": 2,
+    "fileId": "1U-PWhSC-6OxldOBlsniPROhe04VOIY8U",
+    "fileName": "evidence-2-pilot__fictional-student-01__1790473084156__fictional-pixel.png",
+    "mimeType": "image/png",
+    "sizeBytes": 68,
+    "persistentReview": {
+      "listedFiles": 3,
+      "previewFileId": "19V92hO_smF6FChAM68iNf5-C5aWLO65z",
+      "previewMimeType": "image/png",
+      "previewSizeBytes": 135591
+    }
+  },
+  "allowedData": "FICTIONAL_PILOT_EVIDENCE_ONLY"
+}

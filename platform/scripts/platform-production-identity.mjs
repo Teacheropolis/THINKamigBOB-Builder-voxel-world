@@ -11,9 +11,11 @@ export function parseStudentLabels(value) {
 
 export function productionIdentityConfiguration({ documentRef = document, locationRef = window.location } = {}) {
   const requested = documentRef.querySelector('meta[name="thinkamigbob-production-identity"]')?.content === "enabled";
+  const studentRequested = documentRef.querySelector('meta[name="thinkamigbob-student-access"]')?.content === "enabled";
   const clientId = documentRef.querySelector('meta[name="thinkamigbob-google-signin-client-id"]')?.content?.trim() || "";
   const securePublicHost = locationRef.protocol === "https:" && !LOCAL_HOSTS.has(locationRef.hostname);
-  return Object.freeze({ enabled: requested && securePublicHost, clientId, googleEnabled: requested && securePublicHost && Boolean(clientId) });
+  const enabled = requested && securePublicHost;
+  return Object.freeze({ enabled, studentEnabled: enabled && studentRequested, clientId, googleEnabled: enabled && Boolean(clientId) });
 }
 
 export function createProductionIdentityClient({ fetchImpl = globalThis.fetch, enabled = false, origin = globalThis.location?.origin } = {}) {
@@ -40,4 +42,3 @@ export function createProductionIdentityClient({ fetchImpl = globalThis.fetch, e
     signOut() { return request("/api/auth/v1/signout", { method: "POST" }); },
   });
 }
-

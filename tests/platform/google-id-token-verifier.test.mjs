@@ -23,7 +23,7 @@ function fetcher(jwk) {
 test("Google verifier validates signature, issuer, audience, expiry, and authoritative email", async () => {
   const fixture = await signedToken();
   const verifier = createGoogleIdTokenVerifier({ clientId: "client-1", fetchImpl: fetcher(fixture.jwk), now: () => 1_000_000 });
-  assert.deepEqual(await verifier.verify(fixture.token), { subject: "google-user-1", hostedDomain: null });
+  assert.deepEqual(await verifier.verify(fixture.token), { subject: "google-user-1", email: "teacher@gmail.com", hostedDomain: null });
 });
 
 test("Google verifier rejects wrong audience and non-authoritative external email", async () => {
@@ -32,4 +32,3 @@ test("Google verifier rejects wrong audience and non-authoritative external emai
   const external = await signedToken({ email: "teacher@example.org", email_verified: true });
   await assert.rejects(createGoogleIdTokenVerifier({ clientId: "client-1", fetchImpl: fetcher(external.jwk), now: () => 1_000_000 }).verify(external.token), /invalid-google-id-token/);
 });
-

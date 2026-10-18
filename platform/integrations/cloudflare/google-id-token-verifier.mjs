@@ -54,10 +54,9 @@ export function createGoogleIdTokenVerifier({ clientId, fetchImpl = globalThis.f
       const valid = await subtle.verify("RSASSA-PKCS1-v1_5", cryptoKey, Buffer.from(parts[2], "base64url"), Buffer.from(`${parts[0]}.${parts[1]}`));
       const seconds = Math.floor(now() / 1000);
       if (!valid || !GOOGLE_ISSUERS.has(payload.iss) || payload.aud !== clientId || !Number.isFinite(payload.exp) || payload.exp <= seconds || !String(payload.sub || "") || String(payload.sub).length > 255 || !authoritativeEmail(payload)) throw new Error("invalid-google-id-token");
-      return Object.freeze({ subject: String(payload.sub), hostedDomain: payload.hd ? String(payload.hd).toLowerCase().slice(0, 253) : null });
+      return Object.freeze({ subject: String(payload.sub), email: String(payload.email).toLowerCase(), hostedDomain: payload.hd ? String(payload.hd).toLowerCase().slice(0, 253) : null });
     },
   });
 }
 
 export const GOOGLE_IDENTITY_DISCOVERY_URL = DISCOVERY_URL;
-

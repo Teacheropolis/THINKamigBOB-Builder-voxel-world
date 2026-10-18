@@ -1525,15 +1525,15 @@ function studentEntryView() {
         <p>Students will use a class code and their individual student code. Students will not sign in to Google.</p>
         <div class="platform-field">
           <label for="production-class-code">Class Code</label>
-          <input id="production-class-code" name="classCode" type="text"${productionIdentityConfig.enabled ? "" : " disabled"} autocomplete="off" autocapitalize="characters" placeholder="Provided by teacher" required>
+          <input id="production-class-code" name="classCode" type="text"${productionIdentityConfig.studentEnabled ? "" : " disabled"} autocomplete="off" autocapitalize="characters" placeholder="Provided by teacher" required>
         </div>
         <div class="platform-field">
           <label for="production-student-code">Student Code</label>
-          <input id="production-student-code" name="studentCode" type="password"${productionIdentityConfig.enabled ? "" : " disabled"} autocomplete="off" placeholder="Private student code" required>
+          <input id="production-student-code" name="studentCode" type="password"${productionIdentityConfig.studentEnabled ? "" : " disabled"} autocomplete="off" placeholder="Private student code" required>
         </div>
         <p class="platform-error" data-error role="alert" hidden></p>
-        <button class="platform-button platform-button-primary" type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Open Student Dashboard</button>
-        <p class="platform-entry-status">${productionIdentityConfig.enabled ? "Ready for your teacher-provided codes." : "Setup required. Continue with the fictional pilot entry beside this preview."}</p>
+        <button class="platform-button platform-button-primary" type="submit"${productionIdentityConfig.studentEnabled ? "" : " disabled"}>Open Student Dashboard</button>
+        <p class="platform-entry-status">${productionIdentityConfig.studentEnabled ? "Ready for your teacher-provided codes." : "Student sign-in is not open yet. Continue with the fictional pilot entry beside this preview."}</p>
       </form>
       <form class="platform-panel platform-form" data-form="student-entry" novalidate>
         <p class="platform-context-label">Local fictional pilot</p>

@@ -55,8 +55,12 @@ async function internal(binding, path, body, request, method = "POST") {
 function ready(env) {
   try {
     const origin = new URL(env?.PLATFORM_ORIGIN);
-    return env?.PRODUCTION_ENABLED === "true" && origin.protocol === "https:" && typeof env?.PLATFORM_AUTH?.fetch === "function" && Boolean(env?.GOOGLE_SIGNIN_CLIENT_ID);
+    return env?.PRODUCTION_ENABLED === "true" && origin.protocol === "https:" && typeof env?.PLATFORM_AUTH?.fetch === "function" && Boolean(env?.GOOGLE_SIGNIN_CLIENT_ID) && allowedTeacherEmails(env).size > 0;
   } catch { return false; }
+}
+
+function allowedTeacherEmails(env) {
+  return new Set(String(env?.ALLOWED_TEACHER_EMAILS || "").split(",").map((value) => value.trim().toLowerCase()).filter(Boolean));
 }
 
 export function createPlatformIdentityWorker({ verifierFactory = (options) => createGoogleIdTokenVerifier(options) } = {}) {
@@ -78,12 +82,14 @@ export function createPlatformIdentityWorker({ verifierFactory = (options) => cr
           const form = new URLSearchParams(await boundedText(request));
           if (!sameSecret(cookie(request, "g_csrf_token"), form.get("g_csrf_token"))) return json(403, { error: "google-signin-csrf-check-failed" });
           const identity = await verifierFactory({ clientId: env.GOOGLE_SIGNIN_CLIENT_ID }).verify(form.get("credential"));
+          if (!allowedTeacherEmails(env).has(identity.email)) return json(403, { error: "teacher-account-not-approved" });
           const result = await internal(env.PLATFORM_AUTH, PLATFORM_IDENTITY_INTERNAL_PATHS.teacherSession, identity, request);
           if (!result.ok) return json(502, { error: "teacher-session-unavailable" });
           return redirect(`${origin}/platform/index.html#/teacher/dashboard`, platformSessionCookie(result.value.token));
         }
 
         if (url.pathname === STUDENT_PATH && request.method === "POST") {
+          if (env.STUDENT_ACCESS_ENABLED !== "true") return json(503, { status: "student-access-not-open" });
           if (request.headers.get("origin") !== origin) return json(403, { error: "same-origin-request-required" });
           let input;
           try { input = JSON.parse(await boundedText(request)); } catch { return json(400, { error: "invalid-json" }); }

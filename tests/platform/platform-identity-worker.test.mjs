@@ -19,8 +19,10 @@ test("public identity health reports readiness without exposing configuration", 
 function environment() {
   return {
     PRODUCTION_ENABLED: "true",
+    STUDENT_ACCESS_ENABLED: "true",
     PLATFORM_ORIGIN: origin,
     GOOGLE_SIGNIN_CLIENT_ID: "client-1",
+    ALLOWED_TEACHER_EMAILS: "teacher@example.org",
     STUDENT_ENTRY_RATE_LIMIT: { async limit() { return { success: true }; } },
     PLATFORM_AUTH: {
       async fetch(request) {
@@ -37,7 +39,7 @@ function environment() {
 }
 
 test("teacher Google entry verifies double-submit CSRF and sets a secure platform session", async () => {
-  const worker = createPlatformIdentityWorker({ verifierFactory: () => ({ async verify(value) { assert.equal(value, "signed-google-token"); return { subject: "google-1", hostedDomain: null }; } }) });
+  const worker = createPlatformIdentityWorker({ verifierFactory: () => ({ async verify(value) { assert.equal(value, "signed-google-token"); return { subject: "google-1", email: "teacher@example.org", hostedDomain: null }; } }) });
   const body = new URLSearchParams({ credential: "signed-google-token", g_csrf_token: "csrf-1" });
   const response = await worker.fetch(new Request(`${origin}/api/auth/v1/google`, { method: "POST", headers: { cookie: "g_csrf_token=csrf-1", "content-type": "application/x-www-form-urlencoded" }, body }), environment());
   assert.equal(response.status, 303);
@@ -45,6 +47,19 @@ test("teacher Google entry verifies double-submit CSRF and sets a secure platfor
   assert.match(response.headers.get("location"), /#\/teacher\/dashboard$/);
   const denied = await worker.fetch(new Request(`${origin}/api/auth/v1/google`, { method: "POST", headers: { cookie: "g_csrf_token=wrong" }, body }), environment());
   assert.equal(denied.status, 403);
+});
+
+test("teacher entry is allowlisted and student entry can remain independently locked", async () => {
+  const worker = createPlatformIdentityWorker({ verifierFactory: () => ({ async verify() { return { subject: "google-2", email: "other@gmail.com", hostedDomain: null }; } }) });
+  const body = new URLSearchParams({ credential: "signed-google-token", g_csrf_token: "csrf-1" });
+  const teacher = await worker.fetch(new Request(`${origin}/api/auth/v1/google`, { method: "POST", headers: { cookie: "g_csrf_token=csrf-1", "content-type": "application/x-www-form-urlencoded" }, body }), environment());
+  assert.equal(teacher.status, 403);
+  assert.deepEqual(await teacher.json(), { error: "teacher-account-not-approved" });
+  const locked = environment();
+  locked.STUDENT_ACCESS_ENABLED = "false";
+  const student = await worker.fetch(new Request(`${origin}/api/auth/v1/student`, { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify({ classCode: "ROOM-1", studentCode: "STUDENT-1" }) }), locked);
+  assert.equal(student.status, 503);
+  assert.deepEqual(await student.json(), { status: "student-access-not-open" });
 });
 
 test("student classroom entry is same-origin and never uses Google", async () => {
