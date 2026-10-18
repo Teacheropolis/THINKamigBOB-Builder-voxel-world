@@ -2807,6 +2807,13 @@ function openClassroomPresentationWindow() {
   classroomPresentationWindow.document.close();
   const screenOptionsSummary = classroomPresentationWindow.document.querySelector(".platform-classroom-window-controls > summary");
   if (screenOptionsSummary) screenOptionsSummary.textContent = "Screen Options";
+  const exitPresentationButton = classroomPresentationWindow.document.createElement("button");
+  exitPresentationButton.type = "button";
+  exitPresentationButton.className = "platform-classroom-exit-presentation";
+  exitPresentationButton.dataset.action = "exit-classroom-fullscreen";
+  exitPresentationButton.textContent = "Exit Full Screen";
+  exitPresentationButton.hidden = true;
+  classroomPresentationWindow.document.body.append(exitPresentationButton);
   installSmartboardToolGestures(classroomPresentationWindow.document);
   classroomPresentationWindow.document.addEventListener("change", (event) => {
     const voiceTarget = event.target.closest("[data-voice-meter-target]");
@@ -2834,6 +2841,7 @@ function openClassroomPresentationWindow() {
     }
     if (action.dataset.action === "reset-smartboard-tools") resetSmartboardToolPositions(classroomPresentationWindow.document);
     if (action.dataset.action === "fullscreen-classroom-display") void toggleClassroomDisplayFullscreen(action);
+    if (action.dataset.action === "exit-classroom-fullscreen") void exitClassroomDisplayFullscreen(action.ownerDocument);
     if (action.dataset.action === "split-screen-classroom-display") {
       if (classroomPresentationWindow.document.fullscreenElement) void classroomPresentationWindow.document.exitFullscreen();
       const layoutStatus = classroomPresentationWindow.document.querySelector("[data-classroom-display-layout-status]");
@@ -7198,25 +7206,14 @@ async function toggleClassroomDisplayFullscreen(button) {
   const displayDocument = button?.ownerDocument;
   if (!displayWindow || !displayDocument) return;
   const status = displayDocument.querySelector("[data-classroom-display-layout-status]");
-  if (displayDocument.body.classList.contains("platform-classroom-presentation-mode")) {
-    displayDocument.body.classList.remove("platform-classroom-presentation-mode");
-    button.textContent = "Full Screen";
-    if (status) status.textContent = "Full-screen presentation mode closed.";
-    return;
-  }
-  if (displayDocument.fullscreenElement) {
-    await displayDocument.exitFullscreen();
-    button.textContent = "Full Screen";
-    if (status) status.textContent = "Full screen closed.";
-    return;
-  }
+  if (displayDocument.body.classList.contains("platform-classroom-presentation-mode") || displayDocument.fullscreenElement) return exitClassroomDisplayFullscreen(displayDocument);
+  displayDocument.body.classList.add("platform-classroom-presentation-mode");
+  const exitButton = displayDocument.querySelector("[data-action='exit-classroom-fullscreen']");
+  if (exitButton) exitButton.hidden = false;
   try {
-    await displayDocument.documentElement.requestFullscreen();
-    button.textContent = "Exit Full Screen";
+    await displayDocument.documentElement.requestFullscreen({ navigationUI: "hide" });
     if (status) status.textContent = "Classroom Display is full screen.";
   } catch {
-    displayDocument.body.classList.add("platform-classroom-presentation-mode");
-    button.textContent = "Exit Full Screen";
     const screen = displayWindow.screen;
     try {
       displayWindow.moveTo(Number(screen.availLeft || 0), Number(screen.availTop || 0));
@@ -7226,6 +7223,18 @@ async function toggleClassroomDisplayFullscreen(button) {
       if (status) status.textContent = "Full screen was blocked. Use the Chromebook full-screen key for this window.";
     }
   }
+}
+
+async function exitClassroomDisplayFullscreen(displayDocument) {
+  if (!displayDocument) return;
+  if (displayDocument.fullscreenElement) {
+    try { await displayDocument.exitFullscreen(); } catch {}
+  }
+  displayDocument.body.classList.remove("platform-classroom-presentation-mode");
+  const exitButton = displayDocument.querySelector("[data-action='exit-classroom-fullscreen']");
+  if (exitButton) exitButton.hidden = true;
+  const status = displayDocument.querySelector("[data-classroom-display-layout-status]");
+  if (status) status.textContent = "Full-screen presentation mode closed.";
 }
 
 function smartboardToolSource(name) {
