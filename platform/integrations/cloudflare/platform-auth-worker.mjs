@@ -106,7 +106,10 @@ export function createPlatformAuthWorker({ repositoryFactory = ({ database, clas
             const classId = new URL(request.url).searchParams.get("classId");
             return json(200, { steps: await repository.listTeacherLessonSteps({ teacherId: session.id, classId }) });
           }
-          if (session?.role === "student") return json(200, { steps: await repository.listReleasedLessonSteps({ classId: session.classId }) });
+          if (session?.role === "student") return json(200, {
+            steps: await repository.listReleasedLessonSteps({ classId: session.classId }),
+            studentLabels: await repository.listActiveStudentLabels({ classId: session.classId }),
+          });
           return json(401, { error: "authenticated-classroom-session-required" });
         }
 

@@ -154,6 +154,19 @@ test("student display labels remain unique across every active class owned by a 
   );
 });
 
+test("students can receive only the active display labels for their own class poem", async () => {
+  let query = null;
+  const database = {
+    withSession() { return this; },
+    prepare(sql) { return { bind(...values) { return { async all() { query = { sql, values }; return { results: [{ display_label: "Avery Bobzilla" }, { display_label: "Jordan Bobaroo" }] }; } }; } }; },
+  };
+  const repository = createPlatformAuthD1Repository({ database, classroomCodeKey: Buffer.alloc(32, 5) });
+  assert.deepEqual(await repository.listActiveStudentLabels({ classId: "class-1" }), ["Avery Bobzilla", "Jordan Bobaroo"]);
+  assert.deepEqual(query.values, ["class-1"]);
+  assert.match(query.sql, /status = 'active'/);
+  assert.match(query.sql, /LIMIT 40/);
+});
+
 test("audit retention deletes only a bounded set older than the approved cutoff", async () => {
   const runs = [];
   const database = {

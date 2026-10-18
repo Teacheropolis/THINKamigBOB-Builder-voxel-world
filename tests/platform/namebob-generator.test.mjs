@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { firstNameFromRosterLine, generateNameBobLimerick, generateNameBobs, retryNameBob } from "../../platform/scripts/namebob-generator.mjs";
+import { firstNameFromRosterLine, generateClassNameBobLimerick, generateNameBobs, retryNameBob } from "../../platform/scripts/namebob-generator.mjs";
 
 test("extracts first names from typed and common pasted roster lines", () => {
   assert.equal(firstNameFromRosterLine("Ava Smith"), "Ava");
@@ -8,13 +8,17 @@ test("extracts first names from typed and common pasted roster lines", () => {
   assert.equal(firstNameFromRosterLine("  Mia  "), "Mia");
 });
 
-test("generates editable labels using the first name and a funny Bob last name", () => {
-  const result = generateNameBobs("Ava\nLiam\nLily");
-  assert.equal(result.labels.length, 3);
-  assert.match(result.labels[0], /^Ava Bob/i);
-  assert.match(result.labels[1], /^Liam Bob/i);
-  assert.match(result.labels[2], /^Lily Bob/i);
-  assert.equal(new Set(result.labels.map((label) => label.toLowerCase())).size, 3);
+test("generates editable labels using the first name and a rhyming Bob name", () => {
+  const result = generateNameBobs("Savannah\nLydia\nMiley\nSiamara\nMariela\nFaith");
+  assert.deepEqual(result.labels, [
+    "Savannah Bobanana",
+    "Lydia Bobbedia",
+    "Miley SmileyBob",
+    "Siamara Bob Tiara",
+    "Mariela Bobarella",
+    "Faith Bob-the-Eighth",
+  ]);
+  assert.equal(new Set(result.labels.map((label) => label.toLowerCase())).size, 6);
 });
 
 test("varies the funny Bob last names across a class", () => {
@@ -52,22 +56,18 @@ test("retries one student's label without changing the rest of the class", () =>
   assert.equal(new Set(lastNames).size, result.labels.length);
 });
 
-test("creates a five-line funny limerick from a first name or complete Bob name", () => {
-  const labels = generateNameBobs("Ava\nLiam").labels;
-  const byFirstName = generateNameBobLimerick("Ava", labels);
-  const byBobName = generateNameBobLimerick(labels[1], labels);
-  assert.equal(byFirstName.ok, true);
-  assert.equal(byBobName.ok, true);
-  assert.match(byFirstName.limerick, new RegExp(labels[0], "i"));
-  assert.equal(byFirstName.limerick.split("\n").length, 5);
-  assert.match(byBobName.limerick, new RegExp(labels[1], "i"));
+test("creates a funny class limerick that includes every NameBob", () => {
+  const labels = generateNameBobs("Ava\nLiam\nMia\nNoah\nLily\nRiley").labels;
+  const result = generateClassNameBobLimerick(labels);
+  assert.equal(result.ok, true);
+  labels.forEach((label) => assert.match(result.limerick, new RegExp(label, "i")));
+  assert.equal(result.limerick.split("\n\n").every((stanza) => stanza.split("\n").length === 5), true);
 });
 
-test("limerick reports when the student is not in the generated list", () => {
-  const labels = generateNameBobs("Ava\nLiam").labels;
-  const result = generateNameBobLimerick("Mia", labels);
+test("class limerick requires at least one student name", () => {
+  const result = generateClassNameBobLimerick([]);
   assert.equal(result.ok, false);
-  assert.equal(result.reason, "student-not-found");
+  assert.equal(result.reason, "class-names-required");
 });
 
 test("retry reports when the entered student is not in the generated list", () => {

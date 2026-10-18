@@ -28,6 +28,7 @@ function workerFor(session, owns = true) {
     async saveLessonStep({ teacherId, classId, step }) { return { id: "lesson-1", classId, title: step.title, directions: step.directions, resources: step.resources || [], status: step.status === "released" ? "released" : "draft", order: step.order || 0, updatedAt: 1000, releasedAt: step.status === "released" ? 1000 : null, teacherId }; },
     async listTeacherLessonSteps() { return [{ id: "lesson-1", classId: "class-1", title: "Build", directions: "Build a bridge.", resources: [], status: "draft", order: 0, updatedAt: 1000, releasedAt: null }]; },
     async listReleasedLessonSteps() { return [{ id: "lesson-2", classId: "class-1", title: "Test", directions: "Test the bridge.", resources: [], status: "released", order: 1, updatedAt: 1000, releasedAt: 1000 }]; },
+    async listActiveStudentLabels() { return ["Avery Bobzilla", "Jordan Bobaroo"]; },
   }) });
 }
 
@@ -107,6 +108,7 @@ test("teacher can release a shared lesson step and students receive only release
   const studentBody = await studentList.json();
   assert.equal(studentBody.steps.length, 1);
   assert.equal(studentBody.steps[0].status, "released");
+  assert.deepEqual(studentBody.studentLabels, ["Avery Bobzilla", "Jordan Bobaroo"]);
   assert.equal((await student.fetch(request("/internal/classroom/v1/lesson-steps", { method: "POST", body: "{}" }), env)).status, 401);
 });
 

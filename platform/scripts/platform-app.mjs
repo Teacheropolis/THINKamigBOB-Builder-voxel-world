@@ -50,7 +50,7 @@ import { createGoogleConnectionPreview, GOOGLE_CONNECTION_PREVIEW_STATUS, GOOGLE
 import { assessGoogleOAuthReadiness, GOOGLE_OAUTH_ENDPOINTS } from "./evidence-google-oauth-readiness.mjs";
 import { createProductionIdentityClient, parseStudentLabels, productionIdentityConfiguration } from "./platform-production-identity.mjs";
 import { createClassroomLessonClient } from "./classroom-lesson-client.mjs";
-import { generateNameBobLimerick, generateNameBobs, retryNameBob } from "./namebob-generator.mjs";
+import { generateClassNameBobLimerick, generateNameBobs, retryNameBob } from "./namebob-generator.mjs";
 import { createBrowserMessageLibrary } from "./message-library.mjs";
 import { createBrowserClassSetupProfiles } from "./class-setup-profiles.mjs";
 import { CLASS_RESOURCE_STORAGE_KEY, createClassResourceSharing, RESOURCE_RELEASES, RESOURCE_TYPES } from "./class-resource-sharing.mjs?v=preview-20261004-7";
@@ -121,6 +121,7 @@ const productionIdentityConfig = productionIdentityConfiguration();
 const productionIdentity = createProductionIdentityClient({ enabled: productionIdentityConfig.enabled, origin: window.location.origin });
 const classroomLesson = createClassroomLessonClient({ serviceOrigin: window.location.origin });
 let classroomLessonServiceNotice = "";
+let productionStudentClassLabels = [];
 const PRODUCTION_CURRENT_CLASS_KEY = "thinkamigbob.production.current-class.v1";
 let productionTeacherClasses = [];
 
@@ -191,6 +192,7 @@ async function loadLessonStepsFromService(state = session.read()) {
   const result = state.role === PLATFORM_ROLES.STUDENT ? await classroomLesson.studentSteps() : await classroomLesson.teacherSteps(classId);
   if (!result.ok) { classroomLessonServiceNotice = "The secure classroom service is temporarily unavailable."; return result; }
   const steps = Array.isArray(result.steps) ? result.steps : [];
+  if (state.role === PLATFORM_ROLES.STUDENT) productionStudentClassLabels = Array.isArray(result.studentLabels) ? result.studentLabels : [];
   activityDirections.replaceCards(classId, steps.map(lessonStepFromService));
   classroomLessonServiceNotice = state.role === PLATFORM_ROLES.STUDENT ? "Teacher directions loaded." : "Lesson steps loaded securely.";
   return result;
@@ -1206,12 +1208,18 @@ function writeStudentNameplate(studentId, preferences) {
   } catch {}
 }
 
-function studentNameplateMarkup(studentId, studentName, className, rawStudentName) {
+function studentNameplateMarkup(studentId, studentName, className) {
   const preferences = readStudentNameplate(studentId);
   const selected = (value, current) => value === current ? " selected" : "";
-  const limerick = generateNameBobLimerick(rawStudentName, [rawStudentName]);
-  const limerickMarkup = limerick.ok ? `<p class="platform-student-nameplate-limerick">${escapeHtml(limerick.limerick).replaceAll("\n", "<br>")}</p>` : "";
-  return `<section class="platform-student-orientation platform-student-nameplate-bg-${preferences.background} platform-student-nameplate-font-${preferences.font}" style="--student-name-color:${preferences.color}" data-student-nameplate data-student-id="${escapeHtml(studentId)}" aria-labelledby="student-orientation-title"><h2 id="student-orientation-title">${studentName}</h2><p class="platform-student-class">${className}</p>${limerickMarkup}<details class="platform-student-nameplate-customizer"><summary>Customize my nameplate</summary><div><label>Fancy text<select data-student-nameplate-control="font"><option value="slab" style="font-family:'Roboto Slab',Rockwell,Georgia,serif"${selected("slab", preferences.font)}>Inventor</option><option value="classic" style="font-family:Georgia,'Times New Roman',serif;font-style:italic"${selected("classic", preferences.font)}>Classic</option><option value="cursive" style="font-family:'School Cursive',cursive"${selected("cursive", preferences.font)}>Cursive</option><option value="playful" style="font-family:'Comic Sans MS','Comic Sans',cursive"${selected("playful", preferences.font)}>Playful</option></select></label><label>Background<select data-student-nameplate-control="background"><option value="cream"${selected("cream", preferences.background)}>Cream</option><option value="brass"${selected("brass", preferences.background)}>Brass</option><option value="blue"${selected("blue", preferences.background)}>Blue Steel</option><option value="green"${selected("green", preferences.background)}>Workshop Green</option><option value="parchment"${selected("parchment", preferences.background)}>Old Map</option></select></label><label>Name color<input type="color" value="${preferences.color}" data-student-nameplate-control="color"></label></div><p>Changes save automatically.</p></details></section>`;
+  return `<section class="platform-student-orientation platform-student-nameplate-bg-${preferences.background} platform-student-nameplate-font-${preferences.font}" style="--student-name-color:${preferences.color}" data-student-nameplate data-student-id="${escapeHtml(studentId)}" aria-labelledby="student-orientation-title"><h2 id="student-orientation-title">${studentName}</h2><p class="platform-student-class">${className}</p><details class="platform-student-nameplate-customizer"><summary>Customize my nameplate</summary><div><label>Fancy text<select data-student-nameplate-control="font"><option value="slab" style="font-family:'Roboto Slab',Rockwell,Georgia,serif"${selected("slab", preferences.font)}>Inventor</option><option value="classic" style="font-family:Georgia,'Times New Roman',serif;font-style:italic"${selected("classic", preferences.font)}>Classic</option><option value="cursive" style="font-family:'School Cursive',cursive"${selected("cursive", preferences.font)}>Cursive</option><option value="playful" style="font-family:'Comic Sans MS','Comic Sans',cursive"${selected("playful", preferences.font)}>Playful</option></select></label><label>Background<select data-student-nameplate-control="background"><option value="cream"${selected("cream", preferences.background)}>Cream</option><option value="brass"${selected("brass", preferences.background)}>Brass</option><option value="blue"${selected("blue", preferences.background)}>Blue Steel</option><option value="green"${selected("green", preferences.background)}>Workshop Green</option><option value="parchment"${selected("parchment", preferences.background)}>Old Map</option></select></label><label>Name color<input type="color" value="${preferences.color}" data-student-nameplate-control="color"></label></div><p>Changes save automatically.</p></details></section>`;
+}
+
+function studentClassLimerickMarkup(classId) {
+  const fixtureLabels = getRosterForClass(classId).map((student) => student.displayName);
+  const labels = productionStudentClassLabels.length ? productionStudentClassLabels : fixtureLabels;
+  const result = generateClassNameBobLimerick(labels);
+  if (!result.ok) return "";
+  return `<details class="platform-student-class-limerick"><summary>🎩 Our Class Limerick</summary><div><p>${escapeHtml(result.limerick).replaceAll("\n", "<br>")}</p><button class="platform-student-listen-button" type="button" data-action="read-student-section" aria-pressed="false">Listen</button></div></details>`;
 }
 
 function todaysLessonStudentMarkup(classId, studentId, assignedResearch) {
@@ -1592,10 +1600,10 @@ function classroomSetupMarkup() {
         <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
         <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
       </div>
-      <p class="platform-namebob-help">Each label uses the student's first name and a funny Bob last name, such as Ava Bobzilla, Liam Bobinator, or Mia Bobapalooza. Every student in the class gets a different Bob last name.</p>
+      <p class="platform-namebob-help">Each label keeps the student's first name and adds a funny rhyming Bob name, such as Savannah Bobanana, Miley SmileyBob, or Mariela Bobarella. Every student in the class gets a different Bob name.</p>
       <div class="platform-namebob-retry platform-namebob-limerick">
-        <label for="production-namebob-limerick">Make a funny limerick <small>Enter a first name or complete Bob name</small></label>
-        <div><input id="production-namebob-limerick" name="limerickName" maxlength="40"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava or Ava Bobzilla"><button type="button" data-action="generate-namebob-limerick"${productionIdentityConfig.enabled ? "" : " disabled"}>Make Limerick</button></div>
+        <label>Make one funny class limerick <small>Uses every student name or NameBob above</small></label>
+        <div><button type="button" data-action="generate-class-namebob-limerick"${productionIdentityConfig.enabled ? "" : " disabled"}>Make Our Class Limerick</button></div>
         <blockquote data-namebob-limerick-output hidden></blockquote>
       </div>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs—or enter your own labels.</p>
@@ -2604,7 +2612,8 @@ function studentDashboardView(state) {
   return shell(`
     <div class="platform-student-home">
       ${state.studentId === "student-preview-1" ? `<aside class="platform-student-preview-banner"><div><strong>Student Preview — No Sign-In Code</strong><p>You are viewing fictional student Ada Rivera in Preview STEM Class. Work completed here is only preview data in this browser.</p></div><a class="platform-button platform-button-secondary" href="#${ROUTES.WELCOME}">Exit Student Preview</a></aside>` : ""}
-      ${studentNameplateMarkup(state.studentId, studentName, className, rawStudentName)}
+      ${studentNameplateMarkup(state.studentId, studentName, className)}
+      ${studentClassLimerickMarkup(state.classId)}
 
       <section class="platform-student-quest-map" aria-labelledby="student-quest-map-title">
         <div class="platform-student-quest-map-heading">
@@ -5677,24 +5686,23 @@ async function handleClick(event) {
     retryInput.focus();
     return;
   }
-  if (action.dataset.action === "generate-namebob-limerick") {
+  if (action.dataset.action === "generate-class-namebob-limerick") {
     const form = action.closest('[data-form="production-classroom-setup"]');
     const textarea = form?.elements.studentLabels;
-    const limerickInput = form?.elements.limerickName;
     const output = form?.querySelector("[data-namebob-limerick-output]");
     const status = form?.querySelector("[data-namebob-status]");
-    if (!textarea || !limerickInput || !output) return;
-    const result = generateNameBobLimerick(limerickInput.value, textarea.value.split(/\r?\n/));
+    if (!textarea || !output) return;
+    const result = generateClassNameBobLimerick(textarea.value.split(/\r?\n/));
     if (!result.ok) {
       output.hidden = true;
-      if (status) status.textContent = result.reason === "student-not-found" ? "That student is not in the generated NameBob list. Check the spelling and try again." : "Enter a student's first name or complete Bob name.";
-      limerickInput.focus();
+      if (status) status.textContent = "Enter or paste the class names first.";
+      textarea.focus();
       return;
     }
     output.textContent = result.limerick;
     output.hidden = false;
-    if (status) status.textContent = `Funny limerick created for ${result.label}.`;
-    limerickInput.focus();
+    if (status) status.textContent = `Funny class limerick created with all ${result.labels.length} students.`;
+    action.focus();
     return;
   }
   if (action.dataset.action === "open-student-quest-step") {
@@ -5725,7 +5733,7 @@ async function handleClick(event) {
     return;
   }
   if (action.dataset.action === "read-student-section") {
-    const section = action.closest("section, article");
+    const section = action.closest("section, article, details");
     if (!section || !("speechSynthesis" in window)) { action.textContent = "Listening unavailable"; return; }
     if (window.speechSynthesis.speaking && action.getAttribute("aria-pressed") === "true") {
       window.speechSynthesis.cancel();

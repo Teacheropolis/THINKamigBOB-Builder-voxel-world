@@ -156,6 +156,15 @@ export function createPlatformAuthD1Repository({ database, classroomCodeKey, now
       return Object.freeze((result?.results || []).map(lessonProjection));
     },
 
+    async listActiveStudentLabels({ classId }) {
+      const classroom = clean(classId, "class-id");
+      const result = await primary(db).prepare(`SELECT display_label
+        FROM platform_student_entries
+        WHERE class_id = ?1 AND status = 'active'
+        ORDER BY created_at ASC, student_id ASC LIMIT 40`).bind(classroom).all();
+      return Object.freeze((result?.results || []).map((row) => displayLabel(row.display_label)));
+    },
+
     async createClassroom({ teacherId, name, studentLabels }) {
       if (typeof db.batch !== "function") throw new Error("d1-batch-required");
       const owner = clean(teacherId, "teacher-id");
