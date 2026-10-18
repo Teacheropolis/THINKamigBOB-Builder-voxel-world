@@ -1,20 +1,3 @@
-const RHYME_FAMILIES = Object.freeze([
-  [/ava$/i, ["Brava", "Java", "Zava"]],
-  [/ella$/i, ["Stella", "Bella", "Zella"]],
-  [/emma$/i, ["Gemma", "Zemma", "Tremma"]],
-  [/lily$/i, ["Silly", "Chilly", "Frilly"]],
-  [/(?:lee|leigh|li|ly)$/i, ["Glee", "Zippy", "Whirly"]],
-  [/(?:ay|ae)$/i, ["Play", "Hooray", "Gear-Spray"]],
-  [/(?:den|dan|don)$/i, ["Zingden", "Whirlin'", "Gearin'"]],
-  [/(?:son|sen)$/i, ["Awesome", "Gearson", "Cheerson"]],
-  [/(?:er|or)$/i, ["Whirrer", "Gearer", "Explorer"]],
-  [/(?:in|en|yn)$/i, ["Grinnin'", "Spinnin'", "Winnin'"]],
-  [/(?:ie|y)$/i, ["Zippy", "Happy", "Snappy"]],
-  [/(?:a|ah)$/i, ["Ta-Da", "Hurrah", "Zing-Ah"]],
-  [/(?:o|oh)$/i, ["Go-Go", "Yo-Yo", "Glow"]],
-]);
-
-const MADE_UP_ONSETS = Object.freeze(["Z", "Fizz", "Whizz", "B", "Gear", "Tink"]);
 const BOB_FORMS = Object.freeze([
   "Bob", "Bobarella", "Bobzilla", "Bobbio", "Bobinator", "Bobtastic",
   "Bobaroo", "Bobster", "Bobonaut", "Bobasaurus", "Bobnado", "Bobomatic",
@@ -22,6 +5,8 @@ const BOB_FORMS = Object.freeze([
   "Bobiverse", "Bobventure", "Bobberino", "Bobbo", "Bobbles", "Bobalicious",
   "Bobarooza", "Bobmobile", "Bobrocket", "Bobwhiz", "Boboodle", "Boborama",
   "Bobificent", "Bobmazing", "Bobbot", "Bobarooey", "Bobdoodle", "Bobkaboom",
+  "Bobquake", "Bobstorm", "Bobshine", "Bobwizard", "Bobgadget", "Bobspark",
+  "Bobzoom", "Bobwhirl", "Bobtopia", "Bobcraft", "Bobbolt", "Bobberry",
 ]);
 
 function cleanName(value) {
@@ -41,65 +26,41 @@ function stableNumber(value) {
   return [...String(value)].reduce((total, character) => ((total * 31) + character.codePointAt(0)) >>> 0, 7);
 }
 
-function madeUpRhyme(name, choice) {
-  const match = name.match(/[aeiouy][a-z'’-]*$/i);
-  const ending = match?.[0] || name.slice(-2);
-  return `${MADE_UP_ONSETS[choice % MADE_UP_ONSETS.length]}${ending.toLocaleLowerCase()}`;
-}
-
-function rhymesFor(name) {
-  const family = RHYME_FAMILIES.find(([pattern]) => pattern.test(name));
-  if (family) return family[1];
-  return MADE_UP_ONSETS.map((_, index) => madeUpRhyme(name, index));
-}
-
 function boundedLabel(value) {
   return String(value).replace(/\s+/g, " ").trim().slice(0, 40).trim();
 }
 
-function beginningWord(value) {
-  return String(value || "").trim().split(/\s+/)[0].toLocaleLowerCase();
+function bobLastName(value) {
+  return String(value || "").trim().split(/\s+/).at(-1).toLocaleLowerCase();
 }
 
 function labelContainsName(label, firstName) {
   const wanted = firstName.toLocaleLowerCase();
-  return String(label || "").split(/\s+/).some((word) => {
-    const normalized = cleanName(word).toLocaleLowerCase();
-    return normalized === wanted || BOB_FORMS.some((bobForm) => normalized === `${wanted}${bobForm.toLocaleLowerCase()}`);
-  });
+  return cleanName(String(label || "").split(/\s+/)[0]).toLocaleLowerCase() === wanted;
 }
 
-export function generateNameBobs(value, { usedLabels = [], usedBeginningWords = [] } = {}) {
+export function generateNameBobs(value, { usedLabels = [], usedBobLastNames = [] } = {}) {
   const lines = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
   const firstNames = lines.map(firstNameFromRosterLine).filter(Boolean);
   const used = new Set(usedLabels.map((label) => String(label).trim().toLocaleLowerCase()).filter(Boolean));
-  const beginnings = new Set(usedBeginningWords.map(beginningWord).filter(Boolean));
+  const bobLastNames = new Set(usedBobLastNames.map(bobLastName).filter(Boolean));
   const labels = [];
 
   for (const [index, firstName] of firstNames.entries()) {
-    const rhymes = rhymesFor(firstName);
     const seed = stableNumber(`${firstName}-${index}`);
     let label = "";
-    for (let attempt = 0; attempt < 24 && !label; attempt += 1) {
-      const rhyme = rhymes[(seed + attempt) % rhymes.length];
+    for (let attempt = 0; attempt < BOB_FORMS.length && !label; attempt += 1) {
       const bobForm = BOB_FORMS[(seed + attempt) % BOB_FORMS.length];
-      const candidate = [
-        `${rhyme} ${firstName}${bobForm}`,
-        `${firstName}${bobForm} ${rhyme}`,
-        `${rhyme}${bobForm} ${firstName}`,
-        `${firstName} ${rhyme}${bobForm}`,
-      ][(seed + attempt) % 4];
-      const bounded = boundedLabel(candidate);
-      if (labelContainsName(bounded, firstName) && BOB_FORMS.some((form) => bounded.toLocaleLowerCase().includes(form.toLocaleLowerCase())) && !used.has(bounded.toLocaleLowerCase()) && !beginnings.has(beginningWord(bounded))) label = bounded;
+      const candidate = boundedLabel(`${firstName} ${bobForm}`);
+      if (!used.has(candidate.toLocaleLowerCase()) && !bobLastNames.has(bobLastName(candidate))) label = candidate;
     }
     if (!label) {
-      let number = 2;
-      const base = boundedLabel(`${firstName}${BOB_FORMS[seed % BOB_FORMS.length]}`);
-      label = base;
-      while (used.has(label.toLocaleLowerCase()) || beginnings.has(beginningWord(label))) label = boundedLabel(`${base}${number++} ${madeUpRhyme(firstName, number)}`);
+      let number = 3;
+      label = boundedLabel(`${firstName} Bob2`);
+      while (used.has(label.toLocaleLowerCase()) || bobLastNames.has(bobLastName(label))) label = boundedLabel(`${firstName} Bob${number++}`);
     }
     used.add(label.toLocaleLowerCase());
-    beginnings.add(beginningWord(label));
+    bobLastNames.add(bobLastName(label));
     labels.push(label);
   }
   return Object.freeze({ labels: Object.freeze(labels), sourceCount: lines.filter((line) => String(line).trim()).length });
@@ -112,7 +73,7 @@ export function retryNameBob(firstNameValue, currentLabels, { usedLabels = [] } 
   const index = labels.findIndex((label) => labelContainsName(label, firstName));
   if (index < 0) return Object.freeze({ ok: false, reason: "student-not-found", labels: Object.freeze(labels) });
   const otherLabels = labels.filter((_, labelIndex) => labelIndex !== index);
-  const generated = generateNameBobs(firstName, { usedLabels: [...usedLabels, ...labels], usedBeginningWords: otherLabels });
+  const generated = generateNameBobs(firstName, { usedLabels: [...usedLabels, ...labels], usedBobLastNames: otherLabels });
   if (!generated.labels[0]) return Object.freeze({ ok: false, reason: "retry-unavailable", labels: Object.freeze(labels) });
   const retried = [...labels];
   retried[index] = generated.labels[0];

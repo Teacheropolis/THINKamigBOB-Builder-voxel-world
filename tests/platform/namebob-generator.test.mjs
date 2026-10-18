@@ -8,30 +8,21 @@ test("extracts first names from typed and common pasted roster lines", () => {
   assert.equal(firstNameFromRosterLine("  Mia  "), "Mia");
 });
 
-test("generates editable memorable labels containing the first name and Bob", () => {
+test("generates editable labels using the first name and a funny Bob last name", () => {
   const result = generateNameBobs("Ava\nLiam\nLily");
   assert.equal(result.labels.length, 3);
-  assert.match(result.labels[0], /Ava/i);
-  assert.match(result.labels[1], /Liam/i);
-  assert.match(result.labels[2], /Lily/i);
-  assert.equal(result.labels.every((label) => /Bob/i.test(label)), true);
+  assert.match(result.labels[0], /^Ava Bob/i);
+  assert.match(result.labels[1], /^Liam Bob/i);
+  assert.match(result.labels[2], /^Lily Bob/i);
   assert.equal(new Set(result.labels.map((label) => label.toLowerCase())).size, 3);
 });
 
-test("can attach Bob to either the student name or the rhyming word", () => {
-  const names = ["Ava", "Liam", "Mia", "Noah", "Lily", "Riley", "Emma", "Mason"];
-  const labels = generateNameBobs(names).labels;
-  assert.equal(labels.every((label) => /bob/i.test(label)), true);
-  assert.equal(labels.some((label, index) => !new RegExp(`${names[index]}Bob`, "i").test(label)), true);
-  assert.equal(labels.every((label, index) => new RegExp(names[index], "i").test(label)), true);
-});
-
-test("varies Bob with funny forms such as Bobarella, Bobzilla, and Bobbio", () => {
+test("varies the funny Bob last names across a class", () => {
   const names = ["Ava", "Liam", "Mia", "Noah", "Lily", "Riley", "Emma", "Mason", "Ella", "Logan", "Olivia", "Ethan", "Lucas", "Sofia", "Henry", "Aria", "Jack", "Nora", "Leo", "Ruby", "Owen", "Ivy", "Ezra", "Luna", "Theo", "Maya", "Finn", "Zoe", "Eli", "Isla"];
   const labels = generateNameBobs(names).labels;
   assert.equal(labels.every((label) => /bob/i.test(label)), true);
   assert.equal(labels.some((label) => /Bobarella|Bobzilla|Bobbio/i.test(label)), true);
-  const forms = labels.flatMap((label) => label.match(/Bob[A-Za-z]*/g) || []).map((form) => form.toLowerCase());
+  const forms = labels.map((label) => label.split(/\s+/).at(-1).toLowerCase());
   assert.ok(new Set(forms).size >= 10);
 });
 
@@ -43,10 +34,10 @@ test("avoids labels used in earlier classes and resolves repeated first names", 
   assert.notEqual(result.labels[0].toLowerCase(), result.labels[1].toLowerCase());
 });
 
-test("uses a different beginning word for every student in a class", () => {
+test("uses a different Bob last name for every student in a class", () => {
   const result = generateNameBobs("Lily\nRiley\nAvery\nLucy\nMolly\nEmily");
-  const beginnings = result.labels.map((label) => label.split(/\s+/)[0].toLowerCase());
-  assert.equal(new Set(beginnings).size, result.labels.length);
+  const lastNames = result.labels.map((label) => label.split(/\s+/).at(-1).toLowerCase());
+  assert.equal(new Set(lastNames).size, result.labels.length);
 });
 
 test("retries one student's label without changing the rest of the class", () => {
@@ -58,8 +49,8 @@ test("retries one student's label without changing the rest of the class", () =>
   assert.match(result.labels[1], /Liam/i);
   assert.match(result.labels[1], /Bob/i);
   assert.equal(result.labels[2], original[2]);
-  const beginnings = result.labels.map((label) => label.split(/\s+/)[0].toLowerCase());
-  assert.equal(new Set(beginnings).size, result.labels.length);
+  const lastNames = result.labels.map((label) => label.split(/\s+/).at(-1).toLowerCase());
+  assert.equal(new Set(lastNames).size, result.labels.length);
 });
 
 test("retry reports when the entered student is not in the generated list", () => {
