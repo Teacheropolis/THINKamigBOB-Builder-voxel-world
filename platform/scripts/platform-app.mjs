@@ -7463,6 +7463,7 @@ function render() {
   const allowedRoute = guardRoute(requestedRoute, state);
   if (allowedRoute !== requestedRoute) return navigate(allowedRoute, { replace: true });
   root.innerHTML = viewForRoute(allowedRoute, state);
+  root.querySelector('[data-action="clear-captains-log-week"]')?.remove();
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) { installClassroomDisplayChoices(); applyClassroomBobDisplay(); }
   if (allowedRoute === ROUTES.TEACHER_LOGIN) mountProductionGoogleSignIn();
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) pb002jClasswide.mount(root, "teacher");

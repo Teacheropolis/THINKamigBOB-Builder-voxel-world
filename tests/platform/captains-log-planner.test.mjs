@@ -68,6 +68,16 @@ test("teacher can intentionally clear a saved week back to blank defaults", () =
   assert.equal(Object.values(cleared.days).some((entry) => entry.enabled), false);
 });
 
+test("old auto-filled five-prompt plans migrate once to the blank default", () => {
+  const storage = memoryStorage();
+  const reflections = createWeeklyReflections({ storage });
+  const days = Object.fromEntries(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => [day, { enabled: true, promptId: CAPTAINS_LOG_PRESET_PROMPTS[index].id, prompt: CAPTAINS_LOG_PRESET_PROMPTS[index].prompt, assignment: day }]));
+  assert.equal(reflections.saveCaptainLogWeekPlan("class-1", { week: 1, days, required: 5 }).ok, true);
+  const migrated = reflections.captainLogWeekPlan("class-1", 1);
+  assert.equal(migrated.required, 0);
+  assert.equal(Object.values(migrated.days).some((entry) => entry.enabled), false);
+});
+
 test("five-day plan can be copied to other classes", () => {
   const reflections = createWeeklyReflections({ storage: memoryStorage(), now: () => new Date("2026-10-19T12:00:00Z") });
   const days = Object.fromEntries(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => [day, { enabled: true, promptId: `prompt-${index}`, prompt: `Class prompt number ${index + 1}?` }]));

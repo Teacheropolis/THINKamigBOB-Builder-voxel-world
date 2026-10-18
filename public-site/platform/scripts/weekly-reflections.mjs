@@ -90,6 +90,26 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     catch { return {}; }
   };
   const write = (value) => storage.setItem(WEEKLY_REFLECTION_STORAGE_KEY, JSON.stringify(value));
+  const migrateLegacyAutofilledPlans = () => {
+    const all = readAll();
+    if (all.blankPlannerDefaultsV1) return;
+    const plans = { ...(all.captainLogWeekPlans ?? {}) };
+    const isAutofilled = (plan) => Boolean(plan?.days) && CAPTAINS_LOG_WEEKDAYS.every((day, index) => {
+      const entry = plan.days[day], preset = CAPTAINS_LOG_PRESET_PROMPTS[index];
+      return entry?.enabled && entry.promptId === preset.id && entry.prompt === preset.prompt;
+    });
+    Object.entries(plans).forEach(([classId, stored]) => {
+      if (isAutofilled(stored)) delete plans[classId];
+      else if (stored && typeof stored === "object") {
+        const next = { ...stored };
+        Object.keys(next).forEach((week) => { if (isAutofilled(next[week])) delete next[week]; });
+        plans[classId] = next;
+      }
+    });
+    all.captainLogWeekPlans = plans;
+    all.blankPlannerDefaultsV1 = true;
+    write(all);
+  };
   const classWeek = (classId) => `${classId}|${weekKey(now())}`;
   const requirement = (classId) => Math.max(0, Math.min(5, Number(readAll().requirements?.[classWeek(classId)] ?? 1)));
   const setRequirement = (classId, count) => {
@@ -113,6 +133,7 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     return { ok: true, week: value };
   };
   const captainLogPlan = (classId) => {
+    migrateLegacyAutofilledPlans();
     const activeWeek = activeCaptainLogWeek(classId);
     const weekly = readAll().captainLogWeekPlans?.[classId]?.[activeWeek] ?? readAll().captainLogWeekPlans?.[classId];
     if (weekly?.days) {
@@ -128,6 +149,7 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     return saved && typeof saved.prompt === "string" ? saved : { prompt: fallback.prompt, promptId: fallback.id, week: 1, schedule: "Today", required: requirement(classId), updatedAt: null };
   };
   const captainLogWeekPlan = (classId, requestedWeek = activeCaptainLogWeek(classId)) => {
+    migrateLegacyAutofilledPlans();
     const week = Math.max(1, Math.min(7, Number(requestedWeek) || 1));
     const stored = readAll().captainLogWeekPlans?.[classId];
     const saved = stored?.[week] ?? (stored?.days && Number(stored.week) === week ? stored : null);
