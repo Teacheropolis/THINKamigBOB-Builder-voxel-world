@@ -218,8 +218,12 @@ test("student dashboard shows the full weekly prompt map and an adaptive timelin
   assert.match(app, /STUDENT_VOCABULARY/);
   assert.match(app, /Show what I need to think about/);
   assert.match(app, /What the Principal Wants to See/);
-  assert.match(app, /Student thinking:/);
+  assert.match(app, /Purpose of the activity/);
+  assert.match(app, /Evidence aligned to Ohio’s Accomplished level/);
+  assert.match(app, /Accomplished-level wording for lesson plans/);
+  assert.match(app, /Responsive differentiation:/);
   assert.match(app, /Instructional adjustment:/);
+  assert.doesNotMatch(app, /platform-captains-log-learning-message/);
   assert.match(app, /function captainLogThinkingHelp/);
   assert.match(app, /toggle-captains-log-thinking-help/);
 });

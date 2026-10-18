@@ -7558,7 +7558,50 @@ function render() {
   if (allowedRoute !== requestedRoute) return navigate(allowedRoute, { replace: true });
   root.innerHTML = viewForRoute(allowedRoute, state);
   root.querySelector('[data-action="clear-captains-log-week"]')?.remove();
-  root.querySelector("#captains-log-planner-title")?.insertAdjacentHTML("afterend", '<p class="platform-captains-log-learning-message"><strong>Every result teaches us something.</strong> Students briefly explain what happened, what they learned, and what they may improve.</p><details class="platform-captains-log-evaluation-evidence"><summary>What the Principal Wants to See</summary><p>Use Captain’s Log records as possible lesson-planning and teacher-evaluation evidence. Requirements vary by school and state.</p><ul><li><strong>Student thinking:</strong> written explanations, evidence, and reflection—not only completed products.</li><li><strong>Differentiation:</strong> Starting, Growing, and Stretching prompts matched to demonstrated readiness.</li><li><strong>Formative assessment:</strong> patterns in responses show what students understand and where they need support.</li><li><strong>Feedback and questioning:</strong> Bob’s follow-up questions increase depth without replacing teacher judgment.</li><li><strong>Instructional adjustment:</strong> use class trends to document next steps, reteaching, grouping, or added challenge.</li></ul></details>');
+  root.querySelector("#captains-log-planner-title")?.insertAdjacentHTML("afterend", `
+    <details class="platform-captains-log-evaluation-evidence">
+      <summary>What the Principal Wants to See</summary>
+      <div class="platform-captains-log-evaluation-body">
+        <section>
+          <h3>Purpose of the activity</h3>
+          <p>Every result gives students something to notice, explain, and improve. Captain’s Log makes student thinking visible, builds reflection into the learning cycle, and gives the teacher timely evidence for planning the next lesson.</p>
+        </section>
+        <section>
+          <h3>Evidence aligned to Ohio’s Accomplished level</h3>
+          <p>Use this as a planning and evidence guide—not as a guarantee of an evaluation rating. Ohio districts may add local requirements.</p>
+          <ul>
+            <li><strong>Standards and measurable goals:</strong> identify the learning standard, success criteria, and the thinking students will demonstrate in the selected prompt.</li>
+            <li><strong>Knowledge of individual students:</strong> use Starting, Growing, and Stretching prompts intentionally, based on prior responses and readiness—not as fixed student labels.</li>
+            <li><strong>Responsive differentiation:</strong> provide accessible entry points, vocabulary support, and deeper follow-up questions while preserving the same rigorous learning goal.</li>
+            <li><strong>Formative assessment:</strong> review responses for class and individual patterns, misconceptions, evidence use, and changes in student thinking.</li>
+            <li><strong>Feedback and questioning:</strong> document how teacher or Bob follow-up questions prompted students to explain, support, revise, or extend their thinking.</li>
+            <li><strong>Instructional adjustment:</strong> connect the evidence to a specific next action—reteaching, regrouping, a new model, added practice, or greater challenge—and check whether it worked.</li>
+            <li><strong>Student ownership:</strong> show students using feedback and reflection to name progress, revise work, and choose a productive next step.</li>
+            <li><strong>Collaboration and communication:</strong> share appropriate learning evidence with students, families, colleagues, or support staff to plan for individual needs.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Accomplished-level wording for lesson plans</h3>
+          <div class="platform-captains-log-evaluation-copy">
+            <p><strong>Planning:</strong> “I selected this Captain’s Log prompt to collect standards-aligned evidence of students’ ability to explain their process, use evidence, and identify a next step.”</p>
+            <p><strong>Differentiation:</strong> “Students work toward the same learning goal through responsive Starting, Growing, or Stretching questions. Prompt level and support are adjusted from current response evidence.”</p>
+            <p><strong>Assessment:</strong> “I will analyze individual responses and class patterns to identify strengths, misconceptions, and readiness for extension.”</p>
+            <p><strong>Next instruction:</strong> “The evidence will determine who needs reteaching, a different representation, targeted feedback, regrouping, or additional challenge. I will review the next response to evaluate the impact of that adjustment.”</p>
+            <p><strong>Student ownership:</strong> “Students will use feedback to explain what changed in their thinking, revise their work, and name the next action they will take.”</p>
+          </div>
+        </section>
+        <section>
+          <h3>Save as evaluation evidence</h3>
+          <ul>
+            <li>The standard, learning target, success criteria, and selected prompt.</li>
+            <li>Anonymous before-and-after response examples from more than one readiness level.</li>
+            <li>A brief class-trend note plus the individual needs you identified.</li>
+            <li>The instructional change you made and evidence showing its effect.</li>
+            <li>Examples of student revision, self-reflection, and use of feedback.</li>
+          </ul>
+        </section>
+      </div>
+    </details>`);
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) { installClassroomDisplayChoices(); applyClassroomBobDisplay(); }
   if (allowedRoute === ROUTES.TEACHER_LOGIN) mountProductionGoogleSignIn();
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) pb002jClasswide.mount(root, "teacher");

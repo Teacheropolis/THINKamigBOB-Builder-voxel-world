@@ -839,11 +839,15 @@ summary:focus-visible {
 .platform-captains-log-week-map > div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
 .platform-captains-log-week-map h3, .platform-captains-log-week-map > div:first-child p { margin: 0; }
 .platform-captains-log-week-instruction { margin: 0.45rem 0 0; font-weight: 800; }
-.platform-captains-log-learning-message { margin: 0.35rem 0 0.55rem; color: var(--platform-muted); font-size: 0.82rem; }
 .platform-captains-log-evaluation-evidence { margin: 0 0 0.8rem; border: 1px solid #b9ccd4; border-radius: 0.65rem; background: #f4fafc; }
 .platform-captains-log-evaluation-evidence > summary { padding: 0.65rem 0.75rem; color: var(--platform-navy); font-weight: 900; cursor: pointer; }
-.platform-captains-log-evaluation-evidence > p { margin: 0; padding: 0 0.75rem 0.55rem; color: var(--platform-muted); font-size: 0.78rem; }
-.platform-captains-log-evaluation-evidence > ul { display: grid; gap: 0.4rem; margin: 0; padding: 0 1.25rem 0.8rem 2rem; color: var(--platform-ink); font-size: 0.8rem; }
+.platform-captains-log-evaluation-body { display: grid; gap: 0.65rem; padding: 0 0.75rem 0.8rem; }
+.platform-captains-log-evaluation-body section { padding: 0.7rem; border: 1px solid #c9d9df; border-radius: 0.55rem; background: #fff; }
+.platform-captains-log-evaluation-body h3 { margin: 0 0 0.35rem; color: var(--platform-navy); font-size: 0.92rem; }
+.platform-captains-log-evaluation-body p { margin: 0.25rem 0; color: var(--platform-muted); font-size: 0.8rem; line-height: 1.45; }
+.platform-captains-log-evaluation-body ul { display: grid; gap: 0.45rem; margin: 0.45rem 0 0; padding-left: 1.2rem; color: var(--platform-ink); font-size: 0.8rem; line-height: 1.4; }
+.platform-captains-log-evaluation-copy { display: grid; gap: 0.45rem; }
+.platform-captains-log-evaluation-copy p { padding: 0.55rem; border-left: 4px solid var(--platform-gold); background: #fff9e8; color: var(--platform-ink); }
 .platform-captains-log-level { display: inline-flex; width: fit-content; margin: 0.5rem 0 0; padding: 0.35rem 0.55rem; border: 2px solid #6f94a5; border-radius: 999px; background: #e9f6fb; color: #173247; font-size: 0.78rem; }
 .platform-captains-log-level[data-captains-log-level="growing"] { border-color: #2d7d5b; background: #e7f5ed; }
 .platform-captains-log-level[data-captains-log-level="stretching"] { border-color: #7753a6; background: #f0e9fa; }
