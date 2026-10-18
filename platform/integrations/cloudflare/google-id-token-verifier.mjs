@@ -45,9 +45,9 @@ export function createGoogleIdTokenVerifier({ clientId, fetchImpl = globalThis.f
       const payload = decodePart(parts[1]);
       if (header.alg !== "RS256" || !String(header.kid || "")) throw new Error("unsupported-google-token-signature");
 
-      const discovery = await boundedJson(await fetchImpl(DISCOVERY_URL, { headers: { Accept: "application/json" }, redirect: "error" }), "google-discovery-unavailable");
+      const discovery = await boundedJson(await fetchImpl(DISCOVERY_URL, { headers: { Accept: "application/json" }, redirect: "manual" }), "google-discovery-unavailable");
       if (discovery.issuer !== "https://accounts.google.com" || !String(discovery.jwks_uri || "").startsWith("https://www.googleapis.com/")) throw new Error("invalid-google-discovery");
-      const jwks = await boundedJson(await fetchImpl(discovery.jwks_uri, { headers: { Accept: "application/json" }, redirect: "error" }), "google-signing-keys-unavailable");
+      const jwks = await boundedJson(await fetchImpl(discovery.jwks_uri, { headers: { Accept: "application/json" }, redirect: "manual" }), "google-signing-keys-unavailable");
       const key = Array.isArray(jwks.keys) ? jwks.keys.find((item) => item.kid === header.kid && item.kty === "RSA" && item.use === "sig" && item.alg === "RS256") : null;
       if (!key) throw new Error("google-signing-key-not-found");
       const cryptoKey = await subtle.importKey("jwk", key, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);

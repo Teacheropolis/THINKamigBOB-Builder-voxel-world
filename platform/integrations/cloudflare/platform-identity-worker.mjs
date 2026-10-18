@@ -167,7 +167,17 @@ export function createPlatformIdentityWorker({ verifierFactory = (options) => cr
           : rawReason && /^[A-Za-z0-9 .:_-]{1,120}$/.test(rawReason)
             ? rawReason
             : status >= 500 ? "internal-error" : "identity-rejected";
-        console.error(JSON.stringify({ event: "platform-identity-error", path: url.pathname, status, reason }));
+        const diagnostic = rawReason
+          .replace(/[^\x20-\x7e]/g, "?")
+          .slice(0, 300);
+        console.error(JSON.stringify({
+          event: "platform-identity-error",
+          path: url.pathname,
+          status,
+          reason,
+          errorName: String(error?.name || "Error").slice(0, 80),
+          diagnostic,
+        }));
         return json(status, { error: status === 413 ? "request-too-large" : "identity-not-verified" });
       }
     },

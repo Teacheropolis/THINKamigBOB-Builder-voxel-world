@@ -14,7 +14,8 @@ async function signedToken(overrides = {}) {
 }
 
 function fetcher(jwk) {
-  return async (url) => {
+  return async (url, options) => {
+    assert.equal(options.redirect, "manual");
     if (String(url) === GOOGLE_IDENTITY_DISCOVERY_URL) return Response.json({ issuer: "https://accounts.google.com", jwks_uri: "https://www.googleapis.com/oauth2/v3/certs" });
     return Response.json({ keys: [jwk] });
   };

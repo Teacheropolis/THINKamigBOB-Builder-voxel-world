@@ -2381,6 +2381,19 @@ var productionIdentityConfig = productionIdentityConfiguration();
 var productionIdentity = createProductionIdentityClient({ enabled: productionIdentityConfig.enabled, origin: window.location.origin });
 var classroomLesson = createClassroomLessonClient({ serviceOrigin: window.location.origin });
 var classroomLessonServiceNotice = "";
+var PRODUCTION_CURRENT_CLASS_KEY = "thinkamigbob.production.current-class.v1";
+var productionTeacherClasses = [];
+function productionClassRecord(classroom = {}) {
+  const id = String(classroom.id || classroom.classId || "");
+  const name = String(classroom.name || "Classroom");
+  return { ...classroom, id, displayName: name, periodLabel: "", teacherId: session.read().teacherId };
+}
+function setProductionTeacherClasses(classrooms = [], preferredClassId = "") {
+  productionTeacherClasses = classrooms.map(productionClassRecord).filter((item) => item.id);
+  const saved = preferredClassId || window.sessionStorage.getItem(PRODUCTION_CURRENT_CLASS_KEY) || "";
+  const selected = productionTeacherClasses.some((item) => item.id === saved) ? saved : productionTeacherClasses[0]?.id || "";
+  if (selected) window.sessionStorage.setItem(PRODUCTION_CURRENT_CLASS_KEY, selected);
+}
 function lessonResourceForService(resource = {}, fallbackTitle = "Lesson resource") {
   const mediaType = String(resource.mediaType || "webpage");
   const type = mediaType === "image" ? "image" : mediaType === "youtube" ? "video" : "link";
@@ -3232,6 +3245,10 @@ function currentEvidenceActivity() {
   return todaysMission.read().title || PILOT_ACTIVITY;
 }
 function currentTeacherClass(teacherId) {
+  if (productionIdentityConfig.enabled && productionTeacherClasses.length) {
+    const selected2 = window.sessionStorage.getItem(PRODUCTION_CURRENT_CLASS_KEY);
+    return productionTeacherClasses.find((item) => item.id === selected2) ?? productionTeacherClasses[0];
+  }
   const classes2 = getClassesForTeacher(teacherId);
   const selected = classSetupProfiles.read().currentClassId;
   return classes2.find((item) => item.id === selected) ?? classes2[0] ?? getClassForTeacher(teacherId);
@@ -4238,7 +4255,7 @@ function teacherDashboardView(state) {
   const classRecord = currentTeacherClass(state.teacherId);
   const classRoster = classRecord ? getRosterForClass(classRecord.id) : [];
   ensureClassSetupProfile(classRecord?.id);
-  const teacherName = teacher?.displayName ?? "Preview Teacher";
+  const teacherName = teacher?.displayName ?? (productionIdentityConfig.enabled ? "Signed-in Teacher" : "Preview Teacher");
   const className = classRecord?.displayName ?? "Class not selected";
   const periodLabel = classRecord?.periodLabel ?? "Period not selected";
   const previewIgnoresScheduleClock = state.teacherId === "teacher-preview-1" && !classroomDemoModeIsEnabled();
@@ -4743,7 +4760,7 @@ function teacherClassesView(state) {
   const teacher = getTeacherById(state.teacherId);
   const classRecord = currentTeacherClass(state.teacherId);
   ensureClassSetupProfile(classRecord?.id);
-  const teacherName = teacher?.displayName ?? "Preview Teacher";
+  const teacherName = teacher?.displayName ?? (productionIdentityConfig.enabled ? "Signed-in Teacher" : "Preview Teacher");
   const className = classRecord?.displayName ?? "Class not selected";
   const periodLabel = classRecord?.periodLabel ?? "Period not selected";
   return shell(`
@@ -6023,6 +6040,7 @@ async function submitProductionClassroom(form, data) {
   const result = await productionIdentity.createClassroom({ name, studentLabels: parsed.labels });
   if (!result.ok) return showFormError(form, "The classroom could not be created. Sign in again or try later.");
   oneTimeClassroomCodes = result.value.classroom;
+  setProductionTeacherClasses([productionClassRecord(result.value.classroom), ...productionTeacherClasses], result.value.classroom.classId);
   const region = document.querySelector("[data-classroom-setup]");
   if (region) region.outerHTML = classroomSetupMarkup();
   document.querySelector("#classroom-code-sheet-title")?.focus();
@@ -12997,8 +13015,11 @@ document.addEventListener("paste", (event) => {
 async function startPlatform() {
   if (productionIdentityConfig.enabled) {
     const result = await productionIdentity.session();
-    if (result.ok && result.value.teacher?.id) session.signInTeacher(result.value.teacher.id);
-    else if (result.ok && result.value.student?.id && result.value.student?.classId) session.signInStudent(result.value.student.classId, result.value.student.id);
+    if (result.ok && result.value.teacher?.id) {
+      session.signInTeacher(result.value.teacher.id);
+      const classrooms = await productionIdentity.listClassrooms();
+      if (classrooms.ok) setProductionTeacherClasses(classrooms.value.classrooms);
+    } else if (result.ok && result.value.student?.id && result.value.student?.classId) session.signInStudent(result.value.student.classId, result.value.student.id);
     else if (result.ok) session.signOut();
     if (result.ok && (result.value.teacher?.id || result.value.student?.id)) await loadLessonStepsFromService(session.read());
   }
