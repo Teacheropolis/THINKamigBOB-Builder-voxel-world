@@ -15,7 +15,14 @@ const RHYME_FAMILIES = Object.freeze([
 ]);
 
 const MADE_UP_ONSETS = Object.freeze(["Z", "Fizz", "Whizz", "B", "Gear", "Tink"]);
-const BOB_FORMS = Object.freeze(["Bob", "Bobarella", "Bobzilla", "Bobbio"]);
+const BOB_FORMS = Object.freeze([
+  "Bob", "Bobarella", "Bobzilla", "Bobbio", "Bobinator", "Bobtastic",
+  "Bobaroo", "Bobster", "Bobonaut", "Bobasaurus", "Bobnado", "Bobomatic",
+  "Bobmeister", "Bobkins", "Bobbity", "Bobble", "Bobadillo", "Bobapalooza",
+  "Bobiverse", "Bobventure", "Bobberino", "Bobbo", "Bobbles", "Bobalicious",
+  "Bobarooza", "Bobmobile", "Bobrocket", "Bobwhiz", "Boboodle", "Boborama",
+  "Bobificent", "Bobmazing", "Bobbot", "Bobarooey", "Bobdoodle", "Bobkaboom",
+]);
 
 function cleanName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").replace(/[^\p{L}'’-]/gu, "").slice(0, 24);

@@ -1683,7 +1683,44 @@ var RHYME_FAMILIES = Object.freeze([
   [/(?:o|oh)$/i, ["Go-Go", "Yo-Yo", "Glow"]]
 ]);
 var MADE_UP_ONSETS = Object.freeze(["Z", "Fizz", "Whizz", "B", "Gear", "Tink"]);
-var BOB_FORMS = Object.freeze(["Bob", "Bobarella", "Bobzilla", "Bobbio"]);
+var BOB_FORMS = Object.freeze([
+  "Bob",
+  "Bobarella",
+  "Bobzilla",
+  "Bobbio",
+  "Bobinator",
+  "Bobtastic",
+  "Bobaroo",
+  "Bobster",
+  "Bobonaut",
+  "Bobasaurus",
+  "Bobnado",
+  "Bobomatic",
+  "Bobmeister",
+  "Bobkins",
+  "Bobbity",
+  "Bobble",
+  "Bobadillo",
+  "Bobapalooza",
+  "Bobiverse",
+  "Bobventure",
+  "Bobberino",
+  "Bobbo",
+  "Bobbles",
+  "Bobalicious",
+  "Bobarooza",
+  "Bobmobile",
+  "Bobrocket",
+  "Bobwhiz",
+  "Boboodle",
+  "Boborama",
+  "Bobificent",
+  "Bobmazing",
+  "Bobbot",
+  "Bobarooey",
+  "Bobdoodle",
+  "Bobkaboom"
+]);
 function cleanName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").replace(/[^\p{L}'’-]/gu, "").slice(0, 24);
 }
@@ -3968,7 +4005,7 @@ function classroomSetupMarkup() {
         <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
         <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
       </div>
-      <p class="platform-namebob-help">Examples: Brava AvaBob, BravaBobarella Ava, LiamBobzilla Fizziam, or Liam FizziamBobbio. Every student in the class gets a different beginning word, and names used in your other classes are automatically avoided.</p>
+      <p class="platform-namebob-help">Examples: Brava AvaBob, BravaBobarella Ava, LiamBobzilla Fizziam, or Liam FizziamBobbio. The generator includes dozens of playful Bob forms such as Bobinator, Bobasaurus, Bobonaut, Bobnado, Bobomatic, and Bobapalooza. Every student in the class gets a different beginning word.</p>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs\u2014or enter your own labels.</p>
       <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
       <p class="platform-error" data-error role="alert" hidden></p>
