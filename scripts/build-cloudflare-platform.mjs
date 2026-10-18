@@ -18,7 +18,7 @@ const publicIndex = sourceIndex
   .replace('name="thinkamigbob-production-identity" content="disabled"', 'name="thinkamigbob-production-identity" content="enabled"')
   .replace('name="thinkamigbob-student-access" content="disabled"', 'name="thinkamigbob-student-access" content="enabled"')
   .replace('name="thinkamigbob-google-signin-client-id" content=""', `name="thinkamigbob-google-signin-client-id" content="${publicClientId}"`)
-  .replace('./scripts/platform-app.mjs?v=preview-20261018-346', './scripts/platform-app.bundle.js?v=cloudflare-20261018-39');
+  .replace('./scripts/platform-app.mjs?v=preview-20261018-347', './scripts/platform-app.bundle.js?v=cloudflare-20261018-40');
 
 if (!publicIndex.includes('name="thinkamigbob-student-access" content="enabled"')) {
   throw new Error("student-access-must-be-enabled");

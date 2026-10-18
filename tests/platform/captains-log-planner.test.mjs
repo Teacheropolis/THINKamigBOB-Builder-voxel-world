@@ -200,4 +200,7 @@ test("student dashboard shows the full weekly prompt map and an adaptive timelin
   assert.match(app, /function installStudentVocabularyHelp/);
   assert.match(app, /show-vocabulary-definition/);
   assert.match(app, /STUDENT_VOCABULARY/);
+  assert.match(app, /Show what I need to think about/);
+  assert.match(app, /function captainLogThinkingHelp/);
+  assert.match(app, /toggle-captains-log-thinking-help/);
 });

@@ -849,6 +849,10 @@ summary:focus-visible {
 .platform-captains-log-choice-task > div > ul > li p { margin: 0.1rem 0 0; }
 .platform-captains-log-student-timeline { padding: 0.65rem; border-radius: 0.6rem; background: #e9f6fb; }
 .platform-captains-log-student-timeline p { margin: 0.25rem 0 0; }
+.platform-captains-log-thinking-help { margin-top: 0.45rem; }
+.platform-captains-log-thinking-help button { min-height: 2.25rem; padding: 0.4rem 0.65rem; border: 2px solid #18789d; border-radius: 0.5rem; background: #e9f6fb; color: #173247; font-size: 0.82rem; font-weight: 900; text-align: left; }
+.platform-captains-log-thinking-help p { margin: 0.4rem 0 0 !important; padding: 0.6rem 0.7rem; border-left: 4px solid #18789d; border-radius: 0.35rem; background: #f2fbff; color: #173247; font-size: 0.95rem; line-height: 1.45; }
+.platform-captains-log-thinking-help p[hidden] { display: none; }
 .platform-student-pomodoro-status { position: sticky; top: 0.5rem; z-index: 18; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.65rem; max-width: 48rem; margin: 0.65rem auto 1rem; padding: 0.65rem 0.9rem; border: 3px solid #b98413; border-radius: 999px; background: rgba(15,48,69,0.96); color: #fff; box-shadow: 0 8px 18px rgba(9,31,45,0.25); }
 .platform-student-pomodoro-status small { display: block; color: #d9edf4; }
 .platform-student-pomodoro-status b { font-size: clamp(1.05rem,3vw,1.5rem); font-variant-numeric: tabular-nums; }
