@@ -126,5 +126,7 @@ test("student dashboard shows the full weekly prompt map and an adaptive timelin
   assert.match(app, /function captainsLogStudentWeekMarkup/);
   assert.match(app, /Your Week/);
   assert.match(app, /Suggested plan/);
+  assert.match(app, /Choose \$\{choiceRemaining\} of these \$\{choiceEntries\.length\} prompts/);
+  assert.match(app, /Choice complete/);
   assert.match(app, /Check the plan above for your next prompt/);
 });

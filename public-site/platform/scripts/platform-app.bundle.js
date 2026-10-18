@@ -3952,13 +3952,23 @@ function captainsLogStudentWeekMarkup(classId, studentId) {
     futureAssigned.forEach((item) => timeline.push(`${item.assignment ?? item.slot}: complete the assigned prompt.`));
     if (choiceNeeded > (todayAssigned.length ? 0 : 1)) timeline.push(`Before Friday: choose ${choiceNeeded - (todayAssigned.length ? 0 : 1)} more different prompt${choiceNeeded - (todayAssigned.length ? 0 : 1) === 1 ? "" : "s"}.`);
   }
-  const prompts = entries.map((item, index) => {
+  const assignedEntries = entries.filter((item) => (item.assignment ?? item.slot) !== "Daily student choice");
+  const choiceEntries = entries.filter((item) => (item.assignment ?? item.slot) === "Daily student choice");
+  const assignedPrompts = assignedEntries.map((item) => {
     const assignment = item.assignment ?? item.slot;
     const isDone = completedIds.has(item.promptId);
-    const label = isDone ? "\u2713 Done" : assignment === "Daily student choice" ? "Your choice" : assignment === today ? `Today \xB7 ${assignment}` : assignment;
-    return `<li class="${isDone ? "is-complete" : ""}"><span aria-hidden="true">${isDone ? "\u2713" : assignment === "Daily student choice" ? "\u25C7" : "\u25CF"}</span><div><strong>Prompt ${index + 1} \xB7 ${escapeHtml2(label)}</strong><p>${escapeHtml2(item.prompt)}</p></div></li>`;
+    const number = CAPTAINS_LOG_WEEKDAYS.indexOf(item.slot) + 1;
+    const label = isDone ? "\u2713 Done" : assignment === today ? `Today \xB7 ${assignment}` : assignment;
+    return `<li class="${isDone ? "is-complete" : ""}"><span aria-hidden="true">${isDone ? "\u2713" : "\u25CF"}</span><div><strong>Prompt ${number} \xB7 ${escapeHtml2(label)}</strong><p>${escapeHtml2(item.prompt)}</p></div></li>`;
   }).join("");
-  return `<section class="platform-captains-log-week-map" aria-labelledby="captains-log-week-map-title"><div><h3 id="captains-log-week-map-title">Your Week</h3><p><strong>${done} of ${required} done</strong> \xB7 ${remaining} left</p></div><ol>${prompts}</ol><div class="platform-captains-log-student-timeline"><strong>Suggested plan</strong>${timeline.map((item) => `<p>${escapeHtml2(item)}</p>`).join("")}</div></section>`;
+  const choiceRequired = Math.max(0, required - assignedEntries.length);
+  const choiceCompleted = choiceEntries.filter((item) => completedIds.has(item.promptId)).length;
+  const choiceRemaining = Math.max(0, choiceRequired - choiceCompleted);
+  const choiceGroup = choiceEntries.length && choiceRequired ? `<li class="platform-captains-log-choice-task${choiceRemaining === 0 ? " is-complete" : ""}"><span aria-hidden="true">${choiceRemaining === 0 ? "\u2713" : "\u25C7"}</span><div><strong>${choiceRemaining === 0 ? "Choice complete" : `Choose ${choiceRemaining} of these ${choiceEntries.length} prompts`}</strong><ul>${choiceEntries.map((item) => {
+    const isDone = completedIds.has(item.promptId), number = CAPTAINS_LOG_WEEKDAYS.indexOf(item.slot) + 1;
+    return `<li class="${isDone ? "is-complete" : ""}"><strong>Prompt ${number}${isDone ? " \xB7 Used" : ""}</strong><p>${escapeHtml2(item.prompt)}</p></li>`;
+  }).join("")}</ul></div></li>` : "";
+  return `<section class="platform-captains-log-week-map" aria-labelledby="captains-log-week-map-title"><div><h3 id="captains-log-week-map-title">Your Week</h3><p><strong>${done} of ${required} done</strong> \xB7 ${remaining} left</p></div><p class="platform-captains-log-week-instruction">Complete the assigned prompts and ${choiceRequired ? `choose ${choiceRequired} more` : "follow the assigned days"}.</p><ol>${assignedPrompts}${choiceGroup}</ol><div class="platform-captains-log-student-timeline"><strong>Suggested plan</strong>${timeline.map((item) => `<p>${escapeHtml2(item)}</p>`).join("")}</div></section>`;
 }
 function studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions, classId) {
   if (!reflectionStatus.required) return "";
