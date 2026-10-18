@@ -1014,6 +1014,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-today-timer-adjuster > div { display: flex; flex-wrap: wrap; gap: 0.45rem; }
 .platform-smartboard-tool { position: fixed; z-index: 30; display: grid; box-sizing: border-box; gap: 0.75rem; width: min(24rem, calc(100vw - 1rem)); max-width: calc(100vw - 1rem); max-height: calc(100vh - 1rem); padding: 0.8rem 1.25rem 1.25rem 0.8rem; overflow: auto; overscroll-behavior: contain; border: 3px solid var(--platform-gold); border-radius: 0.85rem; color: var(--platform-ink); background: rgba(255, 255, 255, 0.97); box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.3); resize: none; container-type: inline-size; }
 .platform-smartboard-tool[hidden] { display: none; }
+.platform-smartboard-tool > * { min-width: 0; }
 .platform-smartboard-tool header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.4rem 0.75rem; padding: 0.35rem; color: #fff; background: var(--platform-navy); cursor: move; touch-action: none; }
 .platform-smartboard-tool header strong { min-width: 0; font-size: clamp(0.82rem, 4.5cqw, 1.2rem); overflow-wrap: anywhere; }
 .platform-smartboard-tool header button { min-width: 2.25rem; min-height: 2.25rem; padding: 0.2rem; color: #fff; border-color: #fff; background: transparent; }
@@ -1064,7 +1065,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-amig-anchor-steps [data-amig-step="improve"] { --amig-step-color: #9b6b00; }
 .platform-amig-anchor-steps [data-amig-step="grow"] { --amig-step-color: #176b55; }
 .platform-amig-anchor-reminder { margin: 0; padding: 0.55rem; border-radius: 0.7rem; color: #fff; background: #176b55; font-size: clamp(0.78rem, 2.5cqw, 1.35rem); font-weight: 900; text-align: center; }
-.platform-name-picker-wheel-wrap { position: relative; display: grid !important; width: min(15rem, 70cqw); justify-self: center; place-items: center; }
+.platform-name-picker-wheel-wrap { position: relative; display: grid !important; width: clamp(10rem, 58cqw, 16rem) !important; max-width: 100%; justify-self: center; place-items: center; }
 .platform-name-picker-wheel { display: grid !important; width: 100%; aspect-ratio: 1; place-items: center; border: 0.55rem solid #fff; border-radius: 50%; background: repeating-conic-gradient(from -18deg, var(--platform-blue) 0 40deg, var(--platform-gold) 40deg 80deg, var(--platform-green) 80deg 120deg, #8798a1 120deg 160deg); box-shadow: 0 0.75rem 1.5rem rgba(7, 27, 39, 0.24); transform: rotate(var(--name-picker-rotation)); transition: transform 1s cubic-bezier(0.18, 0.72, 0.2, 1); }
 .platform-name-picker-wheel::before { position: absolute; width: 44%; aspect-ratio: 1; border: 0.3rem solid #d1dde2; border-radius: 50%; background: #fff; content: ""; }
 .platform-name-picker-wheel output { position: relative; z-index: 1; max-width: 38%; color: var(--platform-navy); font-size: clamp(0.72rem, 5cqw, 1.2rem); font-weight: 900; line-height: 1.15; text-align: center; transform: rotate(calc(var(--name-picker-rotation) * -1)); transition: transform 1s cubic-bezier(0.18, 0.72, 0.2, 1); }
@@ -1094,7 +1095,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-activity-side-timer { color: #4d3200 !important; border-color: #d28a00 !important; background: #fff4c7 !important; }
 .platform-activity-side-timer > header { color: #fff !important; background: #9a6200 !important; }
 .platform-activity-side-timer > output { display: block; padding: .45rem; border: .25rem solid #9a6200; border-radius: .65rem; color: #4d3200; background: #fff; font-size: clamp(2.4rem, 17cqw, 5rem); font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
-.platform-activity-side-timer-note, .platform-activity-side-timer [data-activity-side-timer-status] { margin: 0; font-weight: 850; }
+.platform-activity-side-timer-note, .platform-activity-side-timer [data-activity-side-timer-status] { margin: 0; font-weight: 850; overflow-wrap: anywhere; }
 .platform-activity-side-timer label { display: grid; grid-template-columns: 1fr 6rem; align-items: center; gap: .5rem; font-weight: 850; }
 .platform-activity-side-timer input { width: 100%; min-height: 2.5rem; padding: .4rem; border: 2px solid #9a6200; border-radius: .4rem; font: inherit; }
 .platform-activity-side-timer-presets, .platform-activity-side-timer-controls { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; }
@@ -1109,8 +1110,10 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-smartboard-resize-handle::before { position: absolute; right: 0.35rem; bottom: 0.35rem; width: 0.8rem; height: 0.8rem; border: 0.18rem solid currentColor; border-top: 0; border-left: 0; content: ""; }
 .platform-smartboard-tool button { min-height: 2.75rem; padding-inline: clamp(0.35rem, 2cqw, 0.8rem); font-size: clamp(0.7rem, 3.4cqw, 1rem); touch-action: manipulation; }
 .platform-smartboard-message { display: block !important; font-size: clamp(1rem, 6cqw, 2.2rem); line-height: 1.35; overflow-wrap: anywhere; }
-.platform-smartboard-tool-tray { position: absolute; z-index: 40; top: 50%; right: 1rem; display: flex; flex-direction: column; gap: 0.45rem; align-items: stretch; width: min(10rem, 24vw); padding: 0.55rem; border-radius: 0.75rem; color: #fff; background: rgba(16, 47, 69, 0.94); transform: translateY(-50%); }
-.platform-smartboard-tool-tray strong { text-align: center; }
+.platform-smartboard-tool-tray { position: absolute; z-index: 40; top: 50%; right: 1rem; width: min(10rem, 24vw); color: #fff; transform: translateY(-50%); }
+.platform-smartboard-tool-tray > summary { padding: 0.8rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; color: #fff; background: rgba(16, 47, 69, 0.96); font-weight: 900; text-align: center; list-style: none; cursor: pointer; }
+.platform-smartboard-tool-tray > summary::-webkit-details-marker { display: none; }
+.platform-smartboard-tool-options { display: flex; flex-direction: column; gap: 0.45rem; align-items: stretch; margin-top: 0.35rem; padding: 0.55rem; border-radius: 0.75rem; background: rgba(16, 47, 69, 0.96); }
 .platform-smartboard-tool-tray button { min-height: 3rem; padding: 0.35rem; border: 2px solid rgba(255,255,255,0.8); color: #fff; font-size: clamp(0.68rem, 1.1vw, 0.92rem); font-weight: 900; line-height: 1.15; overflow-wrap: anywhere; }
 .platform-smartboard-tool-tray [data-smartboard-tool-name="timer"] { background: #5d45a1; }
 .platform-smartboard-tool-tray [data-smartboard-tool-name="amig"] { color: #173e54; background: var(--platform-gold); }
@@ -1121,7 +1124,10 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-smartboard-tool-tray [data-smartboard-tool-name="names"] { background: #9a4656; }
 .platform-smartboard-tool-tray [data-smartboard-tool-name="whiteboard"] { background: #8a5a2b; }
 .platform-smartboard-tool-tray .platform-smartboard-reset-tools { min-height: 2.35rem; color: var(--platform-navy); background: #fff; font-size: 0.75rem; }
-.platform-classroom-window-controls { position: fixed; z-index: 320; top: 0.6rem; left: 50%; display: flex; align-items: center; gap: 0.45rem; max-width: calc(100vw - 2rem); padding: 0.4rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; color: #fff; background: rgba(16, 47, 69, 0.94); box-shadow: 0 0.45rem 1rem rgba(0,0,0,0.28); transform: translateX(-50%); }
+.platform-classroom-window-controls { position: fixed; z-index: 320; top: 0.6rem; left: 0.6rem; color: #fff; }
+.platform-classroom-window-controls > summary { min-width: 7rem; padding: 0.65rem 0.8rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; color: #fff; background: rgba(16, 47, 69, 0.96); font-weight: 900; text-align: center; list-style: none; cursor: pointer; }
+.platform-classroom-window-controls > summary::-webkit-details-marker { display: none; }
+.platform-classroom-window-options { display: flex; align-items: center; gap: 0.45rem; max-width: calc(100vw - 1.2rem); margin-top: 0.35rem; padding: 0.4rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; background: rgba(16, 47, 69, 0.96); box-shadow: 0 0.45rem 1rem rgba(0,0,0,0.28); }
 .platform-classroom-window-controls button { min-height: 2.6rem; padding: 0.4rem 0.8rem; border: 2px solid #fff; color: var(--platform-navy); background: #fff8e7; font-weight: 900; white-space: nowrap; }
 .platform-classroom-window-controls button:first-child { color: #fff; background: var(--platform-blue); }
 .platform-classroom-window-controls span { max-width: 17rem; font-size: 0.72rem; font-weight: 800; }
@@ -1312,7 +1318,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 @media (max-width: 700px) { .platform-resource-assignment-chooser { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .platform-quick-time-tools { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .platform-current-class-plan-heading { align-items: stretch; flex-direction: column; } .platform-live-lesson-tools, .platform-current-plan-live-voice { grid-template-columns: 1fr; } .platform-live-lesson-tool-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); } .platform-current-plan-voice, .platform-current-plan-live-voice-card { grid-column: 1; } .platform-live-voice-heading, .platform-live-voice-actions { grid-column: 1; } .platform-voice-history-summary { grid-template-columns: 1fr; } .platform-voice-progress-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .platform-voice-motivation { grid-template-columns: 1fr; } }
-@media (max-width: 700px) { .platform-smartboard-tool-tray { top: auto; right: 0.5rem; bottom: 0.5rem; left: 0.5rem; flex-direction: row; flex-wrap: wrap; width: auto; transform: none; } .platform-smartboard-tool-tray strong { flex-basis: 100%; } .platform-smartboard-tool-tray button { flex: 1 1 7rem; } .platform-smartboard-tool[data-smartboard-tool="amig"] { width: calc(100vw - 1rem) !important; height: calc(100vh - 1rem); } }
+@media (max-width: 700px) { .platform-smartboard-tool-tray { top: auto; right: 0.5rem; bottom: 0.5rem; left: auto; width: min(8rem, 34vw); transform: none; } .platform-smartboard-tool-options { position: absolute; right: 0; bottom: calc(100% + 0.35rem); width: min(18rem, calc(100vw - 1rem)); max-height: 72vh; overflow: auto; } .platform-smartboard-tool-tray button { width: 100%; } .platform-smartboard-tool[data-smartboard-tool="amig"] { width: calc(100vw - 1rem) !important; height: calc(100vh - 1rem); } }
 .platform-resource-slot-button { display: grid; width: 100%; min-height: 6.5rem; align-content: center; gap: 0.25rem; border: 2px dashed var(--platform-blue) !important; border-radius: 0.65rem; color: var(--platform-navy) !important; background: #fff !important; text-align: left; cursor: pointer; }
 .platform-resource-slot-button:hover, .platform-resource-slot-button:focus-visible { border-style: solid !important; background: #eef8fb !important; box-shadow: 0 0 0 3px rgba(22,105,142,0.14); }
 .platform-class-resource-editor[open] { margin-top: 1rem; padding-top: 1rem; border-top: 3px solid var(--platform-blue); }
@@ -1883,9 +1889,11 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 }
 .platform-student-engineering-time { display: grid; justify-items: center; gap: clamp(0.35rem, 1.2vh, 0.75rem); min-width: 0; }
 .platform-student-timer-display h2 { margin: 0; font-size: clamp(1.75rem, 5vw, 4rem); line-height: 1.1; }
-.platform-student-timer-display output { color: var(--platform-focus); font-size: clamp(4.5rem, 18vw, 13rem); font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: 0.03em; line-height: 0.95; }
+.platform-student-round-timer > output { max-width: 84%; color: var(--platform-focus); font-size: clamp(3rem, 24cqw, 8rem); font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: 0; line-height: 0.95; }
+.platform-student-timer-display .platform-activity-side-timer > output { max-width: 100%; font-size: clamp(2rem, 17cqw, 5rem); letter-spacing: 0; overflow: hidden; }
+.platform-student-timer-display .platform-name-picker-wheel output { max-width: 42%; color: var(--platform-navy); font-size: clamp(0.72rem, 5cqw, 1.2rem); letter-spacing: 0; line-height: 1.1; overflow-wrap: anywhere; }
 .platform-student-timer-display [data-smartboard-tool="stopwatch"] .platform-smartboard-timer { max-width: 100%; color: var(--platform-navy); font-size: clamp(2rem, 12cqw, 6rem); line-height: 1; overflow-wrap: normal; }
-.platform-student-round-timer { position: relative; display: grid; width: min(62vh, 72vw, 36rem); aspect-ratio: 1; place-items: center; border-radius: 50%; background: #24779a; box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.3); }
+.platform-student-round-timer { position: relative; display: grid; width: min(62vh, 72vw, 36rem); aspect-ratio: 1; place-items: center; border-radius: 50%; background: #24779a; box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.3); container-type: inline-size; }
 .platform-student-round-timer[data-active-phases="true"] { background: conic-gradient(from -90deg, #454f55 0 var(--timer-elapsed), transparent var(--timer-elapsed) 100%), conic-gradient(from -90deg, #17698e 0 var(--timer-main-start), #2d7d5b var(--timer-main-start) var(--timer-warning-start), #d4a017 var(--timer-warning-start) var(--timer-red-start), #b94a45 var(--timer-red-start) 100%); }
 .platform-student-round-timer::before { position: absolute; inset: 12%; border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 50%; background: var(--platform-navy); box-shadow: inset 0 0 2rem rgba(0, 0, 0, 0.25); content: ""; }
 .platform-student-round-timer output[data-timer-phase-color] { position: relative; z-index: 1; padding: 0; border: 0; color: #fff; background: transparent; }

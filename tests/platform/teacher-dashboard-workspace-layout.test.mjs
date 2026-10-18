@@ -119,6 +119,8 @@ test("teacher dashboard provides a responsive categorized teacher menu and statu
   assert.match(app, /data-classroom-companion-url/);
   assert.match(app, /Classroom Display and webpage are side by side/);
   assert.match(app, /keepSmartboardToolsOnScreen/);
+  assert.match(app, /<summary>Tools<\/summary>/);
+  assert.match(app, /function smartboardToolSwitcherMarkup\(\) \{\s+return "";/);
   assert.match(css, /\.platform-teacher-menu \{[^}]*display: flex/);
   assert.match(css, /\.platform-teacher-menu-category:hover > \.platform-teacher-menu-panel/);
   assert.match(css, /\.platform-teacher-menu-category\.is-active > summary/);
@@ -174,7 +176,7 @@ test("Presentation Tools provide instant, stopwatch, and countdown timing", () =
   assert.match(app, /requestFullscreen/);
   assert.match(css, /\.platform-smartboard-tool \{[^}]*container-type: inline-size/);
   assert.match(css, /data-smartboard-tool="stopwatch"[^}]*font-size: clamp\(2rem, 12cqw, 6rem\)/);
-  assert.match(css, /\.platform-smartboard-tool-tray \{[^}]*flex-direction: column/);
+  assert.match(css, /\.platform-smartboard-tool-options \{[^}]*flex-direction: column/);
   assert.match(css, /data-smartboard-tool-name="message"/);
   assert.match(css, /data-smartboard-tool-name="voice"/);
   for (const tool of ["timer", "stopwatch", "message", "voice"]) assert.match(css, new RegExp(`data-smartboard-tool="${tool}"`));
