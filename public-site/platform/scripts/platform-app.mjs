@@ -56,6 +56,8 @@ import { createBrowserClassSetupProfiles } from "./class-setup-profiles.mjs";
 import { CLASS_RESOURCE_STORAGE_KEY, createClassResourceSharing, RESOURCE_RELEASES, RESOURCE_TYPES } from "./class-resource-sharing.mjs?v=preview-20261004-7";
 import { ACTIVITY_DIRECTIONS_STORAGE_KEY, createActivityDirections } from "./activity-directions.mjs?v=preview-20261016-2";
 import {
+  CAPTAINS_LOG_PRESET_PROMPTS,
+  CAPTAINS_LOG_SCHEDULE_OPTIONS,
   createWeeklyReflections,
   REFLECTION_ACTIVITY_RATING_OPTIONS,
   REFLECTION_BADGE_OPTIONS,
@@ -1239,11 +1241,19 @@ function todaysLessonStudentMarkup(classId, studentId, assignedResearch) {
   return `<section class="platform-todays-lesson-student platform-student-zone platform-student-zone-now platform-student-trail-stop platform-student-trail-stop-right" id="student-todays-activities" aria-labelledby="student-todays-lesson-title"><div class="platform-student-step-heading"><img src="./assets/images/student-path/inventors-workshop-brass-badge.png" alt=""><div class="platform-student-step-title"><p class="platform-student-section-label">Step 2</p><h2 id="student-todays-lesson-title">Inventor’s Workshop</h2></div></div><p>Follow the mission orders. Use the machines you need.</p>${activityDirectionsStudentMarkup(classId)}<section class="platform-school-start-launcher platform-school-start-launcher-inline" aria-labelledby="school-start-launcher-title"><h3 id="school-start-launcher-title">Auxiliary Machines</h3><p class="platform-school-start-launcher-subheading">Extra Activities</p><div class="platform-school-start-launch-grid">${sidePathLaunch}<a class="platform-school-start-launch-link platform-school-start-launch-link-builder" href="../index.html" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SB</span><strong>STEM BUILDER</strong><small>Build</small></a><a class="platform-school-start-launch-link platform-school-start-launch-link-workshop" href="http://192.168.1.252:8000" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SW</span><strong>STEM WORKSHOP</strong><small>Open</small></a></div><button class="platform-student-listen-button" type="button" data-action="read-student-launches" data-side-path-assigned="${currentSidePath ? "true" : "false"}" aria-pressed="false">Listen</button></section>${researchMarkup}</section>`;
 }
 
-function studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions) {
-  if (!reflectionStatus.required) return "";
+function studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions, classId) {
+  if (!reflectionStatus.required || !weeklyReflections.captainLogAvailableToday(classId)) return "";
   const due = new Date(reflectionActivityWindowStart(new Date()) + (6 * 24 * 60 * 60 * 1000));
   const dueLabel = due.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
-  return `<section class="platform-student-reflection platform-student-reflection-inline platform-student-zone platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><div class="platform-student-step-heading"><img src="./assets/images/student-path/captains-log-brass-badge.png" alt=""><h2 id="reflection-check-title">Captain’s Log</h2></div><p class="platform-student-status" data-weekly-reflection-status>${reflectionStatus.remaining === 0 ? `Done! ${reflectionStatus.completed} finished this week.` : `Record what you learned. Due ${escapeHtml(dueLabel)}.`}</p>${reflectionStatus.remaining === 0 ? "" : `<details class="platform-student-reflection-form"><summary>Open Captain’s Log</summary><form data-form="weekly-reflection" novalidate><label for="weekly-reflection-activity">Activity Worked On Today</label><select id="weekly-reflection-activity" name="activityChoice" required><option value="">Choose an activity</option>${teacherActivities.map((activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activity)}</option>`).join("")}<option value="__other__">Other activity — type my own</option></select><label data-reflection-other-activity hidden>Type the activity name<input name="activityOther" maxlength="120"></label><label for="weekly-reflection-progress">Mission Progress</label><select id="weekly-reflection-progress" name="progress" required>${reflectionOptions(REFLECTION_PROGRESS_OPTIONS)}</select><label for="weekly-reflection-response">What did you learn?</label><textarea id="weekly-reflection-response" name="explanation" minlength="10" maxlength="500" required></textarea><button class="platform-reflection-speech-button" type="button" data-action="reflection-dictate" aria-pressed="false">Speak Answer</button><button class="platform-reflection-speech-stop" type="button" data-action="reflection-dictate-stop" hidden>Stop Speaking</button><p class="platform-reflection-speech-status" data-reflection-speech-status role="status">Type or speak.</p><label>Did you improve your idea?<select name="improved" required>${reflectionOptions(REFLECTION_IMPROVEMENT_OPTIONS)}</select></label><label>Badge<select name="badge" required>${reflectionOptions(REFLECTION_BADGE_OPTIONS)}</select></label><label>Need help next class?<select name="help" required>${reflectionOptions(REFLECTION_HELP_OPTIONS)}</select></label><label>Could you help someone?<select name="helpOther" required>${reflectionOptions(REFLECTION_HELP_OTHER_OPTIONS)}</select></label><label>How did it go?<select name="rating" required>${reflectionOptions(REFLECTION_ACTIVITY_RATING_OPTIONS)}</select></label><button type="submit">Finish Log</button><p class="platform-error" data-weekly-reflection-error role="alert" hidden></p></form></details>`}</section>`;
+  const plan = weeklyReflections.captainLogPlan(classId);
+  return `<section class="platform-student-reflection platform-student-reflection-inline platform-student-zone platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><div class="platform-student-step-heading"><img src="./assets/images/student-path/captains-log-brass-badge.png" alt=""><h2 id="reflection-check-title">Captain’s Log</h2></div><p class="platform-student-status" data-weekly-reflection-status>${reflectionStatus.remaining === 0 ? `Done! ${reflectionStatus.completed} finished this week.` : `Exit ticket · ${escapeHtml(plan.schedule)} · Due ${escapeHtml(dueLabel)}.`}</p>${reflectionStatus.remaining === 0 ? "" : `<details class="platform-student-reflection-form"><summary>Open Captain’s Log</summary><form data-form="weekly-reflection" novalidate><p class="platform-captains-log-prompt"><strong>${escapeHtml(plan.prompt)}</strong></p><label for="weekly-reflection-activity">Activity Worked On Today</label><select id="weekly-reflection-activity" name="activityChoice" required><option value="">Choose an activity</option>${teacherActivities.map((activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activity)}</option>`).join("")}<option value="__other__">Other activity — type my own</option></select><label data-reflection-other-activity hidden>Type the activity name<input name="activityOther" maxlength="120"></label><label for="weekly-reflection-progress">Mission Progress</label><select id="weekly-reflection-progress" name="progress" required>${reflectionOptions(REFLECTION_PROGRESS_OPTIONS)}</select><label for="weekly-reflection-response">Your answer</label><textarea id="weekly-reflection-response" name="explanation" minlength="10" maxlength="500" required></textarea><button class="platform-reflection-speech-button" type="button" data-action="reflection-dictate" aria-pressed="false">Speak Answer</button><button class="platform-reflection-speech-stop" type="button" data-action="reflection-dictate-stop" hidden>Stop Speaking</button><p class="platform-reflection-speech-status" data-reflection-speech-status role="status">Type or speak.</p><label>Did you improve your idea?<select name="improved" required>${reflectionOptions(REFLECTION_IMPROVEMENT_OPTIONS)}</select></label><label>Badge<select name="badge" required>${reflectionOptions(REFLECTION_BADGE_OPTIONS)}</select></label><label>Need help next class?<select name="help" required>${reflectionOptions(REFLECTION_HELP_OPTIONS)}</select></label><label>Could you help someone?<select name="helpOther" required>${reflectionOptions(REFLECTION_HELP_OTHER_OPTIONS)}</select></label><label>How did it go?<select name="rating" required>${reflectionOptions(REFLECTION_ACTIVITY_RATING_OPTIONS)}</select></label><button type="submit">Finish Log</button><p class="platform-error" data-weekly-reflection-error role="alert" hidden></p></form></details>`}</section>`;
+}
+
+function captainsLogPlannerMarkup(classId) {
+  const plan = weeklyReflections.captainLogPlan(classId), library = weeklyReflections.captainLogLibrary();
+  const choices = [...CAPTAINS_LOG_PRESET_PROMPTS.map((item) => ({ ...item, group: `Week ${item.week}` })), ...library.map((item) => ({ ...item, week: plan.week, label: "Saved", group: "My Library" }))];
+  const selectedId = choices.some((item) => item.id === plan.promptId) ? plan.promptId : "custom";
+  return `<section class="platform-command-card platform-captains-log-planner" aria-labelledby="captains-log-planner-title"><p class="platform-command-label">Exit ticket</p><h3 id="captains-log-planner-title">Plan the Captain’s Log</h3><p>Choose the short writing prompt students will answer at the end of class.</p><form data-form="captains-log-plan" novalidate><label>Prompt<select name="promptId"><option value="custom"${selectedId === "custom" ? " selected" : ""}>Create a new prompt</option>${choices.map((item) => `<option value="${escapeHtml(item.id)}"${selectedId === item.id ? " selected" : ""}>${escapeHtml(item.group)} · ${escapeHtml(item.label)} — ${escapeHtml(item.prompt)}</option>`).join("")}</select></label><label>Prompt text<textarea name="prompt" minlength="5" maxlength="240" required>${escapeHtml(plan.prompt)}</textarea></label><div class="platform-captains-log-schedule"><label>Plan week<select name="week">${CAPTAINS_LOG_PRESET_PROMPTS.map((item) => `<option value="${item.week}"${plan.week === item.week ? " selected" : ""}>Week ${item.week}</option>`).join("")}</select></label><label>Show to students<select name="schedule">${CAPTAINS_LOG_SCHEDULE_OPTIONS.map((item) => `<option${plan.schedule === item ? " selected" : ""}>${item}</option>`).join("")}</select></label><label>Logs this week<select name="required">${[0,1,2,3,4,5].map((count) => `<option value="${count}"${plan.required === count ? " selected" : ""}>${count}</option>`).join("")}</select></label></div><label class="platform-captains-log-library-choice"><input type="checkbox" name="saveToLibrary"> Save this prompt to My Library</label><button type="submit">Save Captain’s Log Plan</button><p data-captains-log-status role="status">Current: Week ${plan.week} · ${escapeHtml(plan.schedule)} · ${plan.required} log${plan.required === 1 ? "" : "s"} this week.</p></form>${library.length ? `<details class="platform-captains-log-library"><summary>My Prompt Library (${library.length})</summary>${library.map((item) => `<div><span>${escapeHtml(item.prompt)}</span><button type="button" data-action="delete-captains-log-prompt" data-prompt-id="${escapeHtml(item.id)}">Delete</button></div>`).join("")}</details>` : ""}</section>`;
 }
 
 function weeklyReflectionTeacherMarkup(classId) {
@@ -2098,6 +2108,7 @@ function teacherDashboardView(state) {
           </section>
           ${currentClassPlanMarkup(classRecord?.id, state.teacherId)}
         </section>
+        ${captainsLogPlannerMarkup(classRecord?.id)}
         <div data-class-schedule-storage hidden>${classTimerScheduleMarkup(classRecord?.id, { showBackToToday: false })}</div>
         <div class="platform-today-primary-grid" id="teacher-today-tools">
           <div class="platform-workspace-heading" id="teacher-classroom-tools" hidden>
@@ -2623,7 +2634,7 @@ function studentDashboardView(state) {
     todaysMission.read().title,
   ].filter(Boolean))];
   const reflectionOptions = (options) => `<option value="">Choose one</option>${options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join("")}`;
-  const assignedReflection = studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions);
+  const assignedReflection = studentReflectionMarkup(reflectionStatus, teacherActivities, reflectionOptions, state.classId);
   const finishMarkup = assignedReflection || `<section class="platform-student-finish platform-student-zone platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><div class="platform-student-step-heading"><img src="./assets/images/student-path/captains-log-brass-badge.png" alt=""><h2 id="reflection-check-title">Captain’s Log</h2></div><p>Mission complete for today!</p></section>`;
   const rawStudentName = productionStudentDisplayLabel || student?.displayName || "Student";
   const studentName = escapeHtml(rawStudentName);
@@ -3437,6 +3448,19 @@ async function handleSubmit(event) {
     const result = weeklyReflections.setRequirement(classId, Number(data.get("required")));
     const status = form.querySelector("[data-weekly-reflection-teacher-status]");
     if (status) status.textContent = result.ok ? `Saved: ${result.required} response${result.required === 1 ? "" : "s"} required this week.` : "Choose a requirement from 0 to 5.";
+    return;
+  }
+  if (form.dataset.form === "captains-log-plan") {
+    const state = session.read();
+    const classId = currentTeacherClass(state.teacherId)?.id;
+    const promptId = String(data.get("promptId") || "custom");
+    const selected = [...CAPTAINS_LOG_PRESET_PROMPTS, ...weeklyReflections.captainLogLibrary()].find((item) => item.id === promptId);
+    const prompt = promptId === "custom" ? String(data.get("prompt") || "").trim() : String(selected?.prompt || data.get("prompt") || "").trim();
+    const result = weeklyReflections.saveCaptainLogPlan(classId, { promptId, prompt, week: Number(data.get("week")), schedule: data.get("schedule"), required: Number(data.get("required")) });
+    if (result.ok && data.get("saveToLibrary") === "on") weeklyReflections.saveCaptainLogPrompt(prompt);
+    const status = form.querySelector("[data-captains-log-status]");
+    if (status) status.textContent = result.ok ? `Saved: Week ${result.plan.week} · ${result.plan.schedule} · ${result.plan.required} log${result.plan.required === 1 ? "" : "s"} this week.` : "Add a prompt and choose a week, day, and number of logs.";
+    if (result.ok) render();
     return;
   }
   if (form.dataset.form === "weekly-reflection") {
@@ -7082,6 +7106,9 @@ async function handleClick(event) {
   if (action.dataset.action === "delete-saved-message") {
     if (window.confirm("Delete this saved message?")) { messageLibrary.remove(action.dataset.messageId); render(); }
   }
+  if (action.dataset.action === "delete-captains-log-prompt") {
+    if (window.confirm("Delete this Captain’s Log prompt from My Library?")) { weeklyReflections.deleteCaptainLogPrompt(action.dataset.promptId); render(); }
+  }
   if (action.dataset.action === "save-message-assignments") {
     document.querySelectorAll("[data-message-assignment]").forEach((select) => messageLibrary.assign(action.dataset.classId, select.dataset.messageAssignment, select.value));
     render();
@@ -8020,6 +8047,19 @@ root.addEventListener("change", (event) => {
       input.required = usesOther;
       if (usesOther) input.focus();
       else input.value = "";
+    }
+    return;
+  }
+  const captainPromptChoice = event.target.closest('[data-form="captains-log-plan"] [name="promptId"]');
+  if (captainPromptChoice) {
+    const form = captainPromptChoice.closest("form");
+    const prompt = [...CAPTAINS_LOG_PRESET_PROMPTS, ...weeklyReflections.captainLogLibrary()].find((item) => item.id === captainPromptChoice.value);
+    if (prompt) {
+      form.elements.prompt.value = prompt.prompt;
+      if (prompt.week) form.elements.week.value = String(prompt.week);
+    } else {
+      form.elements.prompt.value = "";
+      form.elements.prompt.focus();
     }
     return;
   }

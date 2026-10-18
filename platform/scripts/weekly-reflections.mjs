@@ -1,4 +1,14 @@
 export const WEEKLY_REFLECTION_STORAGE_KEY = "thinkamigbob.weekly-reflections.v1";
+export const CAPTAINS_LOG_PRESET_PROMPTS = Object.freeze([
+  { id: "week-1-ask", week: 1, label: "Ask", prompt: "What did you notice or wonder today?" },
+  { id: "week-2-make", week: 2, label: "Make", prompt: "What did you make, build, or try today?" },
+  { id: "week-3-improve", week: 3, label: "Improve", prompt: "What did you test or change today?" },
+  { id: "week-4-grow", week: 4, label: "Grow", prompt: "What did you learn from today’s work?" },
+  { id: "week-5-evidence", week: 5, label: "Evidence", prompt: "What evidence shows your idea is working?" },
+  { id: "week-6-explain", week: 6, label: "Explain", prompt: "What challenge did you solve, and how?" },
+  { id: "week-7-next", week: 7, label: "Next Step", prompt: "What are you proud of, and what will you try next?" },
+]);
+export const CAPTAINS_LOG_SCHEDULE_OPTIONS = Object.freeze(["Today", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
 export const REFLECTION_PROGRESS_OPTIONS = Object.freeze(["🌱 Started", "🧪 Testing", "🔧 Improving", "🏆 Complete"]);
 export const REFLECTION_IMPROVEMENT_OPTIONS = Object.freeze(["Yes", "Not Yet"]);
 export const REFLECTION_BADGE_OPTIONS = Object.freeze([
@@ -66,6 +76,44 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     write(all);
     return { ok: true, required };
   };
+  const captainLogPlan = (classId) => {
+    const saved = readAll().captainLogPlans?.[classId];
+    const fallback = CAPTAINS_LOG_PRESET_PROMPTS[0];
+    return saved && typeof saved.prompt === "string" ? saved : { prompt: fallback.prompt, promptId: fallback.id, week: 1, schedule: "Today", required: requirement(classId), updatedAt: null };
+  };
+  const captainLogAvailableToday = (classId) => {
+    const schedule = captainLogPlan(classId).schedule;
+    return schedule === "Today" || schedule === new Date(now()).toLocaleDateString("en-US", { weekday: "long" });
+  };
+  const saveCaptainLogPlan = (classId, value) => {
+    const prompt = String(value?.prompt ?? "").trim();
+    const week = Number(value?.week), required = Number(value?.required), schedule = String(value?.schedule ?? "");
+    if (!classId || prompt.length < 5 || prompt.length > 240 || !Number.isInteger(week) || week < 1 || week > 7 || !CAPTAINS_LOG_SCHEDULE_OPTIONS.includes(schedule) || !Number.isInteger(required) || required < 0 || required > 5) return { ok: false };
+    const all = readAll();
+    const plan = { prompt, promptId: String(value?.promptId ?? "custom"), week, schedule, required, updatedAt: new Date(now()).toISOString() };
+    all.captainLogPlans = { ...(all.captainLogPlans ?? {}), [classId]: plan };
+    all.requirements = { ...(all.requirements ?? {}), [classWeek(classId)]: required };
+    write(all);
+    return { ok: true, plan };
+  };
+  const captainLogLibrary = () => (readAll().captainLogLibrary ?? []).filter((item) => item && typeof item.prompt === "string");
+  const saveCaptainLogPrompt = (prompt) => {
+    const clean = String(prompt ?? "").trim();
+    if (clean.length < 5 || clean.length > 240) return { ok: false };
+    const all = readAll(), existing = captainLogLibrary();
+    const duplicate = existing.find((item) => item.prompt.toLowerCase() === clean.toLowerCase());
+    if (duplicate) return { ok: true, item: duplicate, duplicate: true };
+    const item = { id: `captains-log-${new Date(now()).getTime()}`, prompt: clean };
+    all.captainLogLibrary = [item, ...existing].slice(0, 30);
+    write(all);
+    return { ok: true, item, duplicate: false };
+  };
+  const deleteCaptainLogPrompt = (id) => {
+    const all = readAll(), before = captainLogLibrary();
+    all.captainLogLibrary = before.filter((item) => item.id !== id);
+    write(all);
+    return { ok: all.captainLogLibrary.length !== before.length };
+  };
   const responses = (classId, studentId) => readAll().responses?.[`${classWeek(classId)}|${studentId}`] ?? [];
   const recordActivity = (classId, title) => {
     const cleanTitle = String(title ?? "").trim().slice(0, 120);
@@ -100,5 +148,5 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     write(all);
     return { ok: true, status: status(classId, studentId) };
   };
-  return { requirement, setRequirement, activities, recordActivity, responses, status, submit };
+  return { requirement, setRequirement, captainLogPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
 }
