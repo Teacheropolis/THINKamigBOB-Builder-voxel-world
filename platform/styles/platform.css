@@ -1127,6 +1127,8 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-smartboard-tool-tray [data-smartboard-tool-name="whiteboard"] { background: #8a5a2b; }
 .platform-smartboard-tool-tray .platform-smartboard-reset-tools { min-height: 2.35rem; color: var(--platform-navy); background: #fff; font-size: 0.75rem; }
 .platform-classroom-window-controls { position: fixed; z-index: 320; top: 0.6rem; left: 0.6rem; color: #fff; }
+.platform-classroom-window-controls:not(details) { display: flex; align-items: center; gap: 0.45rem; padding: 0.4rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; background: rgba(16, 47, 69, 0.96); box-shadow: 0 0.45rem 1rem rgba(0,0,0,0.28); }
+.platform-classroom-window-controls:not(details) > strong { padding-inline: 0.35rem; font-size: 0.82rem; }
 .platform-classroom-window-controls > summary { min-width: 7rem; padding: 0.65rem 0.8rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; color: #fff; background: rgba(16, 47, 69, 0.96); font-weight: 900; text-align: center; list-style: none; cursor: pointer; }
 .platform-classroom-window-controls > summary::-webkit-details-marker { display: none; }
 .platform-classroom-presentation-mode { overflow: hidden !important; background: var(--platform-navy); }
@@ -1138,7 +1140,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-standalone-classroom-display { margin: 0; overflow: hidden; background: var(--platform-navy); }
 .platform-classroom-window-options { display: flex; align-items: center; gap: 0.45rem; max-width: calc(100vw - 1.2rem); margin-top: 0.35rem; padding: 0.4rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; background: rgba(16, 47, 69, 0.96); box-shadow: 0 0.45rem 1rem rgba(0,0,0,0.28); }
 .platform-classroom-window-controls button { min-height: 2.6rem; padding: 0.4rem 0.8rem; border: 2px solid #fff; color: var(--platform-navy); background: #fff8e7; font-weight: 900; white-space: nowrap; }
-.platform-classroom-window-controls button:first-child { color: #fff; background: var(--platform-blue); }
+.platform-classroom-window-controls button:first-of-type { color: #fff; background: var(--platform-blue); }
 .platform-classroom-window-controls span { max-width: 17rem; font-size: 0.72rem; font-weight: 800; }
 .platform-classroom-split-control { position: relative; }
 .platform-classroom-split-control > summary { min-height: 2.6rem; padding: 0.55rem 0.8rem; border: 2px solid #fff; border-radius: 0.35rem; color: var(--platform-navy); background: #fff8e7; font-weight: 900; list-style: none; cursor: pointer; }

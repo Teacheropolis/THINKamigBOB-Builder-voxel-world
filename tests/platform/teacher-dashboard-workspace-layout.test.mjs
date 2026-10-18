@@ -117,6 +117,11 @@ test("teacher dashboard provides a responsive categorized teacher menu and statu
   assert.match(app, /fullscreen-classroom-display/);
   assert.match(app, /classroomUrl\.searchParams\.set\("classroomDisplay", "1"\)/);
   assert.match(app, /function enterStandaloneClassroomDisplayMode\(\)/);
+  assert.match(app, /updateNamePickerView\(document\);\s+enterStandaloneClassroomDisplayMode\(\)/);
+  assert.match(app, /root\.append\(controls\)/);
+  assert.match(app, /controls\.innerHTML = '<strong>Screen Options<\/strong><button/);
+  assert.match(app, /controls\.querySelector\('\[data-action="fullscreen-classroom-display"\]'\)\.addEventListener/);
+  assert.match(app, /root\.append\(exit\)/);
   assert.match(app, /split-screen-classroom-display/);
   assert.match(app, /data-classroom-companion-url/);
   assert.match(app, /Classroom Display and webpage are side by side/);

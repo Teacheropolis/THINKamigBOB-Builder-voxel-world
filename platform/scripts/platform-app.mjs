@@ -2940,11 +2940,15 @@ function enterStandaloneClassroomDisplayMode() {
   display.hidden = false;
   document.body.classList.add("platform-standalone-classroom-display");
   if (!document.querySelector(".platform-classroom-window-controls")) {
-    const controls = document.createElement("details");
+    const controls = document.createElement("div");
     controls.className = "platform-classroom-window-controls";
     controls.setAttribute("aria-label", "Classroom Display screen options");
-    controls.innerHTML = '<summary>Screen Options</summary><div class="platform-classroom-window-options"><button type="button" data-action="fullscreen-classroom-display">Full Screen</button><span data-classroom-display-layout-status role="status"></span></div>';
-    document.body.append(controls);
+    controls.innerHTML = '<strong>Screen Options</strong><button type="button" data-action="fullscreen-classroom-display">Full Screen</button><span data-classroom-display-layout-status role="status"></span>';
+    controls.querySelector('[data-action="fullscreen-classroom-display"]').addEventListener("click", (event) => {
+      event.stopPropagation();
+      void toggleClassroomDisplayFullscreen(event.currentTarget);
+    });
+    root.append(controls);
   }
   if (!document.querySelector(".platform-classroom-exit-presentation")) {
     const exit = document.createElement("button");
@@ -2953,7 +2957,11 @@ function enterStandaloneClassroomDisplayMode() {
     exit.dataset.action = "exit-classroom-fullscreen";
     exit.textContent = "Exit Full Screen";
     exit.hidden = true;
-    document.body.append(exit);
+    exit.addEventListener("click", (event) => {
+      event.stopPropagation();
+      void exitClassroomDisplayFullscreen(event.currentTarget.ownerDocument);
+    });
+    root.append(exit);
   }
   installSmartboardToolPopoutButtons(document);
   syncLessonTimerPresentation();
@@ -7030,6 +7038,7 @@ function render() {
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) {
     syncStudentDisplayPresentation();
     updateNamePickerView(document);
+    enterStandaloneClassroomDisplayMode();
   }
   const studentDisplayRestored = restoreLessonTimerDisplay(allowedRoute, state);
   window.requestAnimationFrame(() => {
