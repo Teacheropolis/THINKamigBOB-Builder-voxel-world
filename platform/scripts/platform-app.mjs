@@ -2800,9 +2800,9 @@ function openClassroomPresentationWindow() {
     .filter(Boolean)
     .map((href) => `<link rel="stylesheet" href="${escapeHtml(href)}">`)
     .join("");
-  classroomPresentationWindow = window.open("", "thinkamigbob-classroom-view", "popup=yes,width=1200,height=760,resizable=yes");
+  classroomPresentationWindow = window.open("", "thinkamigbob-classroom-view");
   const status = document.querySelector("[data-classroom-window-status]");
-  if (!classroomPresentationWindow) { if (status) status.textContent = "The Classroom Display was blocked. Allow pop-ups for this platform, then try again."; return; }
+  if (!classroomPresentationWindow) { if (status) status.textContent = "The Classroom Display was blocked. Allow new tabs for this platform, then try again."; return; }
   classroomPresentationWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Classroom View · THINKamigBOB</title>${stylesheetLinks}<style>html,body{margin:0;min-height:100%;overflow:hidden}#platform-second-window-display{display:grid!important}</style></head><body class="platform-app"><details class="platform-classroom-window-controls" aria-label="Classroom Display window controls"><summary>Display</summary><div class="platform-classroom-window-options"><button type="button" data-action="fullscreen-classroom-display">Full Screen</button><details class="platform-classroom-split-control"><summary>Split Screen</summary><div><label>Webpage address<input type="url" data-classroom-companion-url inputmode="url" placeholder="Paste a webpage link"></label><button type="button" data-action="split-screen-classroom-display">Show Side by Side</button></div></details><span data-classroom-display-layout-status role="status"></span></div></details>${clone.outerHTML}</body></html>`);
   classroomPresentationWindow.document.close();
   const screenOptionsSummary = classroomPresentationWindow.document.querySelector(".platform-classroom-window-controls > summary");
@@ -2915,7 +2915,7 @@ function openClassroomPresentationWindow() {
   if (scheduledPost) showDoNow(scheduledPost);
   else if (readLiveDoNow()) syncDoNowPresentation();
   classroomPresentationWindow.focus();
-  if (status) status.textContent = "Classroom Display opened in a separate window.";
+  if (status) status.textContent = "Classroom Display opened in a separate browser tab or window.";
 }
 
 function syncLessonTimerPresentation() {
