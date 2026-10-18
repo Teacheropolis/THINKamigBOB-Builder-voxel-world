@@ -1825,32 +1825,71 @@ function generateClassNameBobLimerick(currentLabels) {
   }
   return Object.freeze({ ok: true, labels: Object.freeze(labels), limerick: stanzas.join("\n\n") });
 }
+var STUDENT_LIMERICK_DETAILS = Object.freeze(["copper", "clockwork", "glowing", "whirling"]);
 var STUDENT_LIMERICKS = Object.freeze([
-  (name) => `${name} came in with a plan,
-And built the best gadget they can.
+  (name, detail) => `${name} arrived with a plan,
+For a ${detail} mechanical fan.
 It rattled\u2014ker-pop!
 But they would not stop,
-Then fixed it and shouted, \u201CIt ran!\u201D`,
-  (name) => `${name} made a machine,
-The funniest ever yet seen.
-It flashed a bright light,
-Then zoomed out of sight,
-And landed on one jelly bean!`,
-  (name) => `${name} worked with a crew,
-On a rocket painted bright blue.
-It wobbled around,
-Then bounced on the ground,
-So they tested and built version two!`
+Till it hummed just as smooth as it can!`,
+  (name, detail) => `${name} painted a rocket bright blue,
+With a ${detail} gold engine or two.
+It looped through the air,
+Singed Bob's hat and hair,
+Then landed precisely on cue!`,
+  (name, detail) => `${name} built a robot named Bop,
+For the ${detail} invention shop.
+It danced with a mop,
+Did a flip and a hop,
+Then bowed when the music went \u201CSTOP!\u201D`,
+  (name, detail) => `${name} raised a bridge over town,
+With ${detail} gears spinning around.
+A toy truck rolled through,
+And a rubber duck too,
+While not one strong beam tumbled down!`,
+  (name, detail) => `${name} launched a kite in the night,
+With a ${detail} tail shining bright.
+It tugged at the string,
+Made the weather vane sing,
+Then sailed like a starship in flight!`,
+  (name, detail) => `${name} made a boat that could float,
+With a ${detail} propeller and coat.
+It splashed past a frog,
+Then outraced a log,
+And parked by the drawbridge's moat!`,
+  (name, detail) => `${name} designed a tall crane,
+With a ${detail} hook and a chain.
+It lifted a chair,
+Spun it twice through the air,
+Then set it down softly again!`,
+  (name, detail) => `${name} invented a wheel,
+Made of ${detail} springs and blue steel.
+It rolled up a wall,
+Bounced over a ball,
+Then stopped for a grand big reveal!`,
+  (name, detail) => `${name} built a tower with power,
+And a ${detail} clock counting each hour.
+It chimed with a BONG,
+Played a Bob-themed song,
+Then sprinkled the room with a flower!`,
+  (name, detail) => `${name} mapped a marvelous maze,
+Full of ${detail} tunnels and ways.
+A marble zipped right,
+Found the finish by night,
+And left the whole workshop amazed!`
 ]);
-function generateStudentNameBobLimerick(nameValue) {
+function generateStudentNameBobLimerick(nameValue, variantIndex = null) {
   const label = boundedLabel(nameValue);
   if (!label || !/bob/i.test(label)) return Object.freeze({ ok: false, reason: "namebob-required", label: "", limerick: "" });
-  return Object.freeze({ ok: true, label, limerick: STUDENT_LIMERICKS[stableNumber(label) % STUDENT_LIMERICKS.length](label) });
+  const index = Number.isSafeInteger(variantIndex) && variantIndex >= 0 ? variantIndex : stableNumber(label);
+  const template = STUDENT_LIMERICKS[index % STUDENT_LIMERICKS.length];
+  const detail = STUDENT_LIMERICK_DETAILS[Math.floor(index / STUDENT_LIMERICKS.length) % STUDENT_LIMERICK_DETAILS.length];
+  return Object.freeze({ ok: true, label, limerick: template(label, detail) });
 }
 function generateAllNameBobLimericks(currentLabels) {
   const classResult = generateClassNameBobLimerick(currentLabels);
   if (!classResult.ok) return Object.freeze({ ...classResult, studentLimericks: Object.freeze([]) });
-  const studentLimericks = classResult.labels.map((label) => generateStudentNameBobLimerick(label)).filter((result) => result.ok);
+  const studentLimericks = classResult.labels.map((label, index) => generateStudentNameBobLimerick(label, index)).filter((result) => result.ok);
   return Object.freeze({ ...classResult, studentLimericks: Object.freeze(studentLimericks) });
 }
 
@@ -3694,7 +3733,9 @@ function writeStudentNameplate(studentId, preferences) {
 function studentNameplateMarkup(studentId, studentName, className, rawStudentName) {
   const preferences = readStudentNameplate(studentId);
   const selected = (value, current) => value === current ? " selected" : "";
-  const limerick = generateStudentNameBobLimerick(rawStudentName);
+  const classLabels = productionStudentClassLabels.length ? productionStudentClassLabels : [];
+  const rosterIndex = classLabels.findIndex((label) => label === rawStudentName);
+  const limerick = generateStudentNameBobLimerick(rawStudentName, rosterIndex >= 0 ? rosterIndex : null);
   const limerickMarkup = limerick.ok ? `<p class="platform-student-nameplate-limerick">${escapeHtml2(limerick.limerick).replaceAll("\n", "<br>")}</p>` : "";
   return `<section class="platform-student-orientation platform-student-nameplate-bg-${preferences.background} platform-student-nameplate-font-${preferences.font}" style="--student-name-color:${preferences.color}" data-student-nameplate data-student-id="${escapeHtml2(studentId)}" aria-labelledby="student-orientation-title"><h2 id="student-orientation-title">${studentName}</h2><p class="platform-student-class">${className}</p>${limerickMarkup}<details class="platform-student-nameplate-customizer"><summary>Customize my nameplate</summary><div><label>Fancy text<select data-student-nameplate-control="font"><option value="slab" style="font-family:'Roboto Slab',Rockwell,Georgia,serif"${selected("slab", preferences.font)}>Inventor</option><option value="classic" style="font-family:Georgia,'Times New Roman',serif;font-style:italic"${selected("classic", preferences.font)}>Classic</option><option value="cursive" style="font-family:'School Cursive',cursive"${selected("cursive", preferences.font)}>Cursive</option><option value="playful" style="font-family:'Comic Sans MS','Comic Sans',cursive"${selected("playful", preferences.font)}>Playful</option></select></label><label>Background<select data-student-nameplate-control="background"><option value="cream"${selected("cream", preferences.background)}>Cream</option><option value="brass"${selected("brass", preferences.background)}>Brass</option><option value="blue"${selected("blue", preferences.background)}>Blue Steel</option><option value="green"${selected("green", preferences.background)}>Workshop Green</option><option value="parchment"${selected("parchment", preferences.background)}>Old Map</option></select></label><label>Name color<input type="color" value="${preferences.color}" data-student-nameplate-control="color"></label></div><p>Changes save automatically.</p></details></section>`;
 }

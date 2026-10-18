@@ -142,21 +142,32 @@ export function generateClassNameBobLimerick(currentLabels) {
   return Object.freeze({ ok: true, labels: Object.freeze(labels), limerick: stanzas.join("\n\n") });
 }
 
+const STUDENT_LIMERICK_DETAILS = Object.freeze(["copper", "clockwork", "glowing", "whirling"]);
 const STUDENT_LIMERICKS = Object.freeze([
-  (name) => `${name} came in with a plan,\nAnd built the best gadget they can.\nIt rattled—ker-pop!\nBut they would not stop,\nThen fixed it and shouted, “It ran!”`,
-  (name) => `${name} made a machine,\nThe funniest ever yet seen.\nIt flashed a bright light,\nThen zoomed out of sight,\nAnd landed on one jelly bean!`,
-  (name) => `${name} worked with a crew,\nOn a rocket painted bright blue.\nIt wobbled around,\nThen bounced on the ground,\nSo they tested and built version two!`,
+  (name, detail) => `${name} arrived with a plan,\nFor a ${detail} mechanical fan.\nIt rattled—ker-pop!\nBut they would not stop,\nTill it hummed just as smooth as it can!`,
+  (name, detail) => `${name} painted a rocket bright blue,\nWith a ${detail} gold engine or two.\nIt looped through the air,\nSinged Bob's hat and hair,\nThen landed precisely on cue!`,
+  (name, detail) => `${name} built a robot named Bop,\nFor the ${detail} invention shop.\nIt danced with a mop,\nDid a flip and a hop,\nThen bowed when the music went “STOP!”`,
+  (name, detail) => `${name} raised a bridge over town,\nWith ${detail} gears spinning around.\nA toy truck rolled through,\nAnd a rubber duck too,\nWhile not one strong beam tumbled down!`,
+  (name, detail) => `${name} launched a kite in the night,\nWith a ${detail} tail shining bright.\nIt tugged at the string,\nMade the weather vane sing,\nThen sailed like a starship in flight!`,
+  (name, detail) => `${name} made a boat that could float,\nWith a ${detail} propeller and coat.\nIt splashed past a frog,\nThen outraced a log,\nAnd parked by the drawbridge's moat!`,
+  (name, detail) => `${name} designed a tall crane,\nWith a ${detail} hook and a chain.\nIt lifted a chair,\nSpun it twice through the air,\nThen set it down softly again!`,
+  (name, detail) => `${name} invented a wheel,\nMade of ${detail} springs and blue steel.\nIt rolled up a wall,\nBounced over a ball,\nThen stopped for a grand big reveal!`,
+  (name, detail) => `${name} built a tower with power,\nAnd a ${detail} clock counting each hour.\nIt chimed with a BONG,\nPlayed a Bob-themed song,\nThen sprinkled the room with a flower!`,
+  (name, detail) => `${name} mapped a marvelous maze,\nFull of ${detail} tunnels and ways.\nA marble zipped right,\nFound the finish by night,\nAnd left the whole workshop amazed!`,
 ]);
 
-export function generateStudentNameBobLimerick(nameValue) {
+export function generateStudentNameBobLimerick(nameValue, variantIndex = null) {
   const label = boundedLabel(nameValue);
   if (!label || !/bob/i.test(label)) return Object.freeze({ ok: false, reason: "namebob-required", label: "", limerick: "" });
-  return Object.freeze({ ok: true, label, limerick: STUDENT_LIMERICKS[stableNumber(label) % STUDENT_LIMERICKS.length](label) });
+  const index = Number.isSafeInteger(variantIndex) && variantIndex >= 0 ? variantIndex : stableNumber(label);
+  const template = STUDENT_LIMERICKS[index % STUDENT_LIMERICKS.length];
+  const detail = STUDENT_LIMERICK_DETAILS[Math.floor(index / STUDENT_LIMERICKS.length) % STUDENT_LIMERICK_DETAILS.length];
+  return Object.freeze({ ok: true, label, limerick: template(label, detail) });
 }
 
 export function generateAllNameBobLimericks(currentLabels) {
   const classResult = generateClassNameBobLimerick(currentLabels);
   if (!classResult.ok) return Object.freeze({ ...classResult, studentLimericks: Object.freeze([]) });
-  const studentLimericks = classResult.labels.map((label) => generateStudentNameBobLimerick(label)).filter((result) => result.ok);
+  const studentLimericks = classResult.labels.map((label, index) => generateStudentNameBobLimerick(label, index)).filter((result) => result.ok);
   return Object.freeze({ ...classResult, studentLimericks: Object.freeze(studentLimericks) });
 }

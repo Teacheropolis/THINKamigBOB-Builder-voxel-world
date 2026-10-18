@@ -91,6 +91,14 @@ test("creates one individual limerick for every generated NameBob", () => {
   assert.equal(generateStudentNameBobLimerick("Savannah").ok, false);
 });
 
+test("all forty classroom positions receive different individual limerick text", () => {
+  const labels = Array.from({ length: 40 }, (_, index) => `Student${index + 1} Bob${index + 1}`);
+  const result = generateAllNameBobLimericks(labels);
+  assert.equal(result.studentLimericks.length, 40);
+  const bodies = result.studentLimericks.map((item) => item.limerick.split("\n").slice(1).join("\n"));
+  assert.equal(new Set(bodies).size, 40);
+});
+
 test("retry reports when the entered student is not in the generated list", () => {
   const original = generateNameBobs("Ava\nLiam").labels;
   const result = retryNameBob("Mia", original);
