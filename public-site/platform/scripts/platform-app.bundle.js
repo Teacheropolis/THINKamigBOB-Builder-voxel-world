@@ -2450,16 +2450,16 @@ function createWeeklyReflections({ storage, now = () => /* @__PURE__ */ new Date
     const legacy = readAll().captainLogPlans?.[classId];
     const days = Object.fromEntries(CAPTAINS_LOG_WEEKDAYS.map((day, index) => {
       const preset = CAPTAINS_LOG_PRESET_PROMPTS[index];
-      return [day, { enabled: legacy ? day === legacy.schedule || legacy.schedule === "Today" && index === 0 : true, promptId: legacy?.promptId ?? preset.id, prompt: legacy?.prompt ?? preset.prompt, assignment: day }];
+      return [day, legacy ? { enabled: day === legacy.schedule || legacy.schedule === "Today" && index === 0, promptId: legacy.promptId ?? preset.id, prompt: legacy.prompt ?? preset.prompt, assignment: day } : { enabled: false, promptId: "", prompt: "", assignment: "" }];
     }));
-    return { week, days, required: legacy?.required ?? requirement(classId) };
+    return { week, days, required: legacy?.required ?? 0 };
   };
   const saveCaptainLogWeekPlan = (classId, value) => {
     const week = Number(value?.week), days = {};
     if (!classId || !Number.isInteger(week) || week < 1 || week > 7) return { ok: false };
     for (const day of CAPTAINS_LOG_WEEKDAYS) {
       const entry = value?.days?.[day] ?? {}, prompt = String(entry.prompt ?? "").trim();
-      if (entry.enabled && (prompt.length < 5 || prompt.length > 240)) return { ok: false };
+      if (entry.enabled && (prompt.length < 5 || prompt.length > 240)) return { ok: false, reason: "missing-prompt" };
       const assignment = CAPTAINS_LOG_ASSIGNMENT_OPTIONS.includes(entry.assignment) ? entry.assignment : day;
       days[day] = { enabled: Boolean(entry.enabled), promptId: String(entry.promptId ?? "custom"), prompt, assignment };
     }
@@ -4021,9 +4021,10 @@ function captainsLogPlannerMarkup(classId) {
   const otherClasses = classes2.filter((item) => item.id !== classId);
   const dayRows = CAPTAINS_LOG_WEEKDAYS.map((day, index) => {
     const entry = plan.days[day], selectedId = choices.some((item) => item.id === entry.promptId) ? entry.promptId : "custom";
-    const custom = selectedId === "custom";
-    const assignment = CAPTAINS_LOG_ASSIGNMENT_OPTIONS.includes(entry.assignment) ? entry.assignment : day;
-    return `<div class="platform-captains-log-day" data-captains-log-day="${day}"><label class="platform-captains-log-day-toggle"><input type="checkbox" name="enabled-${day}"${entry.enabled ? " checked" : ""}> <strong>Prompt ${index + 1}</strong></label><label class="platform-captains-log-choice">Choose prompt<select name="promptId-${day}" data-captains-log-prompt-choice><option value="custom"${custom ? " selected" : ""}>Create a new prompt</option>${choices.map((item) => `<option value="${escapeHtml2(item.id)}"${selectedId === item.id ? " selected" : ""}>${item.week ? "" : "Library \xB7 "}${escapeHtml2(item.label)} \u2014 ${escapeHtml2(item.prompt)}</option>`).join("")}</select></label><label class="platform-captains-log-assignment">Offer this prompt<select name="assignment-${day}">${CAPTAINS_LOG_ASSIGNMENT_OPTIONS.map((option) => `<option value="${option}"${assignment === option ? " selected" : ""}>${option}</option>`).join("")}</select></label><div class="platform-captains-log-custom-row" data-captains-log-custom-row${custom ? "" : " hidden"}><label>Prompt text<input name="prompt-${day}" value="${escapeHtml2(entry.prompt)}" minlength="5" maxlength="240"></label><label class="platform-captains-log-library-choice"><input type="checkbox" name="save-${day}"> Save to library</label></div></div>`;
+    const hasPromptSelection = Boolean(entry.promptId || entry.prompt);
+    const custom = hasPromptSelection && selectedId === "custom";
+    const assignment = CAPTAINS_LOG_ASSIGNMENT_OPTIONS.includes(entry.assignment) ? entry.assignment : "";
+    return `<div class="platform-captains-log-day" data-captains-log-day="${day}"><label class="platform-captains-log-day-toggle"><input type="checkbox" name="enabled-${day}"${entry.enabled ? " checked" : ""}> <strong>Prompt ${index + 1}</strong></label><label class="platform-captains-log-choice">Choose prompt<select name="promptId-${day}" data-captains-log-prompt-choice><option value=""${hasPromptSelection ? "" : " selected"} disabled>Select or create a prompt\u2026</option><option value="custom"${custom ? " selected" : ""}>Create a new prompt</option>${choices.map((item) => `<option value="${escapeHtml2(item.id)}"${selectedId === item.id ? " selected" : ""}>${item.week ? "" : "Library \xB7 "}${escapeHtml2(item.label)} \u2014 ${escapeHtml2(item.prompt)}</option>`).join("")}</select></label><label class="platform-captains-log-assignment">Offer this prompt<select name="assignment-${day}"><option value=""${assignment ? "" : " selected"} disabled>Choose a day or student choice\u2026</option>${CAPTAINS_LOG_ASSIGNMENT_OPTIONS.map((option) => `<option value="${option}"${assignment === option ? " selected" : ""}>${option}</option>`).join("")}</select></label><div class="platform-captains-log-custom-row" data-captains-log-custom-row${custom ? "" : " hidden"}><label>Prompt text<input name="prompt-${day}" value="${escapeHtml2(entry.prompt)}" minlength="5" maxlength="240"></label><label class="platform-captains-log-library-choice"><input type="checkbox" name="save-${day}"> Save to library</label></div></div>`;
   }).join("");
   const enabledCount = CAPTAINS_LOG_WEEKDAYS.filter((day) => plan.days[day].enabled).length;
   const assignedCount = CAPTAINS_LOG_WEEKDAYS.filter((day) => plan.days[day].enabled && (plan.days[day].assignment ?? day) !== "Daily student choice").length;
@@ -6303,16 +6304,23 @@ async function handleSubmit(event) {
   if (form.dataset.form === "captains-log-week-plan") {
     const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id, days = {};
     CAPTAINS_LOG_WEEKDAYS.forEach((day) => {
-      const promptId = String(data.get(`promptId-${day}`) || "custom");
+      const promptId = String(data.get(`promptId-${day}`) || "");
       const selected = [...CAPTAINS_LOG_PRESET_PROMPTS, ...weeklyReflections.captainLogLibrary()].find((item) => item.id === promptId);
       const prompt = promptId === "custom" ? String(data.get(`prompt-${day}`) || "").trim() : String(selected?.prompt || data.get(`prompt-${day}`) || "").trim();
-      days[day] = { enabled: data.get(`enabled-${day}`) === "on", promptId: promptId === "custom" ? `custom-${data.get("week")}-${day.toLowerCase()}` : promptId, prompt, assignment: String(data.get(`assignment-${day}`) || day) };
-      if (data.get(`save-${day}`) === "on") weeklyReflections.saveCaptainLogPrompt(prompt);
+      const enabled = data.get(`enabled-${day}`) === "on";
+      days[day] = { enabled, promptId: promptId === "custom" ? `custom-${data.get("week")}-${day.toLowerCase()}` : promptId, prompt, assignment: String(data.get(`assignment-${day}`) || "") };
+      if (enabled && data.get(`save-${day}`) === "on") weeklyReflections.saveCaptainLogPrompt(prompt);
     });
     const requestedGoal = Number(data.get("required"));
-    const result = weeklyReflections.saveCaptainLogWeekPlan(classId, { week: Number(data.get("week")), days, required: requestedGoal });
+    const missingAssignment = CAPTAINS_LOG_WEEKDAYS.some((day) => days[day].enabled && !CAPTAINS_LOG_ASSIGNMENT_OPTIONS.includes(days[day].assignment));
+    const missingPrompt = CAPTAINS_LOG_WEEKDAYS.some((day) => days[day].enabled && (!days[day].promptId || days[day].prompt.length < 5));
     const status = form.querySelector("[data-captains-log-status]");
-    if (status) status.textContent = result.ok ? `Saved: students complete ${result.plan.required} of ${CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length} available Captain\u2019s Logs in Week ${result.plan.week}.` : result.reason === "goal-exceeds-prompts" ? `Add more prompts or lower the weekly goal. Students cannot complete ${requestedGoal} different logs with fewer available prompts.` : result.reason === "goal-below-assigned" ? "Raise the weekly goal or change some assigned-day prompts to student choices." : "Every selected prompt needs text.";
+    if (missingPrompt || missingAssignment) {
+      if (status) status.textContent = missingPrompt ? "Choose or create a prompt for every checked row." : "Choose a day or Daily student choice for every checked prompt.";
+      return;
+    }
+    const result = weeklyReflections.saveCaptainLogWeekPlan(classId, { week: Number(data.get("week")), days, required: requestedGoal });
+    if (status) status.textContent = result.ok ? `Saved: students complete ${result.plan.required} of ${CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length} available Captain\u2019s Logs in Week ${result.plan.week}.` : result.reason === "goal-exceeds-prompts" ? `Add more prompts or lower the weekly goal. Students cannot complete ${requestedGoal} different logs with fewer available prompts.` : result.reason === "goal-below-assigned" ? "Raise the weekly goal or change some assigned-day prompts to student choices." : result.reason === "missing-assignment" ? "Choose a day or Daily student choice for every checked prompt." : "Choose or create a prompt for every checked row.";
     if (result.ok) render();
     return;
   }
@@ -13327,8 +13335,8 @@ root.addEventListener("change", (event) => {
     const input = row?.querySelector(`[name="prompt-${row.dataset.captainsLogDay}"]`);
     const customRow = row?.querySelector("[data-captains-log-custom-row]");
     if (input) input.value = prompt?.prompt ?? "";
-    if (customRow) customRow.hidden = Boolean(prompt);
-    if (!prompt) input?.focus();
+    if (customRow) customRow.hidden = captainDayPromptChoice.value !== "custom";
+    if (captainDayPromptChoice.value === "custom") input?.focus();
     return;
   }
   const captainEditorWeek = event.target.matches?.("select[data-captains-log-editor-week]") ? event.target : null;

@@ -47,6 +47,17 @@ test("teacher can assign five different weekday prompts", () => {
   assert.equal(reflections.captainLogPlan("class-1").prompt, "Different prompt number 1?");
 });
 
+test("a new Captain's Log week starts empty with instructional placeholders", () => {
+  const reflections = createWeeklyReflections({ storage: memoryStorage() });
+  const plan = reflections.captainLogWeekPlan("new-class", 1);
+  assert.equal(plan.required, 0);
+  assert.equal(Object.values(plan.days).some((entry) => entry.enabled), false);
+  assert.equal(Object.values(plan.days).every((entry) => entry.promptId === "" && entry.assignment === ""), true);
+  const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
+  assert.match(app, /Select or create a prompt…/);
+  assert.match(app, /Choose a day or student choice…/);
+});
+
 test("five-day plan can be copied to other classes", () => {
   const reflections = createWeeklyReflections({ storage: memoryStorage(), now: () => new Date("2026-10-19T12:00:00Z") });
   const days = Object.fromEntries(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => [day, { enabled: true, promptId: `prompt-${index}`, prompt: `Class prompt number ${index + 1}?` }]));

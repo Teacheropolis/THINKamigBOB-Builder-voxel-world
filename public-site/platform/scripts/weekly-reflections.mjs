@@ -135,16 +135,18 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     const legacy = readAll().captainLogPlans?.[classId];
     const days = Object.fromEntries(CAPTAINS_LOG_WEEKDAYS.map((day, index) => {
       const preset = CAPTAINS_LOG_PRESET_PROMPTS[index];
-      return [day, { enabled: legacy ? day === legacy.schedule || legacy.schedule === "Today" && index === 0 : true, promptId: legacy?.promptId ?? preset.id, prompt: legacy?.prompt ?? preset.prompt, assignment: day }];
+      return [day, legacy
+        ? { enabled: day === legacy.schedule || legacy.schedule === "Today" && index === 0, promptId: legacy.promptId ?? preset.id, prompt: legacy.prompt ?? preset.prompt, assignment: day }
+        : { enabled: false, promptId: "", prompt: "", assignment: "" }];
     }));
-    return { week, days, required: legacy?.required ?? requirement(classId) };
+    return { week, days, required: legacy?.required ?? 0 };
   };
   const saveCaptainLogWeekPlan = (classId, value) => {
     const week = Number(value?.week), days = {};
     if (!classId || !Number.isInteger(week) || week < 1 || week > 7) return { ok: false };
     for (const day of CAPTAINS_LOG_WEEKDAYS) {
       const entry = value?.days?.[day] ?? {}, prompt = String(entry.prompt ?? "").trim();
-      if (entry.enabled && (prompt.length < 5 || prompt.length > 240)) return { ok: false };
+      if (entry.enabled && (prompt.length < 5 || prompt.length > 240)) return { ok: false, reason: "missing-prompt" };
       const assignment = CAPTAINS_LOG_ASSIGNMENT_OPTIONS.includes(entry.assignment) ? entry.assignment : day;
       days[day] = { enabled: Boolean(entry.enabled), promptId: String(entry.promptId ?? "custom"), prompt, assignment };
     }
