@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { firstNameFromRosterLine, generateClassNameBobLimerick, generateNameBobs, retryNameBob } from "../../platform/scripts/namebob-generator.mjs";
+import { firstNameFromRosterLine, generateAllNameBobLimericks, generateClassNameBobLimerick, generateNameBobs, generateStudentNameBobLimerick, retryNameBob } from "../../platform/scripts/namebob-generator.mjs";
 
 test("extracts first names from typed and common pasted roster lines", () => {
   assert.equal(firstNameFromRosterLine("Ava Smith"), "Ava");
@@ -68,6 +68,18 @@ test("class limerick requires at least one student name", () => {
   const result = generateClassNameBobLimerick([]);
   assert.equal(result.ok, false);
   assert.equal(result.reason, "class-names-required");
+});
+
+test("creates one individual limerick for every generated NameBob", () => {
+  const labels = generateNameBobs("Savannah\nLydia\nMiley").labels;
+  const result = generateAllNameBobLimericks(labels);
+  assert.equal(result.studentLimericks.length, 3);
+  result.studentLimericks.forEach((item, index) => {
+    assert.equal(item.label, labels[index]);
+    assert.match(item.limerick, new RegExp(labels[index], "i"));
+    assert.equal(item.limerick.split("\n").length, 5);
+  });
+  assert.equal(generateStudentNameBobLimerick("Savannah").ok, false);
 });
 
 test("retry reports when the entered student is not in the generated list", () => {

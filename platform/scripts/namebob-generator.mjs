@@ -128,3 +128,22 @@ export function generateClassNameBobLimerick(currentLabels) {
   }
   return Object.freeze({ ok: true, labels: Object.freeze(labels), limerick: stanzas.join("\n\n") });
 }
+
+const STUDENT_LIMERICKS = Object.freeze([
+  (name) => `${name} came in with a plan,\nAnd built the best gadget they can.\nIt rattled—ker-pop!\nBut they would not stop,\nThen fixed it and shouted, “It ran!”`,
+  (name) => `${name} made a machine,\nThe funniest ever yet seen.\nIt flashed a bright light,\nThen zoomed out of sight,\nAnd landed on one jelly bean!`,
+  (name) => `${name} worked with a crew,\nOn a rocket painted bright blue.\nIt wobbled around,\nThen bounced on the ground,\nSo they tested and built version two!`,
+]);
+
+export function generateStudentNameBobLimerick(nameValue) {
+  const label = boundedLabel(nameValue);
+  if (!label || !/bob/i.test(label)) return Object.freeze({ ok: false, reason: "namebob-required", label: "", limerick: "" });
+  return Object.freeze({ ok: true, label, limerick: STUDENT_LIMERICKS[stableNumber(label) % STUDENT_LIMERICKS.length](label) });
+}
+
+export function generateAllNameBobLimericks(currentLabels) {
+  const classResult = generateClassNameBobLimerick(currentLabels);
+  if (!classResult.ok) return Object.freeze({ ...classResult, studentLimericks: Object.freeze([]) });
+  const studentLimericks = classResult.labels.map((label) => generateStudentNameBobLimerick(label)).filter((result) => result.ok);
+  return Object.freeze({ ...classResult, studentLimericks: Object.freeze(studentLimericks) });
+}

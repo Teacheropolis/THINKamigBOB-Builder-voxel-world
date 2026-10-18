@@ -165,6 +165,14 @@ export function createPlatformAuthD1Repository({ database, classroomCodeKey, now
       return Object.freeze((result?.results || []).map((row) => displayLabel(row.display_label)));
     },
 
+    async findStudentDisplayLabel({ studentId, classId }) {
+      const row = await primary(db).prepare(`SELECT display_label
+        FROM platform_student_entries
+        WHERE student_id = ?1 AND class_id = ?2 AND status = 'active'
+        LIMIT 1`).bind(clean(studentId, "student-id"), clean(classId, "class-id")).first();
+      return row?.display_label ? displayLabel(row.display_label) : null;
+    },
+
     async createClassroom({ teacherId, name, studentLabels }) {
       if (typeof db.batch !== "function") throw new Error("d1-batch-required");
       const owner = clean(teacherId, "teacher-id");

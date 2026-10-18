@@ -167,6 +167,18 @@ test("students can receive only the active display labels for their own class po
   assert.match(query.sql, /LIMIT 40/);
 });
 
+test("student nameplate lookup is bound to both student and class", async () => {
+  let query = null;
+  const database = {
+    withSession() { return this; },
+    prepare(sql) { return { bind(...values) { return { async first() { query = { sql, values }; return { display_label: "Avery Bobzilla" }; } }; } }; },
+  };
+  const repository = createPlatformAuthD1Repository({ database, classroomCodeKey: Buffer.alloc(32, 5) });
+  assert.equal(await repository.findStudentDisplayLabel({ studentId: "student-1", classId: "class-1" }), "Avery Bobzilla");
+  assert.deepEqual(query.values, ["student-1", "class-1"]);
+  assert.match(query.sql, /student_id = \?1 AND class_id = \?2/);
+});
+
 test("audit retention deletes only a bounded set older than the approved cutoff", async () => {
   const runs = [];
   const database = {
