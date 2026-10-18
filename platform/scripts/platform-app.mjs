@@ -2185,12 +2185,16 @@ function teacherDashboardView(state) {
       <aside class="platform-smartboard-tool platform-amig-anchor-chart" data-smartboard-tool="amig" hidden style="left: 8%; top: 7%; width: min(58rem, 80vw);">
         <header data-smartboard-drag-handle><strong>AMIG — How We Learn in STEM</strong><button type="button" data-action="close-smartboard-tool" aria-label="Close AMIG Anchor Chart">×</button></header>
         <div class="platform-amig-anchor-intro"><b>AMIG</b><span>Ask <i aria-hidden="true">•</i> Make <i aria-hidden="true">•</i> Improve <i aria-hidden="true">•</i> Grow</span></div>
-        <ol class="platform-amig-anchor-steps">
-          <li data-amig-step="ask"><b>A</b><div><h3>Ask</h3><p>What do I notice? What do I wonder?</p></div></li>
-          <li data-amig-step="make"><b>M</b><div><h3>Make</h3><p>Build an idea. Try it out.</p></div></li>
-          <li data-amig-step="improve"><b>I</b><div><h3>Improve</h3><p>Test it. Learn from it. Make it better.</p></div></li>
-          <li data-amig-step="grow"><b>G</b><div><h3>Grow</h3><p>Share what I learned. Try a new challenge.</p></div></li>
-        </ol>
+        <div class="platform-amig-cycle" aria-label="AMIG learning cycle moves clockwise from Ask to Make to Improve to Grow">
+          <span class="platform-amig-cycle-ring" aria-hidden="true"></span>
+          <p class="platform-amig-cycle-center"><strong>STEM</strong><span>Learning Cycle</span></p>
+          <ol class="platform-amig-anchor-steps">
+            <li data-amig-step="ask"><b>A</b><div><h3>Ask</h3><p>Notice and wonder.</p></div></li>
+            <li data-amig-step="make"><b>M</b><div><h3>Make</h3><p>Build and try.</p></div></li>
+            <li data-amig-step="improve"><b>I</b><div><h3>Improve</h3><p>Test and make it better.</p></div></li>
+            <li data-amig-step="grow"><b>G</b><div><h3>Grow</h3><p>Share and try again.</p></div></li>
+          </ol>
+        </div>
         <p class="platform-amig-anchor-reminder">Every try helps your ideas grow.</p>
         ${smartboardToolSwitcherMarkup()}<span class="platform-smartboard-resize-handle" data-smartboard-resize-handle aria-label="Resize AMIG Anchor Chart"></span>
       </aside>
