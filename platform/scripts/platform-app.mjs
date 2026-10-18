@@ -2802,7 +2802,7 @@ function openClassroomPresentationWindow() {
   classroomPresentationWindow = window.open("", "thinkamigbob-classroom-view", "popup=yes,width=1200,height=760,resizable=yes");
   const status = document.querySelector("[data-classroom-window-status]");
   if (!classroomPresentationWindow) { if (status) status.textContent = "The Classroom Display was blocked. Allow pop-ups for this platform, then try again."; return; }
-  classroomPresentationWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Classroom View · THINKamigBOB</title>${stylesheetLinks}<style>html,body{margin:0;min-height:100%;overflow:hidden}#platform-second-window-display{display:grid!important}</style></head><body class="platform-app">${clone.outerHTML}</body></html>`);
+  classroomPresentationWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Classroom View · THINKamigBOB</title>${stylesheetLinks}<style>html,body{margin:0;min-height:100%;overflow:hidden}#platform-second-window-display{display:grid!important}</style></head><body class="platform-app"><nav class="platform-classroom-window-controls" aria-label="Classroom Display window controls"><button type="button" data-action="fullscreen-classroom-display">Full Screen</button><button type="button" data-action="split-screen-classroom-display">Split Screen</button><span data-classroom-display-layout-status role="status"></span></nav>${clone.outerHTML}</body></html>`);
   classroomPresentationWindow.document.close();
   installSmartboardToolGestures(classroomPresentationWindow.document);
   classroomPresentationWindow.document.addEventListener("click", (event) => {
@@ -2818,6 +2818,30 @@ function openClassroomPresentationWindow() {
       }
     }
     if (action.dataset.action === "reset-smartboard-tools") resetSmartboardToolPositions(classroomPresentationWindow.document);
+    if (action.dataset.action === "fullscreen-classroom-display") {
+      if (classroomPresentationWindow.document.fullscreenElement) void classroomPresentationWindow.document.exitFullscreen();
+      else void classroomPresentationWindow.document.documentElement.requestFullscreen();
+    }
+    if (action.dataset.action === "split-screen-classroom-display") {
+      if (classroomPresentationWindow.document.fullscreenElement) void classroomPresentationWindow.document.exitFullscreen();
+      const displayScreen = classroomPresentationWindow.screen;
+      const screenLeft = Number(displayScreen.availLeft || 0);
+      const screenTop = Number(displayScreen.availTop || 0);
+      const screenWidth = Number(displayScreen.availWidth || displayScreen.width || 1200);
+      const screenHeight = Number(displayScreen.availHeight || displayScreen.height || 760);
+      const halfWidth = Math.max(500, Math.floor(screenWidth / 2));
+      try {
+        window.moveTo(screenLeft, screenTop);
+        window.resizeTo(halfWidth, screenHeight);
+        classroomPresentationWindow.moveTo(screenLeft + halfWidth, screenTop);
+        classroomPresentationWindow.resizeTo(screenWidth - halfWidth, screenHeight);
+        const layoutStatus = classroomPresentationWindow.document.querySelector("[data-classroom-display-layout-status]");
+        if (layoutStatus) layoutStatus.textContent = "Teacher platform and Classroom Display are side by side.";
+      } catch {
+        const layoutStatus = classroomPresentationWindow.document.querySelector("[data-classroom-display-layout-status]");
+        if (layoutStatus) layoutStatus.textContent = "Use your Chromebook window controls to place this display beside another window.";
+      }
+    }
     if (action.dataset.action === "popout-smartboard-tool") openSmartboardToolPopout(action.closest("[data-smartboard-tool]"));
     if (action.dataset.action === "fullscreen-smartboard-tool") {
       const tool = action.closest("[data-smartboard-tool]");

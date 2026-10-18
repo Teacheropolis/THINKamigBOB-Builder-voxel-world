@@ -114,6 +114,8 @@ test("teacher dashboard provides a responsive categorized teacher menu and statu
   for (const label of ["Review Today’s Plan", "Start Classroom Display", "Preview Student View — No Code", "AMIG Anchor Chart"]) assert.match(app, new RegExp(label));
   for (const phrase of ["AMIG learning cycle moves clockwise", "Notice and wonder", "Build and try", "Test and make it better", "Every try helps your ideas grow"]) assert.match(app, new RegExp(phrase));
   assert.match(app, /Show AMIG Anchor Chart full screen/);
+  assert.match(app, /fullscreen-classroom-display/);
+  assert.match(app, /split-screen-classroom-display/);
   assert.match(css, /\.platform-teacher-menu \{[^}]*display: flex/);
   assert.match(css, /\.platform-teacher-menu-category:hover > \.platform-teacher-menu-panel/);
   assert.match(css, /\.platform-teacher-menu-category\.is-active > summary/);

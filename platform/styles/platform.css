@@ -1117,6 +1117,10 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-smartboard-tool-tray [data-smartboard-tool-name="voice"] { background: var(--platform-green); }
 .platform-smartboard-tool-tray [data-smartboard-tool-name="amig"] { color: #173e54; background: var(--platform-gold); }
 .platform-smartboard-tool-tray .platform-smartboard-reset-tools { min-height: 2.35rem; color: var(--platform-navy); background: #fff; font-size: 0.75rem; }
+.platform-classroom-window-controls { position: fixed; z-index: 320; top: 0.6rem; left: 50%; display: flex; align-items: center; gap: 0.45rem; max-width: calc(100vw - 2rem); padding: 0.4rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; color: #fff; background: rgba(16, 47, 69, 0.94); box-shadow: 0 0.45rem 1rem rgba(0,0,0,0.28); transform: translateX(-50%); }
+.platform-classroom-window-controls button { min-height: 2.6rem; padding: 0.4rem 0.8rem; border: 2px solid #fff; color: var(--platform-navy); background: #fff8e7; font-weight: 900; white-space: nowrap; }
+.platform-classroom-window-controls button:first-child { color: #fff; background: var(--platform-blue); }
+.platform-classroom-window-controls span { max-width: 17rem; font-size: 0.72rem; font-weight: 800; }
 .platform-smartboard-voice-tool output { display: block; color: var(--platform-navy); font-size: 2.5rem; font-weight: 900; text-align: center; }
 .platform-missions-first-reminder { margin: 0; padding: 0.65rem 0.75rem; border-left: 4px solid #c28b12; color: var(--platform-ink) !important; background: #fff8e4; font-size: 0.78rem; font-weight: 750; line-height: 1.35; }
 .platform-todays-mission-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; }
