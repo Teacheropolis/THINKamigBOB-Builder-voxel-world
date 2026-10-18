@@ -26,6 +26,12 @@ test("can attach Bob to either the student name or the rhyming word", () => {
   assert.equal(labels.every((label, index) => new RegExp(names[index], "i").test(label)), true);
 });
 
+test("varies Bob with funny forms such as Bobarella, Bobzilla, and Bobbio", () => {
+  const labels = generateNameBobs(["Ava", "Liam", "Mia", "Noah", "Lily", "Riley", "Emma", "Mason", "Ella", "Logan"]).labels;
+  assert.equal(labels.every((label) => /bob/i.test(label)), true);
+  assert.equal(labels.some((label) => /Bobarella|Bobzilla|Bobbio/i.test(label)), true);
+});
+
 test("avoids labels used in earlier classes and resolves repeated first names", () => {
   const first = generateNameBobs("Ava").labels[0];
   const result = generateNameBobs("Ava\nAva", { usedLabels: [first] });

@@ -1683,6 +1683,7 @@ var RHYME_FAMILIES = Object.freeze([
   [/(?:o|oh)$/i, ["Go-Go", "Yo-Yo", "Glow"]]
 ]);
 var MADE_UP_ONSETS = Object.freeze(["Z", "Fizz", "Whizz", "B", "Gear", "Tink"]);
+var BOB_FORMS = Object.freeze(["Bob", "Bobarella", "Bobzilla", "Bobbio"]);
 function cleanName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").replace(/[^\p{L}'’-]/gu, "").slice(0, 24);
 }
@@ -1717,7 +1718,7 @@ function labelContainsName(label, firstName) {
   const wanted = firstName.toLocaleLowerCase();
   return String(label || "").split(/\s+/).some((word) => {
     const normalized = cleanName(word).toLocaleLowerCase();
-    return normalized === wanted || normalized === `${wanted}bob`;
+    return normalized === wanted || BOB_FORMS.some((bobForm) => normalized === `${wanted}${bobForm.toLocaleLowerCase()}`);
   });
 }
 function generateNameBobs(value, { usedLabels = [], usedBeginningWords = [] } = {}) {
@@ -1732,18 +1733,19 @@ function generateNameBobs(value, { usedLabels = [], usedBeginningWords = [] } = 
     let label = "";
     for (let attempt = 0; attempt < 24 && !label; attempt += 1) {
       const rhyme = rhymes[(seed + attempt) % rhymes.length];
+      const bobForm = BOB_FORMS[(seed + attempt) % BOB_FORMS.length];
       const candidate = [
-        `${rhyme} ${firstName}Bob`,
-        `${firstName}Bob ${rhyme}`,
-        `${rhyme}Bob ${firstName}`,
-        `${firstName} ${rhyme}Bob`
+        `${rhyme} ${firstName}${bobForm}`,
+        `${firstName}${bobForm} ${rhyme}`,
+        `${rhyme}${bobForm} ${firstName}`,
+        `${firstName} ${rhyme}${bobForm}`
       ][(seed + attempt) % 4];
       const bounded = boundedLabel(candidate);
-      if (!used.has(bounded.toLocaleLowerCase()) && !beginnings.has(beginningWord(bounded))) label = bounded;
+      if (labelContainsName(bounded, firstName) && BOB_FORMS.some((form) => bounded.toLocaleLowerCase().includes(form.toLocaleLowerCase())) && !used.has(bounded.toLocaleLowerCase()) && !beginnings.has(beginningWord(bounded))) label = bounded;
     }
     if (!label) {
       let number = 2;
-      const base = boundedLabel(`${firstName}Bob`);
+      const base = boundedLabel(`${firstName}${BOB_FORMS[seed % BOB_FORMS.length]}`);
       label = base;
       while (used.has(label.toLocaleLowerCase()) || beginnings.has(beginningWord(label))) label = boundedLabel(`${base}${number++} ${madeUpRhyme(firstName, number)}`);
     }
@@ -3966,7 +3968,7 @@ function classroomSetupMarkup() {
         <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
         <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
       </div>
-      <p class="platform-namebob-help">Examples: Brava AvaBob, BravaBob Ava, LiamBob Fizziam, or Liam FizziamBob. Every student in the class gets a different beginning word, and names used in your other classes are automatically avoided.</p>
+      <p class="platform-namebob-help">Examples: Brava AvaBob, BravaBobarella Ava, LiamBobzilla Fizziam, or Liam FizziamBobbio. Every student in the class gets a different beginning word, and names used in your other classes are automatically avoided.</p>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs\u2014or enter your own labels.</p>
       <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
       <p class="platform-error" data-error role="alert" hidden></p>

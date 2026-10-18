@@ -15,6 +15,7 @@ const RHYME_FAMILIES = Object.freeze([
 ]);
 
 const MADE_UP_ONSETS = Object.freeze(["Z", "Fizz", "Whizz", "B", "Gear", "Tink"]);
+const BOB_FORMS = Object.freeze(["Bob", "Bobarella", "Bobzilla", "Bobbio"]);
 
 function cleanName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").replace(/[^\p{L}'’-]/gu, "").slice(0, 24);
@@ -57,7 +58,7 @@ function labelContainsName(label, firstName) {
   const wanted = firstName.toLocaleLowerCase();
   return String(label || "").split(/\s+/).some((word) => {
     const normalized = cleanName(word).toLocaleLowerCase();
-    return normalized === wanted || normalized === `${wanted}bob`;
+    return normalized === wanted || BOB_FORMS.some((bobForm) => normalized === `${wanted}${bobForm.toLocaleLowerCase()}`);
   });
 }
 
@@ -74,18 +75,19 @@ export function generateNameBobs(value, { usedLabels = [], usedBeginningWords = 
     let label = "";
     for (let attempt = 0; attempt < 24 && !label; attempt += 1) {
       const rhyme = rhymes[(seed + attempt) % rhymes.length];
+      const bobForm = BOB_FORMS[(seed + attempt) % BOB_FORMS.length];
       const candidate = [
-        `${rhyme} ${firstName}Bob`,
-        `${firstName}Bob ${rhyme}`,
-        `${rhyme}Bob ${firstName}`,
-        `${firstName} ${rhyme}Bob`,
+        `${rhyme} ${firstName}${bobForm}`,
+        `${firstName}${bobForm} ${rhyme}`,
+        `${rhyme}${bobForm} ${firstName}`,
+        `${firstName} ${rhyme}${bobForm}`,
       ][(seed + attempt) % 4];
       const bounded = boundedLabel(candidate);
-      if (!used.has(bounded.toLocaleLowerCase()) && !beginnings.has(beginningWord(bounded))) label = bounded;
+      if (labelContainsName(bounded, firstName) && BOB_FORMS.some((form) => bounded.toLocaleLowerCase().includes(form.toLocaleLowerCase())) && !used.has(bounded.toLocaleLowerCase()) && !beginnings.has(beginningWord(bounded))) label = bounded;
     }
     if (!label) {
       let number = 2;
-      const base = boundedLabel(`${firstName}Bob`);
+      const base = boundedLabel(`${firstName}${BOB_FORMS[seed % BOB_FORMS.length]}`);
       label = base;
       while (used.has(label.toLocaleLowerCase()) || beginnings.has(beginningWord(label))) label = boundedLabel(`${base}${number++} ${madeUpRhyme(firstName, number)}`);
     }
