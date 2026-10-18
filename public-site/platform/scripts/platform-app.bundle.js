@@ -2475,6 +2475,21 @@ function createWeeklyReflections({ storage, now = () => /* @__PURE__ */ new Date
     write(all);
     return { ok: true, plan };
   };
+  const clearCaptainLogWeekPlan = (classId, requestedWeek = activeCaptainLogWeek(classId)) => {
+    const week = Math.max(1, Math.min(7, Number(requestedWeek) || 1));
+    if (!classId) return { ok: false };
+    const all = readAll();
+    const stored = all.captainLogWeekPlans?.[classId];
+    if (stored?.days) delete all.captainLogWeekPlans[classId];
+    else if (stored) {
+      const next = { ...stored };
+      delete next[week];
+      all.captainLogWeekPlans = { ...all.captainLogWeekPlans ?? {}, [classId]: next };
+    }
+    if (activeCaptainLogWeek(classId) === week) all.requirements = { ...all.requirements ?? {}, [classWeek(classId)]: 0 };
+    write(all);
+    return { ok: true, week };
+  };
   const copyCaptainLogWeekPlan = (sourceClassId, targetClassIds, selectedDays = CAPTAINS_LOG_WEEKDAYS, requestedWeek = activeCaptainLogWeek(sourceClassId)) => {
     const sourceWeek = Math.max(1, Math.min(7, Number(requestedWeek) || 1)), source = captainLogWeekPlan(sourceClassId, sourceWeek), targets = [...new Set(targetClassIds)].filter((id) => id && id !== sourceClassId);
     const chosen = selectedDays.filter((day) => CAPTAINS_LOG_WEEKDAYS.includes(day));
@@ -2607,7 +2622,7 @@ function createWeeklyReflections({ storage, now = () => /* @__PURE__ */ new Date
     write(all);
     return { ok: true, status: status(classId, studentId) };
   };
-  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogChoices, captainLogObligations, recordStudentVisit, captainLogWeekPlan, saveCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
+  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogChoices, captainLogObligations, recordStudentVisit, captainLogWeekPlan, saveCaptainLogWeekPlan, clearCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
 }
 
 // platform/scripts/automatic-visuals.mjs
@@ -4028,7 +4043,7 @@ function captainsLogPlannerMarkup(classId) {
   }).join("");
   const enabledCount = CAPTAINS_LOG_WEEKDAYS.filter((day) => plan.days[day].enabled).length;
   const assignedCount = CAPTAINS_LOG_WEEKDAYS.filter((day) => plan.days[day].enabled && (plan.days[day].assignment ?? day) !== "Daily student choice").length;
-  return `<section class="platform-command-card platform-captains-log-planner" aria-labelledby="captains-log-planner-title" data-captains-log-editor-week="${editorWeek}"><p class="platform-command-label">Exit tickets</p><h3 id="captains-log-planner-title">Plan the Captain\u2019s Log</h3><p>Each class keeps seven separate five-day plans. Editing a future week does not change what students see.</p><div class="platform-captains-log-week-controls"><label>Edit plan for<select data-captains-log-editor-week>${CAPTAINS_LOG_PRESET_PROMPTS.map((item) => `<option value="${item.week}"${editorWeek === item.week ? " selected" : ""}>Week ${item.week}</option>`).join("")}</select></label><p><strong>Students are on Week ${activeWeek}.</strong> Change the Current Rotation Week in Class Setup.</p></div><form data-form="captains-log-week-plan" novalidate><input type="hidden" name="week" value="${editorWeek}"><div class="platform-captains-log-weekly-goal"><label>Weekly Goal<strong>Students complete</strong><span><select name="required" data-captains-log-required>${[0, 1, 2, 3, 4, 5].map((count) => `<option value="${count}"${required === count ? " selected" : ""}>${count}</option>`).join("")}</select> different Captain\u2019s Logs this week.</span></label><p data-captains-log-summary><strong>${required} required \xB7 ${enabledCount} prompts available</strong><span>${assignedCount} assigned to specific days \xB7 ${enabledCount - assignedCount} student choices</span></p></div><div class="platform-captains-log-days">${dayRows}</div><button type="submit">Save Week ${editorWeek} Plan</button><p data-captains-log-status role="status">Week ${editorWeek}: ${enabledCount} Captain\u2019s Log${enabledCount === 1 ? "" : "s"} planned.${editorWeek === activeWeek ? " This is the class\u2019s current rotation week." : ` Students are currently on Week ${activeWeek}.`}</p></form>${otherClasses.length ? `<details class="platform-captains-log-copy"><summary>Copy Week ${editorWeek} to other classes</summary><fieldset><legend>Copy to</legend>${otherClasses.map((item) => `<label><input type="checkbox" data-captains-log-copy-target value="${escapeHtml2(item.id)}"> ${escapeHtml2(item.periodLabel || item.displayName)}${item.periodLabel ? ` \u2014 ${escapeHtml2(item.displayName)}` : ""}</label>`).join("")}</fieldset><button type="button" data-action="copy-captains-log-week">Copy Week ${editorWeek} Plan</button><p data-captains-log-copy-status role="status">Choose one or more classes.</p></details>` : ""}${library.length ? `<details class="platform-captains-log-library"><summary>My Prompt Library (${library.length})</summary>${library.map((item) => `<div><span>${escapeHtml2(item.prompt)}</span><button type="button" data-action="delete-captains-log-prompt" data-prompt-id="${escapeHtml2(item.id)}">Delete</button></div>`).join("")}</details>` : ""}</section>`;
+  return `<section class="platform-command-card platform-captains-log-planner" aria-labelledby="captains-log-planner-title" data-captains-log-editor-week="${editorWeek}"><p class="platform-command-label">Exit tickets</p><h3 id="captains-log-planner-title">Plan the Captain\u2019s Log</h3><p>Each class keeps seven separate five-day plans. Editing a future week does not change what students see.</p><div class="platform-captains-log-week-controls"><label>Edit plan for<select data-captains-log-editor-week>${CAPTAINS_LOG_PRESET_PROMPTS.map((item) => `<option value="${item.week}"${editorWeek === item.week ? " selected" : ""}>Week ${item.week}</option>`).join("")}</select></label><p><strong>Students are on Week ${activeWeek}.</strong> Change the Current Rotation Week in Class Setup.</p><button class="platform-button platform-button-secondary" type="button" data-action="clear-captains-log-week">Start Week ${editorWeek} Blank</button></div><form data-form="captains-log-week-plan" novalidate><input type="hidden" name="week" value="${editorWeek}"><div class="platform-captains-log-weekly-goal"><label>Weekly Goal<strong>Students complete</strong><span><select name="required" data-captains-log-required>${[0, 1, 2, 3, 4, 5].map((count) => `<option value="${count}"${required === count ? " selected" : ""}>${count}</option>`).join("")}</select> different Captain\u2019s Logs this week.</span></label><p data-captains-log-summary><strong>${required} required \xB7 ${enabledCount} prompts available</strong><span>${assignedCount} assigned to specific days \xB7 ${enabledCount - assignedCount} student choices</span></p></div><div class="platform-captains-log-days">${dayRows}</div><button type="submit">Save Week ${editorWeek} Plan</button><p data-captains-log-status role="status">Week ${editorWeek}: ${enabledCount} Captain\u2019s Log${enabledCount === 1 ? "" : "s"} planned.${editorWeek === activeWeek ? " This is the class\u2019s current rotation week." : ` Students are currently on Week ${activeWeek}.`}</p></form>${otherClasses.length ? `<details class="platform-captains-log-copy"><summary>Copy Week ${editorWeek} to other classes</summary><fieldset><legend>Copy to</legend>${otherClasses.map((item) => `<label><input type="checkbox" data-captains-log-copy-target value="${escapeHtml2(item.id)}"> ${escapeHtml2(item.periodLabel || item.displayName)}${item.periodLabel ? ` \u2014 ${escapeHtml2(item.displayName)}` : ""}</label>`).join("")}</fieldset><button type="button" data-action="copy-captains-log-week">Copy Week ${editorWeek} Plan</button><p data-captains-log-copy-status role="status">Choose one or more classes.</p></details>` : ""}${library.length ? `<details class="platform-captains-log-library"><summary>My Prompt Library (${library.length})</summary>${library.map((item) => `<div><span>${escapeHtml2(item.prompt)}</span><button type="button" data-action="delete-captains-log-prompt" data-prompt-id="${escapeHtml2(item.id)}">Delete</button></div>`).join("")}</details>` : ""}</section>`;
 }
 function weeklyReflectionTeacherMarkup(classId) {
   const required = weeklyReflections.requirement(classId);
@@ -12194,6 +12209,16 @@ ${item.limerick}`)].join("\n\n");
       weeklyReflections.deleteCaptainLogPrompt(action.dataset.promptId);
       render();
     }
+  }
+  if (action.dataset.action === "clear-captains-log-week") {
+    const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id;
+    const section = action.closest(".platform-captains-log-planner");
+    const editorWeek = Number(section?.dataset.captainsLogEditorWeek);
+    if (window.confirm(`Start Week ${editorWeek} blank? This clears the five prompt selections and weekly goal for this class.`)) {
+      weeklyReflections.clearCaptainLogWeekPlan(classId, editorWeek);
+      render();
+    }
+    return;
   }
   if (action.dataset.action === "copy-captains-log-week") {
     const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id;

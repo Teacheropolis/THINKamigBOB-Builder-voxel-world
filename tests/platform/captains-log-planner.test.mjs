@@ -58,6 +58,16 @@ test("a new Captain's Log week starts empty with instructional placeholders", ()
   assert.match(app, /Choose a day or student choice…/);
 });
 
+test("teacher can intentionally clear a saved week back to blank defaults", () => {
+  const reflections = createWeeklyReflections({ storage: memoryStorage() });
+  const days = Object.fromEntries(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => [day, { enabled: true, promptId: `prompt-${index}`, prompt: `Saved prompt number ${index + 1}?`, assignment: day }]));
+  assert.equal(reflections.saveCaptainLogWeekPlan("class-1", { week: 1, days, required: 5 }).ok, true);
+  assert.equal(reflections.clearCaptainLogWeekPlan("class-1", 1).ok, true);
+  const cleared = reflections.captainLogWeekPlan("class-1", 1);
+  assert.equal(cleared.required, 0);
+  assert.equal(Object.values(cleared.days).some((entry) => entry.enabled), false);
+});
+
 test("five-day plan can be copied to other classes", () => {
   const reflections = createWeeklyReflections({ storage: memoryStorage(), now: () => new Date("2026-10-19T12:00:00Z") });
   const days = Object.fromEntries(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => [day, { enabled: true, promptId: `prompt-${index}`, prompt: `Class prompt number ${index + 1}?` }]));

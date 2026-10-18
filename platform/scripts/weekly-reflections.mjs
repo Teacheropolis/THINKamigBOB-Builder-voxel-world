@@ -162,6 +162,21 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     write(all);
     return { ok: true, plan };
   };
+  const clearCaptainLogWeekPlan = (classId, requestedWeek = activeCaptainLogWeek(classId)) => {
+    const week = Math.max(1, Math.min(7, Number(requestedWeek) || 1));
+    if (!classId) return { ok: false };
+    const all = readAll();
+    const stored = all.captainLogWeekPlans?.[classId];
+    if (stored?.days) delete all.captainLogWeekPlans[classId];
+    else if (stored) {
+      const next = { ...stored };
+      delete next[week];
+      all.captainLogWeekPlans = { ...(all.captainLogWeekPlans ?? {}), [classId]: next };
+    }
+    if (activeCaptainLogWeek(classId) === week) all.requirements = { ...(all.requirements ?? {}), [classWeek(classId)]: 0 };
+    write(all);
+    return { ok: true, week };
+  };
   const copyCaptainLogWeekPlan = (sourceClassId, targetClassIds, selectedDays = CAPTAINS_LOG_WEEKDAYS, requestedWeek = activeCaptainLogWeek(sourceClassId)) => {
     const sourceWeek = Math.max(1, Math.min(7, Number(requestedWeek) || 1)), source = captainLogWeekPlan(sourceClassId, sourceWeek), targets = [...new Set(targetClassIds)].filter((id) => id && id !== sourceClassId);
     const chosen = selectedDays.filter((day) => CAPTAINS_LOG_WEEKDAYS.includes(day));
@@ -289,5 +304,5 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     write(all);
     return { ok: true, status: status(classId, studentId) };
   };
-  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogChoices, captainLogObligations, recordStudentVisit, captainLogWeekPlan, saveCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
+  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogChoices, captainLogObligations, recordStudentVisit, captainLogWeekPlan, saveCaptainLogWeekPlan, clearCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
 }
