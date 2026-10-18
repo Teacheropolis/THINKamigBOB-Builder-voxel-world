@@ -3557,6 +3557,7 @@ function classSetupSharingMarkup(teacherId, location) {
     ${weeklyReflectionTeacherMarkup(current?.id)}
     <button type="button" data-action="apply-class-setup">Apply Selected Setup</button>
     <p data-class-setup-status role="status" aria-live="polite">Nothing is copied until you confirm.</p>
+    ${location === "manage" ? `<a class="platform-button platform-button-secondary platform-back-to-today" href="#${ROUTES.TEACHER_DASHBOARD}">\u2190 Back to Today</a>` : ""}
   </section>`;
 }
 function classResourceTeacherMarkup(classId) {
@@ -4130,6 +4131,7 @@ function classroomSetupMarkup() {
       <table><thead><tr><th>Student</th><th>Private student code</th></tr></thead><tbody>${classroom.students.map((student) => `<tr><td>${escapeHtml2(student.displayLabel)}</td><td><code>${escapeHtml2(student.studentCode)}</code></td></tr>`).join("")}</tbody></table>
       <div class="platform-actions platform-code-sheet-actions"><button type="button" data-action="print-classroom-codes">Print Code Sheet</button><button type="button" data-action="close-classroom-codes">Close &amp; Hide Codes</button></div>
     </section>` : ""}
+    <a class="platform-button platform-button-secondary platform-back-to-today" href="#${ROUTES.TEACHER_DASHBOARD}">\u2190 Back to Today</a>
   </section>`;
 }
 function studentRosterView(state) {
@@ -4275,7 +4277,7 @@ function classTimerScheduleMarkup(classId = "class-preview-1", { showBackToToday
         </div>
       </details>
       <button type="submit">Save Class Schedule</button>
-      ${showBackToToday ? `<a class="platform-button platform-button-secondary" href="#${ROUTES.TEACHER_DASHBOARD}">Back to Today</a>` : ""}
+      ${showBackToToday ? `<a class="platform-button platform-button-secondary platform-back-to-today" href="#${ROUTES.TEACHER_DASHBOARD}">\u2190 Back to Today</a>` : ""}
       <p class="platform-error" data-class-timer-schedule-error role="alert" hidden></p>
       <p class="platform-evidence-drive-status" data-class-timer-schedule-status role="status" aria-live="polite">${schedule.enabled ? `Scheduled for ${schedule.weekdays.join(", ")} at ${schedule.startTime} for ${schedule.durationMinutes} minutes.` : "Automatic timer is off. Manual timer controls remain available."}</p>
     </form>
@@ -5047,6 +5049,7 @@ function teacherClassesView(state) {
         <details class="platform-manage-advanced" id="teacher-setup-tools">
           <summary><span><b>4</b><strong>Connections &amp; Safeguards</strong></span><small>Optional school setup for Drive and evidence policies</small></summary>
           <div class="platform-today-primary-grid platform-class-management-setup">${teacherSetupMarkup()}</div>
+          <a class="platform-button platform-button-secondary platform-back-to-today" href="#${ROUTES.TEACHER_DASHBOARD}">\u2190 Back to Today</a>
         </details>
       </main>
     </div>

@@ -33,7 +33,7 @@ test("Create a Classroom lives on the dedicated Manage Classes screen", () => {
   assert.match(classes, /\$\{classroomSetupMarkup\(\)\}/);
   assert.match(classes, /\$\{teacherSetupMarkup\(\)\}/);
   assert.match(classes, /id="teacher-setup-tools"/);
-  assert.doesNotMatch(classes, /Back to Today/);
+  assert.match(classes, /Back to Today/);
   assert.match(app, /Create Classroom &amp; Add Students/);
   assert.doesNotMatch(classes, /platform-class-management-nav/);
   assert.doesNotMatch(classes, /aria-label="Classroom access shortcuts"/);
