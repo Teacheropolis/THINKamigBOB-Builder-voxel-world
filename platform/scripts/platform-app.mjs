@@ -2806,7 +2806,7 @@ function openClassroomPresentationWindow() {
   classroomPresentationWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Classroom View · THINKamigBOB</title>${stylesheetLinks}<style>html,body{margin:0;min-height:100%;overflow:hidden}#platform-second-window-display{display:grid!important}</style></head><body class="platform-app"><details class="platform-classroom-window-controls" aria-label="Classroom Display window controls"><summary>Display</summary><div class="platform-classroom-window-options"><button type="button" data-action="fullscreen-classroom-display">Full Screen</button><details class="platform-classroom-split-control"><summary>Split Screen</summary><div><label>Webpage address<input type="url" data-classroom-companion-url inputmode="url" placeholder="Paste a webpage link"></label><button type="button" data-action="split-screen-classroom-display">Show Side by Side</button></div></details><span data-classroom-display-layout-status role="status"></span></div></details>${clone.outerHTML}</body></html>`);
   classroomPresentationWindow.document.close();
   const screenOptionsSummary = classroomPresentationWindow.document.querySelector(".platform-classroom-window-controls > summary");
-  if (screenOptionsSummary) screenOptionsSummary.innerHTML = '<span>Screen Options</span><small aria-hidden="true"></small>';
+  if (screenOptionsSummary) screenOptionsSummary.textContent = "Screen Options";
   installSmartboardToolGestures(classroomPresentationWindow.document);
   classroomPresentationWindow.document.addEventListener("change", (event) => {
     const voiceTarget = event.target.closest("[data-voice-meter-target]");
@@ -2877,8 +2877,7 @@ function openClassroomPresentationWindow() {
     if (action.dataset.action === "popout-smartboard-tool") openSmartboardToolPopout(action.closest("[data-smartboard-tool]"));
     if (action.dataset.action === "fullscreen-smartboard-tool") {
       const tool = action.closest("[data-smartboard-tool]");
-      if (classroomPresentationWindow.document.fullscreenElement) void classroomPresentationWindow.document.exitFullscreen();
-      else if (tool) void tool.requestFullscreen();
+      toggleSmartboardToolMaximized(tool);
     }
     if (action.dataset.action === "close-smartboard-tool") action.closest("[data-smartboard-tool]").hidden = true;
     if (action.dataset.action === "timer-start") lessonTimer.start();
@@ -5710,11 +5709,7 @@ function handleClick(event) {
     return;
   }
   if (action.dataset.action === "fullscreen-smartboard-tool") {
-    if (document.fullscreenElement) void document.exitFullscreen();
-    else {
-      const tool = action.closest("[data-smartboard-tool]");
-      void (tool || action.closest("#platform-student-timer-display") || document.documentElement).requestFullscreen();
-    }
+    toggleSmartboardToolMaximized(action.closest("[data-smartboard-tool]"));
     return;
   }
   if (action.dataset.action === "close-smartboard-tool") {
@@ -7178,6 +7173,18 @@ function installSmartboardToolPopoutButtons(documentRef = document) {
     button.textContent = "Full Screen";
     header.insertBefore(button, close);
   });
+}
+
+function toggleSmartboardToolMaximized(tool) {
+  if (!tool) return;
+  const maximized = tool.classList.toggle("platform-smartboard-tool-maximized");
+  const button = tool.querySelector('[data-action="fullscreen-smartboard-tool"]');
+  if (button) {
+    button.textContent = maximized ? "Restore" : "Full Screen";
+    button.setAttribute("aria-pressed", String(maximized));
+    button.title = maximized ? "Return this tool to its window" : "Fill the Classroom Display with this tool";
+  }
+  if (maximized) bringSmartboardToolForward(tool);
 }
 
 function smartboardToolSource(name) {

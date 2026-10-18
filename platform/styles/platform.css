@@ -1113,8 +1113,6 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-smartboard-tool-tray { position: absolute; z-index: 40; top: 50%; right: 1rem; width: min(10rem, 24vw); color: #fff; transform: translateY(-50%); }
 .platform-smartboard-tool-tray > summary { padding: 0.8rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; color: #fff; background: rgba(16, 47, 69, 0.96); font-weight: 900; text-align: center; list-style: none; cursor: pointer; }
 .platform-smartboard-tool-tray > summary::-webkit-details-marker { display: none; }
-.platform-smartboard-tool-tray > summary::after { display: block; margin-top: 0.12rem; color: #f6d66e; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; content: "Expand"; }
-.platform-smartboard-tool-tray[open] > summary::after { content: "Minimize"; }
 .platform-smartboard-tool-options { display: flex; flex-direction: column; gap: 0.45rem; align-items: stretch; margin-top: 0.35rem; padding: 0.55rem; border-radius: 0.75rem; background: rgba(16, 47, 69, 0.96); }
 .platform-smartboard-tool-tray button { min-height: 3rem; padding: 0.35rem; border: 2px solid rgba(255,255,255,0.8); color: #fff; font-size: clamp(0.68rem, 1.1vw, 0.92rem); font-weight: 900; line-height: 1.15; overflow-wrap: anywhere; }
 .platform-smartboard-tool-tray [data-smartboard-tool-name="timer"] { background: #5d45a1; }
@@ -1129,10 +1127,6 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-classroom-window-controls { position: fixed; z-index: 320; top: 0.6rem; left: 0.6rem; color: #fff; }
 .platform-classroom-window-controls > summary { min-width: 7rem; padding: 0.65rem 0.8rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; color: #fff; background: rgba(16, 47, 69, 0.96); font-weight: 900; text-align: center; list-style: none; cursor: pointer; }
 .platform-classroom-window-controls > summary::-webkit-details-marker { display: none; }
-.platform-classroom-window-controls > summary span { display: block; max-width: none; font-size: inherit; }
-.platform-classroom-window-controls > summary small { display: block; margin-top: 0.12rem; color: #f6d66e; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
-.platform-classroom-window-controls > summary small::before { content: "Expand"; }
-.platform-classroom-window-controls[open] > summary small::before { content: "Minimize"; }
 .platform-classroom-window-options { display: flex; align-items: center; gap: 0.45rem; max-width: calc(100vw - 1.2rem); margin-top: 0.35rem; padding: 0.4rem; border: 2px solid var(--platform-gold); border-radius: 0.75rem; background: rgba(16, 47, 69, 0.96); box-shadow: 0 0.45rem 1rem rgba(0,0,0,0.28); }
 .platform-classroom-window-controls button { min-height: 2.6rem; padding: 0.4rem 0.8rem; border: 2px solid #fff; color: var(--platform-navy); background: #fff8e7; font-weight: 900; white-space: nowrap; }
 .platform-classroom-window-controls button:first-child { color: #fff; background: var(--platform-blue); }
@@ -1147,6 +1141,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-smartboard-voice-choice { display: grid; gap: 0.3rem; margin: 0.4rem 0; font-weight: 900; }
 .platform-smartboard-voice-choice select { min-height: 2.8rem; width: 100%; padding: 0.35rem 0.5rem; border: 2px solid currentColor; border-radius: 0.35rem; color: var(--platform-navy); background: #fff8e7; font: inherit; }
 .platform-smartboard-tool:fullscreen { inset: 0 !important; width: 100vw !important; height: 100vh !important; max-width: none !important; max-height: none !important; border: 0; border-radius: 0; }
+.platform-smartboard-tool.platform-smartboard-tool-maximized { inset: 0 !important; z-index: 300 !important; width: 100vw !important; height: 100vh !important; max-width: none !important; max-height: none !important; border: 0; border-radius: 0; }
 .platform-smartboard-voice-tool output { display: block; color: var(--platform-navy); font-size: clamp(1.75rem, 12cqw, 3.75rem); font-weight: 900; text-align: center; }
 .platform-smartboard-voice-tool [data-large-voice-level-label], .platform-smartboard-voice-tool [data-voice-prediction] { font-size: clamp(0.82rem, 4cqw, 1.2rem); }
 

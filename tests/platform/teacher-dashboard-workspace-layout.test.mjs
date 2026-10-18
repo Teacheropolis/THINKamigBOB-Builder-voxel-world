@@ -119,8 +119,7 @@ test("teacher dashboard provides a responsive categorized teacher menu and statu
   assert.match(app, /data-classroom-companion-url/);
   assert.match(app, /Classroom Display and webpage are side by side/);
   assert.match(app, /keepSmartboardToolsOnScreen/);
-  assert.match(css, /platform-smartboard-tool-tray > summary::after[^}]*content: "Expand"/);
-  assert.match(css, /platform-smartboard-tool-tray\[open\] > summary::after[^}]*content: "Minimize"/);
+  assert.doesNotMatch(css, /platform-smartboard-tool-tray > summary::after[^}]*content: "Expand"/);
   assert.doesNotMatch(app, /tray\.open = false/);
   assert.match(app, /Screen Options/);
   assert.match(app, /Expected voice level on the classroom Voice Meter/);
@@ -175,6 +174,8 @@ test("Presentation Tools provide instant, stopwatch, and countdown timing", () =
   assert.doesNotMatch(app, /button\.dataset\.action = "popout-smartboard-tool"/);
   assert.match(app, /classroomPresentationWindow\.document\.addEventListener\("keydown"/);
   assert.match(app, /data-action = "fullscreen-smartboard-tool"|dataset\.action = "fullscreen-smartboard-tool"/);
+  assert.match(app, /function toggleSmartboardToolMaximized\(tool\)/);
+  assert.match(css, /platform-smartboard-tool-maximized/);
   assert.match(app, /requestFullscreen/);
   assert.match(css, /\.platform-smartboard-tool \{[^}]*container-type: inline-size/);
   assert.match(css, /data-smartboard-tool="stopwatch"[^}]*font-size: clamp\(2rem, 12cqw, 6rem\)/);
