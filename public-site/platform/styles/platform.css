@@ -787,6 +787,7 @@ summary:focus-visible {
 .platform-weekly-reflection-setup form p { grid-column: 1 / -1; margin: 0; }
 .platform-captains-log-planner { grid-column: 1 / -1; min-height: 0; margin: 0 0 0.75rem; padding: 0.85rem 1rem; border-top: 6px solid var(--platform-gold); background: linear-gradient(145deg, #fffaf0, #fff2c7); }
 .platform-captains-log-planner > p { margin: 0.15rem 0 0.6rem; }
+.platform-captains-log-learning-message { padding: 0.65rem 0.75rem; border-left: 5px solid #b98413; border-radius: 0.4rem; background: #fff8dc; color: #173247; }
 .platform-captains-log-planner form { display: grid; grid-template-columns: minmax(16rem, 2fr) minmax(14rem, 1fr); gap: 0.55rem 0.75rem; align-items: end; }
 .platform-captains-log-planner label { display: grid; gap: 0.3rem; font-weight: 800; }
 .platform-captains-log-planner select, .platform-captains-log-planner textarea { width: 100%; min-height: 2.35rem; padding: 0.4rem 0.5rem; border: 2px solid var(--platform-border); border-radius: 0.5rem; background: #fff; font: inherit; }

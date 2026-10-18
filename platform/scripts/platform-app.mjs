@@ -7464,6 +7464,7 @@ function render() {
   if (allowedRoute !== requestedRoute) return navigate(allowedRoute, { replace: true });
   root.innerHTML = viewForRoute(allowedRoute, state);
   root.querySelector('[data-action="clear-captains-log-week"]')?.remove();
+  root.querySelector("#captains-log-planner-title")?.insertAdjacentHTML("afterend", '<p class="platform-captains-log-learning-message"><strong>Failure is data.</strong> Most prompts help students study mistakes, failed tests, and what still needs improvement. Progress is worth noticing—and every success can be improved.</p>');
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) { installClassroomDisplayChoices(); applyClassroomBobDisplay(); }
   if (allowedRoute === ROUTES.TEACHER_LOGIN) mountProductionGoogleSignIn();
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) pb002jClasswide.mount(root, "teacher");

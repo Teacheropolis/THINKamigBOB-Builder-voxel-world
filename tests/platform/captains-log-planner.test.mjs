@@ -11,8 +11,9 @@ function memoryStorage() {
 test("Captain's Log provides a seven-week AMIG prompt progression", () => {
   assert.equal(CAPTAINS_LOG_PRESET_PROMPTS.length, 7);
   assert.deepEqual(CAPTAINS_LOG_PRESET_PROMPTS.map((item) => item.week), [1, 2, 3, 4, 5, 6, 7]);
-  assert.match(CAPTAINS_LOG_PRESET_PROMPTS[0].prompt, /notice or wonder/i);
-  assert.match(CAPTAINS_LOG_PRESET_PROMPTS[6].prompt, /try next/i);
+  assert.match(CAPTAINS_LOG_PRESET_PROMPTS[0].prompt, /not work|wonder/i);
+  assert.match(CAPTAINS_LOG_PRESET_PROMPTS[6].prompt, /success be improved/i);
+  assert.ok(CAPTAINS_LOG_PRESET_PROMPTS.filter((item) => /fail|mistake|not work|weakness|struggle|limitation/i.test(item.prompt)).length > CAPTAINS_LOG_PRESET_PROMPTS.length / 2);
 });
 
 test("teacher can schedule a prompt and update the weekly requirement", () => {

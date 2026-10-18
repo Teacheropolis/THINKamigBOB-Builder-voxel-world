@@ -2325,13 +2325,13 @@ function createActivityDirections({ storage, now = () => Date.now() }) {
 // platform/scripts/weekly-reflections.mjs
 var WEEKLY_REFLECTION_STORAGE_KEY = "thinkamigbob.weekly-reflections.v1";
 var CAPTAINS_LOG_PRESET_PROMPTS = Object.freeze([
-  { id: "week-1-ask", week: 1, label: "Ask", prompt: "What did you notice or wonder today?" },
-  { id: "week-2-make", week: 2, label: "Make", prompt: "What did you make, build, or try today?" },
-  { id: "week-3-improve", week: 3, label: "Improve", prompt: "What did you test or change today?" },
-  { id: "week-4-grow", week: 4, label: "Grow", prompt: "What did you learn from today\u2019s work?" },
-  { id: "week-5-evidence", week: 5, label: "Evidence", prompt: "What evidence shows your idea is working?" },
-  { id: "week-6-explain", week: 6, label: "Explain", prompt: "What challenge did you solve, and how?" },
-  { id: "week-7-next", week: 7, label: "Next Step", prompt: "What are you proud of, and what will you try next?" }
+  { id: "week-1-ask", week: 1, label: "Ask", prompt: "What did not work, surprise you, or make you wonder today?" },
+  { id: "week-2-make", week: 2, label: "Make", prompt: "Describe a mistake or failed test from today. What did it reveal?" },
+  { id: "week-3-improve", week: 3, label: "Improve", prompt: "Which part is still not working, and what change will you try?" },
+  { id: "week-4-grow", week: 4, label: "Grow", prompt: "How did a failure, wrong turn, or struggle help your thinking grow?" },
+  { id: "week-5-evidence", week: 5, label: "Evidence", prompt: "What evidence shows a weakness or limitation in your idea?" },
+  { id: "week-6-explain", week: 6, label: "Explain", prompt: "Explain why something failed and what you learned from it." },
+  { id: "week-7-next", week: 7, label: "Next Step", prompt: "What progress did you make, and how could even that success be improved?" }
 ]);
 var CAPTAINS_LOG_SCHEDULE_OPTIONS = Object.freeze(["Today", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
 var CAPTAINS_LOG_WEEKDAYS = Object.freeze(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
@@ -2414,7 +2414,7 @@ function createWeeklyReflections({ storage, now = () => /* @__PURE__ */ new Date
     const plans = { ...all.captainLogWeekPlans ?? {} };
     const isAutofilled = (plan) => Boolean(plan?.days) && CAPTAINS_LOG_WEEKDAYS.every((day, index) => {
       const entry = plan.days[day], preset = CAPTAINS_LOG_PRESET_PROMPTS[index];
-      return entry?.enabled && entry.promptId === preset.id && entry.prompt === preset.prompt;
+      return entry?.enabled && entry.promptId === preset.id;
     });
     Object.entries(plans).forEach(([classId, stored]) => {
       if (isAutofilled(stored)) delete plans[classId];
@@ -12389,6 +12389,7 @@ function render() {
   if (allowedRoute !== requestedRoute) return navigate(allowedRoute, { replace: true });
   root.innerHTML = viewForRoute(allowedRoute, state);
   root.querySelector('[data-action="clear-captains-log-week"]')?.remove();
+  root.querySelector("#captains-log-planner-title")?.insertAdjacentHTML("afterend", '<p class="platform-captains-log-learning-message"><strong>Failure is data.</strong> Most prompts help students study mistakes, failed tests, and what still needs improvement. Progress is worth noticing\u2014and every success can be improved.</p>');
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) {
     installClassroomDisplayChoices();
     applyClassroomBobDisplay();
