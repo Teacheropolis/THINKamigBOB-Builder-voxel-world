@@ -178,6 +178,8 @@ test("Presentation Tools provide instant, stopwatch, and countdown timing", () =
   assert.match(app, /function toggleClassroomDisplayFullscreen\(button\)/);
   assert.match(app, /function exitClassroomDisplayFullscreen\(displayDocument\)/);
   assert.match(app, /exit-classroom-fullscreen/);
+  assert.match(app, /classroomRestoreWindow/);
+  assert.match(app, /displayWindow\.resizeTo/);
   assert.match(app, /platform-classroom-presentation-mode/);
   assert.match(app, /smartboardRestoreStyle/);
   assert.match(css, /platform-floating-timer-face::before/);

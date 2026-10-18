@@ -7208,20 +7208,24 @@ async function toggleClassroomDisplayFullscreen(button) {
   const status = displayDocument.querySelector("[data-classroom-display-layout-status]");
   if (displayDocument.body.classList.contains("platform-classroom-presentation-mode") || displayDocument.fullscreenElement) return exitClassroomDisplayFullscreen(displayDocument);
   displayDocument.body.classList.add("platform-classroom-presentation-mode");
+  displayDocument.body.dataset.classroomRestoreWindow = JSON.stringify({
+    left: displayWindow.screenX,
+    top: displayWindow.screenY,
+    width: displayWindow.outerWidth,
+    height: displayWindow.outerHeight,
+  });
   const exitButton = displayDocument.querySelector("[data-action='exit-classroom-fullscreen']");
   if (exitButton) exitButton.hidden = false;
+  const screen = displayWindow.screen;
+  try {
+    displayWindow.moveTo(Number(screen.availLeft || 0), Number(screen.availTop || 0));
+    displayWindow.resizeTo(Number(screen.availWidth || screen.width), Number(screen.availHeight || screen.height));
+  } catch {}
   try {
     await displayDocument.documentElement.requestFullscreen({ navigationUI: "hide" });
     if (status) status.textContent = "Classroom Display is full screen.";
   } catch {
-    const screen = displayWindow.screen;
-    try {
-      displayWindow.moveTo(Number(screen.availLeft || 0), Number(screen.availTop || 0));
-      displayWindow.resizeTo(Number(screen.availWidth || screen.width), Number(screen.availHeight || screen.height));
-      if (status) status.textContent = "The browser blocked native full screen. Presentation mode is filling the display window.";
-    } catch {
-      if (status) status.textContent = "Full screen was blocked. Use the Chromebook full-screen key for this window.";
-    }
+    if (status) status.textContent = "The Classroom Display window was expanded to fill the smartboard.";
   }
 }
 
@@ -7231,6 +7235,15 @@ async function exitClassroomDisplayFullscreen(displayDocument) {
     try { await displayDocument.exitFullscreen(); } catch {}
   }
   displayDocument.body.classList.remove("platform-classroom-presentation-mode");
+  const displayWindow = displayDocument.defaultView;
+  try {
+    const restoreWindow = JSON.parse(displayDocument.body.dataset.classroomRestoreWindow || "null");
+    if (restoreWindow && displayWindow) {
+      displayWindow.moveTo(restoreWindow.left, restoreWindow.top);
+      displayWindow.resizeTo(restoreWindow.width, restoreWindow.height);
+    }
+  } catch {}
+  delete displayDocument.body.dataset.classroomRestoreWindow;
   const exitButton = displayDocument.querySelector("[data-action='exit-classroom-fullscreen']");
   if (exitButton) exitButton.hidden = true;
   const status = displayDocument.querySelector("[data-classroom-display-layout-status]");
