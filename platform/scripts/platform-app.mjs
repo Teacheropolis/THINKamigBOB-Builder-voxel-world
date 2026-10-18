@@ -2108,7 +2108,6 @@ function teacherDashboardView(state) {
           </section>
           ${currentClassPlanMarkup(classRecord?.id, state.teacherId)}
         </section>
-        ${captainsLogPlannerMarkup(classRecord?.id)}
         <div data-class-schedule-storage hidden>${classTimerScheduleMarkup(classRecord?.id, { showBackToToday: false })}</div>
         <div class="platform-today-primary-grid" id="teacher-today-tools">
           <div class="platform-workspace-heading" id="teacher-classroom-tools" hidden>
@@ -2125,6 +2124,7 @@ function teacherDashboardView(state) {
             </div>
           </div>
           ${todaysLessonTeacherMarkup(classRecord?.id, assignedResearch, researchLinkBank, className)}
+          ${captainsLogPlannerMarkup(classRecord?.id)}
           <section id="teacher-timer-card" class="platform-command-card platform-command-card-timer" hidden>
             <p class="platform-command-label">Class timing</p>
             <h3>Today’s Class Timer</h3>
