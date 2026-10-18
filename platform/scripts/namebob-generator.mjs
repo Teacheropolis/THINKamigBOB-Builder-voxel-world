@@ -53,6 +53,14 @@ function beginningWord(value) {
   return String(value || "").trim().split(/\s+/)[0].toLocaleLowerCase();
 }
 
+function labelContainsName(label, firstName) {
+  const wanted = firstName.toLocaleLowerCase();
+  return String(label || "").split(/\s+/).some((word) => {
+    const normalized = cleanName(word).toLocaleLowerCase();
+    return normalized === wanted || normalized === `${wanted}bob`;
+  });
+}
+
 export function generateNameBobs(value, { usedLabels = [], usedBeginningWords = [] } = {}) {
   const lines = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
   const firstNames = lines.map(firstNameFromRosterLine).filter(Boolean);
@@ -66,9 +74,12 @@ export function generateNameBobs(value, { usedLabels = [], usedBeginningWords = 
     let label = "";
     for (let attempt = 0; attempt < 24 && !label; attempt += 1) {
       const rhyme = rhymes[(seed + attempt) % rhymes.length];
-      const candidate = attempt % 2 === 0
-        ? `${rhyme} ${firstName}Bob`
-        : `${firstName}Bob ${rhyme}`;
+      const candidate = [
+        `${rhyme} ${firstName}Bob`,
+        `${firstName}Bob ${rhyme}`,
+        `${rhyme}Bob ${firstName}`,
+        `${firstName} ${rhyme}Bob`,
+      ][(seed + attempt) % 4];
       const bounded = boundedLabel(candidate);
       if (!used.has(bounded.toLocaleLowerCase()) && !beginnings.has(beginningWord(bounded))) label = bounded;
     }
@@ -89,8 +100,7 @@ export function retryNameBob(firstNameValue, currentLabels, { usedLabels = [] } 
   const firstName = firstNameFromRosterLine(firstNameValue);
   const labels = Array.from(currentLabels || [], (label) => String(label).trim()).filter(Boolean);
   if (!firstName) return Object.freeze({ ok: false, reason: "student-name-required", labels: Object.freeze(labels) });
-  const marker = `${firstName}bob`.toLocaleLowerCase();
-  const index = labels.findIndex((label) => label.toLocaleLowerCase().includes(marker));
+  const index = labels.findIndex((label) => labelContainsName(label, firstName));
   if (index < 0) return Object.freeze({ ok: false, reason: "student-not-found", labels: Object.freeze(labels) });
   const otherLabels = labels.filter((_, labelIndex) => labelIndex !== index);
   const generated = generateNameBobs(firstName, { usedLabels: [...usedLabels, ...labels], usedBeginningWords: otherLabels });

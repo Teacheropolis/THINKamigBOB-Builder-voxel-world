@@ -1590,7 +1590,7 @@ function classroomSetupMarkup() {
         <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
         <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
       </div>
-      <p class="platform-namebob-help">Examples: Brava AvaBob or LiamBob Fizziam. Every student in the class gets a different beginning word, and names used in your other classes are automatically avoided.</p>
+      <p class="platform-namebob-help">Examples: Brava AvaBob, BravaBob Ava, LiamBob Fizziam, or Liam FizziamBob. Every student in the class gets a different beginning word, and names used in your other classes are automatically avoided.</p>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs—or enter your own labels.</p>
       <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
       <p class="platform-error" data-error role="alert" hidden></p>

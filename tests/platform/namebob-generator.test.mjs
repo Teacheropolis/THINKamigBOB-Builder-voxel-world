@@ -11,10 +11,19 @@ test("extracts first names from typed and common pasted roster lines", () => {
 test("generates editable memorable labels containing the first name and Bob", () => {
   const result = generateNameBobs("Ava\nLiam\nLily");
   assert.equal(result.labels.length, 3);
-  assert.match(result.labels[0], /AvaBob/i);
-  assert.match(result.labels[1], /LiamBob/i);
-  assert.match(result.labels[2], /LilyBob/i);
+  assert.match(result.labels[0], /Ava/i);
+  assert.match(result.labels[1], /Liam/i);
+  assert.match(result.labels[2], /Lily/i);
+  assert.equal(result.labels.every((label) => /Bob/i.test(label)), true);
   assert.equal(new Set(result.labels.map((label) => label.toLowerCase())).size, 3);
+});
+
+test("can attach Bob to either the student name or the rhyming word", () => {
+  const names = ["Ava", "Liam", "Mia", "Noah", "Lily", "Riley", "Emma", "Mason"];
+  const labels = generateNameBobs(names).labels;
+  assert.equal(labels.every((label) => /bob/i.test(label)), true);
+  assert.equal(labels.some((label, index) => !new RegExp(`${names[index]}Bob`, "i").test(label)), true);
+  assert.equal(labels.every((label, index) => new RegExp(names[index], "i").test(label)), true);
 });
 
 test("avoids labels used in earlier classes and resolves repeated first names", () => {
@@ -37,7 +46,8 @@ test("retries one student's label without changing the rest of the class", () =>
   assert.equal(result.ok, true);
   assert.equal(result.labels[0], original[0]);
   assert.notEqual(result.labels[1], original[1]);
-  assert.match(result.labels[1], /LiamBob/i);
+  assert.match(result.labels[1], /Liam/i);
+  assert.match(result.labels[1], /Bob/i);
   assert.equal(result.labels[2], original[2]);
   const beginnings = result.labels.map((label) => label.split(/\s+/)[0].toLowerCase());
   assert.equal(new Set(beginnings).size, result.labels.length);

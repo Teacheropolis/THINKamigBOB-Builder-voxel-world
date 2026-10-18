@@ -1713,6 +1713,13 @@ function boundedLabel(value) {
 function beginningWord(value) {
   return String(value || "").trim().split(/\s+/)[0].toLocaleLowerCase();
 }
+function labelContainsName(label, firstName) {
+  const wanted = firstName.toLocaleLowerCase();
+  return String(label || "").split(/\s+/).some((word) => {
+    const normalized = cleanName(word).toLocaleLowerCase();
+    return normalized === wanted || normalized === `${wanted}bob`;
+  });
+}
 function generateNameBobs(value, { usedLabels = [], usedBeginningWords = [] } = {}) {
   const lines = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
   const firstNames = lines.map(firstNameFromRosterLine).filter(Boolean);
@@ -1725,7 +1732,12 @@ function generateNameBobs(value, { usedLabels = [], usedBeginningWords = [] } = 
     let label = "";
     for (let attempt = 0; attempt < 24 && !label; attempt += 1) {
       const rhyme = rhymes[(seed + attempt) % rhymes.length];
-      const candidate = attempt % 2 === 0 ? `${rhyme} ${firstName}Bob` : `${firstName}Bob ${rhyme}`;
+      const candidate = [
+        `${rhyme} ${firstName}Bob`,
+        `${firstName}Bob ${rhyme}`,
+        `${rhyme}Bob ${firstName}`,
+        `${firstName} ${rhyme}Bob`
+      ][(seed + attempt) % 4];
       const bounded = boundedLabel(candidate);
       if (!used.has(bounded.toLocaleLowerCase()) && !beginnings.has(beginningWord(bounded))) label = bounded;
     }
@@ -1745,8 +1757,7 @@ function retryNameBob(firstNameValue, currentLabels, { usedLabels = [] } = {}) {
   const firstName = firstNameFromRosterLine(firstNameValue);
   const labels = Array.from(currentLabels || [], (label) => String(label).trim()).filter(Boolean);
   if (!firstName) return Object.freeze({ ok: false, reason: "student-name-required", labels: Object.freeze(labels) });
-  const marker = `${firstName}bob`.toLocaleLowerCase();
-  const index = labels.findIndex((label) => label.toLocaleLowerCase().includes(marker));
+  const index = labels.findIndex((label) => labelContainsName(label, firstName));
   if (index < 0) return Object.freeze({ ok: false, reason: "student-not-found", labels: Object.freeze(labels) });
   const otherLabels = labels.filter((_, labelIndex) => labelIndex !== index);
   const generated = generateNameBobs(firstName, { usedLabels: [...usedLabels, ...labels], usedBeginningWords: otherLabels });
@@ -3955,7 +3966,7 @@ function classroomSetupMarkup() {
         <label for="production-namebob-retry">Try a different NameBob <small>Enter one student's first name</small></label>
         <div><input id="production-namebob-retry" name="retryName" maxlength="24"${productionIdentityConfig.enabled ? "" : " disabled"} placeholder="Example: Ava"><button type="button" data-action="retry-namebob"${productionIdentityConfig.enabled ? "" : " disabled"}>Retry This Name</button></div>
       </div>
-      <p class="platform-namebob-help">Examples: Brava AvaBob or LiamBob Fizziam. Every student in the class gets a different beginning word, and names used in your other classes are automatically avoided.</p>
+      <p class="platform-namebob-help">Examples: Brava AvaBob, BravaBob Ava, LiamBob Fizziam, or Liam FizziamBob. Every student in the class gets a different beginning word, and names used in your other classes are automatically avoided.</p>
       <p class="platform-entry-status" data-namebob-status role="status" aria-live="polite">Paste a class list, then generate NameBobs\u2014or enter your own labels.</p>
       <button type="submit"${productionIdentityConfig.enabled ? "" : " disabled"}>Create Class &amp; Codes</button>
       <p class="platform-error" data-error role="alert" hidden></p>
