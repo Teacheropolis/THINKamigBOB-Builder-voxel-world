@@ -802,6 +802,9 @@ summary:focus-visible {
 .platform-captains-log-prompt { padding: 0.8rem; border-left: 5px solid var(--platform-gold); background: #fff7d6; font-size: 1.05rem; }
 .platform-captains-log-planner form[data-form="captains-log-week-plan"] { grid-template-columns: 1fr; }
 .platform-captains-log-week { max-width: 11rem; }
+.platform-captains-log-week-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 0.55rem 0.75rem; margin-bottom: 0.65rem; padding: 0.6rem; border: 1px solid #d6c58b; border-radius: 0.55rem; background: #fff8dc; }
+.platform-captains-log-week-controls label { min-width: 10rem; font-size: 0.78rem; }
+.platform-captains-log-week-controls button { min-height: 2.35rem; }
 .platform-captains-log-days { display: grid; gap: 0.45rem; }
 .platform-captains-log-day { display: grid; grid-template-columns: 7rem minmax(16rem, 1.4fr) minmax(14rem, 1fr) auto; gap: 0.55rem; align-items: end; padding: 0.5rem 0.6rem; border: 1px solid #d6c58b; border-radius: 0.55rem; background: rgba(255,255,255,0.72); }
 .platform-captains-log-day label { font-size: 0.76rem; }

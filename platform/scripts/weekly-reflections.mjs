@@ -77,8 +77,21 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     write(all);
     return { ok: true, required };
   };
+  const activeCaptainLogWeek = (classId) => Math.max(1, Math.min(7, Number(readAll().captainLogActiveWeeks?.[classId] ?? 1)));
+  const setActiveCaptainLogWeek = (classId, week) => {
+    const value = Number(week);
+    if (!classId || !Number.isInteger(value) || value < 1 || value > 7) return { ok: false };
+    const all = readAll();
+    const stored = all.captainLogWeekPlans?.[classId]?.[value] ?? all.captainLogWeekPlans?.[classId];
+    const enabledCount = stored?.days ? CAPTAINS_LOG_WEEKDAYS.filter((day) => stored.days[day]?.enabled).length : requirement(classId);
+    all.captainLogActiveWeeks = { ...(all.captainLogActiveWeeks ?? {}), [classId]: value };
+    all.requirements = { ...(all.requirements ?? {}), [classWeek(classId)]: enabledCount };
+    write(all);
+    return { ok: true, week: value };
+  };
   const captainLogPlan = (classId) => {
-    const weekly = readAll().captainLogWeekPlans?.[classId];
+    const activeWeek = activeCaptainLogWeek(classId);
+    const weekly = readAll().captainLogWeekPlans?.[classId]?.[activeWeek] ?? readAll().captainLogWeekPlans?.[classId];
     if (weekly?.days) {
       const today = new Date(now()).toLocaleDateString("en-US", { weekday: "long" });
       return weekly.days[today] ?? weekly.days[CAPTAINS_LOG_WEEKDAYS.find((day) => weekly.days[day]?.enabled)] ?? { prompt: "", promptId: "custom", week: weekly.week ?? 1, schedule: today, required: requirement(classId) };
@@ -87,15 +100,17 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     const fallback = CAPTAINS_LOG_PRESET_PROMPTS[0];
     return saved && typeof saved.prompt === "string" ? saved : { prompt: fallback.prompt, promptId: fallback.id, week: 1, schedule: "Today", required: requirement(classId), updatedAt: null };
   };
-  const captainLogWeekPlan = (classId) => {
-    const saved = readAll().captainLogWeekPlans?.[classId];
+  const captainLogWeekPlan = (classId, requestedWeek = activeCaptainLogWeek(classId)) => {
+    const week = Math.max(1, Math.min(7, Number(requestedWeek) || 1));
+    const stored = readAll().captainLogWeekPlans?.[classId];
+    const saved = stored?.[week] ?? (stored?.days && Number(stored.week) === week ? stored : null);
     if (saved?.days) return saved;
     const legacy = readAll().captainLogPlans?.[classId];
     const days = Object.fromEntries(CAPTAINS_LOG_WEEKDAYS.map((day, index) => {
       const preset = CAPTAINS_LOG_PRESET_PROMPTS[index];
       return [day, { enabled: legacy ? day === legacy.schedule || legacy.schedule === "Today" && index === 0 : true, promptId: legacy?.promptId ?? preset.id, prompt: legacy?.prompt ?? preset.prompt }];
     }));
-    return { week: legacy?.week ?? 1, days };
+    return { week, days };
   };
   const saveCaptainLogWeekPlan = (classId, value) => {
     const week = Number(value?.week), days = {};
@@ -106,26 +121,28 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
       days[day] = { enabled: Boolean(entry.enabled), promptId: String(entry.promptId ?? "custom"), prompt };
     }
     const all = readAll(), plan = { week, days, updatedAt: new Date(now()).toISOString() };
-    all.captainLogWeekPlans = { ...(all.captainLogWeekPlans ?? {}), [classId]: plan };
-    all.requirements = { ...(all.requirements ?? {}), [classWeek(classId)]: CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length };
+    const classPlans = all.captainLogWeekPlans?.[classId]?.days ? { [all.captainLogWeekPlans[classId].week ?? 1]: all.captainLogWeekPlans[classId] } : { ...(all.captainLogWeekPlans?.[classId] ?? {}) };
+    all.captainLogWeekPlans = { ...(all.captainLogWeekPlans ?? {}), [classId]: { ...classPlans, [week]: plan } };
+    if (activeCaptainLogWeek(classId) === week) all.requirements = { ...(all.requirements ?? {}), [classWeek(classId)]: CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length };
     write(all);
     return { ok: true, plan };
   };
-  const copyCaptainLogWeekPlan = (sourceClassId, targetClassIds, selectedDays = CAPTAINS_LOG_WEEKDAYS) => {
-    const source = captainLogWeekPlan(sourceClassId), targets = [...new Set(targetClassIds)].filter((id) => id && id !== sourceClassId);
+  const copyCaptainLogWeekPlan = (sourceClassId, targetClassIds, selectedDays = CAPTAINS_LOG_WEEKDAYS, requestedWeek = activeCaptainLogWeek(sourceClassId)) => {
+    const sourceWeek = Math.max(1, Math.min(7, Number(requestedWeek) || 1)), source = captainLogWeekPlan(sourceClassId, sourceWeek), targets = [...new Set(targetClassIds)].filter((id) => id && id !== sourceClassId);
     const chosen = selectedDays.filter((day) => CAPTAINS_LOG_WEEKDAYS.includes(day));
     if (!sourceClassId || !targets.length || !chosen.length) return { ok: false, copied: 0 };
     const all = readAll(); all.captainLogWeekPlans = { ...(all.captainLogWeekPlans ?? {}) }; all.requirements = { ...(all.requirements ?? {}) };
     targets.forEach((targetId) => {
-      const existing = captainLogWeekPlan(targetId), days = { ...existing.days };
+      const existing = captainLogWeekPlan(targetId, sourceWeek), days = { ...existing.days };
       chosen.forEach((day) => { days[day] = { ...source.days[day] }; });
-      all.captainLogWeekPlans[targetId] = { week: source.week, days, updatedAt: new Date(now()).toISOString() };
-      all.requirements[classWeek(targetId)] = CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length;
+      const targetPlans = all.captainLogWeekPlans[targetId]?.days ? { [all.captainLogWeekPlans[targetId].week ?? 1]: all.captainLogWeekPlans[targetId] } : { ...(all.captainLogWeekPlans[targetId] ?? {}) };
+      all.captainLogWeekPlans[targetId] = { ...targetPlans, [sourceWeek]: { week: sourceWeek, days, updatedAt: new Date(now()).toISOString() } };
+      if (activeCaptainLogWeek(targetId) === sourceWeek) all.requirements[classWeek(targetId)] = CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length;
     });
     write(all); return { ok: true, copied: targets.length };
   };
   const captainLogAvailableToday = (classId) => {
-    const weekly = readAll().captainLogWeekPlans?.[classId];
+    const activeWeek = activeCaptainLogWeek(classId), weekly = readAll().captainLogWeekPlans?.[classId]?.[activeWeek] ?? readAll().captainLogWeekPlans?.[classId];
     if (weekly?.days) return Boolean(weekly.days[new Date(now()).toLocaleDateString("en-US", { weekday: "long" })]?.enabled);
     const schedule = captainLogPlan(classId).schedule;
     return schedule === "Today" || schedule === new Date(now()).toLocaleDateString("en-US", { weekday: "long" });
@@ -193,5 +210,5 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     write(all);
     return { ok: true, status: status(classId, studentId) };
   };
-  return { requirement, setRequirement, captainLogPlan, captainLogWeekPlan, saveCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
+  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogWeekPlan, saveCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
 }

@@ -16,6 +16,7 @@ test("Captain's Log provides a seven-week AMIG prompt progression", () => {
 
 test("teacher can schedule a prompt and update the weekly requirement", () => {
   const reflections = createWeeklyReflections({ storage: memoryStorage(), now: () => new Date("2026-10-19T12:00:00Z") });
+  reflections.setActiveCaptainLogWeek("class-1", 2);
   const result = reflections.saveCaptainLogPlan("class-1", { promptId: "week-3-improve", prompt: "What did you improve?", week: 3, schedule: "Monday", required: 2 });
   assert.equal(result.ok, true);
   assert.equal(reflections.captainLogPlan("class-1").prompt, "What did you improve?");
@@ -36,6 +37,7 @@ test("custom prompts can be saved once and removed from the library", () => {
 
 test("teacher can assign five different weekday prompts", () => {
   const reflections = createWeeklyReflections({ storage: memoryStorage(), now: () => new Date("2026-10-19T12:00:00Z") });
+  reflections.setActiveCaptainLogWeek("class-1", 2);
   const days = Object.fromEntries(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => [day, { enabled: true, promptId: `prompt-${index}`, prompt: `Different prompt number ${index + 1}?` }]));
   const result = reflections.saveCaptainLogWeekPlan("class-1", { week: 2, days });
   assert.equal(result.ok, true);
@@ -48,8 +50,18 @@ test("five-day plan can be copied to other classes", () => {
   const reflections = createWeeklyReflections({ storage: memoryStorage(), now: () => new Date("2026-10-19T12:00:00Z") });
   const days = Object.fromEntries(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => [day, { enabled: true, promptId: `prompt-${index}`, prompt: `Class prompt number ${index + 1}?` }]));
   reflections.saveCaptainLogWeekPlan("source", { week: 4, days });
-  const result = reflections.copyCaptainLogWeekPlan("source", ["class-2", "class-3"]);
+  const result = reflections.copyCaptainLogWeekPlan("source", ["class-2", "class-3"], ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], 4);
   assert.deepEqual(result, { ok: true, copied: 2 });
-  assert.equal(reflections.captainLogWeekPlan("class-2").days.Wednesday.prompt, "Class prompt number 3?");
-  assert.equal(reflections.requirement("class-3"), 5);
+  assert.equal(reflections.captainLogWeekPlan("class-2", 4).days.Wednesday.prompt, "Class prompt number 3?");
+  assert.equal(reflections.requirement("class-3"), 1);
+});
+
+test("all seven class weeks are stored independently", () => {
+  const reflections = createWeeklyReflections({ storage: memoryStorage(), now: () => new Date("2026-10-19T12:00:00Z") });
+  const makeDays = (week) => Object.fromEntries(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => [day, { enabled: true, promptId: `week-${week}-${index}`, prompt: `Week ${week} prompt ${index + 1}?` }]));
+  for (let week = 1; week <= 7; week += 1) reflections.saveCaptainLogWeekPlan("class-1", { week, days: makeDays(week) });
+  assert.equal(reflections.captainLogWeekPlan("class-1", 1).days.Monday.prompt, "Week 1 prompt 1?");
+  assert.equal(reflections.captainLogWeekPlan("class-1", 7).days.Friday.prompt, "Week 7 prompt 5?");
+  reflections.setActiveCaptainLogWeek("class-1", 7);
+  assert.equal(reflections.captainLogPlan("class-1").prompt, "Week 7 prompt 1?");
 });
