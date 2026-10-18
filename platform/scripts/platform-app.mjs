@@ -57,8 +57,10 @@ import { CLASS_RESOURCE_STORAGE_KEY, createClassResourceSharing, RESOURCE_RELEAS
 import { ACTIVITY_DIRECTIONS_STORAGE_KEY, createActivityDirections } from "./activity-directions.mjs?v=preview-20261016-2";
 import {
   CAPTAINS_LOG_PRESET_PROMPTS,
+  CAPTAINS_LOG_ASSIGNMENT_OPTIONS,
   CAPTAINS_LOG_SCHEDULE_OPTIONS,
   CAPTAINS_LOG_WEEKDAYS,
+  captainLogCoachingQuestions,
   createWeeklyReflections,
   REFLECTION_ACTIVITY_RATING_OPTIONS,
   REFLECTION_BADGE_OPTIONS,
@@ -107,7 +109,7 @@ const classTimerSchedule = createBrowserClassTimerSchedule(window);
 const teacherMemo = createTeacherMemoStore({ storage: window.sessionStorage });
 const messageLibrary = createBrowserMessageLibrary(window);
 const pilotTeacherClasses = getClassesForTeacher("teacher-preview-1");
-const classSetupProfiles = createBrowserClassSetupProfiles(window, pilotTeacherClasses.map((item) => item.id));
+let classSetupProfiles = createBrowserClassSetupProfiles(window, pilotTeacherClasses.map((item) => item.id));
 const classResourceSharing = createClassResourceSharing({ storage: window.localStorage });
 const activityDirections = createActivityDirections({ storage: window.localStorage });
 const weeklyReflections = createWeeklyReflections({ storage: window.localStorage });
@@ -138,6 +140,7 @@ function productionClassRecord(classroom = {}) {
 
 function setProductionTeacherClasses(classrooms = [], preferredClassId = "") {
   productionTeacherClasses = classrooms.map(productionClassRecord).filter((item) => item.id);
+  classSetupProfiles = createBrowserClassSetupProfiles(window, productionTeacherClasses.map((item) => item.id));
   const saved = preferredClassId || window.sessionStorage.getItem(PRODUCTION_CURRENT_CLASS_KEY) || "";
   const selected = productionTeacherClasses.some((item) => item.id === saved) ? saved : productionTeacherClasses[0]?.id || "";
   if (selected) window.sessionStorage.setItem(PRODUCTION_CURRENT_CLASS_KEY, selected);
@@ -957,6 +960,20 @@ function classReadiness(classId) {
   return { mission: "previous", timer: "saved", safeguards: "saved", ...(classSetupProfiles.profile(classId)?.readiness ?? {}) };
 }
 
+function currentRotationWeek(classId) {
+  const saved = Number(classSetupProfiles.profile(classId)?.rotationWeek);
+  if (Number.isInteger(saved) && saved >= 1 && saved <= 7) return saved;
+  return weeklyReflections.activeCaptainLogWeek(classId);
+}
+
+function saveCurrentRotationWeek(classId, requestedWeek) {
+  const week = Math.max(1, Math.min(7, Number(requestedWeek) || 1));
+  const profile = classSetupProfiles.profile(classId) ?? {};
+  classSetupProfiles.save(classId, { ...profile, rotationWeek: week });
+  weeklyReflections.setActiveCaptainLogWeek(classId, week);
+  return week;
+}
+
 function automaticGoalsForClass(classId) {
   const classRecord = getClassById(classId);
   const resources = classResourceSharing.read(classId).audienceRows.flatMap((row) => row.resources);
@@ -1248,12 +1265,17 @@ function studentReflectionMarkup(reflectionStatus, teacherActivities, reflection
   const due = new Date(reflectionActivityWindowStart(new Date()) + (6 * 24 * 60 * 60 * 1000));
   const dueLabel = due.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
   const plan = weeklyReflections.captainLogPlan(classId);
-  return `<section class="platform-student-reflection platform-student-reflection-inline platform-student-zone platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><div class="platform-student-step-heading"><img src="./assets/images/student-path/captains-log-brass-badge.png" alt=""><h2 id="reflection-check-title">Captain’s Log</h2></div><p class="platform-student-status" data-weekly-reflection-status>${reflectionStatus.remaining === 0 ? `Done! ${reflectionStatus.completed} finished this week.` : `Exit ticket · ${escapeHtml(plan.schedule)} · Due ${escapeHtml(dueLabel)}.`}</p>${reflectionStatus.remaining === 0 ? "" : `<details class="platform-student-reflection-form"><summary>Open Captain’s Log</summary><form data-form="weekly-reflection" novalidate><p class="platform-captains-log-prompt"><strong>${escapeHtml(plan.prompt)}</strong></p><label for="weekly-reflection-activity">Activity Worked On Today</label><select id="weekly-reflection-activity" name="activityChoice" required><option value="">Choose an activity</option>${teacherActivities.map((activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activity)}</option>`).join("")}<option value="__other__">Other activity — type my own</option></select><label data-reflection-other-activity hidden>Type the activity name<input name="activityOther" maxlength="120"></label><label for="weekly-reflection-progress">Mission Progress</label><select id="weekly-reflection-progress" name="progress" required>${reflectionOptions(REFLECTION_PROGRESS_OPTIONS)}</select><label for="weekly-reflection-response">Your answer</label><textarea id="weekly-reflection-response" name="explanation" minlength="10" maxlength="500" required></textarea><button class="platform-reflection-speech-button" type="button" data-action="reflection-dictate" aria-pressed="false">Speak Answer</button><button class="platform-reflection-speech-stop" type="button" data-action="reflection-dictate-stop" hidden>Stop Speaking</button><p class="platform-reflection-speech-status" data-reflection-speech-status role="status">Type or speak.</p><label>Did you improve your idea?<select name="improved" required>${reflectionOptions(REFLECTION_IMPROVEMENT_OPTIONS)}</select></label><label>Badge<select name="badge" required>${reflectionOptions(REFLECTION_BADGE_OPTIONS)}</select></label><label>Need help next class?<select name="help" required>${reflectionOptions(REFLECTION_HELP_OPTIONS)}</select></label><label>Could you help someone?<select name="helpOther" required>${reflectionOptions(REFLECTION_HELP_OTHER_OPTIONS)}</select></label><label>How did it go?<select name="rating" required>${reflectionOptions(REFLECTION_ACTIVITY_RATING_OPTIONS)}</select></label><button type="submit">Finish Log</button><p class="platform-error" data-weekly-reflection-error role="alert" hidden></p></form></details>`}</section>`;
+  const choices = weeklyReflections.captainLogChoices(classId, session.read().studentId);
+  const promptChoice = choices.length > 1
+    ? `<label class="platform-student-prompt-choice">Choose a prompt<select name="promptId" required><option value="">Choose one</option>${choices.map((item) => `<option value="${escapeHtml(item.promptId)}">${escapeHtml(item.prompt)}</option>`).join("")}</select></label>`
+    : `<input type="hidden" name="promptId" value="${escapeHtml(choices[0]?.promptId ?? plan.promptId)}"><p class="platform-captains-log-prompt"><strong>${escapeHtml(choices[0]?.prompt ?? plan.prompt)}</strong></p>`;
+  return `<section class="platform-student-reflection platform-student-reflection-inline platform-student-zone platform-student-zone-review platform-student-trail-stop platform-student-trail-stop-right" data-reflection-state="${reflectionStatus.state}" aria-labelledby="reflection-check-title"><p class="platform-student-section-label">Step 4</p><div class="platform-student-step-heading"><img src="./assets/images/student-path/captains-log-brass-badge.png" alt=""><h2 id="reflection-check-title">Captain’s Log</h2></div><p class="platform-student-status" data-weekly-reflection-status>${reflectionStatus.remaining === 0 ? `Done! ${reflectionStatus.completed} finished this week.` : `Exit ticket · ${reflectionStatus.remaining} left this week · Due ${escapeHtml(dueLabel)}.`}</p>${reflectionStatus.remaining === 0 ? "" : `<details class="platform-student-reflection-form"><summary>Open Captain’s Log</summary><form data-form="weekly-reflection" data-coaching-started-at="${Date.now()}" novalidate>${promptChoice}<label for="weekly-reflection-activity">Activity Worked On Today</label><select id="weekly-reflection-activity" name="activityChoice" required><option value="">Choose an activity</option>${teacherActivities.map((activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activity)}</option>`).join("")}<option value="__other__">Other activity — type my own</option></select><label data-reflection-other-activity hidden>Type the activity name<input name="activityOther" maxlength="120"></label><label for="weekly-reflection-progress">Mission Progress</label><select id="weekly-reflection-progress" name="progress" required>${reflectionOptions(REFLECTION_PROGRESS_OPTIONS)}</select><label for="weekly-reflection-response">Your answer</label><textarea id="weekly-reflection-response" name="explanation" minlength="10" maxlength="500" required></textarea><button class="platform-reflection-speech-button" type="button" data-action="reflection-dictate" aria-pressed="false">Speak Answer</button><button class="platform-reflection-speech-stop" type="button" data-action="reflection-dictate-stop" hidden>Stop Speaking</button><p class="platform-reflection-speech-status" data-reflection-speech-status role="status">Type or speak.</p><label>Did you improve your idea?<select name="improved" required>${reflectionOptions(REFLECTION_IMPROVEMENT_OPTIONS)}</select></label><label>Badge<select name="badge" required>${reflectionOptions(REFLECTION_BADGE_OPTIONS)}</select></label><label>Need help next class?<select name="help" required>${reflectionOptions(REFLECTION_HELP_OPTIONS)}</select></label><label>Could you help someone?<select name="helpOther" required>${reflectionOptions(REFLECTION_HELP_OTHER_OPTIONS)}</select></label><label>How did it go?<select name="rating" required>${reflectionOptions(REFLECTION_ACTIVITY_RATING_OPTIONS)}</select></label><section class="platform-bob-coaching" data-bob-coaching hidden aria-labelledby="bob-coaching-title"><h3 id="bob-coaching-title">Bob’s Next Questions</h3><p>Show a little more of your thinking.</p><div data-bob-coaching-questions></div></section><button type="submit" data-weekly-reflection-submit>Continue with Bob</button><p class="platform-error" data-weekly-reflection-error role="alert" hidden></p></form></details>`}</section>`;
 }
 
 function captainsLogPlannerMarkup(classId) {
-  const editorWeek = captainLogEditorWeek(classId), activeWeek = weeklyReflections.activeCaptainLogWeek(classId);
+  const editorWeek = captainLogEditorWeek(classId), activeWeek = currentRotationWeek(classId);
   const plan = weeklyReflections.captainLogWeekPlan(classId, editorWeek), library = weeklyReflections.captainLogLibrary();
+  const required = Number(plan.required ?? weeklyReflections.requirement(classId));
   const choices = [...CAPTAINS_LOG_PRESET_PROMPTS, ...library.map((item) => ({ ...item, label: "Saved" }))];
   const state = session.read();
   const classes = productionIdentityConfig.enabled && productionTeacherClasses.length ? productionTeacherClasses : getClassesForTeacher(state.teacherId);
@@ -1261,9 +1283,12 @@ function captainsLogPlannerMarkup(classId) {
   const dayRows = CAPTAINS_LOG_WEEKDAYS.map((day, index) => {
     const entry = plan.days[day], selectedId = choices.some((item) => item.id === entry.promptId) ? entry.promptId : "custom";
     const custom = selectedId === "custom";
-    return `<div class="platform-captains-log-day" data-captains-log-day="${day}"><label class="platform-captains-log-day-toggle"><input type="checkbox" name="enabled-${day}"${entry.enabled ? " checked" : ""}> <strong>Prompt ${index + 1}</strong></label><label class="platform-captains-log-choice">Choose prompt<select name="promptId-${day}" data-captains-log-prompt-choice><option value="custom"${custom ? " selected" : ""}>Create a new prompt</option>${choices.map((item) => `<option value="${escapeHtml(item.id)}"${selectedId === item.id ? " selected" : ""}>${item.week ? `Week ${item.week} · ` : "Library · "}${escapeHtml(item.label)} — ${escapeHtml(item.prompt)}</option>`).join("")}</select></label><div class="platform-captains-log-custom-row" data-captains-log-custom-row${custom ? "" : " hidden"}><label>Prompt text<input name="prompt-${day}" value="${escapeHtml(entry.prompt)}" minlength="5" maxlength="240"></label><label class="platform-captains-log-library-choice"><input type="checkbox" name="save-${day}"> Save to library</label></div></div>`;
+    const assignment = CAPTAINS_LOG_ASSIGNMENT_OPTIONS.includes(entry.assignment) ? entry.assignment : day;
+    return `<div class="platform-captains-log-day" data-captains-log-day="${day}"><label class="platform-captains-log-day-toggle"><input type="checkbox" name="enabled-${day}"${entry.enabled ? " checked" : ""}> <strong>Prompt ${index + 1}</strong></label><label class="platform-captains-log-choice">Choose prompt<select name="promptId-${day}" data-captains-log-prompt-choice><option value="custom"${custom ? " selected" : ""}>Create a new prompt</option>${choices.map((item) => `<option value="${escapeHtml(item.id)}"${selectedId === item.id ? " selected" : ""}>${item.week ? "" : "Library · "}${escapeHtml(item.label)} — ${escapeHtml(item.prompt)}</option>`).join("")}</select></label><label class="platform-captains-log-assignment">Offer this prompt<select name="assignment-${day}">${CAPTAINS_LOG_ASSIGNMENT_OPTIONS.map((option) => `<option value="${option}"${assignment === option ? " selected" : ""}>${option}</option>`).join("")}</select></label><div class="platform-captains-log-custom-row" data-captains-log-custom-row${custom ? "" : " hidden"}><label>Prompt text<input name="prompt-${day}" value="${escapeHtml(entry.prompt)}" minlength="5" maxlength="240"></label><label class="platform-captains-log-library-choice"><input type="checkbox" name="save-${day}"> Save to library</label></div></div>`;
   }).join("");
-  return `<section class="platform-command-card platform-captains-log-planner" aria-labelledby="captains-log-planner-title" data-captains-log-editor-week="${editorWeek}"><p class="platform-command-label">Exit tickets</p><h3 id="captains-log-planner-title">Plan the Captain’s Log</h3><p>Each class keeps seven separate five-day plans. Editing a future week does not change what students see.</p><div class="platform-captains-log-week-controls"><label>Edit plan for<select data-captains-log-editor-week>${CAPTAINS_LOG_PRESET_PROMPTS.map((item) => `<option value="${item.week}"${editorWeek === item.week ? " selected" : ""}>Week ${item.week}</option>`).join("")}</select></label><label>Current student week<select data-captains-log-active-week>${CAPTAINS_LOG_PRESET_PROMPTS.map((item) => `<option value="${item.week}"${activeWeek === item.week ? " selected" : ""}>Week ${item.week}</option>`).join("")}</select></label><button type="button" data-action="set-active-captains-log-week">Use Selected Week for Students</button></div><form data-form="captains-log-week-plan" novalidate><input type="hidden" name="week" value="${editorWeek}"><div class="platform-captains-log-days">${dayRows}</div><button type="submit">Save Week ${editorWeek} Plan</button><p data-captains-log-status role="status">Week ${editorWeek}: ${CAPTAINS_LOG_WEEKDAYS.filter((day) => plan.days[day].enabled).length} Captain’s Log${CAPTAINS_LOG_WEEKDAYS.filter((day) => plan.days[day].enabled).length === 1 ? "" : "s"} planned.${editorWeek === activeWeek ? " This is the current student week." : " Saved separately from the current student week."}</p></form>${otherClasses.length ? `<details class="platform-captains-log-copy"><summary>Copy Week ${editorWeek} to other classes</summary><fieldset><legend>Copy to</legend>${otherClasses.map((item) => `<label><input type="checkbox" data-captains-log-copy-target value="${escapeHtml(item.id)}"> ${escapeHtml(item.periodLabel || item.displayName)}${item.periodLabel ? ` — ${escapeHtml(item.displayName)}` : ""}</label>`).join("")}</fieldset><button type="button" data-action="copy-captains-log-week">Copy Week ${editorWeek} Plan</button><p data-captains-log-copy-status role="status">Choose one or more classes.</p></details>` : ""}${library.length ? `<details class="platform-captains-log-library"><summary>My Prompt Library (${library.length})</summary>${library.map((item) => `<div><span>${escapeHtml(item.prompt)}</span><button type="button" data-action="delete-captains-log-prompt" data-prompt-id="${escapeHtml(item.id)}">Delete</button></div>`).join("")}</details>` : ""}</section>`;
+  const enabledCount = CAPTAINS_LOG_WEEKDAYS.filter((day) => plan.days[day].enabled).length;
+  const assignedCount = CAPTAINS_LOG_WEEKDAYS.filter((day) => plan.days[day].enabled && (plan.days[day].assignment ?? day) !== "Daily student choice").length;
+  return `<section class="platform-command-card platform-captains-log-planner" aria-labelledby="captains-log-planner-title" data-captains-log-editor-week="${editorWeek}"><p class="platform-command-label">Exit tickets</p><h3 id="captains-log-planner-title">Plan the Captain’s Log</h3><p>Each class keeps seven separate five-day plans. Editing a future week does not change what students see.</p><div class="platform-captains-log-week-controls"><label>Edit plan for<select data-captains-log-editor-week>${CAPTAINS_LOG_PRESET_PROMPTS.map((item) => `<option value="${item.week}"${editorWeek === item.week ? " selected" : ""}>Week ${item.week}</option>`).join("")}</select></label><p><strong>Students are on Week ${activeWeek}.</strong> Change the Current Rotation Week in Class Setup.</p></div><form data-form="captains-log-week-plan" novalidate><input type="hidden" name="week" value="${editorWeek}"><div class="platform-captains-log-weekly-goal"><label>Weekly Goal<strong>Students complete</strong><span><select name="required" data-captains-log-required>${[0,1,2,3,4,5].map((count) => `<option value="${count}"${required === count ? " selected" : ""}>${count}</option>`).join("")}</select> different Captain’s Logs this week.</span></label><p data-captains-log-summary><strong>${required} required · ${enabledCount} prompts available</strong><span>${assignedCount} assigned to specific days · ${enabledCount - assignedCount} student choices</span></p></div><div class="platform-captains-log-days">${dayRows}</div><button type="submit">Save Week ${editorWeek} Plan</button><p data-captains-log-status role="status">Week ${editorWeek}: ${enabledCount} Captain’s Log${enabledCount === 1 ? "" : "s"} planned.${editorWeek === activeWeek ? " This is the class’s current rotation week." : ` Students are currently on Week ${activeWeek}.`}</p></form>${otherClasses.length ? `<details class="platform-captains-log-copy"><summary>Copy Week ${editorWeek} to other classes</summary><fieldset><legend>Copy to</legend>${otherClasses.map((item) => `<label><input type="checkbox" data-captains-log-copy-target value="${escapeHtml(item.id)}"> ${escapeHtml(item.periodLabel || item.displayName)}${item.periodLabel ? ` — ${escapeHtml(item.displayName)}` : ""}</label>`).join("")}</fieldset><button type="button" data-action="copy-captains-log-week">Copy Week ${editorWeek} Plan</button><p data-captains-log-copy-status role="status">Choose one or more classes.</p></details>` : ""}${library.length ? `<details class="platform-captains-log-library"><summary>My Prompt Library (${library.length})</summary>${library.map((item) => `<div><span>${escapeHtml(item.prompt)}</span><button type="button" data-action="delete-captains-log-prompt" data-prompt-id="${escapeHtml(item.id)}">Delete</button></div>`).join("")}</details>` : ""}</section>`;
 }
 
 function weeklyReflectionTeacherMarkup(classId) {
@@ -1750,12 +1775,14 @@ function teacherSetupMarkup() {
 
 function classTimerScheduleMarkup(classId = "class-preview-1", { showBackToToday = true } = {}) {
   const schedule = classTimerSchedule.read();
+  const rotationWeek = currentRotationWeek(classId);
   const library = messageLibrary.read();
   const timeZones = ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu"];
   const soundOptions = (selected) => TIMER_SOUND_OPTIONS.map((sound) => `<option value="${sound}"${selected === sound ? " selected" : ""}>${sound}</option>`).join("");
   return `<section id="teacher-class-schedule" class="platform-classroom-setup platform-class-timer-schedule platform-manage-step" aria-labelledby="class-timer-schedule-title" data-manage-step="2">
     <div class="platform-manage-step-heading"><span aria-hidden="true">2</span><div><p class="platform-command-label">Set it once</p><h3 id="class-timer-schedule-title">Class Schedule</h3><p>Choose when this class meets. Detailed timer options are available below.</p></div></div>
     <form data-form="class-timer-schedule" novalidate>
+      <label class="platform-current-rotation-week"><strong>Current Rotation Week</strong><select name="rotationWeek" data-current-rotation-week>${CAPTAINS_LOG_PRESET_PROMPTS.map((item) => `<option value="${item.week}"${rotationWeek === item.week ? " selected" : ""}>Week ${item.week}</option>`).join("")}</select><small>Captain’s Log and student activities follow this class week automatically.</small></label>
       <label class="platform-evidence-drive-confirmation"><input type="checkbox" name="enabled" value="yes"${schedule.enabled ? " checked" : ""}> Automatically run the timer on scheduled school days.</label>
       <fieldset><legend>Weekdays</legend>${WEEKDAYS.map((day) => `<label><input type="checkbox" name="weekdays" value="${day}"${schedule.weekdays.includes(day) ? " checked" : ""}> ${day}</label>`).join("")}</fieldset>
       <label>Class start time<input type="time" name="startTime" value="${schedule.startTime}" required></label>
@@ -3479,20 +3506,38 @@ async function handleSubmit(event) {
       const promptId = String(data.get(`promptId-${day}`) || "custom");
       const selected = [...CAPTAINS_LOG_PRESET_PROMPTS, ...weeklyReflections.captainLogLibrary()].find((item) => item.id === promptId);
       const prompt = promptId === "custom" ? String(data.get(`prompt-${day}`) || "").trim() : String(selected?.prompt || data.get(`prompt-${day}`) || "").trim();
-      days[day] = { enabled: data.get(`enabled-${day}`) === "on", promptId, prompt };
+      days[day] = { enabled: data.get(`enabled-${day}`) === "on", promptId: promptId === "custom" ? `custom-${data.get("week")}-${day.toLowerCase()}` : promptId, prompt, assignment: String(data.get(`assignment-${day}`) || day) };
       if (data.get(`save-${day}`) === "on") weeklyReflections.saveCaptainLogPrompt(prompt);
     });
-    const result = weeklyReflections.saveCaptainLogWeekPlan(classId, { week: Number(data.get("week")), days });
+    const requestedGoal = Number(data.get("required"));
+    const result = weeklyReflections.saveCaptainLogWeekPlan(classId, { week: Number(data.get("week")), days, required: requestedGoal });
     const status = form.querySelector("[data-captains-log-status]");
-    if (status) status.textContent = result.ok ? `Saved ${CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length} Captain’s Logs for Week ${result.plan.week}.` : "Every selected day needs a prompt.";
+    if (status) status.textContent = result.ok ? `Saved: students complete ${result.plan.required} of ${CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length} available Captain’s Logs in Week ${result.plan.week}.` : result.reason === "goal-exceeds-prompts" ? `Add more prompts or lower the weekly goal. Students cannot complete ${requestedGoal} different logs with fewer available prompts.` : "Every selected prompt needs text.";
     if (result.ok) render();
     return;
   }
   if (form.dataset.form === "weekly-reflection") {
     const state = session.read();
     const activityChoice = String(data.get("activityChoice") ?? "");
+    if (form.dataset.coachingReady !== "true") {
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      const questions = captainLogCoachingQuestions({ explanation: data.get("explanation"), progress: data.get("progress"), improved: data.get("improved") }, { elapsedSeconds: Math.max(0, (Date.now() - Number(form.dataset.coachingStartedAt || Date.now())) / 1000) });
+      const region = form.querySelector("[data-bob-coaching]");
+      const list = form.querySelector("[data-bob-coaching-questions]");
+      if (list) list.innerHTML = questions.map((item, index) => `<label data-coaching-question data-dok="${item.dok}" data-question="${escapeHtml(item.question)}"><strong>${index + 1}. ${escapeHtml(item.question)}</strong><textarea name="followUp" minlength="5" maxlength="300" required></textarea></label>`).join("");
+      if (region) region.hidden = false;
+      form.dataset.coachingReady = "true";
+      const submitButton = form.querySelector("[data-weekly-reflection-submit]");
+      if (submitButton) submitButton.textContent = "Submit Captain’s Log";
+      region?.scrollIntoView({ behavior: "smooth", block: "center" });
+      region?.querySelector("textarea")?.focus({ preventScroll: true });
+      return;
+    }
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    const followUps = [...form.querySelectorAll("[data-coaching-question]")].map((label) => ({ dok: Number(label.dataset.dok), question: label.dataset.question, answer: label.querySelector("textarea")?.value }));
     const result = weeklyReflections.submit(state.classId, state.studentId, {
       activity: activityChoice === "__other__" ? data.get("activityOther") : activityChoice,
+      promptId: data.get("promptId"),
       progress: data.get("progress"),
       explanation: data.get("explanation"),
       improved: data.get("improved"),
@@ -3500,6 +3545,7 @@ async function handleSubmit(event) {
       help: data.get("help"),
       helpOther: data.get("helpOther"),
       rating: data.get("rating"),
+      followUps,
     });
     if (!result.ok) {
       const error = form.querySelector("[data-weekly-reflection-error]");
@@ -3689,7 +3735,9 @@ async function handleSubmit(event) {
     } else {
       lessonTimer.setDuration(result.schedule.durationMinutes);
     }
-    preserveCurrentClassSetup(currentTeacherClass(session.read().teacherId)?.id);
+    const classId = currentTeacherClass(session.read().teacherId)?.id;
+    if (classId) saveCurrentRotationWeek(classId, data.get("rotationWeek"));
+    preserveCurrentClassSetup(classId);
     syncLessonTimerPresentation();
     return render();
   }
@@ -7144,16 +7192,6 @@ async function handleClick(event) {
     if (status) status.textContent = result.ok ? `Copied the five-day plan to ${result.copied} class${result.copied === 1 ? "" : "es"}.` : "Choose at least one other class.";
     return;
   }
-  if (action.dataset.action === "set-active-captains-log-week") {
-    const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id;
-    const section = action.closest(".platform-captains-log-planner");
-    const week = Number(section.querySelector("[data-captains-log-active-week]")?.value);
-    const result = weeklyReflections.setActiveCaptainLogWeek(classId, week);
-    if (result.ok) {
-      render();
-    }
-    return;
-  }
   if (action.dataset.action === "save-message-assignments") {
     document.querySelectorAll("[data-message-assignment]").forEach((select) => messageLibrary.assign(action.dataset.classId, select.dataset.messageAssignment, select.value));
     render();
@@ -7757,6 +7795,16 @@ root.addEventListener("change", (event) => {
   }
   const activityTitle = event.target.closest?.("[data-activity-directions-title]");
   if (activityTitle) { const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id; if (classId) activityDirections.setTitle(classId, activityTitle.value); return; }
+  const rotationWeek = event.target.closest?.("[data-current-rotation-week]");
+  if (rotationWeek) {
+    const classId = currentTeacherClass(session.read().teacherId)?.id;
+    if (classId) {
+      const week = saveCurrentRotationWeek(classId, rotationWeek.value);
+      const status = rotationWeek.closest("form")?.querySelector("[data-class-timer-schedule-status]");
+      if (status) status.textContent = `Current Rotation Week saved as Week ${week}. Captain’s Log and student activities now follow Week ${week}.`;
+    }
+    return;
+  }
   if (event.target.matches?.("[data-classroom-bob-enabled], [data-classroom-bob-menu-hidden], [data-classroom-bob-placement], [data-classroom-bob-earn-minutes], [data-classroom-bob-daily-limit]")) {
     const controls = document.querySelector(".platform-classroom-bob-controls"), enabledInput = document.querySelector("[data-classroom-bob-enabled]"), menuInput = document.querySelector("[data-classroom-bob-menu-hidden]");
     const enabled = enabledInput?.checked ?? false;
@@ -8093,6 +8141,16 @@ root.addEventListener("change", (event) => {
       if (usesOther) input.focus();
       else input.value = "";
     }
+    return;
+  }
+  const captainWeekSetting = event.target.closest('[data-form="captains-log-week-plan"] [name^="enabled-"], [data-form="captains-log-week-plan"] [name^="assignment-"], [data-captains-log-required]');
+  if (captainWeekSetting) {
+    const form = captainWeekSetting.closest("form");
+    const enabledRows = [...form.querySelectorAll("[data-captains-log-day]")].filter((row) => row.querySelector('[name^="enabled-"]')?.checked);
+    const assigned = enabledRows.filter((row) => row.querySelector('[name^="assignment-"]')?.value !== "Daily student choice").length;
+    const required = Number(form.elements.required?.value || 0);
+    const summary = form.querySelector("[data-captains-log-summary]");
+    if (summary) summary.innerHTML = `<strong>${required} required · ${enabledRows.length} prompts available</strong><span>${assigned} assigned to specific days · ${enabledRows.length - assigned} student choices</span>${required > enabledRows.length ? `<em>Add ${required - enabledRows.length} more prompt${required - enabledRows.length === 1 ? "" : "s"} or lower the weekly goal.</em>` : ""}`;
     return;
   }
   const captainPromptChoice = event.target.closest('[data-form="captains-log-plan"] [name="promptId"]');

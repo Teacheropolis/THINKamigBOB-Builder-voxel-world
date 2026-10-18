@@ -10,6 +10,7 @@ export const CAPTAINS_LOG_PRESET_PROMPTS = Object.freeze([
 ]);
 export const CAPTAINS_LOG_SCHEDULE_OPTIONS = Object.freeze(["Today", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
 export const CAPTAINS_LOG_WEEKDAYS = Object.freeze(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
+export const CAPTAINS_LOG_ASSIGNMENT_OPTIONS = Object.freeze([...CAPTAINS_LOG_WEEKDAYS, "Daily student choice"]);
 export const REFLECTION_PROGRESS_OPTIONS = Object.freeze(["🌱 Started", "🧪 Testing", "🔧 Improving", "🏆 Complete"]);
 export const REFLECTION_IMPROVEMENT_OPTIONS = Object.freeze(["Yes", "Not Yet"]);
 export const REFLECTION_BADGE_OPTIONS = Object.freeze([
@@ -29,6 +30,28 @@ export const REFLECTION_ACTIVITY_RATING_OPTIONS = Object.freeze([
   "5 = Awesome 🤩", "4 = Good 😊", "3 = Okay 😐", "2 = Difficult 😕", "1 = Frustrating 😫",
 ]);
 
+export function captainLogCoachingQuestions(value = {}, { elapsedSeconds = 0 } = {}) {
+  const response = String(value.explanation ?? "").trim();
+  const words = response.split(/\s+/).filter(Boolean);
+  const writingSignals = [
+    response && !/^[A-Z0-9“”'"(]/.test(response),
+    response && !/[.!?]$/.test(response),
+    /\s{2,}/.test(response),
+    words.length > 4 && !/\b(?:because|so|but|and|then)\b/i.test(response),
+  ].filter(Boolean).length;
+  const slower = Number(elapsedSeconds) >= 240;
+  const needsSupport = slower || words.length < 15 || writingSignals >= 2;
+  const questions = [
+    "What detail from your work best supports your answer?",
+    value.progress === "🏆 Complete"
+      ? "Why did your final idea work?"
+      : value.improved === "Yes" ? "Why did your change make the idea better?" : "What could you change or test next?",
+    "How could you use what you learned in a new problem?",
+  ];
+  const count = slower && writingSignals >= 2 ? 1 : needsSupport ? 2 : words.length >= 24 ? 3 : 2;
+  return questions.slice(0, count).map((question, index) => ({ dok: Math.min(4, index + 2), question }));
+}
+
 function normalizeResponse(value) {
   if (typeof value === "string") return value.trim().length >= 10 && value.trim().length <= 500 ? { reflection: value.trim() } : null;
   if (!value || typeof value !== "object") return null;
@@ -42,7 +65,7 @@ function normalizeResponse(value) {
     && REFLECTION_HELP_OPTIONS.includes(value.help)
     && REFLECTION_HELP_OTHER_OPTIONS.includes(value.helpOther)
     && REFLECTION_ACTIVITY_RATING_OPTIONS.includes(value.rating);
-  return valid ? { activity, progress: value.progress, explanation, improved: value.improved, badge: value.badge, help: value.help, helpOther: value.helpOther, rating: value.rating } : null;
+  return valid ? { activity, promptId: String(value.promptId ?? ""), progress: value.progress, explanation, improved: value.improved, badge: value.badge, help: value.help, helpOther: value.helpOther, rating: value.rating } : null;
 }
 
 export function weekKey(date = new Date()) {
@@ -83,7 +106,7 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     if (!classId || !Number.isInteger(value) || value < 1 || value > 7) return { ok: false };
     const all = readAll();
     const stored = all.captainLogWeekPlans?.[classId]?.[value] ?? all.captainLogWeekPlans?.[classId];
-    const enabledCount = stored?.days ? CAPTAINS_LOG_WEEKDAYS.filter((day) => stored.days[day]?.enabled).length : requirement(classId);
+    const enabledCount = stored?.days ? Math.min(CAPTAINS_LOG_WEEKDAYS.filter((day) => stored.days[day]?.enabled).length, Number(stored.required ?? requirement(classId))) : requirement(classId);
     all.captainLogActiveWeeks = { ...(all.captainLogActiveWeeks ?? {}), [classId]: value };
     all.requirements = { ...(all.requirements ?? {}), [classWeek(classId)]: enabledCount };
     write(all);
@@ -94,7 +117,11 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     const weekly = readAll().captainLogWeekPlans?.[classId]?.[activeWeek] ?? readAll().captainLogWeekPlans?.[classId];
     if (weekly?.days) {
       const today = new Date(now()).toLocaleDateString("en-US", { weekday: "long" });
-      return weekly.days[today] ?? weekly.days[CAPTAINS_LOG_WEEKDAYS.find((day) => weekly.days[day]?.enabled)] ?? { prompt: "", promptId: "custom", week: weekly.week ?? 1, schedule: today, required: requirement(classId) };
+      const entries = CAPTAINS_LOG_WEEKDAYS.map((slot) => weekly.days[slot]).filter(Boolean);
+      return entries.find((entry) => entry.enabled && (entry.assignment ?? entry.schedule) === today)
+        ?? entries.find((entry) => entry.enabled && (entry.assignment ?? entry.schedule) === "Daily student choice")
+        ?? entries.find((entry) => entry.enabled)
+        ?? { prompt: "", promptId: "custom", week: weekly.week ?? 1, schedule: today, required: requirement(classId) };
     }
     const saved = readAll().captainLogPlans?.[classId];
     const fallback = CAPTAINS_LOG_PRESET_PROMPTS[0];
@@ -108,9 +135,9 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     const legacy = readAll().captainLogPlans?.[classId];
     const days = Object.fromEntries(CAPTAINS_LOG_WEEKDAYS.map((day, index) => {
       const preset = CAPTAINS_LOG_PRESET_PROMPTS[index];
-      return [day, { enabled: legacy ? day === legacy.schedule || legacy.schedule === "Today" && index === 0 : true, promptId: legacy?.promptId ?? preset.id, prompt: legacy?.prompt ?? preset.prompt }];
+      return [day, { enabled: legacy ? day === legacy.schedule || legacy.schedule === "Today" && index === 0 : true, promptId: legacy?.promptId ?? preset.id, prompt: legacy?.prompt ?? preset.prompt, assignment: day }];
     }));
-    return { week, days };
+    return { week, days, required: legacy?.required ?? requirement(classId) };
   };
   const saveCaptainLogWeekPlan = (classId, value) => {
     const week = Number(value?.week), days = {};
@@ -118,12 +145,16 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     for (const day of CAPTAINS_LOG_WEEKDAYS) {
       const entry = value?.days?.[day] ?? {}, prompt = String(entry.prompt ?? "").trim();
       if (entry.enabled && (prompt.length < 5 || prompt.length > 240)) return { ok: false };
-      days[day] = { enabled: Boolean(entry.enabled), promptId: String(entry.promptId ?? "custom"), prompt };
+      const assignment = CAPTAINS_LOG_ASSIGNMENT_OPTIONS.includes(entry.assignment) ? entry.assignment : day;
+      days[day] = { enabled: Boolean(entry.enabled), promptId: String(entry.promptId ?? "custom"), prompt, assignment };
     }
-    const all = readAll(), plan = { week, days, updatedAt: new Date(now()).toISOString() };
+    const enabledCount = CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length;
+    const required = Number(value?.required ?? enabledCount);
+    if (!Number.isInteger(required) || required < 0 || required > enabledCount) return { ok: false, reason: "goal-exceeds-prompts" };
+    const all = readAll(), plan = { week, days, required, updatedAt: new Date(now()).toISOString() };
     const classPlans = all.captainLogWeekPlans?.[classId]?.days ? { [all.captainLogWeekPlans[classId].week ?? 1]: all.captainLogWeekPlans[classId] } : { ...(all.captainLogWeekPlans?.[classId] ?? {}) };
     all.captainLogWeekPlans = { ...(all.captainLogWeekPlans ?? {}), [classId]: { ...classPlans, [week]: plan } };
-    if (activeCaptainLogWeek(classId) === week) all.requirements = { ...(all.requirements ?? {}), [classWeek(classId)]: CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length };
+    if (activeCaptainLogWeek(classId) === week) all.requirements = { ...(all.requirements ?? {}), [classWeek(classId)]: required };
     write(all);
     return { ok: true, plan };
   };
@@ -136,16 +167,32 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
       const existing = captainLogWeekPlan(targetId, sourceWeek), days = { ...existing.days };
       chosen.forEach((day) => { days[day] = { ...source.days[day] }; });
       const targetPlans = all.captainLogWeekPlans[targetId]?.days ? { [all.captainLogWeekPlans[targetId].week ?? 1]: all.captainLogWeekPlans[targetId] } : { ...(all.captainLogWeekPlans[targetId] ?? {}) };
-      all.captainLogWeekPlans[targetId] = { ...targetPlans, [sourceWeek]: { week: sourceWeek, days, updatedAt: new Date(now()).toISOString() } };
-      if (activeCaptainLogWeek(targetId) === sourceWeek) all.requirements[classWeek(targetId)] = CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length;
+      all.captainLogWeekPlans[targetId] = { ...targetPlans, [sourceWeek]: { week: sourceWeek, days, required: Math.min(source.required ?? chosen.length, CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length), updatedAt: new Date(now()).toISOString() } };
+      if (activeCaptainLogWeek(targetId) === sourceWeek) all.requirements[classWeek(targetId)] = all.captainLogWeekPlans[targetId][sourceWeek].required;
     });
     write(all); return { ok: true, copied: targets.length };
   };
   const captainLogAvailableToday = (classId) => {
     const activeWeek = activeCaptainLogWeek(classId), weekly = readAll().captainLogWeekPlans?.[classId]?.[activeWeek] ?? readAll().captainLogWeekPlans?.[classId];
-    if (weekly?.days) return Boolean(weekly.days[new Date(now()).toLocaleDateString("en-US", { weekday: "long" })]?.enabled);
+    if (weekly?.days) {
+      const today = new Date(now()).toLocaleDateString("en-US", { weekday: "long" });
+      return CAPTAINS_LOG_WEEKDAYS.some((slot) => {
+        const entry = weekly.days[slot], assignment = entry?.assignment ?? slot;
+        return Boolean(entry?.enabled && (assignment === today || assignment === "Daily student choice"));
+      });
+    }
     const schedule = captainLogPlan(classId).schedule;
     return schedule === "Today" || schedule === new Date(now()).toLocaleDateString("en-US", { weekday: "long" });
+  };
+  const captainLogChoices = (classId, studentId) => {
+    const activeWeek = activeCaptainLogWeek(classId), weekly = readAll().captainLogWeekPlans?.[classId]?.[activeWeek] ?? readAll().captainLogWeekPlans?.[classId];
+    if (!weekly?.days) return [captainLogPlan(classId)];
+    const today = new Date(now()).toLocaleDateString("en-US", { weekday: "long" });
+    const usedIds = new Set(responses(classId, studentId).map((item) => item.promptId).filter(Boolean));
+    return CAPTAINS_LOG_WEEKDAYS.map((slot) => weekly.days[slot]).filter((entry) => {
+      const assignment = entry?.assignment ?? slot;
+      return entry?.enabled && (assignment === today || assignment === "Daily student choice") && !usedIds.has(entry.promptId);
+    });
   };
   const saveCaptainLogPlan = (classId, value) => {
     const prompt = String(value?.prompt ?? "").trim();
@@ -206,9 +253,11 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
     const all = readAll();
     const key = `${classWeek(classId)}|${studentId}`;
     const list = all.responses?.[key] ?? [];
-    all.responses = { ...(all.responses ?? {}), [key]: [...list, { ...response, submittedAt: new Date(now()).toISOString() }] };
+    const followUps = Array.isArray(value.followUps) ? value.followUps.map((item) => ({ dok: Number(item.dok), question: String(item.question ?? "").trim(), answer: String(item.answer ?? "").trim() })).filter((item) => item.question && item.answer.length >= 5) : [];
+    if (!followUps.length) return { ok: false };
+    all.responses = { ...(all.responses ?? {}), [key]: [...list, { ...response, followUps, submittedAt: new Date(now()).toISOString() }] };
     write(all);
     return { ok: true, status: status(classId, studentId) };
   };
-  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogWeekPlan, saveCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
+  return { requirement, setRequirement, activeCaptainLogWeek, setActiveCaptainLogWeek, captainLogPlan, captainLogChoices, captainLogWeekPlan, saveCaptainLogWeekPlan, copyCaptainLogWeekPlan, captainLogAvailableToday, saveCaptainLogPlan, captainLogLibrary, saveCaptainLogPrompt, deleteCaptainLogPrompt, activities, recordActivity, responses, status, submit };
 }

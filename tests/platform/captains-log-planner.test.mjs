@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CAPTAINS_LOG_PRESET_PROMPTS, createWeeklyReflections } from "../../platform/scripts/weekly-reflections.mjs";
+import { readFileSync } from "node:fs";
+import { CAPTAINS_LOG_ASSIGNMENT_OPTIONS, CAPTAINS_LOG_PRESET_PROMPTS, captainLogCoachingQuestions, createWeeklyReflections } from "../../platform/scripts/weekly-reflections.mjs";
 
 function memoryStorage() {
   const values = new Map();
@@ -64,4 +65,51 @@ test("all seven class weeks are stored independently", () => {
   assert.equal(reflections.captainLogWeekPlan("class-1", 7).days.Friday.prompt, "Week 7 prompt 5?");
   reflections.setActiveCaptainLogWeek("class-1", 7);
   assert.equal(reflections.captainLogPlan("class-1").prompt, "Week 7 prompt 1?");
+});
+
+test("Captain's Log follows the class rotation week without a separate publish button", () => {
+  const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
+  assert.match(app, /Current Rotation Week/);
+  assert.match(app, /data-current-rotation-week/);
+  assert.match(app, /saveCurrentRotationWeek\(classId, rotationWeek\.value\)/);
+  assert.doesNotMatch(app, /Use Selected Week for Students/);
+  assert.doesNotMatch(app, /data-action="set-active-captains-log-week"/);
+});
+
+test("prompts can be assigned to a weekday or offered as a daily student choice", () => {
+  assert.deepEqual(CAPTAINS_LOG_ASSIGNMENT_OPTIONS, ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Daily student choice"]);
+  const reflections = createWeeklyReflections({ storage: memoryStorage(), now: () => new Date("2026-10-19T12:00:00Z") });
+  reflections.saveCaptainLogWeekPlan("class-1", { week: 1, days: {
+    Monday: { enabled: true, promptId: "monday-only", prompt: "What did you make today?", assignment: "Monday" },
+    Tuesday: { enabled: true, promptId: "daily-one", prompt: "What did you notice today?", assignment: "Daily student choice" },
+    Wednesday: { enabled: true, promptId: "daily-two", prompt: "What will you improve next?", assignment: "Daily student choice" },
+    Thursday: { enabled: false, promptId: "off", prompt: "Disabled prompt here.", assignment: "Thursday" },
+    Friday: { enabled: false, promptId: "off-two", prompt: "Another disabled prompt.", assignment: "Friday" },
+  } });
+  assert.deepEqual(reflections.captainLogChoices("class-1", "student-1").map((item) => item.promptId), ["monday-only", "daily-one", "daily-two"]);
+  reflections.submit("class-1", "student-1", { activity: "Bridge", promptId: "daily-one", progress: "🧪 Testing", explanation: "I tested the bridge today.", improved: "Yes", badge: "🏗 Builder – I built, tested, or improved a design.", help: "😊 No, I'm doing fine.", helpOther: "Maybe", rating: "4 = Good 😊", followUps: [{ dok: 2, question: "What detail supports your answer?", answer: "The bridge held ten blocks." }] });
+  assert.deepEqual(reflections.captainLogChoices("class-1", "student-1").map((item) => item.promptId), ["monday-only", "daily-two"]);
+});
+
+test("teacher prompt dropdowns do not display rotation week numbers", () => {
+  const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
+  const reflections = readFileSync(new URL("../../platform/scripts/weekly-reflections.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(app, /\$\{item\.week \? `Week \$\{item\.week\} · `/);
+  assert.match(app, /Offer this prompt/);
+  assert.match(reflections, /Daily student choice/);
+});
+
+test("Bob uses deterministic writing and timing signals to adjust follow-up depth", () => {
+  const supported = captainLogCoachingQuestions({ explanation: "i made bridge", progress: "🌱 Started", improved: "Not Yet" }, { elapsedSeconds: 300 });
+  const extended = captainLogCoachingQuestions({ explanation: "I tested three bridge designs because I wanted evidence. The triangle supports held the most blocks, so I strengthened the center and tested it again with additional weight.", progress: "🏆 Complete", improved: "Yes" }, { elapsedSeconds: 90 });
+  assert.equal(supported.length, 1);
+  assert.equal(extended.length, 3);
+  assert.deepEqual(extended.map((item) => item.dok), [2, 3, 4]);
+});
+
+test("weekly goal cannot exceed the number of available unique prompts", () => {
+  const reflections = createWeeklyReflections({ storage: memoryStorage() });
+  const days = Object.fromEntries(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => [day, { enabled: index < 2, promptId: `prompt-${index}`, prompt: `Prompt number ${index + 1} here?`, assignment: "Daily student choice" }]));
+  assert.equal(reflections.saveCaptainLogWeekPlan("class-1", { week: 1, days, required: 3 }).reason, "goal-exceeds-prompts");
+  assert.equal(reflections.saveCaptainLogWeekPlan("class-1", { week: 1, days, required: 2 }).ok, true);
 });
