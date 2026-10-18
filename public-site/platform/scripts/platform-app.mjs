@@ -289,6 +289,8 @@ let namePickerRotation = 0;
 let smartboardDrag = null;
 let lastTimerPhaseKey = null;
 let lastTimerStatus = null;
+let lastStudentPhaseKey = null;
+let studentPhasePopupTimeout = null;
 let studentTimerPopout = null;
 let classroomPresentationWindow = null;
 let classroomCompanionWindow = null;
@@ -2765,7 +2767,7 @@ function studentDashboardView(state) {
       ${studentClassLimerickMarkup(state.classId)}
 
       <aside class="platform-student-pomodoro-status" data-student-pomodoro-status aria-live="polite">
-        <span class="platform-student-pomodoro-dot" data-student-pomodoro-color="${timerPhase?.color ?? "default"}" aria-hidden="true"></span>
+        <span class="platform-student-pomodoro-ring" data-timer-ring data-active-phases="${timerPhase ? "true" : "false"}" style="${timerRingStyle(timerVisual)}" aria-hidden="true"><i></i></span>
         <div><strong data-student-pomodoro-phase>${escapeHtml(timerPhase?.name ?? "Today’s Engineering Time")}</strong><small>Current class phase</small></div>
         <b data-student-pomodoro-time>${formatLessonTime(timerState.remainingSeconds)}</b>
       </aside>
@@ -2820,6 +2822,11 @@ function studentDashboardView(state) {
         <div><button type="button" data-action="start-due-captains-log">Start Captain’s Log</button><button type="button" data-action="dismiss-captains-log-reminder">Not yet</button></div>
       </aside>
       <aside class="platform-student-captains-log-wrap-warning" data-student-captains-log-wrap-warning role="status" hidden><strong>About 6 minutes left</strong><span>Finish your answer and Bob’s questions.</span></aside>
+      <aside class="platform-student-phase-change" data-student-phase-change role="dialog" aria-live="assertive" aria-labelledby="student-phase-change-title" hidden>
+        <div class="platform-student-phase-change-ring" data-timer-ring data-active-phases="${timerPhase ? "true" : "false"}" style="${timerRingStyle(timerVisual)}"><output data-timer-remaining>${formatLessonTime(timerState.remainingSeconds)}</output></div>
+        <p>Class phase changed</p><h2 id="student-phase-change-title" data-student-phase-change-title>${escapeHtml(timerPhase?.name ?? "Today’s Engineering Time")}</h2>
+        <button type="button" data-action="dismiss-student-phase-change">Got it</button>
+      </aside>
 
       <details class="platform-student-later">
         <summary>Archive Room</summary>
@@ -3303,19 +3310,31 @@ function syncLessonTimerPresentation() {
     const studentPhase = presentationPhase ?? phase;
     const phaseName = element.querySelector("[data-student-pomodoro-phase]");
     const phaseTime = element.querySelector("[data-student-pomodoro-time]");
-    const phaseDot = element.querySelector("[data-student-pomodoro-color]");
     if (phaseName) phaseName.textContent = studentPhase?.name ?? "Today’s Engineering Time";
     if (phaseTime) phaseTime.textContent = formatLessonTime(state.remainingSeconds);
-    if (phaseDot) phaseDot.dataset.studentPomodoroColor = studentPhase?.color ?? "default";
   });
   if (appState.role === PLATFORM_ROLES.STUDENT) {
+    const studentPhase = presentationPhase ?? phase;
+    const studentPhaseKey = studentPhase?.key ?? null;
+    if (state.status === LESSON_TIMER_STATES.RUNNING && lastStudentPhaseKey !== null && studentPhaseKey && studentPhaseKey !== lastStudentPhaseKey) {
+      const popup = document.querySelector("[data-student-phase-change]");
+      const title = popup?.querySelector("[data-student-phase-change-title]");
+      if (title) title.textContent = studentPhase.name ?? "New class phase";
+      if (popup) {
+        popup.hidden = false;
+        popup.querySelector("button")?.focus({ preventScroll: true });
+        if (studentPhasePopupTimeout !== null) window.clearTimeout(studentPhasePopupTimeout);
+        studentPhasePopupTimeout = window.setTimeout(() => { popup.hidden = true; studentPhasePopupTimeout = null; }, 7000);
+      }
+    }
+    lastStudentPhaseKey = studentPhaseKey;
     const reminder = document.querySelector("[data-student-captains-log-reminder]");
     const yellowOrFinalTen = state.status === LESSON_TIMER_STATES.RUNNING && (presentationPhase?.key === "warning" || phase?.key === "warning" || state.remainingSeconds <= 600);
     if (reminder?.dataset.captainsLogDue === "true" && yellowOrFinalTen && reminder.dataset.dismissed !== "true") reminder.hidden = false;
     const wrapWarning = document.querySelector("[data-student-captains-log-wrap-warning]");
     const logOpen = Boolean(document.querySelector(".platform-student-reflection-form[open]"));
     if (wrapWarning) wrapWarning.hidden = !(logOpen && state.status === LESSON_TIMER_STATES.RUNNING && state.remainingSeconds <= 360 && state.remainingSeconds > 0);
-  }
+  } else lastStudentPhaseKey = null;
 
   const controlRules = {
     "timer-start": state.status === LESSON_TIMER_STATES.READY,
@@ -5917,6 +5936,13 @@ async function handleClick(event) {
   if (action.dataset.action === "dismiss-captains-log-reminder") {
     const reminder = action.closest("[data-student-captains-log-reminder]");
     if (reminder) { reminder.hidden = true; reminder.dataset.dismissed = "true"; }
+    return;
+  }
+  if (action.dataset.action === "dismiss-student-phase-change") {
+    const popup = action.closest("[data-student-phase-change]");
+    if (popup) popup.hidden = true;
+    if (studentPhasePopupTimeout !== null) window.clearTimeout(studentPhasePopupTimeout);
+    studentPhasePopupTimeout = null;
     return;
   }
   if (action.dataset.action === "show-vocabulary-definition") {

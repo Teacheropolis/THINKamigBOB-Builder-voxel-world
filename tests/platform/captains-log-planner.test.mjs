@@ -194,6 +194,11 @@ test("student dashboard shows the full weekly prompt map and an adaptive timelin
   assert.match(app, /Check the plan above for your next prompt/);
   assert.match(app, /Captain’s Log: \$\{reflectionStatus\.remaining\}/);
   assert.match(app, /data-student-pomodoro-status/);
+  assert.match(app, /platform-student-pomodoro-ring/);
+  assert.match(app, /data-student-phase-change/);
+  assert.match(app, /dismiss-student-phase-change/);
+  assert.match(app, /lastStudentPhaseKey/);
+  assert.match(app, /studentPhasePopupTimeout/);
   assert.match(app, /state\.remainingSeconds <= 600/);
   assert.match(app, /state\.remainingSeconds <= 360/);
   assert.match(app, /Listen and accessibility tools are still available/);
