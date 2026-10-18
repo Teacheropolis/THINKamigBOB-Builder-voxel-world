@@ -197,4 +197,7 @@ test("student dashboard shows the full weekly prompt map and an adaptive timelin
   assert.match(app, /state\.remainingSeconds <= 600/);
   assert.match(app, /state\.remainingSeconds <= 360/);
   assert.match(app, /Listen and accessibility tools are still available/);
+  assert.match(app, /function installStudentVocabularyHelp/);
+  assert.match(app, /show-vocabulary-definition/);
+  assert.match(app, /STUDENT_VOCABULARY/);
 });

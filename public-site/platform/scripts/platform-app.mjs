@@ -92,6 +92,20 @@ export const ROUTES = Object.freeze({
 });
 
 const root = document.querySelector("#platform-root");
+const STUDENT_VOCABULARY = Object.freeze({
+  attempt: "Something you try in order to learn what happens.",
+  attempts: "Things you try in order to learn what happens.",
+  challenge: "Something difficult that gives you a chance to learn.",
+  evidence: "Facts, observations, or results that support your thinking.",
+  improve: "To make something work better than it did before.",
+  limitation: "A part that cannot yet do everything you want it to do.",
+  opportunity: "A chance to try, learn, or make something better.",
+  outcome: "What happened as a result of an action or test.",
+  progress: "Movement toward a goal, even when the work is not finished.",
+  reveal: "To show something that was not clear before.",
+  uncertainty: "Not knowing yet what will happen or which answer is best.",
+  unexpected: "Different from what you thought would happen.",
+});
 const STUDENT_NAMEPLATE_STORAGE_KEY = "thinkamigbob.student-nameplate.v1";
 const CAPTAINS_LOG_EDITOR_WEEK_KEY = "thinkamigbob.captains-log-editor-weeks.v1";
 const STUDENT_NAMEPLATE_FONTS = Object.freeze(["slab", "classic", "cursive", "playful"]);
@@ -5888,6 +5902,21 @@ async function handleClick(event) {
     if (reminder) { reminder.hidden = true; reminder.dataset.dismissed = "true"; }
     return;
   }
+  if (action.dataset.action === "show-vocabulary-definition") {
+    const word = action.dataset.vocabularyWord;
+    const help = document.querySelector("[data-student-vocabulary-help]");
+    const wordLabel = help?.querySelector("[data-student-vocabulary-word]");
+    const definition = help?.querySelector("[data-student-vocabulary-definition]");
+    if (wordLabel) wordLabel.textContent = action.textContent;
+    if (definition) definition.textContent = STUDENT_VOCABULARY[word] ?? "Ask your teacher about this word.";
+    if (help) { help.hidden = false; help.querySelector("button")?.focus(); }
+    return;
+  }
+  if (action.dataset.action === "close-vocabulary-definition") {
+    const help = action.closest("[data-student-vocabulary-help]");
+    if (help) help.hidden = true;
+    return;
+  }
   if (action.dataset.action === "generate-namebobs") {
     const form = action.closest('[data-form="production-classroom-setup"]');
     const textarea = form?.elements.studentLabels;
@@ -7470,6 +7499,7 @@ function render() {
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) pb002jClasswide.mount(root, "teacher");
   if (allowedRoute === ROUTES.STUDENT_DASHBOARD) pb002jClasswide.mount(root, "student");
   if (allowedRoute === ROUTES.STUDENT_DASHBOARD) installStudentReadAloudControls();
+  if (allowedRoute === ROUTES.STUDENT_DASHBOARD) installStudentVocabularyHelp();
   manageLessonTimerPresentation(allowedRoute);
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) {
     syncStudentDisplayPresentation();
@@ -7513,6 +7543,43 @@ function installStudentReadAloudControls() {
     button.textContent = "Listen";
     heading.insertAdjacentElement("afterend", button);
   });
+}
+
+function installStudentVocabularyHelp() {
+  const home = root.querySelector(".platform-student-home");
+  if (!home) return;
+  const words = Object.keys(STUDENT_VOCABULARY).sort((a, b) => b.length - a.length);
+  const pattern = new RegExp(`\\b(${words.join("|")})\\b`, "gi");
+  const walker = document.createTreeWalker(home, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement;
+      if (!node.textContent.trim() || !parent || parent.closest("button, a, input, textarea, select, option, script, style, [data-no-vocabulary-help]")) return NodeFilter.FILTER_REJECT;
+      pattern.lastIndex = 0;
+      return pattern.test(node.textContent) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    },
+  });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach((node) => {
+    const fragment = document.createDocumentFragment();
+    let lastIndex = 0;
+    pattern.lastIndex = 0;
+    for (const match of node.textContent.matchAll(pattern)) {
+      fragment.append(document.createTextNode(node.textContent.slice(lastIndex, match.index)));
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "platform-student-vocabulary-word";
+      button.dataset.action = "show-vocabulary-definition";
+      button.dataset.vocabularyWord = match[0].toLowerCase();
+      button.setAttribute("aria-label", `${match[0]}. Show meaning.`);
+      button.textContent = match[0];
+      fragment.append(button);
+      lastIndex = match.index + match[0].length;
+    }
+    fragment.append(document.createTextNode(node.textContent.slice(lastIndex)));
+    node.replaceWith(fragment);
+  });
+  home.insertAdjacentHTML("beforeend", '<aside class="platform-student-vocabulary-help" data-student-vocabulary-help role="dialog" aria-labelledby="student-vocabulary-word" hidden data-no-vocabulary-help><button type="button" data-action="close-vocabulary-definition" aria-label="Close word meaning">×</button><strong id="student-vocabulary-word" data-student-vocabulary-word></strong><p data-student-vocabulary-definition></p></aside>');
 }
 
 function mountProductionGoogleSignIn() {

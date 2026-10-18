@@ -2,7 +2,7 @@ export const WEEKLY_REFLECTION_STORAGE_KEY = "thinkamigbob.weekly-reflections.v1
 export const CAPTAINS_LOG_PRESET_PROMPTS = Object.freeze([
   { id: "week-1-ask", week: 1, label: "Ask", prompt: "What surprised you or made you wonder today?" },
   { id: "week-2-make", week: 2, label: "Make", prompt: "Which attempt gave you an unexpected result? What did it reveal?" },
-  { id: "week-3-improve", week: 3, label: "Improve", prompt: "Which part could work better, and what change will you try?" },
+  { id: "week-3-improve", week: 3, label: "Improve", prompt: "Which part will you or could you improve, and what change will you try?" },
   { id: "week-4-grow", week: 4, label: "Grow", prompt: "How did a challenge or uncertainty help your thinking grow?" },
   { id: "week-5-evidence", week: 5, label: "Evidence", prompt: "What evidence shows a limitation or a new opportunity in your idea?" },
   { id: "week-6-explain", week: 6, label: "Explain", prompt: "What outcome was different from your plan, and what did you learn from it?" },
