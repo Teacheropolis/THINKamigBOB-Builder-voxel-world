@@ -12,5 +12,10 @@ service = "thinkamigbob-platform-identity-staging"
 binding = "EVIDENCE_API"
 service = "thinkamigbob-evidence-api-staging"
 
-[env]
-production = { }
+[[env.production.services]]
+binding = "PLATFORM_IDENTITY"
+service = "thinkamigbob-platform-identity-staging"
+
+[[env.production.services]]
+binding = "EVIDENCE_API"
+service = "thinkamigbob-evidence-api-staging"
