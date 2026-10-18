@@ -2792,6 +2792,17 @@ function openClassroomPresentationWindow() {
   syncStudentDisplayPresentation();
   const source = document.querySelector("#platform-student-timer-display");
   if (!source) return;
+  const classroomUrl = new URL(window.location.href);
+  classroomUrl.searchParams.set("classroomDisplay", "1");
+  classroomPresentationWindow = window.open(classroomUrl.href, "thinkamigbob-classroom-view");
+  const status = document.querySelector("[data-classroom-window-status]");
+  if (!classroomPresentationWindow) {
+    if (status) status.textContent = "The Classroom Display was blocked. Allow new tabs for this platform, then try again.";
+    return;
+  }
+  classroomPresentationWindow.addEventListener("load", () => syncClassroomPresentationWindow(), { once: true });
+  if (status) status.textContent = "Classroom Display opened in a separate browser tab or window.";
+  return;
   const clone = source.cloneNode(true);
   clone.hidden = false;
   clone.id = "platform-second-window-display";
@@ -2801,7 +2812,7 @@ function openClassroomPresentationWindow() {
     .map((href) => `<link rel="stylesheet" href="${escapeHtml(href)}">`)
     .join("");
   classroomPresentationWindow = window.open("", "thinkamigbob-classroom-view");
-  const status = document.querySelector("[data-classroom-window-status]");
+
   if (!classroomPresentationWindow) { if (status) status.textContent = "The Classroom Display was blocked. Allow new tabs for this platform, then try again."; return; }
   classroomPresentationWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Classroom View · THINKamigBOB</title>${stylesheetLinks}<style>html,body{margin:0;min-height:100%;overflow:hidden}#platform-second-window-display{display:grid!important}</style></head><body class="platform-app"><details class="platform-classroom-window-controls" aria-label="Classroom Display window controls"><summary>Display</summary><div class="platform-classroom-window-options"><button type="button" data-action="fullscreen-classroom-display">Full Screen</button><details class="platform-classroom-split-control"><summary>Split Screen</summary><div><label>Webpage address<input type="url" data-classroom-companion-url inputmode="url" placeholder="Paste a webpage link"></label><button type="button" data-action="split-screen-classroom-display">Show Side by Side</button></div></details><span data-classroom-display-layout-status role="status"></span></div></details>${clone.outerHTML}</body></html>`);
   classroomPresentationWindow.document.close();
@@ -2916,6 +2927,36 @@ function openClassroomPresentationWindow() {
   else if (readLiveDoNow()) syncDoNowPresentation();
   classroomPresentationWindow.focus();
   if (status) status.textContent = "Classroom Display opened in a separate browser tab or window.";
+}
+
+function standaloneClassroomDisplayRequested() {
+  return new URLSearchParams(window.location.search).get("classroomDisplay") === "1";
+}
+
+function enterStandaloneClassroomDisplayMode() {
+  if (!standaloneClassroomDisplayRequested()) return;
+  const display = document.querySelector("#platform-student-timer-display");
+  if (!display) return;
+  display.hidden = false;
+  document.body.classList.add("platform-standalone-classroom-display");
+  if (!document.querySelector(".platform-classroom-window-controls")) {
+    const controls = document.createElement("details");
+    controls.className = "platform-classroom-window-controls";
+    controls.setAttribute("aria-label", "Classroom Display screen options");
+    controls.innerHTML = '<summary>Screen Options</summary><div class="platform-classroom-window-options"><button type="button" data-action="fullscreen-classroom-display">Full Screen</button><span data-classroom-display-layout-status role="status"></span></div>';
+    document.body.append(controls);
+  }
+  if (!document.querySelector(".platform-classroom-exit-presentation")) {
+    const exit = document.createElement("button");
+    exit.type = "button";
+    exit.className = "platform-classroom-exit-presentation";
+    exit.dataset.action = "exit-classroom-fullscreen";
+    exit.textContent = "Exit Full Screen";
+    exit.hidden = true;
+    document.body.append(exit);
+  }
+  installSmartboardToolPopoutButtons(document);
+  syncLessonTimerPresentation();
 }
 
 function syncLessonTimerPresentation() {
@@ -5709,6 +5750,14 @@ function handleClick(event) {
     resetSmartboardToolPositions(action.ownerDocument || document);
     return;
   }
+  if (action.dataset.action === "fullscreen-classroom-display") {
+    void toggleClassroomDisplayFullscreen(action);
+    return;
+  }
+  if (action.dataset.action === "exit-classroom-fullscreen") {
+    void exitClassroomDisplayFullscreen(action.ownerDocument);
+    return;
+  }
   if (action.dataset.action === "popout-smartboard-tool") {
     openSmartboardToolPopout(action.closest("[data-smartboard-tool]"));
     return;
@@ -8172,6 +8221,7 @@ async function startPlatform() {
     else if (result.ok) session.signOut();
   }
   render();
+  enterStandaloneClassroomDisplayMode();
   if (floatingBobRoamingInterval === null) scheduleNextBobMove();
 }
 

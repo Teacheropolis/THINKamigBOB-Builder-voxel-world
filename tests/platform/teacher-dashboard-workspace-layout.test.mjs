@@ -115,7 +115,8 @@ test("teacher dashboard provides a responsive categorized teacher menu and statu
   for (const phrase of ["AMIG learning cycle moves clockwise", "Notice and wonder", "Build and try", "Test and make it better", "Every try helps your ideas grow"]) assert.match(app, new RegExp(phrase));
   assert.match(app, /Show \$\{tool\.dataset\.smartboardTool\} tool full screen/);
   assert.match(app, /fullscreen-classroom-display/);
-  assert.match(app, /window\.open\("", "thinkamigbob-classroom-view"\)/);
+  assert.match(app, /classroomUrl\.searchParams\.set\("classroomDisplay", "1"\)/);
+  assert.match(app, /function enterStandaloneClassroomDisplayMode\(\)/);
   assert.match(app, /split-screen-classroom-display/);
   assert.match(app, /data-classroom-companion-url/);
   assert.match(app, /Classroom Display and webpage are side by side/);
