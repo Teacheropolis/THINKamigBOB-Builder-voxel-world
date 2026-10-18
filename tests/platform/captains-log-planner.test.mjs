@@ -183,6 +183,7 @@ test("weekly goal includes every prompt assigned to a specific day", () => {
 
 test("student dashboard shows the full weekly prompt map and an adaptive timeline", () => {
   const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../../platform/styles/platform.css", import.meta.url), "utf8");
   assert.match(app, /function captainsLogStudentWeekMarkup/);
   assert.match(app, /Your Week/);
   assert.match(app, /Suggested plan/);
@@ -199,6 +200,7 @@ test("student dashboard shows the full weekly prompt map and an adaptive timelin
   assert.match(app, /dismiss-student-phase-change/);
   assert.match(app, /lastStudentPhaseKey/);
   assert.match(app, /studentPhasePopupTimeout/);
+  assert.match(css, /url\("\.\.\/assets\/images\/student-platform\/student-platform-industrial-background\.png"\)/);
   assert.match(app, /state\.remainingSeconds <= 600/);
   assert.match(app, /state\.remainingSeconds <= 360/);
   assert.match(app, /Listen and accessibility tools are still available/);

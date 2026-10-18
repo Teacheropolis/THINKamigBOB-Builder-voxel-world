@@ -277,7 +277,7 @@ summary:focus-visible {
   background-color: #1b363d;
   background-image:
     linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(7, 16, 25, 0.2)),
-    url("../../assets/images/student-platform/student-platform-industrial-background.png");
+    url("../assets/images/student-platform/student-platform-industrial-background.png");
   background-attachment: fixed;
   background-position: center center;
   background-repeat: no-repeat;
