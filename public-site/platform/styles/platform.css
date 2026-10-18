@@ -420,7 +420,7 @@ summary:focus-visible {
   color: var(--platform-blue-dark);
 }
 .platform-student-class { font-size: 1.05rem; font-weight: 850; letter-spacing: .035em; }
-.platform-student-nameplate-limerick { grid-column: 1 / 3; grid-row: 3; margin: .65rem 0 0; color: var(--platform-navy); font-family: "Roboto Slab", Rockwell, Georgia, serif; font-size: clamp(.78rem, 1.6vw, .95rem); font-style: italic; font-weight: 700; line-height: 1.45; }
+.platform-student-nameplate-limerick { grid-column: 1 / 3; grid-row: 3; margin: .55rem 0 0; color: var(--platform-navy); font-family: "Roboto Slab", Rockwell, Georgia, serif; font-size: clamp(.72rem, 1.35vw, .86rem); font-style: italic; font-weight: 700; line-height: 1.4; }
 .platform-student-nameplate-customizer { grid-column: 3; grid-row: 1 / 4; justify-self: stretch; margin-left: auto; }
 .platform-student-nameplate-customizer > summary { cursor: pointer; color: var(--platform-blue-dark); font-weight: 900; text-align: right; }
 .platform-student-nameplate-customizer > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-top: .65rem; }
@@ -428,6 +428,10 @@ summary:focus-visible {
 .platform-student-nameplate-customizer select { min-width: 0; padding: .45rem; font-size: .82rem; }
 .platform-student-nameplate-customizer input[type="color"] { width: 100%; min-height: 2.3rem; padding: .15rem; }
 .platform-student-nameplate-customizer > p:last-child { margin: .35rem 0 0; color: var(--platform-muted); font-size: .72rem; font-weight: 750; text-align: right; }
+.platform-student-class-limerick { margin: 0; border: 2px solid #aa7911; border-radius: 1rem; background: linear-gradient(145deg, #fff8df, #f2d584); box-shadow: 0 .45rem 1rem rgba(7,27,39,.16); }
+.platform-student-class-limerick > summary { cursor: pointer; padding: .8rem 1rem; color: var(--platform-navy); font-family: "Roboto Slab", Rockwell, Georgia, serif; font-size: 1rem; font-weight: 900; }
+.platform-student-class-limerick > div { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: 0 1rem 1rem; }
+.platform-student-class-limerick p { margin: 0; color: #4d320d; font-weight: 750; line-height: 1.55; }
 .platform-bob-welcome { grid-column: span 5; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-blue) !important; }
 .platform-bob-welcome > p:last-child { margin: 0.5rem 0 0; color: var(--platform-muted); line-height: 1.5; }
 .platform-student-goal { grid-column: span 7; padding: clamp(1rem, 2.5vw, 1.4rem); border-top: 5px solid var(--platform-green) !important; }
@@ -2076,6 +2080,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
   .platform-student-orientation { grid-template-columns: minmax(0, 1fr) auto; }
   .platform-student-nameplate-limerick { grid-column: 1 / -1; grid-row: 3; }
   .platform-student-nameplate-customizer { grid-column: 1 / -1; grid-row: 4; width: 100%; margin: .5rem 0 0; }
+  .platform-student-class-limerick > div { align-items: stretch; flex-direction: column; }
   .platform-student-nameplate-customizer > summary, .platform-student-nameplate-customizer > p:last-child { text-align: left; }
 }
 

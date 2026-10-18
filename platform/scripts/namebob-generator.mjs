@@ -115,16 +115,29 @@ export function generateClassNameBobLimerick(currentLabels) {
   const labels = Array.from(currentLabels || [], (label) => boundedLabel(label)).filter(Boolean).slice(0, 40);
   if (!labels.length) return Object.freeze({ ok: false, reason: "class-names-required", limerick: "", labels: Object.freeze([]) });
   const stanzas = [];
+  const middleAdventures = Object.freeze([
+    Object.freeze(["A gear gave a glittery POP!", "They tightened one bolt at the top,"]),
+    Object.freeze(["Their rocket spun twice in the air,", "Then landed on Bob's rolling chair,"]),
+    Object.freeze(["A robot cried, “BEEPITY-BOP!”", "And danced with a mop till it dropped,"]),
+    Object.freeze(["Their bridge did a wibble-wobble,", "They fixed it with one clever bobble,"]),
+    Object.freeze(["A windmill went WHOOSH through the room,", "Then powered a bright paper moon,"]),
+    Object.freeze(["Their marble raced under a bell,", "Then rang it and hollered, “All well!”"]),
+  ]);
+  const totalStanzas = Math.ceil(labels.length / 4);
   for (let index = 0; index < labels.length; index += 4) {
+    const stanzaIndex = Math.floor(index / 4);
     const crew = labels.slice(index, index + 4);
     const lead = crew[0];
     const helpers = joinedNames(crew.slice(1));
-    const endings = [
-      [`${lead} arrived with a plan,`, `${helpers} all joined in and ran.`, "Their gizmo went POP!", "But the Bob crew would not stop,", "So they fixed it—and cheered, “Yes, we can!”"],
-      [`A workshop starred ${lead},`, `${helpers} built something clever to try.`, "It wobbled—ker-plunk!", "Then launched a brass trunk,", "And the Bob crew yelled, “One more try!”"],
-      [`Our inventors began with ${lead},`, `${helpers} made the next great machine.`, "It rattled and spun,", "Then declared testing fun,", "What a brilliant Bob team to be seen!"],
-    ];
-    stanzas.push(endings[stableNumber(crew.join("|")) % endings.length].join("\n"));
+    const middle = middleAdventures[(stableNumber(labels.join("|")) + stanzaIndex) % middleAdventures.length];
+    const opening = stanzaIndex === 0
+      ? `In THINKamigBOB's workshop, ${lead} led the way,`
+      : `Then ${lead} brought a bright plan into play,`;
+    const partners = `${helpers} joined the invention that day.`;
+    const ending = stanzaIndex === totalStanzas - 1
+      ? "Together they cheered, “We improved it—hooray!”"
+      : "They learned, made it better, then cleared the way.";
+    stanzas.push([opening, partners, ...middle, ending].join("\n"));
   }
   return Object.freeze({ ok: true, labels: Object.freeze(labels), limerick: stanzas.join("\n\n") });
 }

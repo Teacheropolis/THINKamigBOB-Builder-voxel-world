@@ -9,6 +9,15 @@ const BOB_FORMS = Object.freeze([
   "Bobzoom", "Bobwhirl", "Bobtopia", "Bobcraft", "Bobbolt", "Bobberry",
 ]);
 
+const RHYMING_BOB_FORMS = Object.freeze({
+  savannah: Object.freeze(["Bobanana", "Bob Cabana", "BananaBob"]),
+  lydia: Object.freeze(["Bobbedia", "Giddy-a-Bob", "Bobblydia"]),
+  miley: Object.freeze(["SmileyBob", "WileyBob", "Bob Smiley"]),
+  siamara: Object.freeze(["Bob Tiara", "Bob-a-Rama", "TiaraBob"]),
+  mariela: Object.freeze(["Bobarella", "Bob Umbrella", "MarshmallowBobella"]),
+  faith: Object.freeze(["Bob-the-Eighth", "Great-Faith-Bob", "Bob of Great Faith"]),
+});
+
 function cleanName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").replace(/[^\p{L}'’-]/gu, "").slice(0, 24);
 }
@@ -39,6 +48,21 @@ function labelContainsName(label, firstName) {
   return cleanName(String(label || "").split(/\s+/)[0]).toLocaleLowerCase() === wanted;
 }
 
+function rhymingBobForms(firstName) {
+  const exact = RHYMING_BOB_FORMS[firstName.toLocaleLowerCase()] || [];
+  const lower = firstName.toLocaleLowerCase();
+  const soundBased = lower.endsWith("y") || lower.endsWith("ie")
+    ? ["SillyBob", "SmileyBob", "WigglyBob"]
+    : lower.endsWith("a")
+      ? ["Bob-a-Rama", "Bob Cabana", "Bobanana"]
+      : lower.endsWith("an")
+        ? ["Bob-the-Can-Do-Man", "Bob Fan", "Bob-a-Plan"]
+        : lower.endsWith("er")
+          ? ["SuperBob", "BuilderBob", "WhirringBob"]
+          : ["Bobble-Doodle", "Bob Kaboom", "Bobbity-Bop"];
+  return [...new Set([...exact, ...soundBased, ...BOB_FORMS])];
+}
+
 export function generateNameBobs(value, { usedLabels = [], usedBobLastNames = [] } = {}) {
   const lines = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
   const firstNames = lines.map(firstNameFromRosterLine).filter(Boolean);
@@ -48,9 +72,11 @@ export function generateNameBobs(value, { usedLabels = [], usedBobLastNames = []
 
   for (const [index, firstName] of firstNames.entries()) {
     const seed = stableNumber(`${firstName}-${index}`);
+    const forms = rhymingBobForms(firstName);
     let label = "";
-    for (let attempt = 0; attempt < BOB_FORMS.length && !label; attempt += 1) {
-      const candidate = boundedLabel(`${firstName} ${BOB_FORMS[(seed + attempt) % BOB_FORMS.length]}`);
+    for (let attempt = 0; attempt < forms.length && !label; attempt += 1) {
+      const formIndex = attempt < 3 ? attempt : (seed + attempt) % forms.length;
+      const candidate = boundedLabel(`${firstName} ${forms[formIndex]}`);
       if (!used.has(candidate.toLocaleLowerCase()) && !bobLastNames.has(bobLastName(candidate))) label = candidate;
     }
     if (!label) {
@@ -79,19 +105,58 @@ export function retryNameBob(firstNameValue, currentLabels, { usedLabels = [] } 
   return Object.freeze({ ok: true, firstName, label: retried[index], labels: Object.freeze(retried) });
 }
 
-const LIMERICKS = Object.freeze([
-  (name) => `There once was ${name} with a plan,\nWho built a remarkable fan.\nIt spun round and round,\nThen bounced on the ground,\nSo they strengthened the fan—and it ran!`,
-  (name) => `${name} worked with a crew,\nOn a rocket painted bright blue.\nIt sputtered “ka-POW!”\nThen chased a small cow,\nSo they built a much calmer one too!`,
-  (name) => `${name} invented a chair,\nThat zoomed through the classroom air.\nIt wiggled with glee,\nThen climbed up a tree,\nAnd parked on a very shocked bear!`,
-  (name) => `${name} made a machine,\nThe funniest ever yet seen.\nIt flashed a green light,\nThen launched out of sight,\nAnd landed in three jelly beans!`,
+function joinedNames(names) {
+  if (names.length < 2) return names[0] || "the Bob crew";
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(", ")}, and ${names.at(-1)}`;
+}
+
+export function generateClassNameBobLimerick(currentLabels) {
+  const labels = Array.from(currentLabels || [], (label) => boundedLabel(label)).filter(Boolean).slice(0, 40);
+  if (!labels.length) return Object.freeze({ ok: false, reason: "class-names-required", limerick: "", labels: Object.freeze([]) });
+  const stanzas = [];
+  const middleAdventures = Object.freeze([
+    Object.freeze(["A gear gave a glittery POP!", "They tightened one bolt at the top,"]),
+    Object.freeze(["Their rocket spun twice in the air,", "Then landed on Bob's rolling chair,"]),
+    Object.freeze(["A robot cried, “BEEPITY-BOP!”", "And danced with a mop till it dropped,"]),
+    Object.freeze(["Their bridge did a wibble-wobble,", "They fixed it with one clever bobble,"]),
+    Object.freeze(["A windmill went WHOOSH through the room,", "Then powered a bright paper moon,"]),
+    Object.freeze(["Their marble raced under a bell,", "Then rang it and hollered, “All well!”"]),
+  ]);
+  const totalStanzas = Math.ceil(labels.length / 4);
+  for (let index = 0; index < labels.length; index += 4) {
+    const stanzaIndex = Math.floor(index / 4);
+    const crew = labels.slice(index, index + 4);
+    const lead = crew[0];
+    const helpers = joinedNames(crew.slice(1));
+    const middle = middleAdventures[(stableNumber(labels.join("|")) + stanzaIndex) % middleAdventures.length];
+    const opening = stanzaIndex === 0
+      ? `In THINKamigBOB's workshop, ${lead} led the way,`
+      : `Then ${lead} brought a bright plan into play,`;
+    const partners = `${helpers} joined the invention that day.`;
+    const ending = stanzaIndex === totalStanzas - 1
+      ? "Together they cheered, “We improved it—hooray!”"
+      : "They learned, made it better, then cleared the way.";
+    stanzas.push([opening, partners, ...middle, ending].join("\n"));
+  }
+  return Object.freeze({ ok: true, labels: Object.freeze(labels), limerick: stanzas.join("\n\n") });
+}
+
+const STUDENT_LIMERICKS = Object.freeze([
+  (name) => `${name} came in with a plan,\nAnd built the best gadget they can.\nIt rattled—ker-pop!\nBut they would not stop,\nThen fixed it and shouted, “It ran!”`,
+  (name) => `${name} made a machine,\nThe funniest ever yet seen.\nIt flashed a bright light,\nThen zoomed out of sight,\nAnd landed on one jelly bean!`,
+  (name) => `${name} worked with a crew,\nOn a rocket painted bright blue.\nIt wobbled around,\nThen bounced on the ground,\nSo they tested and built version two!`,
 ]);
 
-export function generateNameBobLimerick(nameValue, currentLabels) {
-  const query = String(nameValue || "").trim().toLocaleLowerCase();
-  const labels = Array.from(currentLabels || [], (label) => String(label).trim()).filter(Boolean);
-  if (!query) return Object.freeze({ ok: false, reason: "student-name-required" });
-  const label = labels.find((candidate) => candidate.toLocaleLowerCase() === query || candidate.split(/\s+/)[0].toLocaleLowerCase() === query);
-  if (!label) return Object.freeze({ ok: false, reason: "student-not-found" });
-  const limerick = LIMERICKS[stableNumber(label) % LIMERICKS.length](label);
-  return Object.freeze({ ok: true, label, limerick });
+export function generateStudentNameBobLimerick(nameValue) {
+  const label = boundedLabel(nameValue);
+  if (!label || !/bob/i.test(label)) return Object.freeze({ ok: false, reason: "namebob-required", label: "", limerick: "" });
+  return Object.freeze({ ok: true, label, limerick: STUDENT_LIMERICKS[stableNumber(label) % STUDENT_LIMERICKS.length](label) });
+}
+
+export function generateAllNameBobLimericks(currentLabels) {
+  const classResult = generateClassNameBobLimerick(currentLabels);
+  if (!classResult.ok) return Object.freeze({ ...classResult, studentLimericks: Object.freeze([]) });
+  const studentLimericks = classResult.labels.map((label) => generateStudentNameBobLimerick(label)).filter((result) => result.ok);
+  return Object.freeze({ ...classResult, studentLimericks: Object.freeze(studentLimericks) });
 }

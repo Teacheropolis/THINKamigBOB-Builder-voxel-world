@@ -64,6 +64,15 @@ test("creates a funny class limerick that includes every NameBob", () => {
   assert.equal(result.limerick.split("\n\n").every((stanza) => stanza.split("\n").length === 5), true);
 });
 
+test("class limerick has a polished opening and ending with varied stanza middles", () => {
+  const labels = generateNameBobs("Savannah\nLydia\nMiley\nSiamara\nMariela\nFaith\nAva\nLiam\nMia\nNoah\nLily\nRiley").labels;
+  const result = generateClassNameBobLimerick(labels);
+  const stanzas = result.limerick.split("\n\n").map((stanza) => stanza.split("\n"));
+  assert.match(stanzas[0][0], /^In THINKamigBOB's workshop,/);
+  assert.equal(stanzas.at(-1).at(-1), "Together they cheered, “We improved it—hooray!”");
+  assert.equal(new Set(stanzas.map((lines) => lines.slice(2, 4).join(" "))).size, stanzas.length);
+});
+
 test("class limerick requires at least one student name", () => {
   const result = generateClassNameBobLimerick([]);
   assert.equal(result.ok, false);
