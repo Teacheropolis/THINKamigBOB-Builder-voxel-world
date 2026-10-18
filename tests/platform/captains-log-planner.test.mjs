@@ -113,3 +113,18 @@ test("weekly goal cannot exceed the number of available unique prompts", () => {
   assert.equal(reflections.saveCaptainLogWeekPlan("class-1", { week: 1, days, required: 3 }).reason, "goal-exceeds-prompts");
   assert.equal(reflections.saveCaptainLogWeekPlan("class-1", { week: 1, days, required: 2 }).ok, true);
 });
+
+test("weekly goal includes every prompt assigned to a specific day", () => {
+  const reflections = createWeeklyReflections({ storage: memoryStorage() });
+  const days = Object.fromEntries(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => [day, { enabled: index < 3, promptId: `prompt-${index}`, prompt: `Prompt number ${index + 1} here?`, assignment: index < 2 ? day : "Daily student choice" }]));
+  assert.equal(reflections.saveCaptainLogWeekPlan("class-1", { week: 1, days, required: 1 }).reason, "goal-below-assigned");
+  assert.equal(reflections.saveCaptainLogWeekPlan("class-1", { week: 1, days, required: 3 }).ok, true);
+});
+
+test("student dashboard shows the full weekly prompt map and an adaptive timeline", () => {
+  const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
+  assert.match(app, /function captainsLogStudentWeekMarkup/);
+  assert.match(app, /Your Week/);
+  assert.match(app, /Suggested plan/);
+  assert.match(app, /Check the plan above for your next prompt/);
+});

@@ -149,8 +149,10 @@ export function createWeeklyReflections({ storage, now = () => new Date() }) {
       days[day] = { enabled: Boolean(entry.enabled), promptId: String(entry.promptId ?? "custom"), prompt, assignment };
     }
     const enabledCount = CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled).length;
+    const assignedCount = CAPTAINS_LOG_WEEKDAYS.filter((day) => days[day].enabled && days[day].assignment !== "Daily student choice").length;
     const required = Number(value?.required ?? enabledCount);
     if (!Number.isInteger(required) || required < 0 || required > enabledCount) return { ok: false, reason: "goal-exceeds-prompts" };
+    if (required < assignedCount) return { ok: false, reason: "goal-below-assigned" };
     const all = readAll(), plan = { week, days, required, updatedAt: new Date(now()).toISOString() };
     const classPlans = all.captainLogWeekPlans?.[classId]?.days ? { [all.captainLogWeekPlans[classId].week ?? 1]: all.captainLogWeekPlans[classId] } : { ...(all.captainLogWeekPlans?.[classId] ?? {}) };
     all.captainLogWeekPlans = { ...(all.captainLogWeekPlans ?? {}), [classId]: { ...classPlans, [week]: plan } };
