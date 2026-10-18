@@ -2833,10 +2833,7 @@ function openClassroomPresentationWindow() {
       }
     }
     if (action.dataset.action === "reset-smartboard-tools") resetSmartboardToolPositions(classroomPresentationWindow.document);
-    if (action.dataset.action === "fullscreen-classroom-display") {
-      if (classroomPresentationWindow.document.fullscreenElement) void classroomPresentationWindow.document.exitFullscreen();
-      else void classroomPresentationWindow.document.documentElement.requestFullscreen();
-    }
+    if (action.dataset.action === "fullscreen-classroom-display") void toggleClassroomDisplayFullscreen(action);
     if (action.dataset.action === "split-screen-classroom-display") {
       if (classroomPresentationWindow.document.fullscreenElement) void classroomPresentationWindow.document.exitFullscreen();
       const layoutStatus = classroomPresentationWindow.document.querySelector("[data-classroom-display-layout-status]");
@@ -7177,14 +7174,50 @@ function installSmartboardToolPopoutButtons(documentRef = document) {
 
 function toggleSmartboardToolMaximized(tool) {
   if (!tool) return;
-  const maximized = tool.classList.toggle("platform-smartboard-tool-maximized");
+  const maximized = !tool.classList.contains("platform-smartboard-tool-maximized");
+  if (maximized) {
+    bringSmartboardToolForward(tool);
+    tool.dataset.smartboardRestoreStyle = tool.style.cssText;
+    tool.classList.add("platform-smartboard-tool-maximized");
+    for (const [property, value] of [["inset", "0"], ["width", "100vw"], ["height", "100vh"], ["max-width", "none"], ["max-height", "none"], ["z-index", "300"]]) tool.style.setProperty(property, value, "important");
+  } else {
+    tool.classList.remove("platform-smartboard-tool-maximized");
+    tool.style.cssText = tool.dataset.smartboardRestoreStyle || SMARTBOARD_TOOL_DEFAULT_STYLES[tool.dataset.smartboardTool] || "";
+    delete tool.dataset.smartboardRestoreStyle;
+  }
   const button = tool.querySelector('[data-action="fullscreen-smartboard-tool"]');
   if (button) {
     button.textContent = maximized ? "Restore" : "Full Screen";
     button.setAttribute("aria-pressed", String(maximized));
     button.title = maximized ? "Return this tool to its window" : "Fill the Classroom Display with this tool";
   }
-  if (maximized) bringSmartboardToolForward(tool);
+}
+
+async function toggleClassroomDisplayFullscreen(button) {
+  const displayWindow = button?.ownerDocument?.defaultView;
+  const displayDocument = button?.ownerDocument;
+  if (!displayWindow || !displayDocument) return;
+  const status = displayDocument.querySelector("[data-classroom-display-layout-status]");
+  if (displayDocument.fullscreenElement) {
+    await displayDocument.exitFullscreen();
+    button.textContent = "Full Screen";
+    if (status) status.textContent = "Full screen closed.";
+    return;
+  }
+  try {
+    await displayDocument.documentElement.requestFullscreen();
+    button.textContent = "Exit Full Screen";
+    if (status) status.textContent = "Classroom Display is full screen.";
+  } catch {
+    const screen = displayWindow.screen;
+    try {
+      displayWindow.moveTo(Number(screen.availLeft || 0), Number(screen.availTop || 0));
+      displayWindow.resizeTo(Number(screen.availWidth || screen.width), Number(screen.availHeight || screen.height));
+      if (status) status.textContent = "The browser blocked full screen, so the Classroom Display was maximized.";
+    } catch {
+      if (status) status.textContent = "Full screen was blocked. Use the Chromebook full-screen key for this window.";
+    }
+  }
 }
 
 function smartboardToolSource(name) {
