@@ -1121,6 +1121,13 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-classroom-window-controls button { min-height: 2.6rem; padding: 0.4rem 0.8rem; border: 2px solid #fff; color: var(--platform-navy); background: #fff8e7; font-weight: 900; white-space: nowrap; }
 .platform-classroom-window-controls button:first-child { color: #fff; background: var(--platform-blue); }
 .platform-classroom-window-controls span { max-width: 17rem; font-size: 0.72rem; font-weight: 800; }
+.platform-classroom-split-control { position: relative; }
+.platform-classroom-split-control > summary { min-height: 2.6rem; padding: 0.55rem 0.8rem; border: 2px solid #fff; border-radius: 0.35rem; color: var(--platform-navy); background: #fff8e7; font-weight: 900; list-style: none; cursor: pointer; }
+.platform-classroom-split-control > summary::-webkit-details-marker { display: none; }
+.platform-classroom-split-control[open] > div { position: absolute; top: calc(100% + 0.55rem); left: 50%; display: grid; width: min(28rem, calc(100vw - 2rem)); gap: 0.55rem; padding: 0.75rem; border: 3px solid var(--platform-gold); border-radius: 0.75rem; color: var(--platform-navy); background: #fff8e7; box-shadow: 0 0.8rem 2rem rgba(0,0,0,0.28); transform: translateX(-50%); }
+.platform-classroom-split-control label { display: grid; gap: 0.3rem; font-weight: 900; }
+.platform-classroom-split-control input { min-height: 2.8rem; width: 100%; padding: 0.45rem 0.6rem; border: 2px solid var(--platform-blue); border-radius: 0.35rem; font: inherit; }
+.platform-classroom-split-control > div button { color: #fff; background: var(--platform-green); }
 .platform-smartboard-voice-tool output { display: block; color: var(--platform-navy); font-size: 2.5rem; font-weight: 900; text-align: center; }
 .platform-missions-first-reminder { margin: 0; padding: 0.65rem 0.75rem; border-left: 4px solid #c28b12; color: var(--platform-ink) !important; background: #fff8e4; font-size: 0.78rem; font-weight: 750; line-height: 1.35; }
 .platform-todays-mission-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; }

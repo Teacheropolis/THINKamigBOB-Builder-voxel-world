@@ -116,6 +116,8 @@ test("teacher dashboard provides a responsive categorized teacher menu and statu
   assert.match(app, /Show AMIG Anchor Chart full screen/);
   assert.match(app, /fullscreen-classroom-display/);
   assert.match(app, /split-screen-classroom-display/);
+  assert.match(app, /data-classroom-companion-url/);
+  assert.match(app, /Classroom Display and webpage are side by side/);
   assert.match(css, /\.platform-teacher-menu \{[^}]*display: flex/);
   assert.match(css, /\.platform-teacher-menu-category:hover > \.platform-teacher-menu-panel/);
   assert.match(css, /\.platform-teacher-menu-category\.is-active > summary/);
