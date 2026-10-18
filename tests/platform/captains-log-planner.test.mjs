@@ -11,10 +11,11 @@ function memoryStorage() {
 test("Captain's Log provides a seven-week AMIG prompt progression", () => {
   assert.equal(CAPTAINS_LOG_PRESET_PROMPTS.length, 7);
   assert.deepEqual(CAPTAINS_LOG_PRESET_PROMPTS.map((item) => item.week), [1, 2, 3, 4, 5, 6, 7]);
-  assert.match(CAPTAINS_LOG_PRESET_PROMPTS[0].prompt, /surprised|wonder/i);
-  assert.match(CAPTAINS_LOG_PRESET_PROMPTS[6].prompt, /better/i);
+  assert.equal(CAPTAINS_LOG_PRESET_PROMPTS[0].prompt, "What did you notice?");
+  assert.equal(CAPTAINS_LOG_PRESET_PROMPTS[6].prompt, "What will you try next?");
   assert.equal(CAPTAINS_LOG_PRESET_PROMPTS.every((item) => item.prompt === item.starting), true);
-  assert.match(CAPTAINS_LOG_PRESET_PROMPTS[0].starting, /surprised/i);
+  assert.equal(CAPTAINS_LOG_PRESET_PROMPTS[0].starting, "What did you notice?");
+  assert.equal(CAPTAINS_LOG_PRESET_PROMPTS.every((item) => (item.starting.match(/\?/g) || []).length === 1), true);
   assert.match(CAPTAINS_LOG_PRESET_PROMPTS[0].stretching, /changed your thinking/i);
   assert.ok(CAPTAINS_LOG_PRESET_PROMPTS.filter((item) => /unexpected|better|challenge|uncertainty|limitation|different from your plan|improve/i.test(JSON.stringify(item))).length > CAPTAINS_LOG_PRESET_PROMPTS.length / 2);
 });
