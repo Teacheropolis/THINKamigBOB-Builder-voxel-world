@@ -232,6 +232,8 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /"Current message"[\s\S]*: "Not set"/);
   assert.match(app, /platform-current-plan-status/);
   assert.match(app, /Set Today’s Plan/);
+  assert.match(app, /data-action="\$\{planReady \? "open-current-plan-details" : "open-class-readiness"\}"/);
+  assert.match(app, /if \(action\.dataset\.action === "open-current-plan-details"\)[\s\S]*details\.open = true/);
   assert.match(app, /Seven-week unit/);
   assert.doesNotMatch(app, /platform-exit-ticket-shortcut/);
   assert.match(app, /open-do-now-editor">Do Now Post<\/button><button type="button" data-action="open-captains-log-planner">Exit Ticket/);
