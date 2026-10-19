@@ -2214,9 +2214,9 @@ function teacherDashboardView(state) {
             <a class="platform-button platform-button-secondary platform-preview-student-view" href="#${ROUTES.PREVIEW_STUDENT}" target="_blank" rel="noopener">Preview Student View — No Code</a>
           </div>
           <nav class="platform-command-center-flow" aria-label="Teacher Command Center tasks">
-            <a href="#teacher-live-lesson-dashboard"><span>1</span><strong>Run Class</strong><small>Timer, display, and live tools</small></a>
-            <a href="#teacher-todays-lesson"><span>2</span><strong>Build Lesson</strong><small>Steps, activities, and resources</small></a>
-            <button type="button" data-action="open-captains-log-planner"><span>3</span><strong>Plan Exit Tickets</strong><small>Captain’s Log prompts</small></button>
+            <a href="#${ROUTES.TEACHER_DASHBOARD}" data-action="open-teacher-dashboard-section" data-scroll-target="teacher-live-lesson-dashboard"><span>1</span><strong>Run Class</strong><small>Timer, display, and live tools</small></a>
+            <a href="#${ROUTES.TEACHER_DASHBOARD}" data-action="open-teacher-dashboard-section" data-scroll-target="teacher-todays-lesson"><span>2</span><strong>Build Lesson</strong><small>Steps, activities, and resources</small></a>
+            <a href="#${ROUTES.TEACHER_DASHBOARD}" data-action="open-teacher-dashboard-section" data-scroll-target="teacher-captains-log-planner"><span>3</span><strong>Plan Exit Tickets</strong><small>Captain’s Log prompts</small></a>
             <a href="#${ROUTES.TEACHER_DASHBOARD}" data-action="open-teacher-dashboard-section" data-scroll-target="teacher-evidence-tools"><span>4</span><strong>Review Work</strong><small>Student evidence and progress</small></a>
           </nav>
           <form class="platform-class-readiness-panel" data-form="class-readiness" hidden>
@@ -7633,6 +7633,7 @@ function render() {
     const scrollTarget = pendingScrollTarget ? document.querySelector(`#${pendingScrollTarget}`) : null;
     if (scrollTarget) {
       if (scrollTarget.matches("[data-optional-dashboard-section]")) scrollTarget.hidden = false;
+      if (scrollTarget.matches(".platform-captains-log-planner")) scrollTarget.open = true;
       if (pendingOpenClassResourceEditor) {
         const resourceEditor = scrollTarget.querySelector(".platform-class-resource-editor");
         if (resourceEditor) resourceEditor.open = true;
