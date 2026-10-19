@@ -233,13 +233,15 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /platform-current-plan-status/);
   assert.match(app, /Set Today’s Plan/);
   assert.match(app, /Seven school weeks \(35 days\)/);
-  assert.match(app, /Exit Ticket · Captain’s Log/);
-  assert.match(app, /href="#captains-log-planner-title"/);
+  assert.doesNotMatch(app, /platform-exit-ticket-shortcut/);
+  assert.match(app, /open-do-now-editor">Do Now Post<\/button><button type="button" data-action="open-captains-log-planner">Exit Ticket/);
+  assert.match(app, /Plan Exit Tickets/);
+  assert.match(app, /planner\?\.scrollIntoView/);
   assert.match(app, /＋<\/span> More Classroom Tools/);
   assert.match(app, /Today’s Engineering Time/);
   assert.match(app, /platform-current-plan-phase-key/);
   assert.match(app, /Pomodoro phases are shown by default/);
-  assert.match(css, /platform-exit-ticket-shortcut/);
+  assert.match(css, /platform-plan-exit-tickets/);
   assert.match(app, /planningWindow/);
   assert.match(css, /platform-set-todays-plan/);
   assert.match(css, /platform-current-plan-details > summary \{ min-height: 2\.35rem/);

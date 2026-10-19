@@ -788,6 +788,7 @@ summary:focus-visible {
 .platform-weekly-reflection-setup form p { grid-column: 1 / -1; margin: 0; }
 .platform-captains-log-planner { grid-column: 1 / -1; min-height: 0; margin: 0 0 0.75rem; padding: 0.85rem 1rem; border-top: 6px solid var(--platform-gold); background: linear-gradient(145deg, #fffaf0, #fff2c7); }
 .platform-captains-log-planner > p { margin: 0.15rem 0 0.6rem; }
+.platform-plan-exit-tickets { float: right; min-height: 2.35rem; margin: 0 0 0.45rem 0.75rem; padding: 0.4rem 0.7rem; border: 1px solid #b88412; border-radius: 0.5rem; color: #765400; background: #fff8dc; font-weight: 850; }
 .platform-captains-log-learning-message { padding: 0.65rem 0.75rem; border-left: 5px solid #b98413; border-radius: 0.4rem; background: #fff8dc; color: #173247; }
 .platform-captains-log-planner form { display: grid; grid-template-columns: minmax(16rem, 2fr) minmax(14rem, 1fr); gap: 0.55rem 0.75rem; align-items: end; }
 .platform-captains-log-planner label { display: grid; gap: 0.3rem; font-weight: 800; }
@@ -966,6 +967,7 @@ summary:focus-visible {
 .platform-live-lesson-tool-buttons button[data-action="open-name-picker-display"] { --tool-accent: #b88412; border-top-color: #b88412; color: #825d08; background: linear-gradient(180deg, #fff 0%, #fff 58%, #fff7df 100%); }
 .platform-live-lesson-tool-buttons button[data-action="open-timer-popout"] { --tool-accent: #a66f00; border-top-color: #b47a05; color: #845900; background: linear-gradient(180deg, #fff 0%, #fff 58%, #fff7df 100%); }
 .platform-live-lesson-tool-buttons button[data-action="open-message-board-quick"] { --tool-accent: #2d7d5b; border-top-color: #2d7d5b; color: #276d50; background: linear-gradient(180deg, #fff 0%, #fff 58%, #eff8f3 100%); }
+.platform-live-lesson-tool-buttons button[data-action="open-captains-log-planner"] { --tool-accent: #b88412; border-top-color: #b88412; color: #765400; background: linear-gradient(180deg,#fff 0%,#fff 58%,#fff8dc 100%); }
 .platform-live-lesson-tool-buttons button[data-action="open-whiteboard"] { --tool-accent: #167a7c; border-top-color: #167a7c; color: #126d6f; background: linear-gradient(180deg, #fff 0%, #fff 58%, #edf8f8 100%); }
 .platform-live-lesson-tool-buttons button[data-action="open-voice-meter-display"] { --tool-accent: #a94c5b; border-top-color: #a94c5b; color: #93424f; background: linear-gradient(180deg, #fff 0%, #fff 58%, #fbf0f2 100%); }
 .platform-live-lesson-tool-buttons button:hover, .platform-live-lesson-tool-buttons button:focus-visible { border-color: var(--platform-blue-dark); color: var(--platform-navy); filter: brightness(0.98); box-shadow: 0 0 0 3px rgba(23, 105, 142, 0.14), 0 0.25rem 0.55rem rgba(16, 47, 69, 0.13); }
@@ -1017,7 +1019,6 @@ summary:focus-visible {
 .platform-run-class-actions .platform-set-todays-plan { min-height: 2.8rem; padding: 0.55rem 1rem; border: 3px solid #9a6800; border-radius: 0.65rem; color: #19384a; background: linear-gradient(180deg, #fff5c9 0%, #f4c94f 100%); box-shadow: 0 0.35rem 0.75rem rgba(122, 84, 0, 0.24); font-size: 0.9rem; font-weight: 900; }
 .platform-run-class-actions .platform-set-todays-plan:hover, .platform-run-class-actions .platform-set-todays-plan:focus-visible { background: linear-gradient(180deg, #fff9df 0%, #ffd968 100%); outline: 3px solid rgba(216, 165, 38, 0.35); }
 .platform-run-class-actions .platform-start-classroom-display, .platform-run-class-actions .platform-preview-student-view { min-height: 2.2rem; padding-block: 0.35rem; }
-.platform-run-class-actions .platform-exit-ticket-shortcut { min-height: 2.2rem; padding: 0.35rem 0.7rem; border: 1px solid #b88412; color: #765400; background: #fff8dc; font-weight: 800; }
 .platform-current-class-plan-compact .platform-current-plan-timer-widget { grid-template-columns: 4rem minmax(9rem, 1fr) minmax(22rem, 1.6fr); gap: 0.5rem; }
 .platform-current-class-plan-compact .platform-current-plan-timer-wheel { width: 4rem; }
 .platform-current-class-plan-compact .platform-current-plan-timer-controls { grid-column: auto; align-self: center; }

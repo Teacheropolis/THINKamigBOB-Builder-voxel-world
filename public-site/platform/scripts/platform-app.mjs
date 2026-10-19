@@ -807,7 +807,7 @@ function currentClassPlanMarkup(classId, teacherId) {
   const voiceDisplayMode = readVoiceMeterDisplayMode();
   const voiceIsOn = Boolean(voiceMeterStream);
   const liveVoiceBody = `<div class="platform-current-plan-live-voice" data-voice-display-mode="${voiceDisplayMode}"><div class="platform-live-voice-heading"><strong data-voice-prediction>${predictedLearningType(0).icon} ${predictedLearningType(0).label}</strong><small>Goal: ${escapeHtml(voiceActivity.label)}</small></div><p class="platform-live-voice-status" data-live-voice-status data-state="${voiceIsOn ? "on" : "off"}"><span aria-hidden="true"></span> Voice Meter is ${voiceIsOn ? "on and listening" : "off"}</p><div class="platform-voice-meter" data-voice-meter data-meter-state="green" style="--voice-meter-level: 0%; --voice-threshold: ${voiceActivity.target}%"><div class="platform-voice-meter-scale" aria-hidden="true"><span>Ready</span><span>Close</span><span>Too loud</span></div><div class="platform-voice-meter-track"><span class="platform-voice-meter-fill"></span><i class="platform-voice-threshold-marker" title="Expected threshold"></i></div><p><strong data-voice-meter-output>0</strong><span aria-hidden="true"> / 100</span></p></div><label>Meter view<select data-voice-meter-display-mode><option value="basic"${voiceDisplayMode === "basic" ? " selected" : ""}>Basic volume</option><option value="prediction"${voiceDisplayMode === "prediction" ? " selected" : ""}>Predicted learning type + threshold</option></select></label><div class="platform-live-voice-actions"><button type="button" data-action="voice-meter-start"${voiceIsOn ? " disabled" : ""}>Turn Voice Meter On</button><button type="button" data-action="voice-meter-stop"${voiceIsOn ? "" : " disabled"}>Turn Off</button><button type="button" data-action="open-voice-meter-display">Open Class View</button></div></div>`;
-  const presentationToolControls = `<details class="platform-more-classroom-tools platform-more-classroom-tools-standalone"><summary><span aria-hidden="true">＋</span> More Classroom Tools</summary><div class="platform-live-lesson-tools" aria-labelledby="live-lesson-tools-title"><p class="platform-command-label" id="live-lesson-tools-title">Additional tools</p><div class="platform-live-lesson-tool-buttons"><button type="button" data-action="open-timer-display">Present on This Screen</button><button type="button" data-action="open-amig-anchor-chart">AMIG Anchor Chart</button><button type="button" data-action="open-do-now-editor">Do Now Post</button><button type="button" data-action="open-name-picker-display">Name Picker</button><button type="button" data-action="open-timer-popout">Floating Timer</button></div><p id="classroom-display-help" class="platform-live-lesson-tool-help">Classroom Display opens a separate student-facing window for a projector or smartboard.</p><p data-classroom-window-status role="status"></p></div></details>`;
+  const presentationToolControls = `<details class="platform-more-classroom-tools platform-more-classroom-tools-standalone"><summary><span aria-hidden="true">＋</span> More Classroom Tools</summary><div class="platform-live-lesson-tools" aria-labelledby="live-lesson-tools-title"><p class="platform-command-label" id="live-lesson-tools-title">Additional tools</p><div class="platform-live-lesson-tool-buttons"><button type="button" data-action="open-timer-display">Present on This Screen</button><button type="button" data-action="open-amig-anchor-chart">AMIG Anchor Chart</button><button type="button" data-action="open-do-now-editor">Do Now Post</button><button type="button" data-action="open-captains-log-planner">Exit Ticket</button><button type="button" data-action="open-name-picker-display">Name Picker</button><button type="button" data-action="open-timer-popout">Floating Timer</button></div><p id="classroom-display-help" class="platform-live-lesson-tool-help">Classroom Display opens a separate student-facing window for a projector or smartboard.</p><p data-classroom-window-status role="status"></p></div></details>`;
   const timerVisual = effectiveTimerSchedule.pomodoroEnabled ? presentationTimerVisualState(timer) : currentTimerVisualState(timer);
   const timerPhase = timerVisual.active ? timerVisual.phase : null;
   const phaseKey = effectiveTimerSchedule.pomodoroEnabled ? `<ol class="platform-current-plan-phase-key" aria-label="Today’s Pomodoro phases">${effectiveTimerSchedule.phases.map((phase) => `<li data-phase-color="${escapeHtml(phase.color)}"><i aria-hidden="true"></i><span><strong>${escapeHtml(phase.name)}</strong><small>Starts at ${phase.startMinute === 0 ? "class start" : `minute ${phase.startMinute}`}</small></span></li>`).join("")}</ol>` : "";
@@ -2211,7 +2211,6 @@ function teacherDashboardView(state) {
               <button class="platform-set-todays-plan" type="button" data-action="open-class-readiness" data-readiness-focus="mission"><i aria-hidden="true">${planReady ? "✓" : "!"}</i> ${planReady ? `Review Today’s Plan${classSetupProfiles.profile(classRecord?.id)?.planningWindow?.label ? ` · ${escapeHtml(classSetupProfiles.profile(classRecord?.id).planningWindow.label)}` : ""}` : "Set Today’s Plan"}</button>
             </div>
             <button class="platform-start-classroom-display" type="button" data-action="open-classroom-presentation-window" aria-describedby="classroom-display-help">Start Classroom Display</button>
-            <a class="platform-button platform-exit-ticket-shortcut" href="#captains-log-planner-title">Exit Ticket · Captain’s Log</a>
             <a class="platform-button platform-button-secondary platform-preview-student-view" href="#${ROUTES.PREVIEW_STUDENT}" target="_blank" rel="noopener">Preview Student View — No Code</a>
           </div>
           <form class="platform-class-readiness-panel" data-form="class-readiness" hidden>
@@ -5949,6 +5948,12 @@ async function handleClick(event) {
     window.setTimeout(() => form?.querySelector("select, textarea, input")?.focus(), 350);
     return;
   }
+  if (action.dataset.action === "open-captains-log-planner") {
+    const planner = document.querySelector(".platform-captains-log-planner");
+    planner?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => planner?.querySelector("[data-captains-log-editor-week]")?.focus(), 350);
+    return;
+  }
   if (action.dataset.action === "dismiss-captains-log-reminder") {
     const reminder = action.closest("[data-student-captains-log-reminder]");
     if (reminder) { reminder.hidden = true; reminder.dataset.dismissed = "true"; }
@@ -7604,6 +7609,7 @@ function render() {
         </section>
       </div>
     </details>`);
+  root.querySelector("#captains-log-planner-title")?.insertAdjacentHTML("beforebegin", '<button class="platform-plan-exit-tickets" type="button" data-action="open-captains-log-planner">Plan Exit Tickets</button>');
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) { installClassroomDisplayChoices(); applyClassroomBobDisplay(); }
   if (allowedRoute === ROUTES.TEACHER_LOGIN) mountProductionGoogleSignIn();
   if (allowedRoute === ROUTES.TEACHER_DASHBOARD) pb002jClasswide.mount(root, "teacher");
