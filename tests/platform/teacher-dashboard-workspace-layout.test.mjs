@@ -235,7 +235,7 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /Seven school weeks \(35 days\)/);
   assert.match(app, /Exit Ticket · Captain’s Log/);
   assert.match(app, /href="#captains-log-planner-title"/);
-  assert.match(app, /More Classroom Tools <strong>Open<\/strong>/);
+  assert.match(app, /＋<\/span> More Classroom Tools/);
   assert.match(app, /Today’s Engineering Time/);
   assert.match(app, /platform-current-plan-phase-key/);
   assert.match(app, /Pomodoro phases are shown by default/);
@@ -243,7 +243,7 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /planningWindow/);
   assert.match(css, /platform-set-todays-plan/);
   assert.match(css, /platform-current-plan-details > summary \{ min-height: 2\.35rem/);
-  assert.match(css, /platform-more-classroom-tools-standalone > summary \{ display: flex;[^}]*background: linear-gradient/);
+  assert.match(css, /platform-more-classroom-tools-standalone > summary \{ display: flex;[^}]*background: #eef6f8/);
   assert.match(css, /platform-current-plan-grid article \{[^}]+min-height: 6\.25rem; height: auto/);
   assert.match(app, /Today’s “I Can” Goals/);
   assert.match(app, /Suggested timeline:/);
