@@ -253,7 +253,7 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(css, /platform-current-plan-grid article \{[^}]+min-height: 6\.25rem; height: auto/);
   assert.match(app, /Today’s “I Can” Goals/);
   assert.match(app, /Suggested timeline:/);
-  assert.match(app, /Make the two essential choices below/);
+  assert.match(app, /Choose a plan and duration, then apply/);
   assert.match(app, /Apply to Class/);
   assert.match(app, /if \(missionChoice === "previous"\)/);
   assert.match(app, /if \(planningRange !== "today"\) classSetupProfiles\.save/);
