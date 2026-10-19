@@ -720,12 +720,25 @@ summary:focus-visible {
 .platform-message-board-quick-panel #teacher-class-schedule { margin: 0; }
 .platform-class-readiness-panel[hidden] { display: none !important; }
 .platform-class-readiness-panel { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; padding: 0.9rem; border: 2px solid var(--platform-blue); border-radius: 0.75rem; background: #f5fbfd; }
-.platform-class-readiness-panel > div:first-child, .platform-class-readiness-panel > .platform-actions { grid-column: 1 / -1; }
+.platform-class-readiness-heading, .platform-quick-setup-steps, .platform-quick-setup-optional, .platform-quick-setup-review { grid-column: 1 / -1; }
 .platform-class-readiness-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .platform-class-readiness-heading > button { min-height: 2.25rem; padding: 0.35rem 0.65rem; border: 1px solid var(--platform-blue); border-radius: 0.45rem; color: var(--platform-blue-dark); background: #fff; font: inherit; font-size: 0.72rem; font-weight: 800; cursor: pointer; }
 .platform-class-readiness-panel h3, .platform-class-readiness-panel p { margin: 0; }
 .platform-class-readiness-panel label { display: grid; gap: 0.3rem; font-size: 0.75rem; font-weight: 800; }
 .platform-class-readiness-panel select { min-height: 2.75rem; }
+.platform-quick-setup-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.platform-quick-setup-steps li { display: flex; align-items: center; gap: 0.45rem; color: var(--platform-muted); font-size: 0.72rem; font-weight: 850; }
+.platform-quick-setup-steps span, .platform-quick-setup-choice > span, .platform-planning-range legend span, .platform-quick-setup-review > span { display: inline-grid; width: 1.7rem; height: 1.7rem; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #fff; background: var(--platform-blue-dark); font-size: 0.75rem; font-weight: 900; }
+.platform-quick-setup-choice { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.6rem; align-items: center; padding: 0.75rem; border: 1px solid #c7d9df; border-radius: 0.65rem; background: #fff; }
+.platform-planning-range { margin: 0; }
+.platform-quick-setup-optional { border: 1px solid #c7d9df; border-radius: 0.6rem; background: #fff; }
+.platform-quick-setup-optional > summary { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.65rem 0.75rem; color: var(--platform-blue-dark); font-size: 0.78rem; font-weight: 850; cursor: pointer; }
+.platform-quick-setup-optional > summary small { padding: 0.15rem 0.4rem; border-radius: 999px; color: var(--platform-muted); background: var(--platform-soft); font-size: 0.62rem; }
+.platform-quick-setup-optional .platform-quick-goals { border: 0; border-top: 1px solid #c7d9df; border-radius: 0; }
+.platform-quick-setup-review { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0.65rem; align-items: center; padding: 0.75rem; border: 2px solid #9bc8af; border-radius: 0.65rem; background: #f1faf5; }
+.platform-quick-setup-review strong { color: var(--platform-navy); }
+.platform-quick-setup-review p { color: var(--platform-muted); font-size: 0.72rem; }
+.platform-quick-setup-review button { min-height: 2.75rem; padding: 0.55rem 0.85rem; border: 2px solid var(--platform-blue-dark); border-radius: 0.55rem; color: #fff; background: var(--platform-blue-dark); font: inherit; font-weight: 900; cursor: pointer; }
 .platform-today-primary-grid,
 .platform-class-rhythm { display: grid; gap: 1rem; }
 .platform-today-primary-grid { grid-template-columns: 1.4fr 1fr 1fr; }
@@ -2264,6 +2277,9 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 }
 
 @media (max-width: 520px) {
+  .platform-quick-setup-steps { grid-template-columns: 1fr; }
+  .platform-quick-setup-review { grid-template-columns: auto minmax(0, 1fr); }
+  .platform-quick-setup-review button { grid-column: 1 / -1; width: 100%; }
   .platform-class-message-formatting { grid-template-columns: 1fr; }
   .platform-large-voice-controls { grid-template-columns: 1fr; }
   .platform-student-voice-meter { width: min(18rem, calc(100vw - 1rem)); }

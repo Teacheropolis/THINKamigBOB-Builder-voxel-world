@@ -232,7 +232,7 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /"Current message"[\s\S]*: "Not set"/);
   assert.match(app, /platform-current-plan-status/);
   assert.match(app, /Set Today’s Plan/);
-  assert.match(app, /Seven school weeks \(35 days\)/);
+  assert.match(app, /Seven-week unit/);
   assert.doesNotMatch(app, /platform-exit-ticket-shortcut/);
   assert.match(app, /open-do-now-editor">Do Now Post<\/button><button type="button" data-action="open-captains-log-planner">Exit Ticket/);
   assert.match(app, /Plan Exit Tickets/);
@@ -253,7 +253,8 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(css, /platform-current-plan-grid article \{[^}]+min-height: 6\.25rem; height: auto/);
   assert.match(app, /Today’s “I Can” Goals/);
   assert.match(app, /Suggested timeline:/);
-  assert.match(app, /Minimize Quick Setup/);
+  assert.match(app, /Make the two essential choices below/);
+  assert.match(app, /Apply to Class/);
   assert.match(app, /if \(missionChoice === "previous"\)/);
   assert.match(app, /if \(planningRange !== "today"\) classSetupProfiles\.save/);
   assert.match(app, /data-readiness-no-mission-confirmation/);
@@ -320,7 +321,7 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /category === "access"/);
   assert.match(app, /data-action="save-current-plan-message"/);
   assert.match(app, /data-action="return-current-plan"/);
-  assert.ok((app.match(/data-action="return-to-current-class-plan"/g) || []).length >= 8);
+  assert.ok((app.match(/data-action="return-to-current-class-plan"/g) || []).length >= 7);
   assert.match(app, /Return to Today’s Class Plan/);
   assert.match(app, /data-current-plan-resource-toggle/);
   assert.match(app, /currentClassPlanEditorMarkup/);

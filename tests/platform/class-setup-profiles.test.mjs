@@ -55,7 +55,7 @@ test("Manage Classes orders its primary setup sections and copies reflection req
 test("Today readiness squares are clickable and persist settings per class", () => {
   const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
   const css = readFileSync(new URL("../../platform/styles/platform.css", import.meta.url), "utf8");
-  for (const text of ["Quick class setup", "Continue current settings", "Start a new mission", "Save Today’s Plan Setting", "Class Schedule"]) assert.match(app, new RegExp(text));
+  for (const text of ["Quick class setup", "Use the current plan", "Start a new mission", "Apply Quick Class Setup", "Class Schedule"]) assert.match(app, new RegExp(text));
   assert.match(app, /data-action="open-class-readiness"/);
   assert.match(app, /data-action="open-message-board-quick"/);
   assert.match(app, /id="teacher-message-board"/);
@@ -68,7 +68,7 @@ test("Today readiness squares are clickable and persist settings per class", () 
   assert.match(app, /host\.append\(schedule\)/);
   const quickMessageHandler = app.slice(app.indexOf('if (action.dataset.action === "open-message-board-quick")'), app.indexOf('if (action.dataset.action === "open-class-schedule-quick")'));
   assert.doesNotMatch(quickMessageHandler, /scrollIntoView|\.focus\(/);
-  assert.match(app, /classSetupProfiles\.save\(classId, \{ \.\.\.profile, readiness, todayGoals, todayGoalsMode \}\)/);
+  assert.match(app, /classSetupProfiles\.save\(classId, \{ \.\.\.profile, readiness, todayGoals, todayGoalsMode, planningWindow \}\)/);
   assert.match(app, /todaysGoalInputsMarkup\(classRecord\?\.id\)/);
   assert.match(app, /pendingScrollTarget = "teacher-todays-resources"/);
   assert.match(app, /resourceEditor\.open = true/);
