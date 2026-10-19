@@ -56,7 +56,7 @@ test("Today readiness squares are clickable and persist settings per class", () 
   const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
   const css = readFileSync(new URL("../../platform/styles/platform.css", import.meta.url), "utf8");
   for (const text of ["Quick class setup", "Use the current plan", "Start a new mission", "Apply Quick Class Setup", "Class Schedule"]) assert.match(app, new RegExp(text));
-  assert.match(app, /data-action="open-class-readiness"/);
+  assert.match(app, /"open-current-plan-details" : "open-class-readiness"/);
   assert.match(app, /data-action="open-message-board-quick"/);
   assert.match(app, /id="teacher-message-board"/);
   assert.match(app, /data-message-board-home hidden/);

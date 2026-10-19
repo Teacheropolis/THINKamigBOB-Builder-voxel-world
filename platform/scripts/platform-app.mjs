@@ -2187,7 +2187,8 @@ function teacherDashboardView(state) {
   const builderAvailable = missionState.builder === TODAYS_MISSION_AVAILABILITY.AVAILABLE;
   const workshopAvailable = missionState.workshop === TODAYS_MISSION_AVAILABILITY.AVAILABLE;
   const readiness = classReadiness(classRecord?.id);
-  const planReady = hasMission || readiness.mission === "none";
+  const setupProfile = classSetupProfiles.profile(classRecord?.id);
+  const planReady = Boolean(setupProfile?.planningWindow?.savedAt);
   const timerReady = readiness.timer !== "off";
   const selectedVoiceLevel = voiceMeter.read();
   const selectedVoiceActivity = readVoiceMeterActivity();
@@ -6391,9 +6392,8 @@ async function handleClick(event) {
     const selectedWindow = planningWindows[planningRange] || planningWindows.today;
     const planningWindow = { ...selectedWindow, scope: planningRange, startsOn: new Date().toISOString().slice(0, 10), savedAt: Date.now() };
     if (missionChoice === "previous") {
-      if (planningRange !== "today") classSetupProfiles.save(classId, { ...(classSetupProfiles.profile(classId) ?? {}), planningWindow });
-      form.hidden = true;
-      if (planningRange !== "today") render();
+      classSetupProfiles.save(classId, { ...(classSetupProfiles.profile(classId) ?? {}), planningWindow });
+      render();
       return;
     }
     const currentMission = todaysMission.read();

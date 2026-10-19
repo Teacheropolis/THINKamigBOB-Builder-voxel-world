@@ -232,8 +232,10 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /"Current message"[\s\S]*: "Not set"/);
   assert.match(app, /platform-current-plan-status/);
   assert.match(app, /Set Today’s Plan/);
+  assert.match(app, /const planReady = Boolean\(setupProfile\?\.planningWindow\?\.savedAt\)/);
   assert.match(app, /data-action="\$\{planReady \? "open-current-plan-details" : "open-class-readiness"\}"/);
   assert.match(app, /if \(action\.dataset\.action === "open-current-plan-details"\)[\s\S]*details\.open = true/);
+  assert.match(app, /missionChoice === "previous"\)[\s\S]*classSetupProfiles\.save\(classId, \{[\s\S]*planningWindow[\s\S]*render\(\)/);
   assert.match(app, /Seven-week unit/);
   assert.doesNotMatch(app, /platform-exit-ticket-shortcut/);
   assert.match(app, /open-do-now-editor">Do Now Post<\/button><button type="button" data-action="open-captains-log-planner">Exit Ticket/);
@@ -258,7 +260,7 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /Choose a plan and duration, then apply/);
   assert.match(app, /Apply to Class/);
   assert.match(app, /if \(missionChoice === "previous"\)/);
-  assert.match(app, /if \(planningRange !== "today"\) classSetupProfiles\.save/);
+  assert.match(app, /classSetupProfiles\.save\(classId, \{ \.\.\.\(classSetupProfiles\.profile\(classId\) \?\? \{\}\), planningWindow \}\)/);
   assert.match(app, /data-readiness-no-mission-confirmation/);
   assert.match(app, /The selected mission is <strong data-readiness-current-mission>/);
   assert.match(app, /pendingScrollTarget = "teacher-todays-resources"/);
