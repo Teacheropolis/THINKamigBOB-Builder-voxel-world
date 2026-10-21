@@ -9,7 +9,7 @@ function safeUrl(value) {
 }
 function normalizeResource(value = {}) {
   const mediaType = DIRECTION_MEDIA_TYPES.includes(value.mediaType) && value.mediaType !== "none" ? value.mediaType : "webpage";
-  return { title: cleanText(value.title, 100), mediaType, url: cleanText(value.url, 1500) };
+  return { title: cleanText(value.title, 100), mediaType, url: cleanText(value.url, 1500), audienceIds: Array.isArray(value.audienceIds) ? [...new Set(value.audienceIds.map(String).filter(Boolean))] : [] };
 }
 function normalizeCard(value = {}) {
   const mediaType = DIRECTION_MEDIA_TYPES.includes(value.mediaType) ? value.mediaType : "none";

@@ -1606,7 +1606,13 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
 .platform-direction-editor textarea { resize: vertical; }
 .platform-direction-resource-editor { display: grid; gap: 0.7rem; padding: 0.8rem; border: 2px solid var(--platform-border); border-radius: 0.65rem; }
 .platform-direction-resource-row { display: grid; grid-template-columns: minmax(9rem, 0.4fr) minmax(12rem, 0.65fr) minmax(14rem, 1fr) auto; gap: 0.55rem; align-items: end; padding: 0.7rem; border: 2px solid #e0c984; border-radius: 0.55rem; background: #fffaf0; }
-.platform-direction-resources { display: grid; gap: 0.75rem; }
+.platform-direction-choice-audience { grid-column: 1 / -1; display: grid; gap: 0.4rem; padding: 0.55rem; border: 1px solid #c8d8de; border-radius: 0.45rem; background: #f7fbfc; }
+.platform-direction-choice-audience p { margin: 0; color: var(--platform-muted); font-size: 0.75rem; }
+.platform-direction-choice-audience > div { display: flex; flex-wrap: wrap; gap: 0.35rem 0.75rem; }
+.platform-direction-choice-audience label { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.78rem; }
+.platform-direction-choice-summary, .platform-student-choice-instruction { margin: 0; color: var(--platform-green); font-size: 0.78rem; font-weight: 850; }
+.platform-direction-resources { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.75rem; }
+.platform-direction-resources > a { display: grid; place-items: center; text-align: center; }
 @media (max-width: 760px) { .platform-direction-resource-row { grid-template-columns: 1fr; } }
 .platform-direction-image { display: block; width: auto; max-width: 100%; max-height: 28rem; margin-inline: auto; border-radius: 0.65rem; object-fit: contain; }
 .platform-direction-embed { display: block; width: 100%; min-height: clamp(18rem, 48vw, 38rem); border: 0; border-radius: 0.65rem; background: #fff; }

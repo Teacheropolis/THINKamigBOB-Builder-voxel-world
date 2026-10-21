@@ -1167,32 +1167,38 @@ function directionResourceMarkup(resource, title) {
   const fallbackLabels = { pdf: "PDF", youtube: "video", builder: "Builder", "mission-activity": "mission activity", "side-path": "Side Path", webpage: "webpage" };
   return `<a class="platform-button platform-button-secondary" href="${escapeHtml(resource.url)}" target="_blank" rel="noopener noreferrer">Open ${escapeHtml(resource.title || fallbackLabels[resource.mediaType] || "resource")}</a>`;
 }
-function directionMediaMarkup(card) {
-  const resources = card.resources?.length ? card.resources : card.url && card.mediaType !== "none" ? [{ mediaType: card.mediaType, url: card.url }] : [];
-  return resources.length ? `<div class="platform-direction-resources">${resources.map((resource) => directionResourceMarkup(resource, card.title)).join("")}</div>` : "";
+function directionMediaMarkup(card, studentId = "") {
+  const allResources = card.resources?.length ? card.resources : card.url && card.mediaType !== "none" ? [{ mediaType: card.mediaType, url: card.url, audienceIds: [] }] : [];
+  const alternates = studentId ? allResources.filter((resource) => resource.audienceIds?.includes(String(studentId))) : [];
+  const resources = studentId ? (alternates.length ? alternates : allResources.filter((resource) => !resource.audienceIds?.length)) : allResources;
+  if (!resources.length) return "";
+  const instruction = resources.length > 1 ? `<p class="platform-student-choice-instruction">Choose one activity for this step.</p>` : "";
+  return `${studentId ? instruction : ""}<div class="platform-direction-resources" data-activity-choice-count="${resources.length}">${resources.map((resource) => directionResourceMarkup(resource, card.title)).join("")}</div>`;
 }
-function directionResourceEditorRow(resource = { mediaType: "image", url: "" }) {
+function directionResourceEditorRow(resource = { mediaType: "image", url: "", audienceIds: [] }, roster = []) {
   const labels = { image: "Image", "google-slides": "Google Slides", youtube: "YouTube video", pdf: "PDF", webpage: "Webpage", builder: "STEM Builder", "mission-activity": "Mission Activity", "side-path": "Side Path" };
-  return `<div class="platform-direction-resource-row"><label>Type<select name="resourceType">${Object.entries(labels).map(([value, label]) => `<option value="${value}"${resource.mediaType === value ? " selected" : ""}>${label}</option>`).join("")}</select></label><label>Student-facing title<input name="resourceTitle" maxlength="100" placeholder="Example: Bridge design slides" value="${escapeHtml(resource.title || "")}"></label><label>Link or platform address<input name="resourceUrl" type="text" placeholder="https://… or ../index.html" value="${escapeHtml(resource.url || "")}"></label><div class="platform-direction-actions"><button type="button" data-action="move-direction-resource" data-offset="-1" aria-label="Move resource up">↑</button><button type="button" data-action="move-direction-resource" data-offset="1" aria-label="Move resource down">↓</button><button type="button" data-action="remove-direction-resource">Remove</button></div></div>`;
+  const audienceIds = resource.audienceIds || [];
+  const audience = roster.length ? `<fieldset class="platform-direction-choice-audience"><legend>Who receives this choice?</legend><p>Leave every name unchecked for the whole class, or select students who need this alternate.</p><div>${roster.map((student) => `<label><input type="checkbox" name="resourceAudience" value="${escapeHtml(student.id)}"${audienceIds.includes(student.id) ? " checked" : ""}> ${escapeHtml(student.displayName)}</label>`).join("")}</div></fieldset>` : "";
+  return `<div class="platform-direction-resource-row"><label>Activity type<select name="resourceType">${Object.entries(labels).map(([value, label]) => `<option value="${value}"${resource.mediaType === value ? " selected" : ""}>${label}</option>`).join("")}</select></label><label>Activity choice title<input name="resourceTitle" maxlength="100" placeholder="Example: Build a paper bridge" value="${escapeHtml(resource.title || "")}"></label><label>Link or platform address<input name="resourceUrl" type="text" placeholder="https://… or ../index.html" value="${escapeHtml(resource.url || "")}"></label>${audience}<div class="platform-direction-actions"><button type="button" data-action="move-direction-resource" data-offset="-1" aria-label="Move activity choice up">↑</button><button type="button" data-action="move-direction-resource" data-offset="1" aria-label="Move activity choice down">↓</button><button type="button" data-action="remove-direction-resource">Remove Choice</button></div></div>`;
 }
 
 function activityDirectionsTeacherMarkup(classId) {
   const state = activityDirections.read(classId);
   const cards = state.cards.map((card, index) => `<article class="platform-direction-card" data-direction-card-id="${escapeHtml(card.id)}" data-status="${card.status}">
     <div><span class="platform-direction-number">${index + 1}</span><span class="platform-direction-status">${card.status === "released" ? "Visible to students" : "Draft — teacher only"}</span></div>
-    <h4>${escapeHtml(card.title)}</h4><p>${escapeHtml(card.directions)}</p>${directionMediaMarkup(card)}
+    <h4>${escapeHtml(card.title)}</h4><p>${escapeHtml(card.directions)}</p>${card.resources?.length ? `<p class="platform-direction-choice-summary">${card.resources.length} activity choice${card.resources.length === 1 ? "" : "s"}${card.resources.some((resource) => resource.audienceIds?.length) ? " · includes selected-student alternatives" : ""}</p>` : ""}${directionMediaMarkup(card)}
     <div class="platform-direction-actions"><button type="button" data-action="edit-direction-card" data-direction-id="${escapeHtml(card.id)}">Edit</button>${card.status === "released" ? `<button type="button" data-action="withdraw-direction-card" data-direction-id="${escapeHtml(card.id)}">Withdraw</button>` : `<button type="button" data-action="release-direction-card" data-direction-id="${escapeHtml(card.id)}">Release</button>`}<details class="platform-direction-more"><summary>More</summary><div><button type="button" data-action="duplicate-direction-card" data-direction-id="${escapeHtml(card.id)}">Duplicate</button><button type="button" data-action="move-direction-card" data-direction-id="${escapeHtml(card.id)}" data-direction-offset="-1"${index === 0 ? " disabled" : ""}>Move Up</button><button type="button" data-action="move-direction-card" data-direction-id="${escapeHtml(card.id)}" data-direction-offset="1"${index === state.cards.length - 1 ? " disabled" : ""}>Move Down</button><button type="button" data-action="remove-direction-card" data-direction-id="${escapeHtml(card.id)}">Delete</button></div></details></div>
   </article>`).join("");
   return `<section class="platform-command-card platform-activity-directions platform-visual-zone platform-zone-create" data-activity-directions-teacher aria-labelledby="activity-directions-title">
     <p class="platform-command-label">Directions, activities, and resources together</p><h2 id="activity-directions-title">Lesson Steps</h2>
-    <p>Add each step as the lesson develops, then attach everything students need directly to that step. Draft steps stay private until you release them.</p>
+    <p>Build the sequence students follow. Add one or more activity choices to each step, reorder steps at any time, and assign an alternate choice to selected students when needed.</p>
     <label class="platform-activity-title">Activity title<input data-activity-directions-title maxlength="100" value="${escapeHtml(state.title)}"></label>
     <div class="platform-direction-list">${cards || `<p class="platform-student-empty-state">No direction cards yet. Add the first card below.</p>`}</div>
     <details class="platform-direction-editor"><summary>Add or Edit a Lesson Step</summary>
       <form data-form="activity-direction" novalidate><input type="hidden" name="id">
         <label>Card title<input name="title" maxlength="100" placeholder="Example: Step 1 — Investigate" required></label>
         <label>Directions<textarea name="directions" maxlength="2000" rows="4" placeholder="Tell students exactly what to do next." required></textarea></label>
-        <fieldset class="platform-direction-resource-editor"><legend>Activities and resources for this step</legend><p>Attach slides, images, video, webpages, Builder, a mission activity, or a Side Path. Students will find each item directly under these directions.</p><div data-direction-resource-list></div><button type="button" data-action="add-direction-resource">+ Add an Activity or Resource</button></fieldset>
+        <fieldset class="platform-direction-resource-editor"><legend>Activity choices for this step</legend><p>Add one required activity or give students two or more choices. To differentiate, select student names on an alternate choice; those students will see the alternate instead of the whole-class choices.</p><div data-direction-resource-list></div><button type="button" data-action="add-direction-resource">+ Add Another Activity Choice</button></fieldset>
         <label>Student visibility<select name="visibility"><option value="draft">Keep private draft</option><option value="released">Show to students</option></select></label>
         <div class="platform-direction-actions"><button type="button" data-action="save-direction-card">Save Lesson Step</button><button type="reset" data-action="cancel-direction-edit">Clear</button></div>
         <p data-activity-direction-status role="status">${escapeHtml(classroomLessonServiceNotice || "Choose whether students can see this step, then save it.")}</p>
@@ -1201,11 +1207,11 @@ function activityDirectionsTeacherMarkup(classId) {
   </section>`;
 }
 
-function activityDirectionsStudentMarkup(classId) {
+function activityDirectionsStudentMarkup(classId, studentId) {
   const state = activityDirections.read(classId), cards = activityDirections.releasedForStudents(classId);
   return `<section class="platform-activity-directions platform-activity-directions-student platform-student-zone platform-student-zone-now" aria-labelledby="student-directions-title">
     <p class="platform-student-section-label">Teacher directions</p><h2 id="student-directions-title">${escapeHtml(state.title)}</h2>
-    ${cards.length ? `<ol class="platform-student-direction-list">${cards.map((card) => `<li><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.directions)}</p>${directionMediaMarkup(card)}</li>`).join("")}</ol>` : `<p class="platform-student-empty-state">Your teacher has not released any directions yet.</p>`}
+    ${cards.length ? `<ol class="platform-student-direction-list">${cards.map((card) => `<li><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.directions)}</p>${directionMediaMarkup(card, studentId)}</li>`).join("")}</ol>` : `<p class="platform-student-empty-state">Your teacher has not released any directions yet.</p>`}
   </section>`;
 }
 
@@ -1274,7 +1280,7 @@ function todaysLessonStudentMarkup(classId, studentId, assignedResearch, locked 
   const sidePathType = currentSidePath?.title || currentSidePath?.type || "Teacher choice";
   const sidePathLaunch = currentSidePath ? `<a class="platform-school-start-launch-link platform-school-start-launch-link-side-path" href="${escapeHtml(currentSidePath.url)}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SP</span><strong>SIDE PATH</strong><small>${escapeHtml(sidePathType)}</small></a>` : `<button class="platform-school-start-launch-link platform-school-start-launch-link-side-path is-unavailable" type="button" disabled aria-label="Side Path locked"><span aria-hidden="true">SP</span><strong>SIDE PATH</strong><small>🔒 Locked</small></button>`;
   const researchMarkup = assignedResearch.topic || assignedResearch.links.length ? `<section class="platform-assigned-research platform-assigned-research-student" aria-labelledby="assigned-research-student-title"><p class="platform-student-section-label">Teacher links</p><h3 id="assigned-research-student-title">Research</h3>${assignedResearch.topic ? `<p>${escapeHtml(assignedResearch.topic)}</p>` : ""}${assignedResearch.links.length ? `<div class="platform-assigned-research-links">${assignedResearch.links.map((link) => `<button type="button" data-action="open-assigned-research" data-research-url="${escapeHtml(link.url)}">${escapeHtml(link.title)}</button>`).join("")}</div>` : ""}</section>` : "";
-  return `<section class="platform-todays-lesson-student platform-student-zone platform-student-zone-now platform-student-trail-stop platform-student-trail-stop-right${locked ? " is-captains-log-locked" : ""}" id="student-todays-activities" aria-labelledby="student-todays-lesson-title"${locked ? " aria-disabled=\"true\"" : ""}>${locked ? `<p class="platform-student-prompt-gate">🔒 Finish the Captain’s Log that is due before continuing. Listen and accessibility tools are still available.</p>` : ""}<div class="platform-student-step-heading"><img src="./assets/images/student-path/inventors-workshop-brass-badge.png" alt=""><div class="platform-student-step-title"><p class="platform-student-section-label">Step 2</p><h2 id="student-todays-lesson-title">Inventor’s Workshop</h2></div></div><p>Follow the mission orders. Use the machines you need.</p>${activityDirectionsStudentMarkup(classId)}<section class="platform-school-start-launcher platform-school-start-launcher-inline" aria-labelledby="school-start-launcher-title"><h3 id="school-start-launcher-title">Auxiliary Machines</h3><p class="platform-school-start-launcher-subheading">Extra Activities</p><div class="platform-school-start-launch-grid">${sidePathLaunch}<a class="platform-school-start-launch-link platform-school-start-launch-link-builder" href="../index.html" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SB</span><strong>STEM BUILDER</strong><small>Build</small></a><a class="platform-school-start-launch-link platform-school-start-launch-link-workshop" href="http://192.168.1.252:8000" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SW</span><strong>STEM WORKSHOP</strong><small>Open</small></a></div><button class="platform-student-listen-button" type="button" data-action="read-student-launches" data-side-path-assigned="${currentSidePath ? "true" : "false"}" aria-pressed="false">Listen</button></section>${researchMarkup}</section>`;
+  return `<section class="platform-todays-lesson-student platform-student-zone platform-student-zone-now platform-student-trail-stop platform-student-trail-stop-right${locked ? " is-captains-log-locked" : ""}" id="student-todays-activities" aria-labelledby="student-todays-lesson-title"${locked ? " aria-disabled=\"true\"" : ""}>${locked ? `<p class="platform-student-prompt-gate">🔒 Finish the Captain’s Log that is due before continuing. Listen and accessibility tools are still available.</p>` : ""}<div class="platform-student-step-heading"><img src="./assets/images/student-path/inventors-workshop-brass-badge.png" alt=""><div class="platform-student-step-title"><p class="platform-student-section-label">Step 2</p><h2 id="student-todays-lesson-title">Inventor’s Workshop</h2></div></div><p>Follow the mission orders. Complete each released step in order and choose one activity when a step offers choices.</p>${activityDirectionsStudentMarkup(classId, studentId)}<section class="platform-school-start-launcher platform-school-start-launcher-inline" aria-labelledby="school-start-launcher-title"><h3 id="school-start-launcher-title">Auxiliary Machines</h3><p class="platform-school-start-launcher-subheading">Extra Activities</p><div class="platform-school-start-launch-grid">${sidePathLaunch}<a class="platform-school-start-launch-link platform-school-start-launch-link-builder" href="../index.html" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SB</span><strong>STEM BUILDER</strong><small>Build</small></a><a class="platform-school-start-launch-link platform-school-start-launch-link-workshop" href="http://192.168.1.252:8000" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">SW</span><strong>STEM WORKSHOP</strong><small>Open</small></a></div><button class="platform-student-listen-button" type="button" data-action="read-student-launches" data-side-path-assigned="${currentSidePath ? "true" : "false"}" aria-pressed="false">Listen</button></section>${researchMarkup}</section>`;
 }
 
 function captainLogThinkingHelp(promptId = "") {
@@ -7084,6 +7090,11 @@ async function handleClick(event) {
     const editor = builder?.querySelector(".platform-direction-editor");
     if (builder) builder.open = true;
     if (editor) editor.open = true;
+    const list = editor?.querySelector("[data-direction-resource-list]");
+    if (list && !list.children.length) {
+      const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id, roster = getRosterForClass(classId);
+      list.innerHTML = `${directionResourceEditorRow(undefined, roster)}${directionResourceEditorRow(undefined, roster)}`;
+    }
     editor?.querySelector('[name="title"]')?.focus();
     return;
   }
@@ -7094,7 +7105,7 @@ async function handleClick(event) {
     if (!classId || !region || !form) return;
     const id = action.dataset.directionId;
     if (["save-direction-card", "save-release-direction-card"].includes(action.dataset.action)) {
-      const resources = [...form.querySelectorAll("[data-direction-resource-list] .platform-direction-resource-row")].map((row) => ({ mediaType: row.querySelector('[name="resourceType"]').value, title: row.querySelector('[name="resourceTitle"]').value.trim(), url: row.querySelector('[name="resourceUrl"]').value.trim() })).filter((item) => item.url);
+      const resources = [...form.querySelectorAll("[data-direction-resource-list] .platform-direction-resource-row")].map((row) => ({ mediaType: row.querySelector('[name="resourceType"]').value, title: row.querySelector('[name="resourceTitle"]').value.trim(), url: row.querySelector('[name="resourceUrl"]').value.trim(), audienceIds: [...row.querySelectorAll('[name="resourceAudience"]:checked')].map((input) => input.value) })).filter((item) => item.url);
       const result = activityDirections.saveCard(classId, { id: form.elements.id.value, title: form.elements.title.value, directions: form.elements.directions.value, resources });
       if (!result.ok) { const output = form.querySelector("[data-activity-direction-status]"); if (output) output.textContent = result.reason === "missing-media" ? "Add a secure https link for the selected media." : "Add both a card title and student directions."; return; }
       const visibility = form.elements.visibility?.value || (action.dataset.action === "save-release-direction-card" ? "released" : "draft");
@@ -7108,7 +7119,7 @@ async function handleClick(event) {
       if (!card) return;
       form.elements.id.value = card.id; form.elements.title.value = card.title; form.elements.directions.value = card.directions;
       if (form.elements.visibility) form.elements.visibility.value = card.status;
-      const resourceList = form.querySelector("[data-direction-resource-list]"); if (resourceList) resourceList.innerHTML = (card.resources || []).map(directionResourceEditorRow).join("");
+      const resourceList = form.querySelector("[data-direction-resource-list]"); if (resourceList) resourceList.innerHTML = (card.resources || []).map((resource) => directionResourceEditorRow(resource, getRosterForClass(classId))).join("");
       form.closest("details").open = true; form.elements.title.focus(); return;
     }
     if (action.dataset.action === "release-direction-card") {
@@ -7129,7 +7140,7 @@ async function handleClick(event) {
   }
   if (["add-direction-resource", "remove-direction-resource", "move-direction-resource"].includes(action.dataset.action)) {
     const list = action.closest('[data-form="activity-direction"]')?.querySelector("[data-direction-resource-list]"); if (!list) return;
-    if (action.dataset.action === "add-direction-resource") list.insertAdjacentHTML("beforeend", directionResourceEditorRow());
+    if (action.dataset.action === "add-direction-resource") { const state = session.read(), classId = currentTeacherClass(state.teacherId)?.id; list.insertAdjacentHTML("beforeend", directionResourceEditorRow(undefined, getRosterForClass(classId))); }
     if (action.dataset.action === "remove-direction-resource") action.closest(".platform-direction-resource-row")?.remove();
     if (action.dataset.action === "move-direction-resource") { const row = action.closest(".platform-direction-resource-row"), offset = Number(action.dataset.offset), sibling = offset < 0 ? row?.previousElementSibling : row?.nextElementSibling; if (row && sibling) offset < 0 ? list.insertBefore(row, sibling) : list.insertBefore(sibling, row); }
     return;

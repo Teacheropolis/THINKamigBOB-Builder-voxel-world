@@ -46,6 +46,13 @@ test("a direction card can contain multiple mixed resources", () => {
   assert.equal(store.read("a").cards[0].resources[1].title, "Bridge video");
 });
 
+test("activity choices can be differentiated for selected students", () => {
+  const store = createActivityDirections({ storage: memoryStorage() });
+  const saved = store.saveCard("a", { title: "Build", directions: "Choose one activity.", resources: [{ title: "Bridge", mediaType: "builder", url: "../index.html" }, { title: "Alternate tower", mediaType: "mission-activity", url: "https://example.com/tower", audienceIds: ["student-2"] }] });
+  assert.equal(saved.ok, true);
+  assert.deepEqual(store.read("a").cards[0].resources[1].audienceIds, ["student-2"]);
+});
+
 test("secure classroom steps can replace the browser projection", () => {
   const store = createActivityDirections({ storage: memoryStorage() });
   store.setTitle("class-a", "Bridge Challenge");
@@ -57,7 +64,9 @@ test("secure classroom steps can replace the browser projection", () => {
 test("teacher and student views expose the live directions timeline", () => {
   const app = readFileSync(new URL("../../platform/scripts/platform-app.mjs", import.meta.url), "utf8");
   const css = readFileSync(new URL("../../platform/styles/platform.css", import.meta.url), "utf8");
-  for (const text of ["Lesson Steps", "Lesson Steps, Activities, and Resources", "Add Lesson Step", "Add or Edit a Lesson Step", "Add an Activity or Resource", "Student visibility", "Release", "Withdraw", "Duplicate", "Move Up", "Move Down"]) assert.match(app, new RegExp(text));
+  for (const text of ["Lesson Steps", "Lesson Steps, Activities, and Resources", "Add Lesson Step", "Add or Edit a Lesson Step", "Add Another Activity Choice", "Who receives this choice", "selected students", "Student visibility", "Release", "Withdraw", "Duplicate", "Move Up", "Move Down"]) assert.match(app, new RegExp(text));
+  assert.match(app, /alternates\.length \? alternates : allResources\.filter/);
+  assert.match(app, /Complete each released step in order/);
   assert.doesNotMatch(app.slice(app.indexOf("function todaysLessonTeacherMarkup"), app.indexOf("function todaysLessonStudentMarkup")), /classResourceTeacherMarkup/);
   assert.match(app, /activityDirections\.releasedForStudents/);
   assert.match(app, /classroomLesson\.saveStep/);
