@@ -2257,6 +2257,9 @@ function teacherDashboardView(state) {
             </div>
           </div>
           ${todaysLessonTeacherMarkup(classRecord?.id, assignedResearch, researchLinkBank, className)}
+          <div class="platform-todays-resources-panel" data-todays-resources-panel hidden>
+            ${classResourceTeacherMarkup(classRecord?.id)}
+          </div>
           ${captainsLogPlannerMarkup(classRecord?.id)}
           <section id="teacher-timer-card" class="platform-command-card platform-command-card-timer" hidden>
             <p class="platform-command-label">Class timing</p>
@@ -6188,6 +6191,8 @@ async function handleClick(event) {
     closeQuickClassSchedule();
     const readinessPanel = document.querySelector('[data-form="class-readiness"]');
     if (readinessPanel) readinessPanel.hidden = true;
+    const resourcesPanel = document.querySelector("[data-todays-resources-panel]");
+    if (resourcesPanel) resourcesPanel.hidden = true;
     const plan = document.querySelector(".platform-current-class-plan");
     plan?.scrollIntoView({ behavior: "smooth", block: "start" });
     plan?.querySelector("#current-class-plan-title")?.focus?.();
@@ -6195,7 +6200,11 @@ async function handleClick(event) {
   }
   if (action.dataset.action === "current-plan-open-resources") {
     closeCurrentClassPlanEditor();
-    document.querySelector("#teacher-todays-resources")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const resources = document.querySelector("#teacher-todays-resources");
+    const resourcesPanel = resources?.closest("[data-todays-resources-panel]");
+    if (resourcesPanel) resourcesPanel.hidden = false;
+    resources?.scrollIntoView({ behavior: "smooth", block: "start" });
+    resources?.querySelector("#class-resource-title")?.focus({ preventScroll: true });
     return;
   }
   if (action.dataset.action === "save-current-plan-message") {
@@ -7643,6 +7652,8 @@ function render() {
   window.requestAnimationFrame(() => {
     const scrollTarget = pendingScrollTarget ? document.querySelector(`#${pendingScrollTarget}`) : null;
     if (scrollTarget) {
+      const resourcesPanel = scrollTarget.closest("[data-todays-resources-panel]");
+      if (resourcesPanel) resourcesPanel.hidden = false;
       if (scrollTarget.matches("[data-optional-dashboard-section]")) scrollTarget.hidden = false;
       if (scrollTarget.matches(".platform-captains-log-planner")) scrollTarget.open = true;
       if (pendingOpenClassResourceEditor) {

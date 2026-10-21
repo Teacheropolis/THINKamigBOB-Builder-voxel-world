@@ -2400,6 +2400,7 @@ article[data-plan-card="voice"] .platform-current-plan-card-title::before { cont
   border-top-color: var(--platform-green);
   background: linear-gradient(150deg, #ffffff 0%, #edf8f2 100%);
 }
+.platform-todays-resources-panel { grid-column: 1 / -1; }
 .platform-resource-assignment-chooser {
   border-width: 1px;
   border-left: 5px solid var(--platform-blue);

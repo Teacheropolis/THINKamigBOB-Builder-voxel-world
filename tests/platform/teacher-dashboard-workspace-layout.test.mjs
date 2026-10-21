@@ -230,6 +230,8 @@ test("Run Today’s Class shows a compact live current plan", () => {
   assert.match(app, /"Assigned activities"[\s\S]*: "Not set"/);
   assert.match(app, /"Students can work in"[\s\S]*: "Not set"/);
   assert.match(app, /"Current message"[\s\S]*: "Not set"/);
+  assert.match(app, /data-todays-resources-panel hidden>[\s\S]*classResourceTeacherMarkup/);
+  assert.match(app, /current-plan-open-resources"\)[\s\S]*resourcesPanel\.hidden = false[\s\S]*resources\?\.scrollIntoView/);
   assert.match(app, /platform-current-plan-status/);
   assert.match(app, /Set Today’s Plan/);
   assert.match(app, /const planReady = Boolean\(setupProfile\?\.planningWindow\?\.savedAt\)/);
