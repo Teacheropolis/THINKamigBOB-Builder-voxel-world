@@ -24,7 +24,7 @@ test("starter project entry uses the approved hierarchy and canonical mission st
   assert.match(approvedArtwork,/background-image:url\("assets\/images\/start-a-mission-button-transparent\.png"\)/);
   assert.match(approvedArtwork,/\.startMissionActionLabel\{[\s\S]*position:absolute[\s\S]*clip:rect\(0 0 0 0\)/);
   assert.match(approvedArtwork,/\.starterTitleBanner\{[\s\S]*width:min\(1320px,92vw\)/);
-  assert.match(approvedArtwork,/grid-template-rows:minmax\(170px,200px\) minmax\(0,1fr\) auto auto/);
+  assert.match(approvedArtwork,/grid-template-rows:minmax\(170px,200px\) minmax\(min-content,1fr\) auto auto/);
   assert.match(approvedArtwork,/\.startBeforePanel\{[\s\S]*grid-template-rows:105px 44px[\s\S]*overflow:visible/);
   assert.match(approvedArtwork,/#startBuildingButton\{[\s\S]*width:min\(320px,100%\)/);
   assert.match(approvedArtwork,/\.startMissionGrid\{[\s\S]*grid-template-rows:repeat\(2,56px\)/);

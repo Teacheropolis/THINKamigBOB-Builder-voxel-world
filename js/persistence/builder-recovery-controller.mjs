@@ -1,3 +1,4 @@
+import {validDetailRecord} from '../editing/builder-detailed-parts.mjs';
 export const BUILDER_RECOVERY_SCHEMA="THINKamigBOB Builder Recovery";
 export const BUILDER_RECOVERY_VERSION=3;
 export const BUILDER_RECOVERY_KEY="thinkamigbob-builder-recoveries-v3";
@@ -35,7 +36,8 @@ function validBlock(value){
   const rotationY=value.rotationY==null ? 0 : value.rotationY;
   return [value.x,value.y,value.z,value.color,sx,sy,sz,rotationY].every(finite) &&
     Number.isInteger(value.color) && value.color>=0 && value.color<=0xffffff &&
-    sx>0 && sy>0 && sz>0 && SHAPES.has(shape);
+    sx>0 && sy>0 && sz>0 && SHAPES.has(shape) &&
+    (value.door===undefined || typeof value.door==="boolean") && validDetailRecord(value.detail);
 }
 
 export function validateBuilderRecoveryState(value){

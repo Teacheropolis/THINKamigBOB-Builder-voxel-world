@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {encodeStoryGif,suggestedStorySeconds} from '../../js/editing/builder-story-gif.mjs';
+test('captions receive reading time instead of animation speed',()=>{assert.equal(suggestedStorySeconds(''),1);assert.equal(suggestedStorySeconds('My cell'),3);assert.equal(suggestedStorySeconds('one two three four five six seven eight nine ten'),7);});
+test('GIF has valid signature, loop extension, per-scene delays, and trailer',()=>{const bytes=encodeStoryGif(1,1,[{rgba:new Uint8ClampedArray([255,0,0,255]),seconds:3},{rgba:new Uint8ClampedArray([0,0,255,255]),seconds:5}]);assert.equal(new TextDecoder().decode(bytes.slice(0,6)),'GIF89a');assert.equal(bytes.at(-1),59);const delays=[];for(let i=781;i<bytes.length-7;i++)if(bytes[i]===33&&bytes[i+1]===249)delays.push(bytes[i+4]+256*bytes[i+5]);assert.deepEqual(delays,[300,500]);assert.ok(new TextDecoder().decode(bytes).includes('NETSCAPE2.0'));});
+test('frame count and dimensions are bounded',()=>{assert.throws(()=>encodeStoryGif(800,450,[]));assert.throws(()=>encodeStoryGif(1,1,[{rgba:[],seconds:1}]));});

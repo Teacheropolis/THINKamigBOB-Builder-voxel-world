@@ -4,9 +4,10 @@ import { readFileSync } from "node:fs";
 
 const source=readFileSync(new URL("../../index.html",import.meta.url),"utf8");
 
-test("starter page owns one viewport without page or card scrolling",()=>{
+test("starter page keeps a fixed viewport with a keyboard-reachable scrolling card",()=>{
   assert.match(source,/body\.starterScreenActive,\s*#startScreen\{[\s\S]*height:100dvh;[\s\S]*overflow:hidden !important;/);
-  assert.match(source,/#startCard\{[\s\S]*height:min\(100%,900px\) !important;[\s\S]*max-height:100% !important;[\s\S]*overflow:hidden !important;[\s\S]*grid-template-rows:/);
+  assert.match(source,/#startCard\{[\s\S]*height:min\(100%,900px\) !important;[\s\S]*max-height:100% !important;[\s\S]*overflow-x:hidden !important;[\s\S]*overflow-y:auto !important;[\s\S]*grid-template-rows:/);
+  assert.match(source,/<div id="startCard" role="region" aria-label="Missions and saved builds" tabindex="0">/);
   assert.match(source,/#startScreen\{[\s\S]*padding:clamp\(6px,1\.4vh,16px\)/);
 });
 

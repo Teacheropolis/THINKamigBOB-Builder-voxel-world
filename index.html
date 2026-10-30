@@ -3754,14 +3754,14 @@ Keep button IDs and onclick handlers unchanged.
   <div class="starterLoadingMessage">BOB is getting your mission ready...</div>
   <div class="starterLoadingProgress" aria-hidden="true">Loading…</div>
 </div>
-<div id="startCard">
+<div id="startCard" role="region" aria-label="Missions and saved builds" tabindex="0">
 <div class="startLogo">
 <div class="starterTitleBanner" role="img" aria-label="THINKamigBOB STEM Builder">
 <img class="starterBannerImage" alt="THINKamigBOB STEM Builder" src="assets/images/thinkamigbob-logo-banner.png" loading="eager" decoding="sync" fetchpriority="high"/>
 </div>
 </div>
 <div class="startMissionPanel">
-<h2>Choose Your STEM Mission</h2>
+<p class="starterEyebrow">IMAGINE • BUILD • DISCOVER</p><h2>What will you create today?</h2><p class="starterIntro">Click a mission to begin. Build your idea. Make it your own.</p>
 <div class="startWorldGrid startMissionGrid">
 <button type="button" class="selectedStartWorld missionTile" onclick="chooseStartWorld('buildCastle', this)"><span class="missionArt missionCastle">🏰</span><span class="missionTileTitle">Castle Builder</span></button>
 <button type="button" class="missionTile" onclick="chooseStartWorld('buildPlayground', this)"><span class="missionArt missionPlayground">🛝</span><span class="missionTileTitle">Playground Builder</span></button>
@@ -4318,8 +4318,8 @@ Nature ▶
     <button id="returnMissionsButton" aria-label="Return to Missions" onclick="return window.requestBuilderReturnToMissions ? window.requestBuilderReturnToMissions(this) : false">Return to Missions</button>
   </section>
 
-  <section class="dashboard139Zone dashboard139ShapeZone" aria-label="Shapes and colors">
-    <div class="dashboard139ZoneLabel">Shapes &amp; Colors</div>
+  <section class="dashboard139Zone dashboard139ShapeZone" aria-label="Building shapes">
+    <div class="dashboard139ZoneLabel">Shapes</div>
     <div class="dashboard139ShapeRow">
       <select id="blockShape" aria-label="Building shape" title="Choose a building shape">
         <option value="cube" selected>🧊 Cube</option>
@@ -5472,6 +5472,7 @@ const redoBlocks = [];
 const workshopDeletedSelectionUndo = [];
 const workshopDeletedSelectionRedo = [];
 let workshopEditHistory = null;
+let builderDirectEditHistory = null;
 let workshopSelectionMoveController = null;
 let workshopSelectionRotateTransformModule = null;
 let workshopSelectionResizeTransformModule = null;
@@ -5500,7 +5501,7 @@ function updateUndoRedoButtons(){
   const editHistorySnapshot = workshopEditHistory &&
     document.body.classList.contains("workshopMode")
     ? workshopEditHistory.getSnapshot()
-    : null;
+    : builderDirectEditHistory ? builderDirectEditHistory.getSnapshot() : null;
   const canUndo = editHistorySnapshot
     ? editHistorySnapshot.canUndo
     : blocks.length > 0 || workshopDeletedSelectionUndo.length > 0;
@@ -5721,6 +5722,9 @@ function applyWorkshopEditTransaction(transaction,direction){
 }
 
 function recordWorkshopPlacementHistory(objects){
+  if(builderDirectEditHistory && !document.body.classList.contains("workshopMode") && !workshopEditHistorySuspended){
+    return builderDirectEditHistory.commit({type:"PLACEMENT",entries:(Array.isArray(objects)?objects:[objects]).map(object=>({object,before:null,after:workshopEditCoordinates(object)}))});
+  }
   if(!workshopEditHistory || workshopEditHistorySuspended ||
     !document.body.classList.contains("workshopMode")) return null;
   const entries=(Array.isArray(objects) ? objects : [objects]).map(function(object){
@@ -5768,6 +5772,7 @@ function resetWorkshopEditFoundation(options){
   selectMode=false;
   workshopLastSelectionPoint=null;
   if(!preserveHistory){
+    if(builderDirectEditHistory && !document.body.classList.contains("workshopMode")) builderDirectEditHistory.reset();
     if(workshopEditHistory) workshopEditHistory.reset();
     workshopDeletedSelectionUndo.length=0;
     workshopDeletedSelectionRedo.length=0;
@@ -5872,6 +5877,7 @@ function createBuilderGeometry(shape, dimensions = {}){
 }
 
 function createStudentShape(shape, color){
+  if(!document.body.classList.contains("workshopMode") && window.builderDoorToolActive && typeof window.createBuilderDoorMesh==="function") return window.createBuilderDoorMesh();
   const normalizedShape =
     shape === "sphere" || shape === "trianglePrism"
       ? shape
@@ -6259,6 +6265,7 @@ function addBlock(x, y, z, color, geometry = new THREE.BoxGeometry()){
   );
 
   block.position.set(x, y, z);
+  if(window.builderDetailContext && window.decorateDetailedBuilderPart)window.decorateDetailedBuilderPart(block,{kind:window.builderDetailContext.kind || window.builderDetailedKind(color,window.builderDetailContext.source),assembly:window.builderDetailContext.assembly});
   scene.add(block);
   blocks.push(block);
   recordWorkshopPlacementHistory(block);
@@ -8414,6 +8421,7 @@ const viewDiceMouse = new THREE.Vector2();
 
 function builderUiBlocksCanvasEvent(event){
   const target = event && event.target;
+  if(window.builderWorldUIBlocksCanvas && target===renderer.domElement) return true;
   if(!target || typeof target.closest !== "function") return false;
   return !!target.closest(
     "#rightHudColumn, #builderBobRightPanel, #buildBar, #missionPopup, #helpDialog, #workshopProjectDialog"
@@ -8550,7 +8558,7 @@ function updateCamera(){
     typeof window.getWorkshopCameraOrbitTarget === "function"
       ? window.getWorkshopCameraOrbitTarget()
       : null;
-  const cameraTarget = workshopOrbitTarget || {x:0,y:0,z:0};
+  const cameraTarget = (!document.body.classList.contains("workshopMode") && window.builderSharedOrbitTarget) || workshopOrbitTarget || {x:0,y:0,z:0};
 
   camera.position.x =
     cameraTarget.x + Math.sin(cameraAngle) * cameraDistance;
@@ -9766,6 +9774,14 @@ if(intersects.length > 0){
       }
       newBlock.position.copy(candidate.position);
       workshopPlacementContact = candidate.contactedBlock;
+    }else if(typeof window.getBuilderFacePlacementCandidate === "function"){
+      const candidate=window.getBuilderFacePlacementCandidate(intersects[0]);
+      if(!candidate.valid){
+        newBlock.geometry.dispose();newBlock.material.dispose();
+        document.getElementById("toolMessage").textContent="Choose an open face or a clear place on the platform.";
+        return;
+      }
+      newBlock.position.set(candidate.position.x,candidate.position.y,candidate.position.z);
     }else if(hit === ground){
 
       newBlock.position.set(
@@ -9874,6 +9890,7 @@ document.addEventListener('contextmenu', (event)=>{
 
 function animate(){
   requestAnimationFrame(animate);
+  if(typeof window.updateBuilderPlacementPreview === "function") window.updateBuilderPlacementPreview();
   if(window.refreshWorkshopRulerSelectionHighlight){
     window.refreshWorkshopRulerSelectionHighlight();
   }
@@ -9924,14 +9941,17 @@ viewCubeRenderer.render(
   viewCubeCamera
 );
 
-  if(!(document.body.classList.contains("workshopMode") &&
+  if(typeof window.updateBuilderExploreFrame === "function") window.updateBuilderExploreFrame();
+  if(!window.builderExploreActive && !(document.body.classList.contains("workshopMode") &&
     typeof window.applyWorkshopEngineeringView === "function" &&
     window.applyWorkshopEngineeringView())){
     const workshopOrbitTarget =
       typeof window.getWorkshopCameraOrbitTarget === "function"
         ? window.getWorkshopCameraOrbitTarget()
         : null;
-    if(workshopOrbitTarget){
+    if(!document.body.classList.contains("workshopMode") && window.builderSharedOrbitTarget){
+      camera.lookAt(window.builderSharedOrbitTarget.x,window.builderSharedOrbitTarget.y,window.builderSharedOrbitTarget.z);
+    }else if(workshopOrbitTarget){
       camera.lookAt(workshopOrbitTarget);
     }else{
       camera.lookAt(0, 0, 0);
@@ -10064,6 +10084,17 @@ function saveImage(){
   
 function undoLast(){
 
+  if(builderDirectEditHistory && !document.body.classList.contains("workshopMode")){
+    const result=builderDirectEditHistory.undo();
+    if(result.ok){
+      syncWorkshopSelectionMeasurements();updateUndoRedoButtons();checkBadge();
+      document.getElementById("toolMessage").textContent="Change undone.";
+      if(typeof window.scheduleStudentAutosave==="function") window.scheduleStudentAutosave({meaningful:true});
+      return;
+    }
+    if(result.code!=="EMPTY") return;
+  }
+
   if(workshopEditHistory && document.body.classList.contains("workshopMode")){
     if(workshopMoveIsPending(workshopSelectionMoveController &&
       workshopSelectionMoveController.getSnapshot())){
@@ -10089,6 +10120,7 @@ function undoLast(){
               ? "↩️ Resize undone."
           : "↩️ Last block removed.";
     }
+    announceWorkshopMove(document.getElementById("toolMessage").textContent);
     checkBadge();
     updateUndoRedoButtons();
     return;
@@ -10138,6 +10170,17 @@ function undoLast(){
 
 function redoLast(){
 
+  if(builderDirectEditHistory && !document.body.classList.contains("workshopMode")){
+    const result=builderDirectEditHistory.redo();
+    if(result.ok){
+      syncWorkshopSelectionMeasurements();updateUndoRedoButtons();checkBadge();
+      document.getElementById("toolMessage").textContent="Change restored.";
+      if(typeof window.scheduleStudentAutosave==="function") window.scheduleStudentAutosave({meaningful:true});
+      return;
+    }
+    if(result.code!=="EMPTY") return;
+  }
+
   if(workshopEditHistory && document.body.classList.contains("workshopMode")){
     if(workshopMoveIsPending(workshopSelectionMoveController &&
       workshopSelectionMoveController.getSnapshot())){
@@ -10160,6 +10203,7 @@ function redoLast(){
       result.transaction.type==="ROTATE" ? "↪️ Rotation restored." :
       result.transaction.type==="RESIZE" ? "↪️ Resize restored." :
       "↪️ Last block restored.";
+    announceWorkshopMove(document.getElementById("toolMessage").textContent);
     checkBadge();
     updateUndoRedoButtons();
     return;
@@ -10205,19 +10249,22 @@ function redoLast(){
 }
   
 function setSkyBannerVehicle(vehicle){
-  const banner = document.getElementById("skyBannerPlane");
-  const artwork = banner && banner.querySelector("img");
-  const useRocket = vehicle === "rocket";
-  if(!banner || !artwork) return;
-
-  banner.classList.toggle("skyBannerRocket", useRocket);
-  artwork.src = useRocket
-    ? "assets/images/sky-banner-rocket.png"
-    : "assets/images/sky-banner-plane.png";
+  const banner=document.getElementById("skyBannerPlane"),artwork=banner?.querySelector("img");
+  if(!banner||!artwork)return;
+  let choice;
+  try{choice=localStorage.getItem('thinkamigbob-sky-flyer')||'off';}catch{choice='off';}
+  banner.dataset.flyer=choice;
+  banner.classList.toggle('skyBannerRocket',false);
+  banner.style.setProperty('display',choice==='off'?'none':'block','important');
+  artwork.src=['blimp','glider','parachute'].includes(choice)?'assets/images/sky-flyers/'+choice+'.svg':'assets/images/sky-banner-plane.png';
+  const caption=banner.querySelector('span');if(caption)caption.hidden=choice!=='plane';
+  const picker=document.getElementById('worldSkyFlyer');if(picker)picker.value=choice;
 }
 window.setSkyBannerVehicle = setSkyBannerVehicle;
 
 function resetWorld(){
+window.builderSharedOrbitTarget=null;
+camera.near=.1;camera.updateProjectionMatrix();
 
 stopThinkerBob();
 setSkyBannerVehicle("plane");
@@ -10618,6 +10665,8 @@ function addRocks(){
 }
 
 function addBuilding(){
+const priorDetailContext=window.builderDetailContext;window.builderDetailContext={kind:'metal',assembly:'addBuilding-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)};try{
+
 
   const x = Math.round(-8 + Math.random() * 16);
   const z = Math.round(-8 + Math.random() * 16);
@@ -10628,6 +10677,8 @@ function addBuilding(){
   }
 
   checkBadge();
+
+}finally{window.builderDetailContext=priorDetailContext;}
 }
 
 function addPortal(){
@@ -10710,6 +10761,8 @@ function addRainbowBridge(){
 }
 
 function addCrystalCluster(){
+const priorDetailContext=window.builderDetailContext;window.builderDetailContext={kind:'crystal',assembly:'addCrystalCluster-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)};try{
+
 
   const crystalColors = [
     0x00FFFF,
@@ -10730,6 +10783,8 @@ function addCrystalCluster(){
   }
 
   checkBadge();
+
+}finally{window.builderDetailContext=priorDetailContext;}
 }
 
 function addRocket(){
@@ -11018,6 +11073,8 @@ function addThermometer(){
 }
 
 function addBridgeBeam(){
+const priorDetailContext=window.builderDetailContext;window.builderDetailContext={kind:'wood',assembly:'addBridgeBeam-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)};try{
+
 
   const spot = randomSpot();
 
@@ -11033,9 +11090,13 @@ function addBridgeBeam(){
   }
 
   checkBadge();
+
+}finally{window.builderDetailContext=priorDetailContext;}
 }
 
 function addSupportColumn(){
+const priorDetailContext=window.builderDetailContext;window.builderDetailContext={kind:'stone',assembly:'addSupportColumn-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)};try{
+
 
   const spot = randomSpot();
 
@@ -11051,6 +11112,8 @@ function addSupportColumn(){
   }
 
   checkBadge();
+
+}finally{window.builderDetailContext=priorDetailContext;}
 }
 
 function addRamp(){
@@ -11547,6 +11610,10 @@ function chooseMissionPopupReading(mode){
 }
 
 function showMissionPopup(){
+  // Mission guidance now lives in the persistent next-challenge card.
+  document.getElementById("missionPopup").style.display="none";
+  return;
+
 
   document.getElementById("popupTitle").innerHTML =
     document.getElementById("worldTitle").innerHTML;
@@ -11715,6 +11782,8 @@ function resetChecklist(){
 }
   
 function buildCastle(){
+const priorDetailContext=window.builderDetailContext;window.builderDetailContext={kind:'',assembly:'buildCastle-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)};try{
+
 
 resetWorld();
 resetChecklist();
@@ -11778,6 +11847,8 @@ addMovingClouds();
 
 showMissionPopup();
 checkBadge();
+
+}finally{window.builderDetailContext=priorDetailContext;}
 }
 
 function buildPlayground(){
@@ -12472,7 +12543,9 @@ function exportBuilderWorld(name){
       sy: block.geometry.parameters.height || 1,
       sz: block.geometry.parameters.depth || 1,
       shape: block.userData.builderShape || "cube",
-      rotationY: block.rotation.y || 0
+      rotationY: block.rotation.y || 0,
+      ...(block.userData.detailedPart ? {detail:block.userData.detailedPart}:{}),
+      ...(typeof window.getBuilderDoorSaveRecord==="function" ? window.getBuilderDoorSaveRecord(block) : {})
     });
   });
 
@@ -12527,6 +12600,8 @@ function validateBuilderProjectFile(value){
       record.sz == null ? 1 : record.sz,
       record.rotationY == null ? 0 : record.rotationY].every(Number.isFinite) &&
       shapes.includes(record.shape || "cube") &&
+      (record.door===undefined || typeof record.door==="boolean") &&
+      (record.detail===undefined || (record.detail && (window.builderDetailKinds||["stone","wood","metal","crystal"]).includes(record.detail.kind) && typeof record.detail.assembly==="string" && record.detail.assembly.length<=100)) &&
       (record.sx == null || record.sx>0) &&
       (record.sy == null || record.sy>0) &&
       (record.sz == null || record.sz>0);
@@ -12595,6 +12670,9 @@ document.getElementById('loadFile')
 
       loadedBlock.userData.builderShape = loadedShape;
       loadedBlock.userData.studentPlaced = true;
+      if(data.detail && window.decorateDetailedBuilderPart)window.decorateDetailedBuilderPart(loadedBlock,data.detail);
+      else window.upgradeLegacyDetailedPart?.(loadedBlock,data);
+      if(data.door===true && typeof window.decorateBuilderDoor==="function") window.decorateBuilderDoor(loadedBlock);
 
     });
 
@@ -12918,6 +12996,7 @@ if(document.body.classList.contains("workshopMode") &&
 }
 
 if(view === "home"){
+  if(!document.body.classList.contains("workshopMode"))window.builderSharedOrbitTarget=null;
   cameraAngle = 0;
   cameraDistance = 24;
   cameraHeight = 5;
@@ -13080,6 +13159,7 @@ window.setSelectedStartWorld = setSelectedStartWorld;
 
 function chooseStartWorld(fnName, buttonEl){
   setSelectedStartWorld(fnName, buttonEl);
+  if(document.body.classList.contains("starterScreenActive"))startSelectedWorld();
 }
 window.chooseStartWorld = chooseStartWorld;
 
@@ -13115,6 +13195,9 @@ function hideStartScreen(){
 window.hideStartScreen = hideStartScreen;
 
 function showStartScreen(){
+  window.missionLaunchTransitionActive=false;
+  document.getElementById('startScreen')?.classList.remove('missionLaunchFading');
+  document.getElementById('startScreen')?.scrollTo(0,0);
   if(typeof stopThinkerBob === 'function') stopThinkerBob();
   const screen = document.getElementById('startScreen');
   if(screen) screen.classList.remove('hidden');
@@ -17603,7 +17686,7 @@ Small help modal kept inline for now.
         <section data-help-section="moving-camera">
           <h3>Moving the Camera</h3>
           <p><strong>View Cube:</strong> Click a face to look from that direction. Drag the cube to orbit. Double-click it for Home.</p>
-          <p><strong>Build view:</strong> Drag to orbit around the build. Use the mouse wheel or trackpad to zoom. Use Home to return to the mission view.</p>
+          <p><strong>Build view:</strong> Choose a block color from the bottom bar or press 1–6. Point at a block face to preview the next block; click to attach it. Red means the space is blocked. Drag on empty platform space to draw a selection box. Drag a selected block to move the group. Double-click a block to delete it; Undo brings it back. Hold Alt and drag to rotate the view, or use the view cube. Use the mouse wheel or trackpad to zoom. Press Escape to cancel a drag.</p>
         </section>
         <section data-help-section="saving-work">
           <h3>Saving Your Work</h3>
@@ -19051,10 +19134,13 @@ body.starterScreenActive,
   height:min(100%,900px) !important;
   max-height:100% !important;
   min-height:0 !important;
-  overflow:hidden !important;
+  /* Scroll within the mission entry card when its contents exceed the viewport. */
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  overscroll-behavior-y:contain;
   padding:0 !important;
   display:grid !important;
-  grid-template-rows:minmax(54px,clamp(68px,15vh,150px)) minmax(0,1fr) auto auto !important;
+  grid-template-rows:minmax(54px,clamp(68px,15vh,150px)) minmax(min-content,1fr) auto auto !important;
   gap:clamp(6px,1.1vh,12px) !important;
 }
 .startLogo{
@@ -19151,12 +19237,12 @@ body.starterScreenActive,
 .startTipText span{font-size:clamp(9px,1.4vh,13px) !important}
 
 @media(max-height:720px){
-  #startCard{grid-template-rows:minmax(46px,11vh) minmax(0,1fr) auto auto !important}
+  #startCard{grid-template-rows:minmax(46px,11vh) minmax(min-content,1fr) auto auto !important}
   .startTipText span{display:none !important}
   .startHowToWide .startTip{justify-content:center !important}
 }
 @media(max-height:560px){
-  #startCard{grid-template-rows:44px minmax(0,1fr) 46px !important}
+  #startCard{grid-template-rows:44px minmax(min-content,1fr) 46px !important}
   .startHelpPanel{display:none !important}
   .startBeforePanel h2{font-size:13px !important}
 }
@@ -26243,7 +26329,9 @@ body.calmMode #reopenLibraryFromCoach{
       color:block.material && block.material.color ? block.material.color.getHex() : 0xffffff,
       sx:parameters.width || 1, sy:parameters.height || 1, sz:parameters.depth || 1,
       shape:(block.userData && block.userData.builderShape) || "cube",
-      rotationY:block.rotation.y || 0
+      rotationY:block.rotation.y || 0,
+      ...(block.userData.detailedPart ? {detail:block.userData.detailedPart}:{}),
+      ...(typeof window.getBuilderDoorSaveRecord==="function" ? window.getBuilderDoorSaveRecord(block) : {})
     };
   }
 
@@ -26313,6 +26401,9 @@ body.calmMode #reopenLibraryFromCoach{
       block.rotation.y=typeof data.rotationY === "number" ? data.rotationY : 0;
       block.userData.builderShape=shape;
       block.userData.studentPlaced=true;
+      if(data.detail && window.decorateDetailedBuilderPart)window.decorateDetailedBuilderPart(block,data.detail);
+      else window.upgradeLegacyDetailedPart?.(block,data,state.selectedStartWorld);
+      if(data.door===true && typeof window.decorateBuilderDoor==="function") window.decorateBuilderDoor(block);
     });
     if(Array.isArray(state.favorites)){
       favoriteData=state.favorites;
@@ -26508,7 +26599,7 @@ body.calmMode #reopenLibraryFromCoach{
       saveButton:document.getElementById("builderExitProtectionSave"),
       continueButton:document.getElementById("builderExitProtectionContinue"),
       document:document,
-      isBuilderActive:function(){ return !document.body.classList.contains("workshopMode"); },
+      isBuilderActive:function(){ return !document.body.classList.contains("workshopMode") && !document.body.classList.contains("starterScreenActive"); },
       announce:function(message){
         presentRecoveryStatus({kind:"failed",message:message});
       },
@@ -42086,7 +42177,7 @@ body.starterScreenActive #startScreen #startCard .startBeforeGrid #startBuilding
 }
 @media (min-width:701px){
   body.starterScreenActive #startCard{
-    grid-template-rows:minmax(170px,200px) minmax(0,1fr) auto auto !important;
+    grid-template-rows:minmax(170px,200px) minmax(min-content,1fr) auto auto !important;
   }
   body.starterScreenActive .startLogo,
   body.starterScreenActive .starterTitleBanner{
@@ -42141,7 +42232,7 @@ body.starterScreenActive #startBuildingButton:not(.missionLaunchButtonPulse):act
 }
 @media (min-width:701px) and (max-height:760px){
   body.starterScreenActive #startCard{
-    grid-template-rows:140px minmax(0,1fr) auto auto !important;
+    grid-template-rows:140px minmax(min-content,1fr) auto auto !important;
   }
   body.starterScreenActive .starterTitleBanner{
     width:min(1320px,94vw) !important;
@@ -42315,5 +42406,607 @@ body:not(.starterScreenActive):not(.workshopMode) #reopenLibraryFromCoach{
   min-width:0 !important;
 }
 </style>
+<style id="directBlockManipulationCSS">
+#directBlockSelectionRectangle{position:fixed;pointer-events:none;z-index:1500;border:2px solid #60e9ff;background:rgba(50,210,255,.16);box-sizing:border-box;}
+#directBlockSelectionRectangle[hidden]{display:none;}
+</style>
+<script type="module" id="detailedBuilderPartsScript">
+import {createDetailedPartDecorator,detailKind,DETAIL_KINDS} from "./js/editing/builder-detailed-parts.mjs";
+import {installDetailedCatalog} from './js/editing/builder-detail-catalog.mjs';
+import {starterDetailManifest} from './js/editing/builder-starter-detail-manifest.mjs';
+window.decorateDetailedBuilderPart=createDetailedPartDecorator({THREE,document});window.builderDetailedKind=detailKind;window.builderDetailKinds=DETAIL_KINDS;
+installDetailedCatalog({target:window,getBlocks:()=>blocks,getScene:()=>scene,decorate:window.decorateDetailedBuilderPart,resolve:detailKind});
+window.upgradeLegacyDetailedPart=function(block,data,mission){
+ if(data.detail)return;
+ const name=['buildMoonColony','buildMarsColony'].includes(mission)?'buildSpaceColony':mission;
+ const values=[data.x,data.y,data.z,data.color,data.sx||1,data.sy||1,data.sz||1];
+ for(const [source,records]of Object.entries(starterDetailManifest)){
+  if(name && source!==name)continue;
+  if(records.some(r=>r.every((v,i)=>Math.abs(v-values[i])<.0001))){window.decorateDetailedBuilderPart(block,{kind:detailKind(data.color,source),assembly:'starter-'+source});break;}
+ }
+};
+
+document.addEventListener('click',event=>{
+ if(event.target!==renderer.domElement||event.detail>1||window.builderWorldUIBlocksCanvas||window.builderExploreActive||document.body.classList.contains('workshopMode'))return;
+ if(!setBuilderPointerFromRendererEvent(event))return;raycaster.setFromCamera(mouse,camera);
+ const hit=raycaster.intersectObjects(blocks,false)[0]?.object,detail=hit?.userData.detailedPart;if(!detail)return;
+ const selection=window.builderChoosePartMode?[hit]:activeWorkshopBlocks(blocks).filter(o=>o.userData.detailedPart?.assembly===detail.assembly);
+ setWorkshopSelectedObjectsExact(selection);event.preventDefault();event.stopImmediatePropagation();
+ document.getElementById('toolMessage').textContent=window.builderChoosePartMode?'Detailed part selected. Move, delete, or duplicate it.':'Detailed object selected. Choose a part in Tools to explore its pieces.';
+},true);
+window.duplicateBuilderSelection=function(){
+ if(window.builderExploreActive||document.body.classList.contains('workshopMode'))return;
+ const selected=activeWorkshopBlocks(selectedBlocks);if(!selected.length){document.getElementById('toolMessage').textContent='Select an object or part first, then choose Duplicate.';return;}
+ const group='copy-'+Date.now().toString(36),copies=[];
+ for(const original of selected){
+  const copy=new THREE.Mesh(original.geometry.clone(),original.material.clone());
+  copy.position.copy(original.position);copy.position.x+=2;copy.rotation.copy(original.rotation);copy.scale.copy(original.scale);
+  copy.userData={...original.userData,detailDecorated:false,builderDoorDecorated:false};
+  if(original.userData.detailedPart)window.decorateDetailedBuilderPart(copy,{...original.userData.detailedPart,assembly:group});
+  if(original.userData.builderDoor)window.decorateBuilderDoor?.(copy);
+  scene.add(copy);blocks.push(copy);copies.push(copy);
+ }
+ recordWorkshopPlacementHistory(copies);setWorkshopSelectedObjectsExact(copies);redoBlocks.length=0;updateUndoRedoButtons();window.scheduleStudentAutosave?.({meaningful:true});
+ document.getElementById('toolMessage').textContent='Copy created. Drag it to a new place. Undo brings you back.';
+};
+
+</script>
+<script type="module" id="directBlockManipulationScript">
+import {installDirectManipulation} from './js/editing/direct-manipulation.mjs';
+import {createWorkshopEditHistory} from './js/workshop/editing/workshop-edit-history.mjs';
+builderDirectEditHistory=createWorkshopEditHistory({validate:validateWorkshopEditTransaction,apply:applyWorkshopEditTransaction});
+const box=document.createElement('div');box.id='directBlockSelectionRectangle';box.hidden=true;box.setAttribute('aria-hidden','true');document.body.appendChild(box);
+const inWorkshop=()=>document.body.classList.contains('workshopMode');
+const history=()=>inWorkshop()?workshopEditHistory:builderDirectEditHistory;
+const ready=()=>!window.builderWorldUIBlocksCanvas && !window.builderExploreActive && !document.body.classList.contains('starterScreenActive') &&
+  !document.querySelector('#missionPopup:not(.hidden)[style*="display: flex"]') &&
+  !!history() && (!inWorkshop() || window.getWorkshopCanonicalState?.()==='READY');
+const notify=message=>{announceWorkshopMove(message);};
+const completeEdit=()=>{
+  redoBlocks.length=0;syncWorkshopSelectionMeasurements();updateUndoRedoButtons();checkBadge();
+  if(typeof window.scheduleStudentAutosave==='function')window.scheduleStudentAutosave({meaningful:true});
+};
+const setSelection=objects=>{
+  if(!inWorkshop()&&!window.builderChoosePartMode){
+    const assemblies=new Set(objects.map(o=>o.userData.detailedPart?.assembly).filter(Boolean));
+    if(assemblies.size)objects=[...new Set([...objects,...activeWorkshopBlocks(blocks).filter(o=>assemblies.has(o.userData.detailedPart?.assembly))])];
+  }
+  if(workshopMoveIsPending())cancelWorkshopMove({announce:false,restoreFocus:false});
+  if(workshopSelectionFoundationController)workshopSelectionFoundationController.reset();
+  selectMode=false;moveSelectedMode=false;setWorkshopSelectedObjectsExact(objects);
+};
+const restoreMove=move=>{
+  if(!move)return;
+  move.entries.forEach(entry=>entry.object.position.set(entry.before.x,entry.before.y,entry.before.z));
+  syncWorkshopSelectionMeasurements();
+};
+function groundPoint(event){
+  if(!setBuilderPointerFromRendererEvent(event))return null;
+  raycaster.setFromCamera(mouse,camera);
+  const point=new THREE.Vector3();
+  return raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),0),point);
+}
+function pick(event){
+  if(!setBuilderPointerFromRendererEvent(event))return null;
+  raycaster.setFromCamera(mouse,camera);
+  return raycaster.intersectObjects(blocks,false)[0]?.object || null;
+}
+function projectObjects(){
+  const viewport=renderer.domElement.getBoundingClientRect();
+  camera.updateMatrixWorld();scene.updateMatrixWorld(true);
+  return activeWorkshopBlocks(blocks).map(object=>{
+    const bounds=new THREE.Box3().setFromObject(object);const points=[];
+    for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [bounds.min.z,bounds.max.z]){
+      const point=new THREE.Vector3(x,y,z).project(camera);
+      if(point.z < -1 || point.z > 1)return {object,bounds:null};
+      points.push({x:viewport.left+(point.x+1)*viewport.width/2,y:viewport.top+(1-point.y)*viewport.height/2});
+    }
+    return {object,bounds:{left:Math.min(...points.map(p=>p.x)),right:Math.max(...points.map(p=>p.x)),top:Math.min(...points.map(p=>p.y)),bottom:Math.max(...points.map(p=>p.y))}};
+  });
+}
+function deleteBlock(object){
+  const ledger=history();const selection=activeWorkshopBlocks(selectedBlocks).slice();
+  const operation=createWorkshopDeletionOperation([object],selection);
+  const prepared=ledger.prepare(operation);if(!prepared.ok){notify('Delete is not ready. Try again.');return;}
+  removeWorkshopSelectedBlock(object);scene.remove(object);blocks.splice(blocks.indexOf(object),1);
+  const result=ledger.commitPrepared(prepared.token);
+  if(!result.ok){scene.add(object);blocks.push(object);setWorkshopSelectedObjectsExact(selection);ledger.cancelPrepared(prepared.token);notify('Delete cancelled. Block restored.');return;}
+  completeEdit();notify('Block deleted. Use Undo to bring it back.');
+}
+installDirectManipulation({canvas:renderer.domElement,document,window,isActive:ready,
+  pick,getSelection:()=>activeWorkshopBlocks(selectedBlocks),setSelection,projectObjects,groundPoint,
+  prepareInteraction(){isDragging=false;mouseMoved=false;},
+  onGestureChange(active){window.builderBlockGestureActive=active;},
+  increment:()=>activeWorkshopBlocks(selectedBlocks).some(isStandardWorkshopBlock)?1:
+    (inWorkshop() && typeof window.getWorkshopSnapIncrement==='function'?window.getWorkshopSnapIncrement():1),
+  beginMove(objects){objects=activeWorkshopBlocks(selectedBlocks);return {ledger:history(),entries:objects.map(object=>({object,before:workshopEditCoordinates(object)})),objects:objects.slice(),workshop:inWorkshop()};},
+  previewMove(move,delta){
+    restoreMove(move);
+    if(move.ledger!==history() || move.workshop!==inWorkshop())return false;
+    const bounds=createWorkshopTranslatedSelectionBounds(move.objects,delta.x,delta.z);
+    const platform=new THREE.Box3().setFromObject(ground);
+    const onPlatform=inWorkshop()?workshopBoundsFitActiveWorkspace(bounds):
+      bounds.min.x>=platform.min.x && bounds.max.x<=platform.max.x && bounds.min.z>=platform.min.z && bounds.max.z<=platform.max.z;
+    if(!onPlatform || workshopTranslatedSelectionCollides(move.objects,delta.x,delta.z)){
+      notify('Keep the group on the platform and clear of other objects.');return false;
+    }
+    move.delta=delta;
+    move.entries.forEach(entry=>entry.object.position.set(Number((entry.before.x+delta.x).toFixed(4)),entry.before.y,Number((entry.before.z+delta.z).toFixed(4))));
+    syncWorkshopSelectionMeasurements();return true;
+  },
+  finishMove(move){
+    if(!move || move.ledger!==history() || !move.delta)return false;
+    if(move.delta.x===0 && move.delta.z===0)return true;
+    const result=move.ledger.commit({type:'MOVE',entries:move.entries.map(entry=>({...entry,after:workshopEditCoordinates(entry.object)})),translation:move.delta,selection:move.objects});
+    if(!result.ok)return false;
+    completeEdit();notify('Group moved. Use Undo to move it back.');return true;
+  },
+  cancelMove:restoreMove,deleteBlock,announce:notify,
+  showRectangle(rect){box.hidden=false;Object.assign(box.style,{left:rect.left+'px',top:rect.top+'px',width:(rect.right-rect.left)+'px',height:(rect.bottom-rect.top)+'px'});},
+  hideRectangle(){box.hidden=true;}
+});
+updateUndoRedoButtons();
+</script>
+
+<style id="builderBlockHotbarCSS">
+#builderBlockHotbar,#builderMoreBlocks{display:none;}
+body:not(.starterScreenActive):not(.workshopMode) #builderBlockHotbar{
+  display:block;position:fixed;z-index:119;left:var(--builder-swap-center-left);right:var(--builder-swap-center-right);
+  bottom:60px;margin-inline:auto;max-width:540px;padding:8px;border:2px solid #5bdcf2;border-radius:12px;
+  background:linear-gradient(#17384b,#071b2b);box-shadow:0 4px 14px #0008;box-sizing:border-box;color:white;
+}
+#builderBlockHotbar .builderHotbarStatus{font:600 13px/1.3 system-ui,sans-serif;margin:0 0 7px;text-align:center;color:#eefbff;}
+#builderHotbarSlots{display:grid;grid-template-columns:repeat(6,minmax(44px,1fr)) minmax(54px,1fr);gap:5px;overflow:auto;padding:3px;}
+#builderBlockHotbar button,#builderMoreBlocks button{
+  position:relative;min-height:58px;min-width:44px;margin:0;padding:5px 3px;border:2px solid #7c9baa;border-radius:8px;
+  background:#183448!important;color:#fff!important;-webkit-text-fill-color:#fff!important;text-shadow:none!important;
+  font:700 12px/1.2 system-ui,sans-serif!important;box-shadow:none!important;letter-spacing:normal!important;
+}
+#builderBlockHotbar button[aria-pressed="true"],#builderMoreBlocks button[aria-pressed="true"]{border-color:#e6ff94;outline:2px solid #b7f34a;outline-offset:0;}
+#builderBlockHotbar button:focus-visible,#builderMoreBlocks button:focus-visible{outline:3px solid #fff;outline-offset:2px;}
+.builderHotbarCube{display:block;width:22px;height:22px;margin:0 auto 4px;border:1px solid #fff9;border-radius:2px;box-shadow:inset -5px -5px 0 #0003,inset 3px 3px 0 #fff3;}
+.builderHotbarKey{position:absolute;top:2px;left:4px;font:700 10px/1 system-ui,sans-serif;color:#e6edf1;}
+body:not(.starterScreenActive):not(.workshopMode) #builderMoreBlocks:not([hidden]){
+  display:block;position:fixed;z-index:120;left:var(--builder-swap-center-left);right:var(--builder-swap-center-right);
+  bottom:173px;max-height:min(310px,50vh);max-width:540px;margin-inline:auto;overflow:auto;padding:12px;
+  border:2px solid #5bdcf2;border-radius:12px;background:#09273b;color:white;box-sizing:border-box;
+}
+#builderMoreBlocks[hidden]{display:none!important;}
+#builderMoreBlocks h2{font:700 17px system-ui,sans-serif;margin:0 0 12px;}
+#builderMoreBlocksGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(85px,1fr));gap:8px;}
+#builderMoreBlocks #builderCloseMoreBlocks{min-height:44px;width:100%;margin-top:10px;}
+@media(max-height:640px){body:not(.starterScreenActive):not(.workshopMode) #builderBlockHotbar{bottom:55px;padding:5px;}#builderBlockHotbar .builderHotbarStatus{font-size:12px;margin-bottom:3px;}#builderBlockHotbar button{min-height:52px;}}
+</style>
+<section id="builderBlockHotbar" aria-label="Quick block colors">
+  <p id="builderHotbarStatus" class="builderHotbarStatus" role="status" aria-live="polite">Choose a block color. Point at a face to build.</p>
+  <div id="builderHotbarSlots" role="group" aria-label="Block color shortcuts"></div>
+</section>
+<section id="builderMoreBlocks" aria-labelledby="builderMoreBlocksTitle" hidden>
+  <h2 id="builderMoreBlocksTitle">More block colors</h2><div id="builderMoreBlocksGrid"></div>
+  <button id="builderCloseMoreBlocks" type="button">Close</button>
+</section>
+<script type="module" id="builderFacePlacementScript">
+import {facePlacement} from './js/editing/builder-face-placement.mjs';
+import {createBuilderMaterialTextures} from './js/editing/builder-material-textures.mjs';
+const builderTextures=createBuilderMaterialTextures({THREE,document});
+const bar=document.getElementById('builderBlockHotbar'),slots=document.getElementById('builderHotbarSlots');
+const palette=document.getElementById('builderMoreBlocks'),paletteGrid=document.getElementById('builderMoreBlocksGrid');
+const color=document.getElementById('blockColor');
+const presets=[['Stone',0xcccccc],['Wood',0x8b4513],['Brick',0xb22222],['Grass',0x228b22],['Water',0x1e90ff],['Gold',0xffd700]];
+const isBuilder=()=>!window.builderExploreActive && !document.body.classList.contains('starterScreenActive') && !document.body.classList.contains('workshopMode');
+const label=option=>option.textContent.replace(/^[^A-Za-z]+/,'').trim();
+function swatch(name,value,key){
+  const button=document.createElement('button');button.type='button';button.dataset.blockColor=String(value);
+  button.setAttribute('aria-label',name+(key?' (shortcut '+key+')':''));button.setAttribute('aria-pressed','false');
+  const cube=document.createElement('span');cube.className='builderHotbarCube';cube.setAttribute('aria-hidden','true');cube.style.backgroundColor='#'+value.toString(16).padStart(6,'0');cube.style.backgroundImage=builderTextures.swatchBackground(value);cube.style.backgroundBlendMode='multiply';cube.style.backgroundSize='cover';
+  button.append(cube,document.createTextNode(name));
+  if(key){const shortcut=document.createElement('span');shortcut.className='builderHotbarKey';shortcut.textContent=key;shortcut.setAttribute('aria-hidden','true');button.append(shortcut);}
+  button.addEventListener('click',()=>choose(value));return button;
+}
+function choose(value){
+  window.builderDoorToolActive=false;
+  const option=Array.from(color.options).find(option=>Number(option.value)===value);if(!option)return;
+  color.value=option.value;color.dispatchEvent(new Event('change',{bubbles:true}));
+  if(typeof window.updateCreatorBarSelection==='function')window.updateCreatorBarSelection();sync();
+}
+function sync(){
+  const current=Number(color.value);
+  document.querySelectorAll('[data-block-color]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.blockColor)===current)));
+  const option=color.selectedOptions[0];
+  document.getElementById('builderHotbarStatus').textContent=(option?label(option):'Block')+' • Point at a face to build';
+}
+presets.forEach(([name,value],index)=>slots.append(swatch(name,value,index+1)));
+const more=document.createElement('button');more.type='button';more.id='builderOpenMoreBlocks';more.textContent='More Blocks';more.setAttribute('aria-expanded','false');more.setAttribute('aria-controls','builderMoreBlocks');slots.append(more);
+function closeMore(){palette.hidden=true;more.setAttribute('aria-expanded','false');}
+more.addEventListener('click',()=>{const open=palette.hidden;palette.hidden=!open;more.setAttribute('aria-expanded',String(open));if(open)paletteGrid.querySelector('button')?.focus();});
+document.getElementById('builderCloseMoreBlocks').addEventListener('click',()=>{closeMore();more.focus();});
+function rebuildPalette(){paletteGrid.replaceChildren(...Array.from(color.options).map(option=>swatch(label(option),Number(option.value))));sync();}
+new MutationObserver(rebuildPalette).observe(color,{childList:true,subtree:true});
+color.addEventListener('change',sync);
+document.getElementById('colorSwatchBar').addEventListener('click',()=>queueMicrotask(sync));
+document.addEventListener('keydown',event=>{
+  if(!isBuilder() || event.target.closest?.('input,textarea,select,[contenteditable="true"]') || event.ctrlKey || event.metaKey || event.altKey)return;
+  if(event.key==='Escape' && !palette.hidden){closeMore();more.focus();event.preventDefault();return;}
+  if(/^[1-6]$/.test(event.key) && !document.querySelector('#missionPopup[style*="display: flex"]') && document.getElementById('bobGuidanceRoot')?.hidden!==false){choose(presets[Number(event.key)-1][1]);event.preventDefault();}
+});
+rebuildPalette();
+
+const pointer=new THREE.Vector2(),previewRay=new THREE.Raycaster();let pointerOnCanvas=false;
+const ghost=new THREE.Mesh(createBuilderGeometry(selectedBlockShape),new THREE.MeshBasicMaterial({color:0x60edff,transparent:true,opacity:.38,depthWrite:false}));
+ghost.name='builderPlacementPreview';ghost.visible=false;ghost.raycast=()=>{};scene.add(ghost);
+const outline=new THREE.Box3Helper(new THREE.Box3(),0xafff64);outline.visible=false;outline.raycast=()=>{};scene.add(outline);
+const faceTarget=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0x8cffff,transparent:true,opacity:.45,depthWrite:false,side:THREE.DoubleSide}));
+faceTarget.name='builderTargetFace';faceTarget.visible=false;faceTarget.raycast=()=>{};scene.add(faceTarget);
+let previewShape=selectedBlockShape;
+function candidate(hit){
+  if(window.builderDoorToolActive && typeof window.getBuilderDoorPlacementCandidate==='function')return window.getBuilderDoorPlacementCandidate(hit);
+  const normal=hit.face?hit.face.normal.clone().transformDirection(hit.object.matrixWorld):new THREE.Vector3(0,1,0);
+  return facePlacement({point:hit.point,normal,bounds:new THREE.Box3().setFromObject(hit.object),ground:hit.object===ground,
+    obstacles:blocks.map(block=>new THREE.Box3().setFromObject(block)),platform:new THREE.Box3().setFromObject(ground)});
+}
+window.getBuilderFacePlacementCandidate=hit=>candidate(hit);
+document.addEventListener('mousemove',event=>{
+  pointerOnCanvas=event.target===renderer.domElement;
+  if(pointerOnCanvas){const bounds=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-bounds.left)/bounds.width*2-1,-(event.clientY-bounds.top)/bounds.height*2+1);}
+},true);
+renderer.domElement.addEventListener('mouseleave',()=>{pointerOnCanvas=false;});
+window.addEventListener('blur',()=>{pointerOnCanvas=false;});
+window.updateBuilderPlacementPreview=function(){
+  ghost.visible=outline.visible=faceTarget.visible=false;
+  if(document.body.classList.contains('starterScreenActive') || document.body.classList.contains('workshopMode')){closeMore();return;}
+  blocks.forEach(block=>builderTextures.apply(block));
+  if(window.builderExploreActive){closeMore();return;}
+  if(window.builderWorldUIBlocksCanvas || !pointerOnCanvas || isDragging || selectMode || moveSelectedMode || window.builderBlockGestureActive || !palette.hidden)return;
+  const popup=document.getElementById('missionPopup');
+  if(popup && getComputedStyle(popup).display!=='none')return;
+  if(document.getElementById('bobGuidanceRoot')?.hidden===false)return;
+  previewRay.setFromCamera(pointer,camera);
+  const hit=previewRay.intersectObjects([ground,...blocks],false)[0];if(!hit)return;
+  const placement=candidate(hit);if(!placement.position)return;
+  const requestedPreview=window.builderDoorToolActive?'door':selectedBlockShape;
+  if(previewShape!==requestedPreview){ghost.geometry.dispose();ghost.geometry=requestedPreview==='door'?new THREE.BoxGeometry(1,2,.18):createBuilderGeometry(selectedBlockShape);previewShape=requestedPreview;}
+  ghost.rotation.y=window.builderDoorToolActive?(window.builderDoorOrientation || 0):0;
+  ghost.position.set(placement.position.x,placement.position.y,placement.position.z);
+  ghost.material.color.setHex(placement.valid?Number(color.value):0xff5968);
+  const previewTexture=builderTextures.textureForColor(Number(color.value));
+  if(ghost.material.map!==previewTexture){ghost.material.map=previewTexture;ghost.material.needsUpdate=true;}
+  ghost.visible=true;ghost.updateMatrixWorld(true);outline.box.setFromObject(ghost);outline.material.color.setHex(placement.valid?0xb7ff60:0xff5968);outline.visible=true;
+  const axis=placement.face.axis,sign=placement.face.sign;
+  const bounds=new THREE.Box3().setFromObject(hit.object);const size=bounds.getSize(new THREE.Vector3());const center=bounds.getCenter(new THREE.Vector3());
+  const n=new THREE.Vector3();n[axis]=sign;
+  if(hit.object===ground){center.set(placement.position.x,bounds.max.y+.008,placement.position.z);faceTarget.scale.set(1,1,1);}
+  else{center[axis]=(sign>0?bounds.max[axis]:bounds.min[axis])+sign*.008;faceTarget.scale.set(axis==='x'?size.z:size.x,axis==='y'?size.z:size.y,1);}
+  faceTarget.position.copy(center);faceTarget.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),n);
+  faceTarget.material.color.setHex(placement.valid?0x60e9ff:0xff5968);faceTarget.visible=true;
+};
+</script>
+
+<style id="builderExploreCSS">
+#builderModeBar,#builderExploreControls,#builderExploreCrosshair,#builderExplorePractice{display:none;}
+body:not(.starterScreenActive):not(.workshopMode) #builderModeBar{
+  display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;position:fixed;z-index:119;
+  top:76px;left:var(--builder-swap-center-left);right:var(--builder-swap-center-right);margin-inline:auto;
+  max-width:540px;padding:7px;border:1px solid #65daef;border-radius:10px;background:#09263bec;color:#fff;
+  font:600 13px/1.3 system-ui,sans-serif;box-sizing:border-box;
+}
+#builderModeBar button,#builderExploreControls button,#builderExplorePractice button{
+  min-height:44px;min-width:44px;margin:0;padding:8px 12px;border:2px solid #85b6c9;border-radius:9px;
+  background:#163c55!important;color:#fff!important;-webkit-text-fill-color:#fff!important;text-shadow:none!important;
+  font:700 14px/1.2 system-ui,sans-serif!important;letter-spacing:normal!important;box-shadow:none!important;
+  touch-action:none;user-select:none;
+}
+#builderModeBar button[aria-pressed="true"],#builderExploreControls button.isHeld{border-color:#d4ff85;background:#2d5848!important;}
+#builderModeBar button:focus-visible,#builderExploreControls button:focus-visible,#builderExplorePractice button:focus-visible{outline:3px solid #fff;outline-offset:2px;}
+#builderExploreStart[hidden],#builderExploreControls[hidden],#builderExplorePractice[hidden]{display:none!important;}
+body.builderExploreActive #builderBlockHotbar,body.builderExploreActive #builderMoreBlocks,
+body.builderExploreActive #builderRightToolsPanel,body.builderExploreActive #viewCubeBox,
+body.builderExploreActive #builderMissionJourneyButton,body.builderExploreActive #reopenLibraryFromCoach,body.builderExploreActive #thinkerBobWorkshop{display:none!important;}
+body.builderExploreActive:not(.starterScreenActive):not(.workshopMode) #builderBobRightPanel,
+body.builderExploreActive:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel,
+body.builderExploreActive:not(.starterScreenActive):not(.workshopMode) #thinkerBobWorkshop,
+body.builderExploreActive:not(.starterScreenActive):not(.workshopMode) #builderRecoveryStatus{display:none!important;}
+body.builderExploreActive #builderBobRightPanel #stemCoach #reopenLibraryFromCoach{display:none!important;}
+body:not(.starterScreenActive):not(.workshopMode):not(.builderExploreActive) #builderModeBar{
+  left:calc(var(--builder-swap-center-left) + 190px);right:calc(var(--builder-swap-center-right) + 185px);max-width:310px;padding:5px;
+}
+body:not(.builderExploreActive) #builderExplorePracticeButton{display:none;}
+body:not(.builderExploreActive) #builderExploreStatus{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+body.builderExploreActive:not(.starterScreenActive):not(.workshopMode) #builderModeBar{left:16px;max-width:620px;margin-inline:0;}
+@media(max-width:1000px){body:not(.starterScreenActive):not(.workshopMode):not(.builderExploreActive) #builderModeBar{left:var(--builder-swap-center-left);right:var(--builder-swap-center-right);top:240px;max-width:310px;}}
+
+body.builderExploreActive #builderExploreCrosshair{display:block;position:fixed;pointer-events:none;z-index:116;left:50%;top:50%;transform:translate(-50%,-50%);color:white;text-shadow:0 0 3px #000;font:24px monospace;}
+body.builderExploreActive #builderExploreControls{
+  display:flex;gap:12px;align-items:end;position:fixed;z-index:120;left:16px;bottom:16px;padding:10px;
+  max-width:calc(100vw - 32px);border:1px solid #65daef;border-radius:12px;background:#08263ce8;color:#fff;
+  box-sizing:border-box;font:600 13px/1.4 system-ui,sans-serif;
+}
+#builderExplorePad{display:grid;grid-template-columns:repeat(3,48px);gap:5px;}
+#builderExplorePad [data-walk="forward"]{grid-column:2;}
+#builderExplorePad [data-walk="left"]{grid-column:1;grid-row:2;}
+#builderExplorePad [data-walk="backward"]{grid-column:2;grid-row:2;}
+#builderExplorePad [data-walk="right"]{grid-column:3;grid-row:2;}
+#builderExploreJump{min-width:90px!important;min-height:58px!important;}
+#builderExploreControlText{margin:0 0 7px;max-width:340px;}
+#builderExploreTurns{display:flex;gap:5px;margin-top:5px;}
+body:not(.starterScreenActive):not(.workshopMode) #builderExplorePractice:not([hidden]){
+  display:block;position:fixed;z-index:121;top:145px;left:var(--builder-swap-center-left);right:var(--builder-swap-center-right);
+  max-width:440px;max-height:calc(100vh - 180px);margin-inline:auto;padding:16px;overflow:auto;border:2px solid #5bdcf2;
+  border-radius:12px;background:#09283cf7;color:#fff;box-sizing:border-box;font:16px/1.5 system-ui,sans-serif;
+}
+#builderExplorePractice h2{font-size:20px;margin:0 0 10px;}#builderExplorePractice ol{padding-left:22px;}
+@media(max-width:850px){#builderExploreControlText{max-width:200px;font-size:12px;}#builderExploreTurns button{padding:6px;}body.builderExploreActive #builderExploreControls{gap:8px;padding:7px;}}
+@media(max-height:550px){body.builderExploreActive #builderExploreControls{bottom:5px;padding:5px;}#builderExploreControlText{display:none;}}
+</style>
+<section id="builderModeBar" aria-label="Builder mode">
+  <div role="group" aria-label="Choose Build or Explore"><button id="builderModeBuild" type="button" aria-pressed="true">Build</button> <button id="builderModeExplore" type="button" aria-pressed="false">Explore My Build</button></div>
+  <button id="builderExploreStart" type="button" hidden>Return to Start</button>
+  <button id="builderExplorePracticeButton" type="button" aria-expanded="false" aria-controls="builderExplorePractice">Practice with BOB</button>
+  <span id="builderExploreStatus" role="status" aria-live="polite">Build mode</span>
+</section>
+<div id="builderExploreCrosshair" aria-hidden="true">+</div>
+<section id="builderExploreControls" aria-label="Walking and looking controls" hidden>
+  <div id="builderExplorePad" role="group" aria-label="Hold to walk">
+    <button type="button" data-walk="forward" aria-label="Walk forward — closer">↑<small>Closer</small></button>
+    <button type="button" data-walk="left" aria-label="Step left">←</button>
+    <button type="button" data-walk="backward" aria-label="Walk backward — farther">↓<small>Farther</small></button>
+    <button type="button" data-walk="right" aria-label="Step right">→</button>
+  </div>
+  <div><p id="builderExploreControlText">WASD or arrows: walk<br>Drag: look · Scroll: closer / farther<br>Touch: pinch to move · Space: jump<br>Escape: return to Build</p>
+    <button id="builderExploreJump" type="button" data-walk="jump">Jump</button>
+    <div id="builderExploreTurns"><button type="button" data-walk="turnLeft">Look left</button><button type="button" data-walk="turnRight">Look right</button></div>
+  </div>
+</section>
+<section id="builderExplorePractice" aria-labelledby="builderExplorePracticeTitle" hidden>
+  <h2 id="builderExplorePracticeTitle">Explore with BOB</h2>
+  <p>See your creation from inside your world!</p>
+  <ol><li>Choose <strong>Explore My Build</strong>.</li><li>Hold W or ↑ to walk. A and D step sideways.</li><li>Drag the world to look around, or hold Look left/right. Scroll up to move closer and down to move farther. On a touchscreen, spread two fingers to move closer and pinch them together to move farther.</li><li>Press Space or tap Jump to hop onto a block.</li><li>Click a door or use Open Door when nearby. Press E to use it. Use Return to Start if you get stuck. Choose Build to edit again.</li></ol>
+  <button id="builderExplorePracticeClose" type="button">Got it</button>
+</section>
+<script type="module" id="builderExplorerScript">
+import {createBuilderExplorer,explorerSpawn,explorerBodyBounds} from './js/editing/builder-explorer.mjs';
+import {sharedViewOrbit,sharedViewLook,explorerSpawnNear} from './js/editing/builder-view-continuity.mjs';
+import {installCanvasNavigation} from './js/editing/builder-canvas-navigation.mjs';
+const controls=document.getElementById('builderExploreControls'),startButton=document.getElementById('builderExploreStart');
+const buildButton=document.getElementById('builderModeBuild'),exploreButton=document.getElementById('builderModeExplore');
+const practice=document.getElementById('builderExplorePractice'),practiceButton=document.getElementById('builderExplorePracticeButton');
+const status=document.getElementById('builderExploreStatus');
+const keys=new Set(),held=new Set();let walker=null,yaw=0,pitch=0,looking=null,lastFrame=0,jumpQueued=false,wheelTravel=0;
+const tapUntil=new Map();
+const keyMap={w:'forward',ArrowUp:'forward',s:'backward',ArrowDown:'backward',a:'left',ArrowLeft:'left',d:'right',ArrowRight:'right',' ':'jump'};
+const allowed=()=>!document.body.classList.contains('starterScreenActive') && !document.body.classList.contains('workshopMode');
+const consume=event=>{event.preventDefault();event.stopImmediatePropagation();};
+function release(){
+  keys.clear();held.clear();tapUntil.clear();wheelTravel=0;jumpQueued=false;
+  controls.querySelectorAll('.isHeld').forEach(button=>button.classList.remove('isHeld'));
+  if(looking && renderer.domElement.hasPointerCapture?.(looking.id))renderer.domElement.releasePointerCapture(looking.id);
+  looking=null;
+}
+function sync(){
+  const active=!!window.builderExploreActive;
+  document.body.classList.toggle('builderExploreActive',active);
+  controls.hidden=startButton.hidden=!active;
+  const editingPanel=document.getElementById('builderRightToolsPanel');
+  if(editingPanel)editingPanel.toggleAttribute('inert',active);
+  const readingPanel=document.getElementById('builderBobRightPanel');
+  if(readingPanel)readingPanel.toggleAttribute('inert',active);
+  buildButton.setAttribute('aria-pressed',String(!active));exploreButton.setAttribute('aria-pressed',String(active));
+}
+function closePractice(){practice.hidden=true;practiceButton.setAttribute('aria-expanded','false');}
+function leave(){
+  if(!window.builderExploreActive)return;
+  release();
+  const view=sharedViewOrbit(camera.position,camera.getWorldDirection(new THREE.Vector3()));
+  window.builderSharedOrbitTarget=view.target;cameraAngle=view.angle;cameraDistance=view.distance;cameraHeight=view.height;
+  window.builderExploreActive=false;sync();closePractice();updateCamera();
+  status.textContent='Build here. You are at the same spot you explored.';buildButton.focus({preventScroll:true});
+}
+function enter(){
+  if(!allowed() || window.builderExploreActive)return;
+  window.closeBuilderDoors?.();
+  const platform=new THREE.Box3().setFromObject(ground);
+  const obstacles=blocks.filter(block=>block.parent && block.visible).map(block=>new THREE.Box3().setFromObject(block));
+  const spawn=explorerSpawnNear(platform,obstacles,camera.position);
+  if(!spawn){status.textContent='A clear starting spot is needed. Make some room, then try Explore.';return;}
+  const look=sharedViewLook(camera.getWorldDirection(new THREE.Vector3()));
+  walker=createBuilderExplorer({spawn,platform,obstacles});
+  window.refreshBuilderExploreObstacles=()=>{obstacles.splice(0,obstacles.length,...blocks.filter(block=>block.parent && block.visible).map(block=>new THREE.Box3().setFromObject(block)));};
+  window.getBuilderExplorerBodyBounds=()=>explorerBodyBounds(walker.read());
+  yaw=look.yaw;pitch=look.pitch;release();closePractice();
+  isDragging=false;mouseMoved=false;window.builderExploreActive=true;lastFrame=performance.now();camera.near=.05;camera.updateProjectionMatrix();sync();
+  status.textContent='Explore from here. Walk with WASD or arrows. Switch to Build to edit this spot.';exploreButton.focus({preventScroll:true});
+}
+buildButton.addEventListener('click',leave);exploreButton.addEventListener('click',enter);
+startButton.addEventListener('click',()=>{release();const platform=new THREE.Box3().setFromObject(ground),obstacles=blocks.filter(b=>b.parent&&b.visible).map(b=>new THREE.Box3().setFromObject(b)),spawn=explorerSpawn(platform,obstacles);if(!spawn)return;walker=createBuilderExplorer({spawn,platform,obstacles});window.getBuilderExplorerBodyBounds=()=>explorerBodyBounds(walker.read());window.refreshBuilderExploreObstacles=()=>{obstacles.splice(0,obstacles.length,...blocks.filter(b=>b.parent&&b.visible).map(b=>new THREE.Box3().setFromObject(b)));};yaw=0;pitch=0;status.textContent='Back at the starting spot.';});
+practiceButton.addEventListener('click',()=>{release();practice.hidden=!practice.hidden;practiceButton.setAttribute('aria-expanded',String(!practice.hidden));if(!practice.hidden)document.getElementById('builderExplorePracticeClose').focus();});
+document.getElementById('builderExplorePracticeClose').addEventListener('click',()=>{closePractice();practiceButton.focus();});
+new MutationObserver(()=>{if(window.builderExploreActive && !allowed())leave();}).observe(document.body,{attributes:true,attributeFilter:['class']});
+const editable=target=>target?.closest?.('input,textarea,select,[contenteditable="true"]');
+document.addEventListener('keydown',event=>{
+  if(!window.builderExploreActive||window.builderStoryEditorOpen)return;
+  if(event.key==='Escape'){leave();consume(event);return;}
+  if(editable(event.target)||((event.key===' '||event.key==='Enter')&&event.target.closest?.('button')))return;
+  if(event.key.toLowerCase()==='e' && !editable(event.target) && !event.ctrlKey && !event.metaKey && !event.altKey){window.useTargetBuilderDoor?.();consume(event);return;}
+  if(editable(event.target) || (event.target.closest?.('[data-walk]') && (event.key===' ' || event.key==='Enter')))return;
+  if((event.ctrlKey || event.metaKey) && ['z','y','o'].includes(event.key.toLowerCase())){consume(event);return;}
+  if(['Delete','Backspace'].includes(event.key)){consume(event);return;}
+  if(event.ctrlKey || event.metaKey || event.altKey)return;
+  const direction=keyMap[event.key] || keyMap[event.key.toLowerCase()];
+  if(direction){if(direction==='jump' && !event.repeat)jumpQueued=true;keys.add(direction);consume(event);}
+},true);
+document.addEventListener('keyup',event=>{
+  const direction=keyMap[event.key] || keyMap[event.key.toLowerCase()];if(direction)keys.delete(direction);
+  if(editable(event.target)||window.builderStoryEditorOpen)return;
+  if(event.target.closest?.('[data-walk]') && (event.key===' ' || event.key==='Enter'))return;
+  if(direction && window.builderExploreActive)consume(event);
+},true);
+controls.querySelectorAll('[data-walk]').forEach(button=>{
+  let pressStarted=0,lastDuration=0;
+  button.addEventListener('click',()=>{if(!window.builderExploreActive||window.builderStoryEditorOpen)return;if(lastDuration<180){if(button.dataset.walk==='jump')jumpQueued=true;else tapUntil.set(button.dataset.walk,performance.now()+120);}lastDuration=0;});
+  button.addEventListener('pointerdown',event=>{if(!window.builderExploreActive||window.builderStoryEditorOpen)return;pressStarted=performance.now();held.add(button.dataset.walk);if(button.dataset.walk==='jump')jumpQueued=true;button.classList.add('isHeld');button.setPointerCapture(event.pointerId);consume(event);});
+  const stop=()=>{if(pressStarted)lastDuration=performance.now()-pressStarted;pressStarted=0;held.delete(button.dataset.walk);button.classList.remove('isHeld');};
+  button.addEventListener('pointerup',stop);button.addEventListener('pointercancel',stop);button.addEventListener('lostpointercapture',stop);
+  button.addEventListener('keydown',event=>{if(event.key==='Enter' || event.key===' '){held.add(button.dataset.walk);if(button.dataset.walk==='jump' && !event.repeat)jumpQueued=true;button.classList.add('isHeld');event.preventDefault();}});
+  button.addEventListener('keyup',event=>{if(event.key==='Enter' || event.key===' '){stop();event.preventDefault();}});
+});
+const canvas=renderer.domElement;
+installCanvasNavigation({document,canvas,
+ isExplore:()=>allowed()&&!!window.builderExploreActive&&!window.builderStoryEditorOpen,
+ isBuild:()=>allowed()&&!window.builderExploreActive&&!window.builderWorldUIBlocksCanvas,
+ onTravel:distance=>{wheelTravel=Math.max(-6,Math.min(6,wheelTravel+distance));},
+ onLook:(horizontal,vertical)=>{yaw+=horizontal;pitch=Math.max(-1.15,Math.min(1.15,pitch+vertical));},
+ onBuild:({zoom,dx,dy})=>{cameraDistance=Math.max(4,Math.min(80,cameraDistance+zoom));cameraAngle+=dx*.006;cameraHeight=Math.max(1.5,Math.min(40,cameraHeight-dy*.035));updateCamera();},
+ onGestureStart:()=>{looking=null;}
+});
+canvas.addEventListener('pointerdown',event=>{
+  if(!window.builderExploreActive || event.button!==0)return;
+  looking={id:event.pointerId,x:event.clientX,y:event.clientY,startX:event.clientX,startY:event.clientY,moved:false};canvas.setPointerCapture(event.pointerId);consume(event);
+},true);
+canvas.addEventListener('pointermove',event=>{
+  if(!window.builderExploreActive || !looking)return;
+  if(Math.hypot(event.clientX-looking.startX,event.clientY-looking.startY)>6)looking.moved=true;
+  yaw-=(event.clientX-looking.x)*.004;pitch=Math.max(-1.15,Math.min(1.15,pitch-(event.clientY-looking.y)*.003));
+  looking.x=event.clientX;looking.y=event.clientY;consume(event);
+},true);
+let lookMoved=false;
+for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,()=>{if(looking)lookMoved=looking.moved;looking=null;},true);
+for(const name of ['mousedown','mouseup','mousemove','click','dblclick','contextmenu','wheel'])document.addEventListener(name,event=>{
+  if(window.builderExploreActive && event.target===canvas){
+    if(name==='click'){if(!lookMoved && event.detail===1)window.toggleBuilderDoorAtEvent?.(event);lookMoved=false;}
+    consume(event);
+  }
+},true);
+window.addEventListener('blur',release);document.addEventListener('visibilitychange',()=>{if(document.hidden)release();});
+window.updateBuilderExploreFrame=function(){
+  if(window.builderStoryEditorOpen){release();return;}
+  if(!window.builderExploreActive || !walker)return;
+  const now=performance.now(),dt=Math.min(.05,(now-lastFrame)/1000);lastFrame=now;
+  const paused=!practice.hidden || document.getElementById('bobGuidanceRoot')?.hidden===false;
+  const input={};if(!paused){for(const key of [...keys,...held])input[key]=true;for(const [key,until]of tapUntil){if(until>now)input[key]=true;else tapUntil.delete(key);}
+    if(!input.forward&&!input.backward&&Math.abs(wheelTravel)>.001){const distance=Math.min(Math.abs(wheelTravel),4*dt);input[wheelTravel>0?'forward':'backward']=distance/Math.max(.001,4*dt);wheelTravel-=Math.sign(wheelTravel)*distance;}
+  }else{wheelTravel=0;tapUntil.clear();}
+  yaw+=((input.turnLeft?1:0)-(input.turnRight?1:0))*1.6*dt;
+  if(!paused && jumpQueued)input.jump=true;
+  const before=walker.read(),position=walker.step(input,dt,yaw);jumpQueued=false;
+  const attempted=!!(input.forward||input.backward||input.left||input.right),moved=Math.hypot(position.x-before.x,position.z-before.z)>.00001;
+  if(attempted&&!moved&&status.dataset.movement!=='blocked'){status.dataset.movement='blocked';status.textContent='A block or platform edge is in the way. Step sideways, turn, or jump.';}
+  else if(moved&&status.dataset.movement!=='moving'){status.dataset.movement='moving';status.textContent='Explore from here. Drag to look. Scroll or use Closer / Farther to walk.';}
+  camera.position.set(position.x,position.y+walker.eyeHeight,position.z);camera.rotation.set(pitch,yaw,0,'YXZ');camera.updateMatrixWorld(true);
+  window.updateBuilderDoorTarget?.();
+};
+sync();
+</script>
+
+<style id="builderDoorCSS">
+#builderHotbarSlots{grid-template-columns:repeat(6,minmax(44px,1fr)) repeat(2,minmax(54px,1fr));}
+#builderTurnDoor[hidden],#builderUseDoor[hidden]{display:none!important;}
+#builderBlockHotbar #builderTurnDoor{min-height:36px;width:100%;margin-top:7px;}
+.builderDoorSwatch{display:block;position:relative;width:17px;height:25px;margin:0 auto 3px;background:repeating-linear-gradient(90deg,#865b31 0 3px,#634121 3px 4px);border:2px solid #c99658;border-radius:2px;}
+.builderDoorSwatch::after{content:'';position:absolute;right:2px;top:13px;width:3px;height:3px;background:#ffe789;}
+#builderUseDoor{min-height:44px;min-width:100px;margin:0;padding:8px 12px;border:2px solid #e5ed98;border-radius:9px;background:#254a3b;color:white;font:700 14px/1.2 system-ui,sans-serif;}
+#builderUseDoor:focus-visible{outline:3px solid white;outline-offset:2px;}
+</style>
+<script type="module" id="builderWorkingDoorsScript">
+import {doorOpenPose,doorPlacement,canCloseDoor} from './js/editing/builder-doors.mjs';
+const doorStates=new Map();let orientation=0,targetDoor=null;
+const slots=document.getElementById('builderHotbarSlots');
+const button=document.createElement('button');button.type='button';button.id='builderChooseDoor';button.setAttribute('aria-pressed','false');button.innerHTML='<span class="builderDoorSwatch" aria-hidden="true"></span>Door';slots.append(button);
+const turn=document.createElement('button');turn.type='button';turn.id='builderTurnDoor';turn.hidden=true;turn.textContent='Turn Door ↻';document.getElementById('builderBlockHotbar').append(turn);
+const use=document.createElement('button');use.type='button';use.id='builderUseDoor';use.hidden=true;document.getElementById('builderModeBar').append(use);
+function sync(){
+  const selected=!!window.builderDoorToolActive;button.setAttribute('aria-pressed',String(selected));turn.hidden=!selected;
+  if(selected)document.getElementById('builderHotbarStatus').textContent='Door • '+(orientation?'Side-facing':'Front-facing')+' • click a floor to place';
+}
+button.addEventListener('click',()=>{
+  const color=document.getElementById('blockColor');const wood=Array.from(color.options).find(option=>Number(option.value)===0x654321);
+  if(wood){color.value=wood.value;color.dispatchEvent(new Event('change',{bubbles:true}));window.updateCreatorBarSelection?.();}
+  window.builderDoorToolActive=true;sync();
+});
+const rotate=()=>{orientation=orientation===0?Math.PI/2:0;window.builderDoorOrientation=orientation;sync();};
+turn.addEventListener('click',rotate);
+document.getElementById('blockColor').addEventListener('change',()=>{window.builderDoorToolActive=false;sync();});
+document.getElementById('blockShape').addEventListener('change',()=>{window.builderDoorToolActive=false;sync();});
+document.getElementById('colorSwatchBar').addEventListener('click',()=>{window.builderDoorToolActive=false;sync();});
+document.addEventListener('keydown',event=>{
+  if(window.builderDoorToolActive && !window.builderExploreActive && !document.body.classList.contains('workshopMode') && !event.target.closest?.('input,textarea,select,[contenteditable="true"]') && event.key.toLowerCase()==='r' && !event.ctrlKey && !event.metaKey){rotate();event.preventDefault();}
+});
+window.decorateBuilderDoor=function(mesh){
+  if(mesh.userData.builderDoorDecorated)return mesh;
+  mesh.userData.builderDoor=true;mesh.userData.builderShape='cube';mesh.userData.builderDoorDecorated=true;
+  const knob=new THREE.Mesh(new THREE.SphereGeometry(.055,8,6),new THREE.MeshLambertMaterial({color:0xffd700}));knob.position.set(.33,-.05,.14);knob.raycast=()=>{};mesh.add(knob);
+  const frame=new THREE.Box3Helper(new THREE.Box3(new THREE.Vector3(-.42,-.88,-.095),new THREE.Vector3(.42,.88,.095)),0xa56b32);frame.raycast=()=>{};mesh.add(frame);
+  return mesh;
+};
+window.createBuilderDoorMesh=function(){
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(1,2,.18),new THREE.MeshLambertMaterial({color:0x654321}));
+  mesh.userData.studentPlaced=true;mesh.rotation.y=orientation;return window.decorateBuilderDoor(mesh);
+};
+window.getBuilderDoorPlacementCandidate=function(hit){
+  const bounds=new THREE.Box3().setFromObject(hit.object),normal=hit.face?.normal.clone().transformDirection(hit.object.matrixWorld);
+  return doorPlacement({point:hit.point,normal,top:bounds.max.y,platform:new THREE.Box3().setFromObject(ground),obstacles:blocks.map(block=>new THREE.Box3().setFromObject(block)),rotationY:orientation});
+};
+window.getBuilderDoorSaveRecord=function(block){
+  if(!block.userData.builderDoor)return {};
+  const state=doorStates.get(block);
+  return {door:true,...(state?.open?{x:state.position.x,y:state.position.y,z:state.position.z,rotationY:state.rotationY}:{})};
+};
+window.closeBuilderDoors=function(){
+  for(const [door,state]of doorStates){if(state.open){door.position.set(state.position.x,state.position.y,state.position.z);door.rotation.y=state.rotationY;door.updateMatrixWorld(true);}}
+  doorStates.clear();targetDoor=null;use.hidden=true;
+};
+function stateFor(door){
+  if(!doorStates.has(door))doorStates.set(door,{open:false,position:{x:door.position.x,y:door.position.y,z:door.position.z},rotationY:door.rotation.y});
+  return doorStates.get(door);
+}
+function toggle(door){
+  if(!window.builderExploreActive || !door?.parent || !blocks.includes(door))return;
+  const state=stateFor(door),oldPosition=door.position.clone(),oldRotation=door.rotation.y;
+  if(state.open){door.position.set(state.position.x,state.position.y,state.position.z);door.rotation.y=state.rotationY;}
+  else{const pose=doorOpenPose(state.position,state.rotationY);door.position.set(pose.position.x,pose.position.y,pose.position.z);door.rotation.y=pose.rotationY;}
+  door.updateMatrixWorld(true);
+  const bounds=new THREE.Box3().setFromObject(door),player=window.getBuilderExplorerBodyBounds?.();
+  const overlaps=(a,b)=>['x','y','z'].every(axis=>Math.min(a.max[axis],b.max[axis])-Math.max(a.min[axis],b.min[axis])>1e-5);
+  const obstructed=blocks.some(block=>block!==door && overlaps(bounds,new THREE.Box3().setFromObject(block)));
+  if(!canCloseDoor(bounds,player) || obstructed){
+    door.position.copy(oldPosition);door.rotation.y=oldRotation;door.updateMatrixWorld(true);
+    document.getElementById('builderExploreStatus').textContent='Make room beside the door before '+(state.open?'closing':'opening')+' it.';return;
+  }
+  state.open=!state.open;window.refreshBuilderExploreObstacles?.();
+  document.getElementById('builderExploreStatus').textContent=state.open?'Door open. Walk through!':'Door closed.';
+  use.textContent=state.open?'Close Door':'Open Door';
+}
+use.addEventListener('click',()=>toggle(targetDoor));
+window.useTargetBuilderDoor=()=>toggle(targetDoor);
+const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
+window.toggleBuilderDoorAtEvent=function(event){
+  const bounds=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-bounds.left)/bounds.width*2-1,-(event.clientY-bounds.top)/bounds.height*2+1);
+  ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(blocks,false)[0];
+  if(hit && hit.distance<=3.5 && hit.object.userData.builderDoor){toggle(hit.object);return true;}return false;
+};
+window.updateBuilderDoorTarget=function(){
+  if(!window.builderExploreActive){use.hidden=true;return;}
+  ray.setFromCamera(new THREE.Vector2(0,0),camera);const hit=ray.intersectObjects(blocks,false)[0];
+  targetDoor=hit && hit.distance<=3.5 && hit.object.userData.builderDoor?hit.object:null;
+  // An open leaf may no longer lie under the crosshair; keep the closest reachable door available.
+  if(!targetDoor){targetDoor=blocks.filter(block=>block.userData.builderDoor && block.parent && doorStates.get(block)?.open && camera.position.distanceTo(block.position)<=3.5).sort((a,b)=>camera.position.distanceTo(a.position)-camera.position.distanceTo(b.position))[0] || null;}
+  use.hidden=!targetDoor;if(targetDoor)use.textContent=stateFor(targetDoor).open?'Close Door':'Open Door';
+};
+</script>
+
+<style id="builderSingleColorPaletteCSS">
+/* The hotbar owns Builder color choices; retain the shared color state for saving and Workshop. */
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .colorScrollWrap,
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel #blockColor{display:none !important;}
+body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashboard139ShapeZone{
+  height:auto !important;min-height:0 !important;max-height:none !important;
+  grid-template-rows:auto auto !important;
+}
+</style>
+
+<link rel="stylesheet" href="js/ui/builder-start-page.css"/>
+<link rel="stylesheet" href="js/ui/builder-world-view.css"/>
+<script type="module" src="js/ui/builder-world-view.mjs"></script>
 </body>
 </html>
+
+<link rel="stylesheet" href="js/ui/builder-story-maker.css"/>
+<script type="module" src="js/ui/builder-story-maker.mjs"></script>

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const source=readFileSync(new URL("../../index.html",import.meta.url),"utf8");
-const loadingMarkup=source.match(/<div id="starterLoadingCover"[\s\S]*?<\/div>\s*<div id="startCard">/)?.[0] || "";
+const loadingMarkup=source.match(/<div id="starterLoadingCover"[\s\S]*?<\/div>\s*<div id="startCard"[^>]*>/)?.[0] || "";
 const loadingStyles=source.match(/<style id="starterFirstPaintCSS">[\s\S]*?<\/style>/)?.[0] || "";
 const rigStart=source.indexOf('<script id="thinkerBobRigIntegrationScript">');
 const rigEnd=source.indexOf("</script>",rigStart);

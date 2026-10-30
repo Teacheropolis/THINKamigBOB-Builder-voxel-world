@@ -150,3 +150,10 @@ test("reload and next-day recovery retains exact validated project metadata",()=
   assert.equal(recovered.updatedAt,1000);
   assert.deepEqual(recovered.state.blocks,state().blocks);
 });
+
+test('working doors survive recovery validation without changing ordinary blocks',()=>{
+  const door={shape:'cube',x:0,y:.5,z:6,color:0x654321,sx:1,sy:2,sz:.18,rotationY:Math.PI/2,door:true};
+  const recovered=validateBuilderRecoveryState(state({blocks:[door]}));
+  assert.deepEqual(recovered.blocks[0],door);
+  assert.equal(validateBuilderRecoveryState(state({blocks:[{...door,door:'yes'}]})),null);
+});

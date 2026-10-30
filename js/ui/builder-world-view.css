@@ -1,0 +1,138 @@
+.worldUI{display:none;}
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode){--builder-swap-center-left:98px;--builder-swap-center-right:18px;--builder-guided-header-height:48px;}
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode):not(.builderExploreActive) .worldUI{display:block;}
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel,
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #viewCubeBox,
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #thinkerBobWorkshop,
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderRecoveryStatus{display:none!important;}
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadHeader{
+  position:fixed!important;inset:10px 12px auto!important;height:48px!important;display:flex!important;
+  align-items:center!important;gap:16px!important;padding:4px 10px!important;overflow:visible!important;
+  border-radius:13px!important;background:linear-gradient(180deg,#163d50ed,#092435ed)!important;
+}
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand{width:155px!important;height:100%!important;flex:0 0 155px!important;}
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand #builderMissionLogo{width:150px!important;max-width:150px!important;height:30px!important;max-height:30px!important;}
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadMission,
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderMissionTitleOverlay,
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadProjectActions{display:none!important;}
+#worldProjectName{display:block;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e5faff;font:700 18px/1.2 system-ui,sans-serif;}
+.worldUI button,button.worldUI,#worldProgressButton{
+  color:#fff!important;-webkit-text-fill-color:currentColor!important;text-shadow:none!important;font:700 15px/1.2 system-ui,sans-serif!important;
+  letter-spacing:normal!important;min-height:44px;min-width:44px;margin:0;box-sizing:border-box;cursor:pointer;
+}
+.worldUI button:focus-visible,#worldProgressButton:focus-visible{outline:3px solid #fff!important;outline-offset:3px!important;}
+#worldProgressButton{border:1px solid #d4b872;border-radius:10px;background:linear-gradient(#4c4b33,#24382e);padding:8px 12px;box-shadow:inset 0 1px #fff3;}
+body.builderExploreActive #worldProgressButton{display:none!important;}
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode):not(.builderExploreActive) #builderModeBar{top:72px;left:50%;right:auto;transform:translateX(-50%);width:auto;max-width:none;padding:4px;border-radius:12px;}
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderBlockHotbar{bottom:16px;max-width:520px;padding:6px 8px;border-color:#b5cf8d;border-radius:15px;box-shadow:0 5px 18px #0005;}
+#builderBlockHotbar .builderHotbarStatus{font-size:13px;margin-bottom:3px;}
+body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderBlockHotbar button{min-height:54px;}
+#worldDock{position:fixed;left:12px;top:84px;width:72px;z-index:140;}
+#worldDock button{display:grid;place-items:center;gap:3px;width:72px;min-height:72px;margin-bottom:10px;padding:8px 3px;border:1px solid #7bb8c8;border-radius:14px;background:linear-gradient(#284c61,#0b293b);box-shadow:inset 0 1px #fff4,0 4px 0 #052033,0 7px 14px #0003;}
+#worldDock button[aria-expanded="true"]{border-color:#c8fb7e;background:linear-gradient(#39614c,#163d36);box-shadow:0 0 0 2px #9bd65d,0 5px 18px #0005;}
+.worldDockIcon{font-size:25px;line-height:1.1;}
+#builderWorldView #builderWorldDrawer,#worldBobDrawer{position:fixed;z-index:150;box-sizing:border-box;border:2px solid #68cbd8;border-radius:17px;background:linear-gradient(145deg,#193e51fa,#071f32fa);box-shadow:0 14px 40px #0008,inset 0 1px #fff3;color:white;overflow:auto;}
+#builderWorldView #builderWorldDrawer{top:80px;left:96px;width:min(330px,calc(100vw - 112px));max-height:calc(100dvh - 104px);padding:14px;}
+#builderWorldView #builderWorldDrawer[hidden],#worldBobDrawer[hidden],.worldUI [hidden]{display:none!important;}
+.worldDrawerHeading{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:1px solid #6195a6;padding-bottom:10px;}
+.worldDrawerHeading h2{font:700 22px/1.2 system-ui,sans-serif;margin:0;}
+.worldDrawerHeading button{border:1px solid #83b7c5;border-radius:10px;background:#153b51;padding:6px 12px;}
+.worldDrawerBody p{font:400 15px/1.5 system-ui,sans-serif;color:#dcecf2;}
+.worldDrawerBody h3{font:700 16px/1.3 system-ui,sans-serif;color:#c9f592;}
+#builderWorldView #builderWorldDrawer .worldDrawerBody button{
+  position:static!important;inset:auto!important;display:block;min-height:48px!important;height:auto!important;max-height:none!important;
+  width:100%!important;max-width:none!important;min-width:0!important;padding:10px!important;margin:0!important;
+  border:1px solid #82b6c5!important;border-radius:11px!important;background:linear-gradient(#244b60,#103248)!important;
+  color:#fff!important;-webkit-text-fill-color:#fff!important;box-shadow:inset 0 1px #fff2!important;filter:none!important;transform:none!important;aspect-ratio:auto!important;text-indent:0!important;font:700 16px/1.3 system-ui,sans-serif!important;
+}
+#builderWorldView #builderWorldDrawer .worldDrawerBody button:disabled{opacity:.45;}
+#builderWorldView #builderWorldDrawer .dashboard139Zone,#builderWorldView #builderWorldDrawer .dashboard139ShapeRow{position:static!important;display:block!important;inset:auto!important;width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0 0 14px!important;padding:0!important;border:0!important;background:transparent!important;overflow:visible!important;}
+#builderWorldView #builderWorldDrawer .dashboard139ZoneLabel{display:block!important;position:static!important;font:700 16px/1.2 system-ui,sans-serif!important;color:#c9f592!important;margin-bottom:8px!important;background:none!important;}
+#builderWorldView #builderWorldDrawer #blockShape{width:100%!important;min-height:48px!important;font:600 16px system-ui,sans-serif!important;color:white!important;background:#163b51!important;border:1px solid #8fbecb!important;border-radius:10px!important;}
+#builderWorldView #builderWorldDrawer #blockColor,#builderWorldView #builderWorldDrawer .colorScrollWrap{display:none!important;}
+#builderWorldView #builderWorldDrawer #bottomBuildTools,#builderWorldView #builderWorldDrawer .dashboardUtilityButtons,#builderWorldView #builderWorldDrawer .worldActionGrid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;width:100%!important;}
+#builderWorldView #builderWorldDrawer #bottomBuildTools button,#builderWorldView #builderWorldDrawer .dashboardUtilityButtons button{background:linear-gradient(#244b60,#103248)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;}
+#builderWorldView #builderWorldDrawer #builderMoreBlocks{position:static!important;inset:auto!important;display:block!important;width:100%!important;max-width:none!important;height:auto!important;max-height:none!important;margin:12px 0 0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important;}
+#builderWorldView #builderWorldDrawer #builderMoreBlocks[hidden]{display:none!important;}
+#builderWorldView #builderWorldDrawer #builderMoreBlocksGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}
+#builderWorldView #builderWorldDrawer #builderMoreBlocksGrid button{font-size:12px!important;padding:7px 4px!important;}
+#builderWorldView #builderWorldDrawer #builderMoreBlocksGrid button[aria-pressed="true"]{outline:2px solid #c4fa82;}
+#builderWorldView #builderWorldDrawer #builderCloseMoreBlocks{display:none!important;}
+#builderWorldView #builderWorldDrawer #builderMissionJourneyButton{position:static!important;inset:auto!important;transform:none!important;width:100%!important;margin:10px 0!important;min-width:0!important;}
+#builderWorldView #builderWorldDrawer #builderGearTotal,#builderWorldView #builderWorldDrawer #builderNextWorkshopUpgrade{position:static!important;inset:auto!important;display:flex!important;gap:10px!important;width:100%!important;max-width:none!important;height:auto!important;margin:0 0 14px!important;padding:12px!important;transform:none!important;background:#12374a!important;border-radius:12px!important;font:700 18px system-ui,sans-serif!important;}
+#builderWorldView #builderWorldDrawer .builderGearProgressCopy{font:600 12px/1.3 system-ui,sans-serif!important;}
+#worldChallengeCard{position:fixed;z-index:121;top:80px;right:16px;width:278px;box-sizing:border-box;padding:13px;border:1px solid #87bdca;border-radius:16px;background:linear-gradient(145deg,#153d50ed,#092536ed);box-shadow:0 6px 18px #0003;color:#fff;}
+.worldChallengeHeader{display:flex;align-items:center;justify-content:space-between;gap:5px;}
+.worldChallengeHeader h2{margin:0;font:700 16px/1.3 system-ui,sans-serif;color:#d3f99f;}
+.worldChallengeHeader button{border:0;background:transparent;padding:5px;}
+#worldChallengeText{font:600 17px/1.45 system-ui,sans-serif;margin:9px 0 12px;}
+#worldChallengeProgress{font:500 12px/1.3 system-ui,sans-serif;color:#c8dce5;margin:4px 0 0;}
+.worldChallengeActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+.worldChallengeActions button{border:1px solid #84b7c6;border-radius:9px;padding:7px 3px;background:#1b455b;font-size:13px!important;}
+#worldChallengeDone{background:#315737;border-color:#b5e57c;}
+#worldFullMission{border:0;background:transparent;font-size:13px!important;padding:8px 0 0;min-height:36px;color:#c4edf6!important;}
+body.worldDrawerOpen #worldChallengeCard{display:none!important;}
+#worldBobButton{position:fixed;right:18px;bottom:18px;z-index:142;display:flex;align-items:center;gap:8px;border:1px solid #87d8e9;border-radius:40px;padding:5px 14px 5px 5px;background:linear-gradient(#285267,#0c3044);box-shadow:0 4px 18px #0005;}
+.worldBobPortrait{width:62px;height:62px;border-radius:50%;border:2px solid #96ebf5;background-color:#143c53;background-image:url('../../assets/images/characters/inventor-bob-dance-poses.png');background-size:410px 307.5px;background-position:-20px -1px;background-repeat:no-repeat;}
+#worldBobButton span:last-child{font-size:16px;}
+#worldBobHint{position:fixed;right:20px;bottom:100px;z-index:123;max-width:210px;background:#f0f8d9;color:#183849;border-radius:12px 12px 2px 12px;padding:9px 12px;font:600 14px/1.3 system-ui,sans-serif;box-shadow:0 3px 12px #0003;pointer-events:none;}
+#worldBobDrawer{right:18px;bottom:105px;width:min(360px,calc(100vw - 32px));max-height:calc(100dvh - 180px);padding:14px;}
+#worldBobDrawer #builderBobRightPanel{position:static!important;inset:auto!important;display:flex!important;flex-direction:column!important;transform:none!important;width:100%!important;min-width:0!important;max-width:none!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important;}
+#worldBobDrawer #builderBobRightPanel #stemCoach{position:static!important;inset:auto!important;height:auto!important;min-height:0!important;max-height:none!important;width:100%!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;overflow:visible!important;}
+#worldBobDrawer #builderBobRightPanel #stemCoachContent{min-height:0!important;max-height:230px!important;overflow:auto!important;}
+#worldBobDrawer #builderBobRightPanel #thinkerBobPanel{min-height:0!important;padding:0!important;font:400 16px/1.5 system-ui,sans-serif!important;}
+#worldBobDrawer #builderBobRightPanel #thinkerBobPanel > :not(#readerHighlightBox){display:block!important;}
+#worldBobDrawer #builderBobRightPanel .dashboard139VoiceZone{position:static!important;display:block!important;width:100%!important;height:auto!important;padding:10px 0!important;background:none!important;border:0!important;}
+#worldBobDrawer #voiceControls{position:static!important;inset:auto!important;width:100%!important;display:grid!important;gap:10px!important;}
+#worldBobDrawer #builderBobRightPanel .dashboard139VoiceSelectors{display:grid!important;grid-template-columns:22px minmax(0,1fr) 80px!important;}
+#worldBobDrawer #builderBobRightPanel .dashboard139AccessibilityToggles{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;}
+#worldBobDrawer #builderBobRightPanel .dashboard139AccessibilityToggles label{font:600 13px/1.3 system-ui,sans-serif!important;}
+#worldBobDrawer #builderBobRightPanel #reopenLibraryFromCoach{display:block!important;min-height:44px!important;width:100%!important;max-width:none!important;height:auto!important;padding:10px!important;background:#1b485b!important;color:#fff!important;-webkit-text-fill-color:#fff!important;border:1px solid #81c2d3!important;border-radius:10px!important;font:700 15px system-ui,sans-serif!important;}
+#worldBobDrawer #builderBobRightPanel .dashboard139MessageStrip{position:static!important;height:auto!important;min-height:0!important;margin:8px 0 0!important;}
+#worldGearCelebration{position:fixed;z-index:160;top:140px;right:100px;font-size:38px;pointer-events:none;animation:worldGearPop .75s ease-out both;}
+@keyframes worldGearPop{from{transform:translateY(15px) scale(.7);opacity:0;}30%{opacity:1;}to{transform:translateY(-35px) rotate(50deg) scale(1.2);opacity:0;}}
+@media(max-width:950px){#worldChallengeCard{top:138px;width:235px;}#worldChallengeText{font-size:16px;}#worldBobButton{right:12px;}#worldBobButton span:last-child{display:none;}#worldBobHint{max-width:165px;font-size:13px;}#worldProjectName{font-size:16px;}}
+@media(max-width:700px){body.worldViewReady:not(.starterScreenActive):not(.workshopMode){--builder-swap-center-left:82px;--builder-swap-center-right:12px;}#worldDock{left:7px;width:62px;}#worldDock button{width:62px;font-size:12px!important;min-height:65px;}#worldChallengeCard{width:220px;right:12px;top:136px;}#worldBobHint{display:none;}#builderWorldView #builderWorldDrawer{left:78px;width:calc(100vw - 90px);}body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand{flex-basis:120px!important;width:120px!important;}body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #builderGuidedCadBrand #builderMissionLogo{width:115px!important;max-width:115px!important;}}
+@media(prefers-reduced-motion:reduce){#worldGearCelebration{animation:none;}}
+body.calmMode #worldGearCelebration{animation:none;}
+.worldUI[hidden]{display:none!important;}
+#worldBobTip{font:500 17px/1.5 system-ui,sans-serif;color:#e9f7fc;margin:0 0 12px;}
+#worldBobDrawer .worldBobQuickActions{display:flex;gap:8px;margin-bottom:12px;}
+#worldBobDrawer .worldBobQuickActions button{border:1px solid #9bc8d3;border-radius:10px;background:#234b60;padding:9px;}
+#worldBobDrawer [data-world-welcome]{display:none!important;}
+#worldStatusToast{position:fixed;left:100px;bottom:125px;z-index:145;max-width:min(420px,calc(100vw - 130px));padding:10px 14px;border:1px solid #8fd7df;border-radius:12px;background:#103347ef;color:#fff;font:600 15px/1.4 system-ui,sans-serif;box-shadow:0 3px 15px #0003;}
+#builderWorldView #builderWorldDrawer .worldDrawerBody button small{display:block;margin-top:3px;font:400 12px/1.2 system-ui,sans-serif;color:#d5e9ef;}
+
+#worldProgressButton{font-size:23px!important;}
+#builderWorldView #builderWorldDrawer .worldDrawerBody button{grid-column:auto!important;grid-row:auto!important;justify-self:stretch!important;align-self:stretch!important;}
+#builderWorldView #builderWorldDrawer .dashboard139ZoneLabel{transform:none!important;inset:auto!important;width:auto!important;max-width:none!important;padding:0!important;border:0!important;border-radius:0!important;letter-spacing:normal!important;text-transform:none!important;text-shadow:none!important;}
+#builderWorldView #builderWorldDrawer .dashboard139ZoneLabel::before,#builderWorldView #builderWorldDrawer .dashboard139ZoneLabel::after{content:none!important;display:none!important;}
+#builderWorldView #builderWorldDrawer .dashboardUtilityButtons{grid-auto-flow:row!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:none!important;}
+#builderWorldView #worldBobDrawer #builderBobRightPanel #thinkerBobPanel [data-world-welcome]{display:none!important;}
+#builderWorldView #worldBobDrawer #builderBobRightPanel .dashboard139VoiceZone .dashboard139ZoneLabel{display:none!important;}
+#builderWorldView #worldBobDrawer #builderBobRightPanel #toolMessage{position:static!important;inset:auto!important;display:block!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;transform:none!important;font:500 14px/1.4 system-ui,sans-serif!important;}
+#builderWorldView #worldBobDrawer #builderBobRightPanel #readerHighlightBox{max-height:230px!important;overflow:auto!important;font:400 17px/1.5 system-ui,sans-serif!important;}
+body.builderExploreActive #objectLibraryPortal{display:none!important;}
+
+#builderWorldView .worldSectionLabel{font-size:14px;font-weight:800;color:#d4eef3;margin:6px 0 8px;}
+#builderWorldView .worldDrawerBody h3{margin:14px 0 8px;}
+
+body.workshopMode #builderWorldView,body.starterScreenActive #builderWorldView,body.builderExploreActive #builderWorldView{display:none!important;}
+
+#worldCameraNav{position:fixed;left:12px;top:340px;width:184px;padding:8px;border-radius:14px;background:#14384bea;z-index:120;box-sizing:border-box;}
+#worldViewActions,#worldPositionActions{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+#worldCameraNav button{min-width:0;min-height:38px;padding:5px;border:1px solid #7cabb9;border-radius:8px;background:#244b60;font-size:12px!important;}
+#worldPositionActions{margin-top:7px;}
+@media(max-height:740px){#worldCameraNav{top:330px;}#worldCameraNav button{min-height:34px;}}
+
+@media(min-width:701px){#builderWorldView #builderWorldDrawer{left:210px;}#builderWorldView[data-open-panel="colors"] #builderWorldDrawer{left:auto;right:180px;top:auto;bottom:105px;max-height:calc(100vh - 185px);}}
+
+.worldSkyLabel{display:block;margin:16px 0 6px;font-weight:700;}#worldSkyFlyer{width:100%;min-height:44px;border:1px solid #8eb8c6;border-radius:9px;background:#244b60;color:white;font-size:16px;padding:8px;}
+body:not(.starterScreenActive) #skyBannerPlane[data-flyer="blimp"],body:not(.starterScreenActive) #skyBannerPlane[data-flyer="glider"],body:not(.starterScreenActive) #skyBannerPlane[data-flyer="parachute"]{aspect-ratio:350/190;width:190px;z-index:100;}
+
+#worldHistoryActions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid #87bdca80;}
+#worldHistoryActions button{display:block!important;width:100%!important;min-width:0!important;position:static!important;grid-column:auto!important;}
+#worldHistoryActions button small{display:none;}#worldHistoryActions button:disabled{opacity:.45;cursor:default;}
+
+body.worldViewReady #builderWorldView #worldSaveStatusMount #builderRecoveryStatus{display:block!important;position:static!important;inset:auto!important;transform:none!important;max-width:100%!important;margin:8px 0!important;padding:8px!important;box-sizing:border-box;}#worldSettingsActions{grid-template-columns:1fr;}
+body.builderExploreActive canvas{touch-action:none;}#builderExploreControls [data-walk]{touch-action:none;user-select:none;-webkit-user-select:none;}#builderExplorePad{grid-template-columns:repeat(3,60px)!important;}#builderExplorePad button{min-height:44px;}#builderExplorePad small{display:block;font-size:11px;}body.worldViewReady:not(.workshopMode) canvas{touch-action:none;}
