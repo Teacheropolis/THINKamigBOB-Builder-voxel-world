@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {clickedSelection,duplicateOffset} from '../../js/editing/builder-selection.mjs';
+test('one click selects only the clicked block and toggles it off on a second click',()=>{const a={},b={};assert.deepEqual(clickedSelection([],a),[a]);assert.deepEqual(clickedSelection([a,b],a),[a]);assert.deepEqual(clickedSelection([a],a),[]);});
+test('multiple selection accumulates only explicitly clicked blocks, without assembly expansion',()=>{const a={assembly:'tree'},b={assembly:'tree'},hidden={assembly:'tree'};assert.deepEqual(clickedSelection([a],b,true),[a,b]);assert.deepEqual(clickedSelection([a,b],a,true),[b]);assert.ok(!clickedSelection([a],b,true).includes(hidden));assert.deepEqual(clickedSelection([a,b],null,true),[]);});
+test('copies find a free platform location and cannot overlap their original',()=>{const b={min:{x:0,y:0,z:0},max:{x:2,y:2,z:2}},platform={min:{x:-5,y:0,z:-5},max:{x:5,y:0,z:5}};const offset=duplicateOffset([b],[b],platform);assert.ok(offset);assert.ok(Math.abs(offset.x)>=2||Math.abs(offset.z)>=2);assert.equal(duplicateOffset([b],[b],b),null);});

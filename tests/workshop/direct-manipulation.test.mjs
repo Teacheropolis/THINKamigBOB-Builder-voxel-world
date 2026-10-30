@@ -14,15 +14,15 @@ function harness(){
   win.setTimeout=fn=>{timers.set(++timer,fn);return timer;};win.clearTimeout=id=>timers.delete(id);
   win.MouseEvent=class{constructor(type,props){Object.assign(this,props);this.type=type;}preventDefault(){}stopImmediatePropagation(){this.stopped=true;}};
   canvas.dispatchEvent=e=>{doc.fire(e.type,e);if(!e.stopped)replayed++;};
-  const a={id:'a'},b={id:'b'};
+  const a={id:'a'},b={id:'b'},groundTargets=[];
   const controller=installDirectManipulation({canvas,document:doc,window:win,isActive:()=>active,
     pick:e=>e.clientX>=40 && e.clientX<=60?a:null,getSelection:()=>selection,setSelection:s=>{selection=s;},
     projectObjects:()=>[{object:a,bounds:{left:40,right:60,top:40,bottom:60}},{object:b,bounds:{left:70,right:90,top:40,bottom:60}}],
-    groundPoint:e=>({x:e.clientX/10,z:e.clientY/10}),beginMove:objects=>({objects}),
+    groundPoint:(e,hit)=>{groundTargets.push(hit);return {x:e.clientX/10,z:e.clientY/10};},beginMove:objects=>({objects}),
     previewMove:(move,delta)=>{moves.push(delta);return delta.x<10;},finishMove:()=>{finished++;return true;},
     cancelMove:()=>{cancelled++;},deleteBlock:object=>deleted.push(object),
     showRectangle(){},hideRectangle(){},announce(){}});
-  return {doc,canvas,win,a,b,controller,timers,moves,deleted,get selected(){return selection;},get replayed(){return replayed;},get cancelled(){return cancelled;},get finished(){return finished;},setActive:v=>{active=v;},flush(){for(const [id,fn]of [...timers]){timers.delete(id);fn();}}};
+  return {doc,canvas,win,a,b,controller,timers,moves,deleted,groundTargets,get selected(){return selection;},get replayed(){return replayed;},get cancelled(){return cancelled;},get finished(){return finished;},setActive:v=>{active=v;},flush(){for(const [id,fn]of [...timers]){timers.delete(id);fn();}}};
 }
 
 test('marquee selection encloses full objects, supports reverse drawing and excludes partial intersections',()=>{
@@ -65,3 +65,7 @@ test('invalid drop restores the group; Alt-drag and UI controls retain their inp
 test('opening a UI control cancels a deferred placement',()=>{
  const h=harness();h.doc.fire('click',{clientX:50});h.doc.fire('mousedown',{target:{}});h.flush();assert.equal(h.replayed,0);
 });
+test('marquee does not select occluded blocks even when their bounds fit',()=>{const bounds={left:20,top:20,right:80,bottom:80};assert.deepEqual(enclosedObjects({left:0,top:0,right:100,bottom:100},[{object:'front',bounds,visible:true},{object:'hidden',bounds,visible:false}]),['front']);});
+test('Escape clears a finished selection, not only an active gesture',()=>{const h=harness();h.doc.fire('mousedown',{clientX:10,clientY:10});h.doc.fire('mousemove',{clientX:100,clientY:100});h.doc.fire('mouseup',{clientX:100,clientY:100});h.flush();assert.equal(h.selected.length,2);h.doc.fire('keydown',{key:'Escape'});assert.deepEqual(h.selected,[]);});
+
+test('drag projection uses the same clicked block elevation at both ends',()=>{const h=harness();h.doc.fire('mousedown',{clientX:50,clientY:50});h.doc.fire('mousemove',{clientX:80,clientY:60});h.doc.fire('mouseup',{clientX:80,clientY:60});assert.ok(h.groundTargets.length>=2);assert.ok(h.groundTargets.every(hit=>hit===h.a));});

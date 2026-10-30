@@ -4,7 +4,7 @@ export function selectionRectangle(start, end) {
 }
 
 export function enclosedObjects(rectangle, projected) {
-  return projected.filter(({bounds}) => bounds &&
+  return projected.filter(({bounds,visible}) => visible!==false && bounds &&
     bounds.left>=rectangle.left && bounds.right<=rectangle.right &&
     bounds.top>=rectangle.top && bounds.bottom<=rectangle.bottom).map(item=>item.object);
 }
@@ -21,7 +21,7 @@ export function snappedTranslation(start, end, increment=1) {
 export function installDirectManipulation({canvas,document:doc,window:win,isActive,
   pick,getSelection,setSelection,projectObjects,groundPoint,beginMove,previewMove,
   finishMove,cancelMove,deleteBlock,showRectangle,hideRectangle,announce,
-  prepareInteraction=()=>{},onGestureChange=()=>{},increment=()=>1,clickDelay=500}) {
+  selectClick=()=>false,prepareInteraction=()=>{},onGestureChange=()=>{},increment=()=>1,clickDelay=500}) {
   let gesture=null, pendingClick=null, pendingTimer=null, swallowClick=false;
   const listeners=[];
   const listen=(target,type,handler)=>{
@@ -56,7 +56,7 @@ export function installDirectManipulation({canvas,document:doc,window:win,isActi
     const hit=pick(event);
     gesture={start:point(event),last:point(event),hit,selection:getSelection().slice(),
       kind:hit?'move':'rectangle',started:false,additive:event.shiftKey,
-      ground:groundPoint(event)};
+      ground:groundPoint(event,hit)};
     prepareInteraction();consume(event);
   });
   listen(doc,'mousemove',event=>{
@@ -75,7 +75,7 @@ export function installDirectManipulation({canvas,document:doc,window:win,isActi
     }
     if(gesture.kind==='rectangle')showRectangle(selectionRectangle(gesture.start,current));
     else{
-      const delta=snappedTranslation(gesture.ground,groundPoint(event),increment());
+      const delta=snappedTranslation(gesture.ground,groundPoint(event,gesture.hit),increment());
       gesture.valid=!!delta && previewMove(gesture.move,delta);
     }
     consume(event);
@@ -103,7 +103,8 @@ export function installDirectManipulation({canvas,document:doc,window:win,isActi
     if(event.directManipulationReplay || event.target!==canvas || !isActive())return;
     if(swallowClick){swallowClick=false;consume(event);return;}
     if(event.detail>=2){cancelClick();consume(event);return;}
-    if(!pick(event))return;
+    const hit=pick(event);if(selectClick(event,hit)){cancelClick();consume(event);return;}
+    if(!hit)return;
     // Defer stacking on an existing block so a double-click cannot add two blocks first.
     cancelClick();pendingClick={clientX:event.clientX,clientY:event.clientY,
       shiftKey:event.shiftKey,ctrlKey:event.ctrlKey,metaKey:event.metaKey};
@@ -116,7 +117,7 @@ export function installDirectManipulation({canvas,document:doc,window:win,isActi
     consume(event);
   });
   listen(doc,'keydown',event=>{
-    if(event.key==='Escape'){cancelClick();if(gesture){abort();consume(event);}}
+    if(event.key==='Escape'&&isActive()){cancelClick();if(gesture){abort();consume(event);}else if(getSelection().length){setSelection([]);announce('Selection cleared.');consume(event);}}
   });
   listen(win,'blur',()=>{abort();cancelClick();});
   listen(canvas,'pointercancel',()=>{abort();cancelClick();});

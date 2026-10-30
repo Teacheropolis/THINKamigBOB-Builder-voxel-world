@@ -6028,6 +6028,8 @@ function clearWorkshopSelectionFrames(){
 }
 
 function syncWorkshopSelectionMeasurements(){
+  window.builderSelectionActive=activeWorkshopBlocks(selectedBlocks).length>0;
+  const summary=document.getElementById('worldSelectionSummary');if(summary)summary.textContent=activeWorkshopBlocks(selectedBlocks).length+' block'+(activeWorkshopBlocks(selectedBlocks).length===1?'':'s')+' selected';
   syncWorkshopSelectionFrames();
   if(window.setWorkshopRulerSelectedObjects){
     window.setWorkshopRulerSelectedObjects(selectedBlocks);
@@ -10320,6 +10322,7 @@ updateUndoRedoButtons();
 
 // ===== UPDATE #59 JS SECTION: BUILDER GAMEPLAY / SELECTION MODE =====
 function startSelectMode(){
+  if(!document.body.classList.contains('workshopMode')){window.builderMultiSelectMode=false;document.getElementById('worldMultiSelect')?.setAttribute('aria-pressed','false');}
 
   if(document.body.classList.contains("workshopMode") && workshopMoveIsPending()){
     cancelWorkshopMove({announce:false,restoreFocus:false});
@@ -10340,12 +10343,7 @@ function startSelectMode(){
     return;
   }
 
-  // Remove highlight from previously selected blocks
-  selectedBlocks.forEach(block => {
-    block.material.emissive = new THREE.Color(0x000000);
-  });
-
-  selectedBlocks = [];
+  clearWorkshopSelectedBlocks();
 
 document.getElementById("toolMessage").innerHTML =
   "🖱️ Click one block in the structure you want to select.";
@@ -10513,23 +10511,7 @@ function selectConnectedBlocks(startBlock,selectionPoint){
           (selectedBlocks.length === 1 ? "" : "s")+" selected.";
     return;
   }else{
-    selectedBlocks = [];
-    const startX = Math.round(startBlock.position.x);
-    const startY = Math.round(startBlock.position.y);
-    const startZ = Math.round(startBlock.position.z);
-
-    blocks.forEach(block => {
-
-      const dx = Math.abs(Math.round(block.position.x) - startX);
-      const dy = Math.abs(Math.round(block.position.y) - startY);
-      const dz = Math.abs(Math.round(block.position.z) - startZ);
-
-      if(dx <= 3 && dy <= 5 && dz <= 3){
-        selectedBlocks.push(block);
-        block.material.emissive = new THREE.Color(0x5511ff);
-      }
-
-    });
+    setWorkshopSelectedObjectsExact([startBlock]);
   }
 
   selectMode = false;
@@ -10555,6 +10537,7 @@ function startMoveSelected(){
   return;
 }
 
+  if(!document.body.classList.contains('workshopMode')){moveSelectedMode=false;selectMode=false;document.getElementById('toolMessage').textContent='Drag any highlighted block to move the selected blocks together. Escape cancels a drag.';return;}
   if(document.body.classList.contains("workshopMode")){
     const anchorX=Math.min(...selectedBlocks.map(function(block){
       return block.position.x;
@@ -11490,6 +11473,7 @@ function addLysosome(){
 }
 
 function deleteSelectedStructure(){
+  if(!document.body.classList.contains('workshopMode')&&window.deleteBuilderSelectedBlocks)return window.deleteBuilderSelectedBlocks();
 
   if(document.body.classList.contains("workshopMode")){
     sanitizeWorkshopSelectedBlocks();
@@ -42414,6 +42398,7 @@ body:not(.starterScreenActive):not(.workshopMode) #reopenLibraryFromCoach{
 import {createDetailedPartDecorator,detailKind,DETAIL_KINDS} from "./js/editing/builder-detailed-parts.mjs";
 import {installDetailedCatalog} from './js/editing/builder-detail-catalog.mjs';
 import {starterDetailManifest} from './js/editing/builder-starter-detail-manifest.mjs';
+import {duplicateOffset} from './js/editing/builder-selection.mjs';
 window.decorateDetailedBuilderPart=createDetailedPartDecorator({THREE,document});window.builderDetailedKind=detailKind;window.builderDetailKinds=DETAIL_KINDS;
 installDetailedCatalog({target:window,getBlocks:()=>blocks,getScene:()=>scene,decorate:window.decorateDetailedBuilderPart,resolve:detailKind});
 window.upgradeLegacyDetailedPart=function(block,data,mission){
@@ -42426,22 +42411,18 @@ window.upgradeLegacyDetailedPart=function(block,data,mission){
  }
 };
 
-document.addEventListener('click',event=>{
- if(event.target!==renderer.domElement||event.detail>1||window.builderWorldUIBlocksCanvas||window.builderExploreActive||document.body.classList.contains('workshopMode'))return;
- if(!setBuilderPointerFromRendererEvent(event))return;raycaster.setFromCamera(mouse,camera);
- const hit=raycaster.intersectObjects(blocks,false)[0]?.object,detail=hit?.userData.detailedPart;if(!detail)return;
- const selection=window.builderChoosePartMode?[hit]:activeWorkshopBlocks(blocks).filter(o=>o.userData.detailedPart?.assembly===detail.assembly);
- setWorkshopSelectedObjectsExact(selection);event.preventDefault();event.stopImmediatePropagation();
- document.getElementById('toolMessage').textContent=window.builderChoosePartMode?'Detailed part selected. Move, delete, or duplicate it.':'Detailed object selected. Choose a part in Tools to explore its pieces.';
-},true);
 window.duplicateBuilderSelection=function(){
  if(window.builderExploreActive||document.body.classList.contains('workshopMode'))return;
  const selected=activeWorkshopBlocks(selectedBlocks);if(!selected.length){document.getElementById('toolMessage').textContent='Select an object or part first, then choose Duplicate.';return;}
+ const offset=duplicateOffset(selected.map(o=>new THREE.Box3().setFromObject(o)),activeWorkshopBlocks(blocks).map(o=>new THREE.Box3().setFromObject(o)),new THREE.Box3().setFromObject(ground));
+ if(!offset){document.getElementById('toolMessage').textContent='Make some room on the platform before making a copy.';return;}
  const group='copy-'+Date.now().toString(36),copies=[];
  for(const original of selected){
   const copy=new THREE.Mesh(original.geometry.clone(),original.material.clone());
-  copy.position.copy(original.position);copy.position.x+=2;copy.rotation.copy(original.rotation);copy.scale.copy(original.scale);
+  copy.position.copy(original.position);copy.position.x+=offset.x;copy.position.z+=offset.z;copy.rotation.copy(original.rotation);copy.scale.copy(original.scale);
   copy.userData={...original.userData,detailDecorated:false,builderDoorDecorated:false};
+  if(copy.material.emissive)copy.material.emissive.setHex(original.userData.workshopSelectionEmissive??original.material.emissive.getHex());
+  delete copy.userData.workshopSelectionEmissive;
   if(original.userData.detailedPart)window.decorateDetailedBuilderPart(copy,{...original.userData.detailedPart,assembly:group});
   if(original.userData.builderDoor)window.decorateBuilderDoor?.(copy);
   scene.add(copy);blocks.push(copy);copies.push(copy);
@@ -42453,6 +42434,7 @@ window.duplicateBuilderSelection=function(){
 </script>
 <script type="module" id="directBlockManipulationScript">
 import {installDirectManipulation} from './js/editing/direct-manipulation.mjs';
+import {clickedSelection} from './js/editing/builder-selection.mjs';
 import {createWorkshopEditHistory} from './js/workshop/editing/workshop-edit-history.mjs';
 builderDirectEditHistory=createWorkshopEditHistory({validate:validateWorkshopEditTransaction,apply:applyWorkshopEditTransaction});
 const box=document.createElement('div');box.id='directBlockSelectionRectangle';box.hidden=true;box.setAttribute('aria-hidden','true');document.body.appendChild(box);
@@ -42467,10 +42449,6 @@ const completeEdit=()=>{
   if(typeof window.scheduleStudentAutosave==='function')window.scheduleStudentAutosave({meaningful:true});
 };
 const setSelection=objects=>{
-  if(!inWorkshop()&&!window.builderChoosePartMode){
-    const assemblies=new Set(objects.map(o=>o.userData.detailedPart?.assembly).filter(Boolean));
-    if(assemblies.size)objects=[...new Set([...objects,...activeWorkshopBlocks(blocks).filter(o=>assemblies.has(o.userData.detailedPart?.assembly))])];
-  }
   if(workshopMoveIsPending())cancelWorkshopMove({announce:false,restoreFocus:false});
   if(workshopSelectionFoundationController)workshopSelectionFoundationController.reset();
   selectMode=false;moveSelectedMode=false;setWorkshopSelectedObjectsExact(objects);
@@ -42480,16 +42458,25 @@ const restoreMove=move=>{
   move.entries.forEach(entry=>entry.object.position.set(entry.before.x,entry.before.y,entry.before.z));
   syncWorkshopSelectionMeasurements();
 };
-function groundPoint(event){
+function groundPoint(event,hit){
   if(!setBuilderPointerFromRendererEvent(event))return null;
   raycaster.setFromCamera(mouse,camera);
   const point=new THREE.Vector3();
-  return raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),0),point);
+  return raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),!inWorkshop()&&hit?-hit.position.y:0),point);
 }
 function pick(event){
   if(!setBuilderPointerFromRendererEvent(event))return null;
   raycaster.setFromCamera(mouse,camera);
   return raycaster.intersectObjects(blocks,false)[0]?.object || null;
+}
+window.clearBuilderSelection=()=>{clearWorkshopSelectedBlocks();selectMode=false;moveSelectedMode=false;};
+window.setBuilderMultipleSelection=enabled=>{window.builderMultiSelectMode=!!enabled;selectMode=!!enabled;};
+for(const id of ['blockColor','blockShape'])document.getElementById(id)?.addEventListener('change',()=>{if(!inWorkshop()){window.clearBuilderSelection();window.setBuilderMultipleSelection(false);document.getElementById('worldMultiSelect')?.setAttribute('aria-pressed','false');}});
+function visibleFromCamera(object,bounds){
+ const c=bounds.getCenter(new THREE.Vector3()),points=[c];
+ for(const axis of ['x','y','z'])for(const sign of ['min','max']){const point=c.clone();point[axis]=bounds[sign][axis];points.push(point);}
+ const origin=camera.getWorldPosition(new THREE.Vector3());
+ return points.some(point=>{const direction=point.clone().sub(origin);const ray=new THREE.Raycaster(origin,direction.normalize());return ray.intersectObjects(blocks,false)[0]?.object===object;});
 }
 function projectObjects(){
   const viewport=renderer.domElement.getBoundingClientRect();
@@ -42501,7 +42488,7 @@ function projectObjects(){
       if(point.z < -1 || point.z > 1)return {object,bounds:null};
       points.push({x:viewport.left+(point.x+1)*viewport.width/2,y:viewport.top+(1-point.y)*viewport.height/2});
     }
-    return {object,bounds:{left:Math.min(...points.map(p=>p.x)),right:Math.max(...points.map(p=>p.x)),top:Math.min(...points.map(p=>p.y)),bottom:Math.max(...points.map(p=>p.y))}};
+    return {object,visible:inWorkshop()||visibleFromCamera(object,bounds),bounds:{left:Math.min(...points.map(p=>p.x)),right:Math.max(...points.map(p=>p.x)),top:Math.min(...points.map(p=>p.y)),bottom:Math.max(...points.map(p=>p.y))}};
   });
 }
 function deleteBlock(object){
@@ -42513,8 +42500,24 @@ function deleteBlock(object){
   if(!result.ok){scene.add(object);blocks.push(object);setWorkshopSelectedObjectsExact(selection);ledger.cancelPrepared(prepared.token);notify('Delete cancelled. Block restored.');return;}
   completeEdit();notify('Block deleted. Use Undo to bring it back.');
 }
+window.deleteBuilderSelectedBlocks=function(){
+ const selection=activeWorkshopBlocks(selectedBlocks).slice();if(!selection.length){notify('Select a block first.');return false;}
+ const ledger=history(),prepared=ledger.prepare(createWorkshopDeletionOperation(selection,selection));if(!prepared.ok){notify('Delete is not ready.');return false;}
+ for(const object of selection){removeWorkshopSelectedBlock(object);scene.remove(object);blocks.splice(blocks.indexOf(object),1);}
+ const result=ledger.commitPrepared(prepared.token);if(!result.ok){for(const object of selection){scene.add(object);blocks.push(object);}setWorkshopSelectedObjectsExact(selection);ledger.cancelPrepared(prepared.token);notify('Delete cancelled.');return false;}
+ completeEdit();notify('Selected blocks deleted. Use Undo to bring them back.');return true;
+};
+document.addEventListener('keydown',event=>{if(!inWorkshop()&&ready()&&event.key==='Delete'&&!event.target.closest?.('input,textarea,select,[contenteditable="true"]')&&selectedBlocks.length){event.preventDefault();event.stopImmediatePropagation();window.deleteBuilderSelectedBlocks();}},true);
 installDirectManipulation({canvas:renderer.domElement,document,window,isActive:ready,
   pick,getSelection:()=>activeWorkshopBlocks(selectedBlocks),setSelection,projectObjects,groundPoint,
+  selectClick(event,hit){
+    if(inWorkshop())return false;
+    const selected=activeWorkshopBlocks(selectedBlocks);
+    if(!hit){if(selected.length||selectMode||window.builderMultiSelectMode){setSelection([]);notify('Selection cleared.');return true;}return false;}
+    if(!hit.userData.detailedPart&&!selectMode&&!window.builderMultiSelectMode&&!event.shiftKey&&!selected.length)return false;
+    const next=clickedSelection(selected,hit,!!event.shiftKey||!!window.builderMultiSelectMode);setSelection(next);
+    notify(next.length?next.length+' block'+(next.length===1?'':'s')+' selected. Add blocks with Select multiple, or Shift-click. Escape clears selection.':'Selection cleared.');return true;
+  },
   prepareInteraction(){isDragging=false;mouseMoved=false;},
   onGestureChange(active){window.builderBlockGestureActive=active;},
   increment:()=>activeWorkshopBlocks(selectedBlocks).some(isStandardWorkshopBlock)?1:
@@ -42656,7 +42659,7 @@ window.updateBuilderPlacementPreview=function(){
   if(document.body.classList.contains('starterScreenActive') || document.body.classList.contains('workshopMode')){closeMore();return;}
   blocks.forEach(block=>builderTextures.apply(block));
   if(window.builderExploreActive){closeMore();return;}
-  if(window.builderWorldUIBlocksCanvas || !pointerOnCanvas || isDragging || selectMode || moveSelectedMode || window.builderBlockGestureActive || !palette.hidden)return;
+  if(window.builderWorldUIBlocksCanvas || window.builderSelectionActive || window.builderMultiSelectMode || !pointerOnCanvas || isDragging || selectMode || moveSelectedMode || window.builderBlockGestureActive || !palette.hidden)return;
   const popup=document.getElementById('missionPopup');
   if(popup && getComputedStyle(popup).display!=='none')return;
   if(document.getElementById('bobGuidanceRoot')?.hidden===false)return;
@@ -42812,6 +42815,7 @@ function enter(){
   window.refreshBuilderExploreObstacles=()=>{obstacles.splice(0,obstacles.length,...blocks.filter(block=>block.parent && block.visible).map(block=>new THREE.Box3().setFromObject(block)));};
   window.getBuilderExplorerBodyBounds=()=>explorerBodyBounds(walker.read());
   yaw=look.yaw;pitch=look.pitch;release();closePractice();
+  window.clearBuilderSelection?.();
   isDragging=false;mouseMoved=false;window.builderExploreActive=true;lastFrame=performance.now();camera.near=.05;camera.updateProjectionMatrix();sync();
   status.textContent='Explore from here. Walk with WASD or arrows. Switch to Build to edit this spot.';exploreButton.focus({preventScroll:true});
 }
