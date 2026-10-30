@@ -122,6 +122,9 @@ function install(){
  const reader=$('audioPowerLabel');if(reader)for(const node of reader.childNodes)if(node.nodeType===3&&node.textContent.trim())node.textContent=' Read aloud';
  const brand=$('builderGuidedCadBrand');const project=doc.createElement('span');project.id='worldProjectName';header.append(project);
  const gear=action('⚙',()=>toggle('progress',gear));gear.id='worldProgressButton';gear.setAttribute('aria-label','Open Settings and progress');gear.setAttribute('aria-controls','builderWorldDrawer');gear.setAttribute('aria-expanded','false');header.append(gear);
+ const navigation=doc.createElement('nav');navigation.id='worldPrimaryNavigation';navigation.setAttribute('aria-label','Switch pages');
+ navigation.append(proxy('🛠 Open Workshop','workspaceModeSwitch'),proxy('← Return to Missions','returnMissionsButton'));header.insertBefore(navigation,gear);
+ const returnBuilder=proxy('← Return to Builder','workspaceModeSwitch');returnBuilder.id='worldWorkshopReturn';returnBuilder.setAttribute('aria-label','Return to Builder');doc.body.append(returnBuilder);
  const undo=$('undoButton');if(undo){undo.innerHTML='↶ Undo<small>Fix a mistake</small>';undo.setAttribute('aria-label','Undo — Fix a mistake');}
  const redo=$('redoButton');if(redo)redo.textContent='↷ Redo';
  for(const [name,view]of [['Home view','home'],['From above','top'],['Front view','front'],['Right side','right']])$('worldViewActions').append(action(name,()=>{win.requestViewDicePreset?.(view);closePanel();}));
