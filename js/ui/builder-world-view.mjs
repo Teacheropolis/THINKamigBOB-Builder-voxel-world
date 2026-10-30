@@ -1,3 +1,4 @@
+import {buildingTipPool,nextBuildingTip} from '../guidance/bob-building-tips.mjs';
 import {nextWorldChallenge,toggleWorldPanel} from './builder-world-view-model.mjs';
 import {setMissionCheckpointComplete} from '../guidance/bob-mission-journey-guidance.mjs';
 
@@ -49,11 +50,18 @@ function showPanel(next,owner){
  launchers().forEach(button=>button.setAttribute('aria-expanded',String(button.dataset.worldPanel===panel || (button.id==='worldBobButton'&&panel==='bob') || (button.id==='worldProgressButton'&&panel==='progress'))));
  const palette=$('builderMoreBlocks');if(palette)palette.hidden=panel!=='colors';
  $('builderOpenMoreBlocks')?.setAttribute('aria-expanded',String(panel==='colors'));
- if(panel==='bob')prepareBobText();
+ if(panel==='bob'){prepareBobText();rotateBobTip();}
  syncCanvasOwner();
 }
 function closePanel(restore=false){showPanel(null);if(restore)focusOwner?.focus({preventScroll:true});}
 function toggle(panelName,owner){showPanel(toggleWorldPanel(panel,panelName),owner);}
+let previousTip='';
+function rotateBobTip(){
+ if(!isBuilding()||document.hidden)return;
+ const features=typeof blocks==='undefined'?[]:blocks.filter(b=>b.parent&&b.visible).flatMap(b=>[b.userData?.detailedPart?.kind||'',b.userData?.detailedPart?.assembly||'',b.userData?.isDoor?'door':'']);
+ previousTip=nextBuildingTip(buildingTipPool($('worldTitle')?.textContent||'',features),previousTip);
+ $('worldBobTip').textContent=previousTip;$('worldBobHint').textContent=previousTip;
+}
 function prepareBobText(){
  const welcome=$('thinkerBobPanel');
  [...welcome?.children||[]].filter(node=>node.id!=='readerHighlightBox' && /Welcome, Builder|I.m THINKer BOB|Think.*Build.*Discover/.test(node.textContent)).forEach(node=>node.dataset.worldWelcome='true');
@@ -140,8 +148,9 @@ function install(){
  const bobText=$('thinkerBobPanel');if(bobText)new MutationObserver(prepareBobText).observe(bobText,{childList:true,subtree:true,characterData:true});
  const message=$('toolMessage');if(message)new MutationObserver(()=>{const text=message.textContent.trim();if(isBuilding() && text && !/Tool message|Calm Mode|Saved build restored/.test(text))say(text);}).observe(message,{subtree:true,childList:true,characterData:true});
  const checklist=$('challengeChecklist');new MutationObserver(renderChallenge).observe(checklist,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['disabled','checked']});
- $('worldTitle')&&new MutationObserver(()=>{updateProjectName();renderChallenge();}).observe($('worldTitle'),{childList:true,subtree:true,characterData:true});
+ $('worldTitle')&&new MutationObserver(()=>{updateProjectName();renderChallenge();rotateBobTip();}).observe($('worldTitle'),{childList:true,subtree:true,characterData:true});
  doc.body.classList.add('worldViewReady');restoreSharedControls();showPanel(null);updateProjectName();renderChallenge();
+ rotateBobTip();win.setInterval(rotateBobTip,18000);
  win.setInterval(()=>{if(isBuilding()){restoreSharedControls();updateProjectName();renderChallenge();}},1200);
  return true;
 }
@@ -155,7 +164,7 @@ $('worldSettingsSave').addEventListener('click',()=>{closePanel();$('builderSave
 $('worldReviewBadges').addEventListener('click',()=>{closePanel();$('badgeMessage')?.click();});
 $('worldChallengeHear').addEventListener('click',readChallenge);$('worldBobReadAction').addEventListener('click',readChallenge);
 $('worldChallengeShow').addEventListener('click',fullMission);$('worldFullMission').addEventListener('click',fullMission);
-$('worldBobHintAction').addEventListener('click',()=>{$('worldBobTip').textContent='Try one small part of your challenge first. Look at it from another side. If you want to change it, Undo is in Tools.';});
+$('worldBobHintAction').addEventListener('click',rotateBobTip);
 $('worldChallengeDone').addEventListener('click',()=>{
  if(!challenge?.input)return;
  setMissionCheckpointComplete(challenge.input,true,{window:win});renderChallenge();say('Nice work! One challenge complete.');

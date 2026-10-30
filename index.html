@@ -42766,6 +42766,7 @@ body:not(.starterScreenActive):not(.workshopMode) #builderExplorePractice:not([h
   <button id="builderExplorePracticeClose" type="button">Got it</button>
 </section>
 <script type="module" id="builderExplorerScript">
+import {createBobAvatar} from './js/editing/builder-bob-avatar.mjs';
 import {createBuilderExplorer,explorerSpawn,explorerBodyBounds} from './js/editing/builder-explorer.mjs';
 import {sharedViewOrbit,sharedViewLook,explorerSpawnNear} from './js/editing/builder-view-continuity.mjs';
 import {installCanvasNavigation} from './js/editing/builder-canvas-navigation.mjs';
@@ -42775,6 +42776,8 @@ const practice=document.getElementById('builderExplorePractice'),practiceButton=
 const status=document.getElementById('builderExploreStatus');
 const keys=new Set(),held=new Set();let walker=null,yaw=0,pitch=0,looking=null,lastFrame=0,jumpQueued=false,wheelTravel=0;
 const tapUntil=new Map();
+const bobAvatar=createBobAvatar(THREE,scene);
+const followRay=new THREE.Raycaster();
 const keyMap={w:'forward',ArrowUp:'forward',s:'backward',ArrowDown:'backward',a:'left',ArrowLeft:'left',d:'right',ArrowRight:'right',' ':'jump'};
 const allowed=()=>!document.body.classList.contains('starterScreenActive') && !document.body.classList.contains('workshopMode');
 const consume=event=>{event.preventDefault();event.stopImmediatePropagation();};
@@ -42798,9 +42801,11 @@ function closePractice(){practice.hidden=true;practiceButton.setAttribute('aria-
 function leave(){
   if(!window.builderExploreActive)return;
   release();
-  const view=sharedViewOrbit(camera.position,camera.getWorldDirection(new THREE.Vector3()));
+  const feet=walker?.read();
+  const viewpoint=feet?new THREE.Vector3(feet.x,feet.y+walker.eyeHeight,feet.z):camera.position;
+  const view=sharedViewOrbit(viewpoint,camera.getWorldDirection(new THREE.Vector3()));
   window.builderSharedOrbitTarget=view.target;cameraAngle=view.angle;cameraDistance=view.distance;cameraHeight=view.height;
-  window.builderExploreActive=false;sync();closePractice();updateCamera();
+  bobAvatar.hide();window.builderExploreActive=false;sync();closePractice();updateCamera();
   status.textContent='Build here. You are at the same spot you explored.';buildButton.focus({preventScroll:true});
 }
 function enter(){
@@ -42894,7 +42899,16 @@ window.updateBuilderExploreFrame=function(){
   const attempted=!!(input.forward||input.backward||input.left||input.right),moved=Math.hypot(position.x-before.x,position.z-before.z)>.00001;
   if(attempted&&!moved&&status.dataset.movement!=='blocked'){status.dataset.movement='blocked';status.textContent='A block or platform edge is in the way. Step sideways, turn, or jump.';}
   else if(moved&&status.dataset.movement!=='moving'){status.dataset.movement='moving';status.textContent='Explore from here. Drag to look. Scroll or use Closer / Farther to walk.';}
-  camera.position.set(position.x,position.y+walker.eyeHeight,position.z);camera.rotation.set(pitch,yaw,0,'YXZ');camera.updateMatrixWorld(true);
+  bobAvatar.update(position,yaw,moved,dt);
+  const eye=new THREE.Vector3(position.x,position.y+walker.eyeHeight,position.z);
+  camera.rotation.set(pitch,yaw,0,'YXZ');
+  const behind=new THREE.Vector3(.85,.65,4.2).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
+  followRay.set(eye,behind.clone().normalize());followRay.far=behind.length();
+  const hit=followRay.intersectObjects(blocks.filter(b=>b.parent&&b.visible),true)[0];
+  const distance=hit?Math.max(0,hit.distance-.18):behind.length();
+  camera.position.copy(eye).addScaledVector(behind.normalize(),distance);
+  bobAvatar.root.visible=distance>.85;
+  camera.updateMatrixWorld(true);
   window.updateBuilderDoorTarget?.();
 };
 sync();
@@ -43007,8 +43021,8 @@ body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashb
 </style>
 
 <link rel="stylesheet" href="js/ui/builder-start-page.css"/>
-<link rel="stylesheet" href="js/ui/builder-world-view.css?v=page-navigation-1"/>
-<script type="module" src="js/ui/builder-world-view.mjs?v=page-navigation-1"></script>
+<link rel="stylesheet" href="js/ui/builder-world-view.css?v=bob-guide-1"/>
+<script type="module" src="js/ui/builder-world-view.mjs?v=bob-guide-1"></script>
 </body>
 </html>
 
