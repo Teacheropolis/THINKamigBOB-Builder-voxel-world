@@ -42766,7 +42766,7 @@ body:not(.starterScreenActive):not(.workshopMode) #builderExplorePractice:not([h
   <button id="builderExplorePracticeClose" type="button">Got it</button>
 </section>
 <script type="module" id="builderExplorerScript">
-import {createBobAvatar} from './js/editing/builder-bob-avatar.mjs?v=inventor-2';
+import {createBobAvatar} from './js/editing/builder-bob-avatar.mjs?v=inventor-profile-4';
 import {createBuilderExplorer,explorerSpawn,explorerBodyBounds} from './js/editing/builder-explorer.mjs';
 import {sharedViewOrbit,sharedViewLook,explorerSpawnNear} from './js/editing/builder-view-continuity.mjs';
 import {installCanvasNavigation} from './js/editing/builder-canvas-navigation.mjs';
@@ -42778,6 +42778,14 @@ const keys=new Set(),held=new Set();let walker=null,yaw=0,pitch=0,looking=null,l
 const tapUntil=new Map();
 const bobAvatar=createBobAvatar(THREE,scene);
 const followRay=new THREE.Raycaster();
+const bobCameraPanel=document.createElement('figure');bobCameraPanel.id='bobFrontCamera';
+bobCameraPanel.setAttribute('aria-label','Live front view of BOB and the world behind him');
+bobCameraPanel.innerHTML='<figcaption>BOB CAM · Front view</figcaption>';document.body.append(bobCameraPanel);
+const bobFrontCamera=new THREE.PerspectiveCamera(48,1.5,.05,150);
+const bobFrontRenderer=new THREE.WebGLRenderer({antialias:true});bobFrontRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));bobFrontRenderer.setSize(240,160);bobFrontCameraPanelSetup();
+function bobFrontCameraPanelSetup(){bobFrontRenderer.domElement.setAttribute('aria-label','Live camera showing BOB from the front');bobCameraPanel.append(bobFrontRenderer.domElement);}
+let bobHeading=0;
+
 const keyMap={w:'forward',ArrowUp:'forward',s:'backward',ArrowDown:'backward',a:'left',ArrowLeft:'left',d:'right',ArrowRight:'right',' ':'jump'};
 const allowed=()=>!document.body.classList.contains('starterScreenActive') && !document.body.classList.contains('workshopMode');
 const consume=event=>{event.preventDefault();event.stopImmediatePropagation();};
@@ -42819,7 +42827,7 @@ function enter(){
   walker=createBuilderExplorer({spawn,platform,obstacles});
   window.refreshBuilderExploreObstacles=()=>{obstacles.splice(0,obstacles.length,...blocks.filter(block=>block.parent && block.visible).map(block=>new THREE.Box3().setFromObject(block)));};
   window.getBuilderExplorerBodyBounds=()=>explorerBodyBounds(walker.read());
-  yaw=look.yaw;pitch=look.pitch;release();closePractice();
+  yaw=look.yaw;bobHeading=yaw;pitch=look.pitch;release();closePractice();
   window.clearBuilderSelection?.();
   isDragging=false;mouseMoved=false;window.builderExploreActive=true;lastFrame=performance.now();camera.near=.05;camera.updateProjectionMatrix();sync();
   status.textContent='Explore from here. Walk with WASD or arrows. Switch to Build to edit this spot.';exploreButton.focus({preventScroll:true});
@@ -42899,7 +42907,9 @@ window.updateBuilderExploreFrame=function(){
   const attempted=!!(input.forward||input.backward||input.left||input.right),moved=Math.hypot(position.x-before.x,position.z-before.z)>.00001;
   if(attempted&&!moved&&status.dataset.movement!=='blocked'){status.dataset.movement='blocked';status.textContent='A block or platform edge is in the way. Step sideways, turn, or jump.';}
   else if(moved&&status.dataset.movement!=='moving'){status.dataset.movement='moving';status.textContent='Explore from here. Drag to look. Scroll or use Closer / Farther to walk.';}
-  bobAvatar.update(position,yaw,moved,dt);
+  if(moved)bobHeading=Math.atan2(-(position.x-before.x),-(position.z-before.z));
+  else if(input.turnLeft||input.turnRight)bobHeading=yaw;
+  bobAvatar.update(position,bobHeading,moved,dt);
   const eye=new THREE.Vector3(position.x,position.y+walker.eyeHeight,position.z);
   camera.rotation.set(pitch,yaw,0,'YXZ');
   const behind=new THREE.Vector3(.85,.65,4.2).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
@@ -42910,10 +42920,23 @@ window.updateBuilderExploreFrame=function(){
   bobAvatar.root.visible=distance>.85;
   camera.updateMatrixWorld(true);
   window.updateBuilderDoorTarget?.();
+  // Position ahead of BOB, looking back toward him and his retreating surroundings.
+  const front=new THREE.Vector3(0,0,-3.5).applyAxisAngle(new THREE.Vector3(0,1,0),bobHeading);
+  bobFrontCamera.position.set(position.x+front.x,position.y+1.65,position.z+front.z);
+  bobFrontCamera.lookAt(position.x,position.y+1.05,position.z);
+  const visible=bobAvatar.root.visible;bobAvatar.root.visible=true;
+  bobFrontRenderer.render(scene,bobFrontCamera);bobAvatar.root.visible=visible;
 };
 sync();
 </script>
 
+<style id="bobFrontCameraCSS">
+#bobFrontCamera{display:none;position:fixed;top:172px;left:16px;margin:0;width:240px;z-index:125;border:2px solid #c89c4d;border-radius:13px;overflow:hidden;background:#142c39;box-shadow:0 4px 15px #0006;pointer-events:none;}
+#bobFrontCamera figcaption{padding:6px 10px;color:#ffe4ac;font:800 12px/1.3 system-ui;letter-spacing:.06em;}
+#bobFrontCamera canvas{display:block;width:100%!important;height:auto!important;}
+body.builderExploreActive:not(.starterScreenActive):not(.workshopMode) #bobFrontCamera{display:block;}
+@media(max-width:700px){#bobFrontCamera{top:176px;left:9px;width:155px;}#bobFrontCamera figcaption{font-size:10px;padding:4px 7px;}}
+</style>
 <style id="builderDoorCSS">
 #builderHotbarSlots{grid-template-columns:repeat(6,minmax(44px,1fr)) repeat(2,minmax(54px,1fr));}
 #builderTurnDoor[hidden],#builderUseDoor[hidden]{display:none!important;}
