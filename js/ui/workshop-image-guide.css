@@ -1,0 +1,18 @@
+#workshopPanelPlanTrace .guideIntro,#workshopPanelPlanTrace #workshopGuideStatus{font:600 12px/1.4 system-ui;margin:4px 0;color:#fff1cf;}
+.guideActions{display:flex;gap:7px;flex-wrap:wrap;}
+#workshopPanelPlanTrace .guideActions button,#workshopSaveMyObject{min-height:40px!important;font:700 12px/1.2 system-ui!important;padding:7px 10px!important;}
+#workshopGuideDialog,#studentObjectDialog,#studentObjectBrowser{box-sizing:border-box;max-width:min(480px,94vw);width:480px;max-height:85vh;overflow:auto;padding:20px;border:2px solid #c49b55;border-radius:16px;background:#183542;color:#fff1d0;box-shadow:0 10px 60px #0009;font:500 15px/1.45 system-ui;}
+#workshopGuideDialog::backdrop,#studentObjectDialog::backdrop,#studentObjectBrowser::backdrop{background:#071824a8;}
+.guideHeading{display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.guideHeading h2{font:800 21px/1.2 system-ui;margin:0;}
+#workshopGuideDialog button,#studentObjectDialog button,#studentObjectBrowser button,#studentObjectShelf button{min-height:42px;padding:8px 11px;border:1px solid #d1ae66;border-radius:8px;background:#315564;color:#fff4dc;font:700 13px/1.25 system-ui;cursor:pointer;}
+#workshopGuideDialog label,#studentObjectDialog label{display:grid;grid-template-columns:130px 1fr auto;align-items:center;gap:10px;margin:15px 0;}
+#workshopGuideDialog input,#studentObjectDialog input,#workshopGuideDialog select,#studentObjectDialog select{min-width:0;width:100%;box-sizing:border-box;accent-color:#dcba6b;font:600 15px system-ui;}
+#studentObjectDialog input,#workshopGuideDialog select,#studentObjectDialog select{min-height:40px;border-radius:6px;padding:7px;border:1px solid #b2bda8;background:#fff4de;color:#143441;}
+#studentObjectShelf{padding:12px 7px;margin-bottom:10px;border-bottom:2px solid #c49b55;color:#fff1d0;background:#183542;border-radius:8px;}
+#studentObjectShelf h3{margin:0 0 5px;font:800 16px system-ui;}
+#studentObjectShelf p{font:500 12px/1.4 system-ui;}
+.studentObjectRow{display:grid;grid-template-columns:1fr 44px;gap:5px;margin:6px 0;}
+.studentObjectRow button:first-child{text-align:left;overflow-wrap:anywhere;}
+#workshopGuideDialog button:focus-visible,#studentObjectDialog button:focus-visible,#studentObjectShelf button:focus-visible{outline:3px solid #6ff0ff;outline-offset:2px;}
+@media(max-width:600px){#workshopGuideDialog label,#studentObjectDialog label{grid-template-columns:105px 1fr auto;}}

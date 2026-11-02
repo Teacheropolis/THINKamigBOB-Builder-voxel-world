@@ -8426,7 +8426,7 @@ function builderUiBlocksCanvasEvent(event){
   if(window.builderWorldUIBlocksCanvas && target===renderer.domElement) return true;
   if(!target || typeof target.closest !== "function") return false;
   return !!target.closest(
-    "#rightHudColumn, #builderBobRightPanel, #buildBar, #missionPopup, #helpDialog, #workshopProjectDialog"
+    "#rightHudColumn, #builderBobRightPanel, #buildBar, #missionPopup, #helpDialog, #workshopProjectDialog, #workshopGuideDialog, #studentObjectDialog, #studentObjectBrowser, #workshopPanelPlanTrace"
   );
 }
 
@@ -12528,6 +12528,7 @@ function exportBuilderWorld(name){
       sz: block.geometry.parameters.depth || 1,
       shape: block.userData.builderShape || "cube",
       rotationY: block.rotation.y || 0,
+      ...(window.getStudentObjectPartRecord?.(block)||{}),
       ...(block.userData.detailedPart ? {detail:block.userData.detailedPart}:{}),
       ...(typeof window.getBuilderDoorSaveRecord==="function" ? window.getBuilderDoorSaveRecord(block) : {})
     });
@@ -12588,7 +12589,8 @@ function validateBuilderProjectFile(value){
       (record.detail===undefined || (record.detail && (window.builderDetailKinds||["stone","wood","metal","crystal"]).includes(record.detail.kind) && typeof record.detail.assembly==="string" && record.detail.assembly.length<=100)) &&
       (record.sx == null || record.sx>0) &&
       (record.sy == null || record.sy>0) &&
-      (record.sz == null || record.sz>0);
+      (record.sz == null || record.sz>0) &&
+      (record.workshopPart==null || window.validateStudentObjectPart?.(record.workshopPart)===true);
   });
   if(!valid || (!legacy && !Array.isArray(value.favorites))) return null;
   return {
@@ -12654,8 +12656,9 @@ document.getElementById('loadFile')
 
       loadedBlock.userData.builderShape = loadedShape;
       loadedBlock.userData.studentPlaced = true;
+      if(data.workshopPart)window.restoreStudentObjectPart?.(loadedBlock,data.workshopPart);
       if(data.detail && window.decorateDetailedBuilderPart)window.decorateDetailedBuilderPart(loadedBlock,data.detail);
-      else window.upgradeLegacyDetailedPart?.(loadedBlock,data);
+      else if(!data.workshopPart)window.upgradeLegacyDetailedPart?.(loadedBlock,data);
       if(data.door===true && typeof window.decorateBuilderDoor==="function") window.decorateBuilderDoor(loadedBlock);
 
     });
@@ -26314,6 +26317,7 @@ body.calmMode #reopenLibraryFromCoach{
       sx:parameters.width || 1, sy:parameters.height || 1, sz:parameters.depth || 1,
       shape:(block.userData && block.userData.builderShape) || "cube",
       rotationY:block.rotation.y || 0,
+      ...(window.getStudentObjectPartRecord?.(block)||{}),
       ...(block.userData.detailedPart ? {detail:block.userData.detailedPart}:{}),
       ...(typeof window.getBuilderDoorSaveRecord==="function" ? window.getBuilderDoorSaveRecord(block) : {})
     };
@@ -26385,8 +26389,9 @@ body.calmMode #reopenLibraryFromCoach{
       block.rotation.y=typeof data.rotationY === "number" ? data.rotationY : 0;
       block.userData.builderShape=shape;
       block.userData.studentPlaced=true;
+      if(data.workshopPart)window.restoreStudentObjectPart?.(block,data.workshopPart);
       if(data.detail && window.decorateDetailedBuilderPart)window.decorateDetailedBuilderPart(block,data.detail);
-      else window.upgradeLegacyDetailedPart?.(block,data,state.selectedStartWorld);
+      else if(!data.workshopPart)window.upgradeLegacyDetailedPart?.(block,data,state.selectedStartWorld);
       if(data.door===true && typeof window.decorateBuilderDoor==="function") window.decorateBuilderDoor(block);
     });
     if(Array.isArray(state.favorites)){
@@ -42419,6 +42424,7 @@ window.duplicateBuilderSelection=function(){
  const group='copy-'+Date.now().toString(36),copies=[];
  for(const original of selected){
   const copy=new THREE.Mesh(original.geometry.clone(),original.material.clone());
+  if(!copy.geometry.parameters)copy.geometry.parameters={...(original.geometry.parameters||{})};
   copy.position.copy(original.position);copy.position.x+=offset.x;copy.position.z+=offset.z;copy.rotation.copy(original.rotation);copy.scale.copy(original.scale);
   copy.userData={...original.userData,detailDecorated:false,builderDoorDecorated:false};
   if(copy.material.emissive)copy.material.emissive.setHex(original.userData.workshopSelectionEmissive??original.material.emissive.getHex());
@@ -42514,7 +42520,7 @@ installDirectManipulation({canvas:renderer.domElement,document,window,isActive:r
     if(inWorkshop())return false;
     const selected=activeWorkshopBlocks(selectedBlocks);
     if(!hit){if(selected.length||selectMode||window.builderMultiSelectMode){setSelection([]);notify('Selection cleared.');return true;}return false;}
-    if(!hit.userData.detailedPart&&!selectMode&&!window.builderMultiSelectMode&&!event.shiftKey&&!selected.length)return false;
+    if(!hit.userData.detailedPart&&!hit.userData.studentObjectPart&&!selectMode&&!window.builderMultiSelectMode&&!event.shiftKey&&!selected.length)return false;
     const next=clickedSelection(selected,hit,!!event.shiftKey||!!window.builderMultiSelectMode);setSelection(next);
     notify(next.length?next.length+' block'+(next.length===1?'':'s')+' selected. Add blocks with Select multiple, or Shift-click. Escape clears selection.':'Selection cleared.');return true;
   },
@@ -43046,6 +43052,8 @@ body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashb
 <link rel="stylesheet" href="js/ui/builder-start-page.css"/>
 <link rel="stylesheet" href="js/ui/builder-world-view.css?v=bob-guide-1"/>
 <script type="module" src="js/ui/builder-world-view.mjs?v=bob-guide-1"></script>
+<link rel="stylesheet" href="js/ui/workshop-image-guide.css?v=workshop-guides-2"/>
+<script type="module" src="js/ui/workshop-image-guide.mjs?v=workshop-guides-2"></script>
 </body>
 </html>
 

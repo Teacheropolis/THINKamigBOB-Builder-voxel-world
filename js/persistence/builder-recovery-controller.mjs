@@ -1,3 +1,4 @@
+import {validateStudentObject} from '../workshop/persistence/student-object-library.mjs';
 import {validDetailRecord} from '../editing/builder-detailed-parts.mjs';
 export const BUILDER_RECOVERY_SCHEMA="THINKamigBOB Builder Recovery";
 export const BUILDER_RECOVERY_VERSION=3;
@@ -37,7 +38,8 @@ function validBlock(value){
   return [value.x,value.y,value.z,value.color,sx,sy,sz,rotationY].every(finite) &&
     Number.isInteger(value.color) && value.color>=0 && value.color<=0xffffff &&
     sx>0 && sy>0 && sz>0 && SHAPES.has(shape) &&
-    (value.door===undefined || typeof value.door==="boolean") && validDetailRecord(value.detail);
+    (value.door===undefined || typeof value.door==="boolean") && validDetailRecord(value.detail) &&
+    (value.workshopPart==null || !!validateStudentObject({schema:"bob-student-object",version:1,id:"part",name:"Part",parts:[value.workshopPart]}));
 }
 
 export function validateBuilderRecoveryState(value){
