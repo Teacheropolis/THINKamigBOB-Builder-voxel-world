@@ -101,6 +101,6 @@ window.restoreStudentObjectPart=(block,part)=>{
 };
 const browser=document.createElement('dialog');browser.id='studentObjectBrowser';browser.setAttribute('aria-label','My Workshop Objects');const close=document.createElement('button');close.type='button';close.textContent='Close My Objects';close.addEventListener('click',()=>browser.close());browser.append(close);document.body.append(browser);
 browser.addEventListener('close',()=>$('toolbox').prepend(shelf));
-const openObjects=document.createElement('button');openObjects.type='button';openObjects.textContent='My Objects';openObjects.addEventListener('click',()=>{renderLibrary();browser.append(shelf);browser.showModal();});$('workshopPanelProject').querySelector('.workshop-dashboard-controls').append(openObjects);
+const openObjects=document.createElement('button');openObjects.id='workshopOpenMyObjects';openObjects.type='button';openObjects.textContent='My Objects';openObjects.addEventListener('click',()=>{renderLibrary();browser.append(shelf);browser.showModal();});$('workshopPanelProject').querySelector('.workshop-dashboard-controls').append(openObjects);
 
 $('guideCloseDialog').addEventListener('click',()=>settings.close());$('studentObjectCloseDialog').addEventListener('click',()=>libraryDialog.close());libraryDialog.querySelector('form').addEventListener('submit',event=>{event.preventDefault();$('studentObjectSave').click();});settings.querySelector('form').addEventListener('submit',event=>event.preventDefault());

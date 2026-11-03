@@ -8430,7 +8430,7 @@ function builderUiBlocksCanvasEvent(event){
   if(window.builderWorldUIBlocksCanvas && target===renderer.domElement) return true;
   if(!target || typeof target.closest !== "function") return false;
   return !!target.closest(
-    "#rightHudColumn, #builderBobRightPanel, #buildBar, #missionPopup, #helpDialog, #workshopProjectDialog, #workshopGuideDialog, #studentObjectDialog, #studentObjectBrowser, #workshopPanelPlanTrace, #studentObjectTransformControls"
+    "#rightHudColumn, #builderBobRightPanel, #buildBar, #missionPopup, #helpDialog, #workshopProjectDialog, #workshopGuideDialog, #studentObjectDialog, #studentObjectBrowser, #workshopPanelPlanTrace, #studentObjectTransformControls, #kidWorkshop"
   );
 }
 
@@ -37628,6 +37628,7 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
   window.beginWorkshopViewDiceDrag=beginWorkshopViewDiceDrag;
   window.fitWorkshopSelection=fitWorkshopSelection;
   window.clearWorkshopFitSelectionState=clearWorkshopFitSelectionState;
+  window.fitWorkshopSelection=fitWorkshopSelection;
   window.markWorkshopManualCameraOverride=function(){
     cancelWorkshopHomeFrameSettlement();
     workshopManualCameraOverride=true;
@@ -37671,6 +37672,8 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
   window.setEngineeringToolChestCabinetState=setEngineeringToolChestCabinetState;
   window.toggleEngineeringToolChestDrawer=toggleEngineeringToolChestDrawer;
   window.resetEngineeringToolChest=resetEngineeringToolChest;
+  window.refreshWorkshopObjectTiles=function(){return workshopToolChestPartsObjectsView?.refresh();};
+  window.chooseSimpleWorkshopColor=chooseWorkshopBuildColor;
   window.getWorkshopSnapIncrement=getWorkshopSnapIncrement;
   window.snapWorkshopValue=snapWorkshopValue;
   window.workshopRulerConfig=workshopRulerConfig;
@@ -43061,6 +43064,8 @@ body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashb
 <link rel="stylesheet" href="js/ui/workshop-image-guide.css?v=object-transform-controls-5"/>
 <script type="module" src="js/ui/workshop-image-guide.mjs?v=object-transform-controls-5"></script>
 <script type="module" src="js/ui/student-object-transform-controls.mjs?v=object-transform-1"></script>
+<link rel="stylesheet" href="js/ui/workshop-kid-layout.css?v=kid-workshop-5"/>
+<script type="module" src="js/ui/workshop-kid-layout.mjs?v=kid-workshop-5"></script>
 </body>
 </html>
 
