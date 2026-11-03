@@ -5580,6 +5580,7 @@ function validateWorkshopEditTransaction(transaction,direction){
   if(!transaction || !Array.isArray(transaction.entries)) return false;
   return transaction.entries.every(function(entry){
     const present=workshopEditObjectPresent(entry.object);
+    if(transaction.type==="TRANSFORM"){const pose=direction==="COMMIT"?entry.afterPose:direction==="UNDO"?entry.afterPose:entry.beforePose;return present&&window.matchesStudentObjectPose?.(entry.object,pose)===true;}
     if(transaction.type==="ROTATE" && direction==="PREPARE"){
       return present && workshopEditTransformMatches(
         entry.object,entry.before,entry.beforeRotationY
@@ -5637,6 +5638,7 @@ function applyWorkshopEditTransaction(transaction,direction){
       present:workshopEditObjectPresent(entry.object),
       coordinates:workshopEditCoordinates(entry.object),
       rotationY:workshopEditRotationY(entry.object),
+      pose:window.readStudentObjectPose?.(entry.object),
       geometry:entry.object && entry.object.geometry
     };
   });
@@ -5658,6 +5660,7 @@ function applyWorkshopEditTransaction(transaction,direction){
       if(coordinates && entry.object.position){
         entry.object.position.set(coordinates.x,coordinates.y,coordinates.z);
       }
+      if(transaction.type==="TRANSFORM")window.applyStudentObjectPose(entry.object,useBefore?entry.beforePose:entry.afterPose);
       if((transaction.type==="ROTATE" || transaction.type==="RESIZE") &&
         entry.object.rotation){
         entry.object.rotation.y=useBefore
@@ -5707,6 +5710,7 @@ function applyWorkshopEditTransaction(transaction,direction){
       if(state.rotationY!==null && state.object.rotation){
         state.object.rotation.y=state.rotationY;
       }
+      if(state.pose)window.applyStudentObjectPose(state.object,state.pose);
       if(state.geometry) state.object.geometry=state.geometry;
       if(state.object && typeof state.object.updateMatrixWorld==="function"){
         state.object.updateMatrixWorld(true);
@@ -8426,7 +8430,7 @@ function builderUiBlocksCanvasEvent(event){
   if(window.builderWorldUIBlocksCanvas && target===renderer.domElement) return true;
   if(!target || typeof target.closest !== "function") return false;
   return !!target.closest(
-    "#rightHudColumn, #builderBobRightPanel, #buildBar, #missionPopup, #helpDialog, #workshopProjectDialog, #workshopGuideDialog, #studentObjectDialog, #studentObjectBrowser, #workshopPanelPlanTrace"
+    "#rightHudColumn, #builderBobRightPanel, #buildBar, #missionPopup, #helpDialog, #workshopProjectDialog, #workshopGuideDialog, #studentObjectDialog, #studentObjectBrowser, #workshopPanelPlanTrace, #studentObjectTransformControls"
   );
 }
 
@@ -10120,6 +10124,8 @@ function undoLast(){
             ? "↩️ Rotation undone."
             : result.transaction.type==="RESIZE"
               ? "↩️ Resize undone."
+            : result.transaction.type==="TRANSFORM"
+              ? "Object change undone."
           : "↩️ Last block removed.";
     }
     announceWorkshopMove(document.getElementById("toolMessage").textContent);
@@ -10204,7 +10210,7 @@ function redoLast(){
       result.transaction.type==="MOVE" ? "↪️ Move restored." :
       result.transaction.type==="ROTATE" ? "↪️ Rotation restored." :
       result.transaction.type==="RESIZE" ? "↪️ Resize restored." :
-      "↪️ Last block restored.";
+      result.transaction.type==="TRANSFORM" ? "Object change restored." : "↪️ Last block restored.";
     announceWorkshopMove(document.getElementById("toolMessage").textContent);
     checkBadge();
     updateUndoRedoButtons();
@@ -37724,14 +37730,14 @@ body.workshopMode:not(.starterScreenActive) #workshopQuickAccessToolbar #workspa
     import("./js/workshop/runtime/workshop-visible-ruler-presentation.mjs"),
     import("./js/workshop/runtime/workshop-active-workspace-boundary.mjs"),
     import("./js/workshop/runtime/workshop-cad-engineering-feedback-view.mjs"),
-    import("./js/workshop/editing/workshop-edit-history.mjs"),
+    import("./js/workshop/editing/workshop-edit-history.mjs?v=full-transform-1"),
     import("./js/workshop/editing/workshop-selection-move-controller.mjs"),
     import("./js/workshop/editing/workshop-selection-rotate-transform.mjs"),
     import("./js/workshop/editing/workshop-selection-resize-transform.mjs"),
     import("./js/workshop/editing/workshop-selection-foundation.mjs"),
     import("./js/workshop/editing/workshop-selection-resize-adapters.mjs"),
     import("./js/workshop/persistence/workshop-draft-controller.mjs"),
-    import("./js/workshop/persistence/workshop-project-serializer.mjs"),
+    import("./js/workshop/persistence/workshop-project-serializer.mjs?v=upright-1"),
     import("./js/workshop/persistence/workshop-project-storage.mjs"),
     import("./js/workshop/persistence/workshop-project-controller.mjs"),
     import("./js/workshop/persistence/workshop-project-file-service.mjs"),
@@ -42441,7 +42447,7 @@ window.duplicateBuilderSelection=function(){
 <script type="module" id="directBlockManipulationScript">
 import {installDirectManipulation} from './js/editing/direct-manipulation.mjs';
 import {clickedSelection} from './js/editing/builder-selection.mjs';
-import {createWorkshopEditHistory} from './js/workshop/editing/workshop-edit-history.mjs';
+import {createWorkshopEditHistory} from './js/workshop/editing/workshop-edit-history.mjs?v=full-transform-1';
 builderDirectEditHistory=createWorkshopEditHistory({validate:validateWorkshopEditTransaction,apply:applyWorkshopEditTransaction});
 const box=document.createElement('div');box.id='directBlockSelectionRectangle';box.hidden=true;box.setAttribute('aria-hidden','true');document.body.appendChild(box);
 const inWorkshop=()=>document.body.classList.contains('workshopMode');
@@ -43050,10 +43056,11 @@ body:not(.starterScreenActive):not(.workshopMode) #builderRightToolsPanel .dashb
 </style>
 
 <link rel="stylesheet" href="js/ui/builder-start-page.css"/>
-<link rel="stylesheet" href="js/ui/builder-world-view.css?v=bob-guide-1"/>
+<link rel="stylesheet" href="js/ui/builder-world-view.css?v=object-transform-1"/>
 <script type="module" src="js/ui/builder-world-view.mjs?v=bob-guide-1"></script>
-<link rel="stylesheet" href="js/ui/workshop-image-guide.css?v=workshop-guides-visible-save-3"/>
-<script type="module" src="js/ui/workshop-image-guide.mjs?v=workshop-guides-visible-save-3"></script>
+<link rel="stylesheet" href="js/ui/workshop-image-guide.css?v=object-transform-controls-5"/>
+<script type="module" src="js/ui/workshop-image-guide.mjs?v=object-transform-controls-5"></script>
+<script type="module" src="js/ui/student-object-transform-controls.mjs?v=object-transform-1"></script>
 </body>
 </html>
 

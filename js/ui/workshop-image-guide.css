@@ -23,3 +23,17 @@ body.workshopMode:not(.starterScreenActive) #workshopAlwaysSaveObject{display:bl
 #workshopAlwaysSaveObject:focus-visible{outline:3px solid #79efff;outline-offset:2px;}
 @media(max-width:700px){body.workshopMode:not(.starterScreenActive) #workshopAlwaysSaveObject{right:192px!important;width:160px;font-size:12px;}}
 @media(max-width:520px){body.workshopMode:not(.starterScreenActive) #workshopAlwaysSaveObject{top:52px!important;right:8px!important;}}
+#studentObjectTransformControls{padding:7px 0;color:#fff0cf;font:600 12px/1.3 system-ui;}
+#studentObjectTransformControls p{font:500 12px/1.3 system-ui;margin:5px 0;}
+.studentTransformButtons{display:flex;flex-wrap:wrap;gap:6px;}
+#studentObjectTransformControls button{min-height:40px;padding:7px 9px;border:1px solid #d1ae66;border-radius:8px;background:#315564;color:#fff4dc;font:700 12px/1.2 system-ui;cursor:pointer;}
+body:not(.workshopMode) .workshopTipObject{display:none;}
+body.workshopMode #studentObjectTransformControls{width:100%;}
+body.workshopMode #studentObjectTransformControls>strong,body.workshopMode #studentObjectTransformControls>p:empty{display:none;}
+
+#studentObjectTransformControls{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);z-index:125;width:min(380px,calc(100vw - 30px));box-sizing:border-box;padding:10px 12px;background:#163642ed;border:2px solid #d1ae66;border-radius:12px;box-shadow:0 3px 16px #0005;}
+#studentObjectTransformControls[hidden]{display:none!important;}
+body.workshopMode #studentObjectTransformControls{width:min(390px,calc(100vw - 30px));bottom:160px;}
+#studentObjectTransformControls>p:first-of-type{display:none;}
+#studentTransformStatus:empty{display:none;}
+@media(max-width:600px){body.workshopMode #studentObjectTransformControls{bottom:190px;}#studentObjectTransformControls{bottom:120px;}}

@@ -18,7 +18,6 @@ export const WORKSHOP_PROJECT_FAMILIES = Object.freeze([
 ]);
 
 const finite = (value) => Number.isFinite(value);
-const ROTATION_EPSILON = 1e-9;
 const validText = (value, maximum = 80) =>
   typeof value === "string" && value.trim().length > 0 && value.trim().length <= maximum;
 const freezeVector = (value, positive = false) => {
@@ -43,8 +42,6 @@ function freezeObjectRecord(record) {
   const scale = freezeVector(record.scale, true);
   if (!position || !rotation || !scale || !Number.isInteger(record.color) ||
       record.color < 0 || record.color > 0xffffff) return null;
-  if (Math.abs(rotation.x) > ROTATION_EPSILON ||
-      Math.abs(rotation.z) > ROTATION_EPSILON) return null;
   if (position.x < -25 || position.x > 25 || position.z < -25 ||
       position.z > 25 || position.y < 0) return null;
 

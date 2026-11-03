@@ -141,3 +141,5 @@ body.workshopMode:not(.starterScreenActive) #worldWorkshopReturn{display:block!i
 @media(max-width:850px){body.worldViewReady:not(.starterScreenActive):not(.workshopMode) #worldProjectName{display:none;}#worldPrimaryNavigation{margin-left:auto;}#worldPrimaryNavigation button{font-size:13px;min-width:0;padding:8px;}}
 @media(max-width:600px){#worldPrimaryNavigation{position:fixed;top:70px;left:82px;right:12px;display:grid;grid-template-columns:1fr 1fr;gap:6px;}#worldPrimaryNavigation button{min-height:46px;font-size:12px;}body.worldViewReady:not(.starterScreenActive):not(.workshopMode):not(.builderExploreActive) #builderModeBar{top:124px;}#worldChallengeCard{top:183px;}body.workshopMode:not(.starterScreenActive) #worldWorkshopReturn{width:175px;right:8px;font-size:13px;}}
 body:not(.workshopMode) #worldWorkshopReturn,body.starterScreenActive #worldWorkshopReturn{display:none!important;}
+
+#worldStatusToast{pointer-events:none;}

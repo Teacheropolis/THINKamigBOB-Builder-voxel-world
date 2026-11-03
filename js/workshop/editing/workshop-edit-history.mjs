@@ -4,6 +4,7 @@ export const WORKSHOP_EDIT_OPERATION_TYPES = Object.freeze({
   MOVE: "MOVE",
   ROTATE: "ROTATE",
   RESIZE: "RESIZE",
+  TRANSFORM: "TRANSFORM",
 });
 
 const validNumber = (value) => Number.isFinite(value);
@@ -21,6 +22,13 @@ const freezeDimensions = (dimensions) => {
   });
 };
 
+const freezePose=pose=>{
+ if(!pose)return null;
+ const position=freezeCoordinates(pose.position),rotation=freezeCoordinates(pose.rotation),scale=freezeCoordinates(pose.scale);
+ return position&&rotation&&scale&&['x','y','z'].every(a=>scale[a]>0)?Object.freeze({position,rotation,scale}):null;
+};
+const samePose=(a,b)=>a===null||b===null?a===b:sameCoordinates(a.position,b.position)&&sameCoordinates(a.rotation,b.rotation)&&sameCoordinates(a.scale,b.scale);
+
 function createEntry(entry) {
   if (!entry || !entry.object) return null;
   const before = entry.before == null ? null : freezeCoordinates(entry.before);
@@ -36,14 +44,17 @@ function createEntry(entry) {
     ? null : freezeDimensions(entry.afterDimensions);
   if ((entry.beforeDimensions != null && !beforeDimensions) ||
       (entry.afterDimensions != null && !afterDimensions)) return null;
+  const beforePose=entry.beforePose==null?null:freezePose(entry.beforePose),afterPose=entry.afterPose==null?null:freezePose(entry.afterPose);
+  if((entry.beforePose!=null&&!beforePose)||(entry.afterPose!=null&&!afterPose))return null;
   return Object.freeze({
-    object:entry.object, before, after, beforeRotationY, afterRotationY,
+    object:entry.object, before, after, beforeRotationY, afterRotationY,beforePose,afterPose,
     beforeDimensions, afterDimensions,
   });
 }
 
 function validOperationShape(type, entries) {
   if (new Set(entries.map((entry) => entry.object)).size !== entries.length) return false;
+  if(type===WORKSHOP_EDIT_OPERATION_TYPES.TRANSFORM)return entries.every(entry=>entry.before!==null&&entry.after!==null&&entry.beforePose!==null&&entry.afterPose!==null);
   if (type === WORKSHOP_EDIT_OPERATION_TYPES.PLACEMENT) {
     return entries.every((entry) => entry.before === null && entry.after !== null);
   }
@@ -85,7 +96,7 @@ function sameOperation(left, right) {
         entry.beforeRotationY === candidate.beforeRotationY &&
         entry.afterRotationY === candidate.afterRotationY &&
         sameDimensions(entry.beforeDimensions, candidate.beforeDimensions) &&
-        sameDimensions(entry.afterDimensions, candidate.afterDimensions);
+        sameDimensions(entry.afterDimensions, candidate.afterDimensions)&&samePose(entry.beforePose,candidate.beforePose)&&samePose(entry.afterPose,candidate.afterPose);
     });
 }
 

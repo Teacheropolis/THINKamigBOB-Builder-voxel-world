@@ -54,7 +54,7 @@ test("invalid saved entries are reported without hiding valid builds",()=>{
 
 test("loads isolated serializer storage and project workflow owners",()=>{
   ["workshop-project-serializer","workshop-project-storage","workshop-project-controller"]
-    .forEach(name=>assert.match(source,new RegExp(`import\\("\\.\\/js\\/workshop\\/persistence\\/${name}\\.mjs"\\)`)));
+    .forEach(name=>assert.match(source,new RegExp(`import\\("\\.\\/js\\/workshop\\/persistence\\/${name}\\.mjs(?:\\?v=[a-z0-9-]+)?"\\)`)));
   assert.match(source,/createWorkshopProjectStorage\(\{[\s\S]*?storage:\{[\s\S]*?window\.localStorage\.getItem\(key\)[\s\S]*?window\.localStorage\.setItem\(key,value\)/);
   assert.match(source,/createWorkshopProjectController\(\{/);
 });

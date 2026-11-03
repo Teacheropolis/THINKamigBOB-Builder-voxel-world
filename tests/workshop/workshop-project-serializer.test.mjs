@@ -55,15 +55,15 @@ test("Bridge Beam preserves its authored half-centimeter thickness", () => {
     dimensions:{width:6,height:0.4,depth:1}}]}),null);
 });
 
-test("preserves Y rotation and rejects unsupported X or Z rotation", () => {
+test("preserves complete rotation for objects tipped upright", () => {
   const valid={app:"THINKamigBOB Workshop",schema:"workshop-project",version:1,
     id:"rotation",name:"Rotation",createdAt:1,updatedAt:1,
     objects:[{...baseRecord,id:"object-1",rotation:vector(0,Math.PI/2,0)}]};
   assert.equal(validateWorkshopProject(valid).objects[0].rotation.y,Math.PI/2);
   assert.equal(validateWorkshopProject({...valid,objects:[{
-    ...valid.objects[0],rotation:vector(0.01,0,0),
-  }]}),null);
+    ...valid.objects[0],rotation:vector(Math.PI/2,0,0),
+  }]}).objects[0].rotation.x,Math.PI/2);
   assert.equal(validateWorkshopProject({...valid,objects:[{
-    ...valid.objects[0],rotation:vector(0,0,0.01),
-  }]}),null);
+    ...valid.objects[0],rotation:vector(0,0,Math.PI/2),
+  }]}).objects[0].rotation.z,Math.PI/2);
 });

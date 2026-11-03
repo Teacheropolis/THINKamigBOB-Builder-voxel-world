@@ -5,7 +5,7 @@ import test from "node:test";
 const source = fs.readFileSync(new URL("../../index.html", import.meta.url), "utf8");
 
 test("runtime loads one ledger and connects the approved Move controller", () => {
-  assert.equal((source.match(/import\("\.\/js\/workshop\/editing\/workshop-edit-history\.mjs"\)/g) || []).length, 1);
+  assert.equal((source.match(/import\("\.\/js\/workshop\/editing\/workshop-edit-history\.mjs(?:\?v=[a-z0-9-]+)?"\)/g) || []).length, 1);
   assert.equal((source.match(/import\("\.\/js\/workshop\/editing\/workshop-selection-move-controller\.mjs"\)/g) || []).length, 1);
   assert.match(source, /workshopEditHistory=modules\[27\]\.createWorkshopEditHistory/);
   assert.match(source, /workshopSelectionMoveController=\s*modules\[28\]\.createWorkshopSelectionMoveController/);
