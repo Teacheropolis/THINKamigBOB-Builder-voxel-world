@@ -43,7 +43,7 @@ function freezeObjectRecord(record) {
   if (!position || !rotation || !scale || !Number.isInteger(record.color) ||
       record.color < 0 || record.color > 0xffffff) return null;
   if (position.x < -25 || position.x > 25 || position.z < -25 ||
-      position.z > 25 || position.y < 0) return null;
+      position.z > 25 || position.y < -0.5) return null;
 
   if (record.kind === WORKSHOP_PROJECT_OBJECT_KINDS.STANDARD_SHAPE) {
     if (!WORKSHOP_PROJECT_SHAPES.includes(record.shape)) return null;

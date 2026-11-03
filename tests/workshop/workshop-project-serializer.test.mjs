@@ -67,3 +67,9 @@ test("preserves complete rotation for objects tipped upright", () => {
     ...valid.objects[0],rotation:vector(0,0,Math.PI/2),
   }]}).objects[0].rotation.z,Math.PI/2);
 });
+
+test('retains a shrunken object whose center sits below zero but above the table surface',()=>{
+ const project={app:'THINKamigBOB Workshop',schema:'workshop-project',version:1,id:'smaller',name:'Smaller',createdAt:1,updatedAt:1,objects:[{...baseRecord,id:'part',position:vector(0,-.25,0),scale:vector(.5,.5,.5)}]};
+ assert.equal(validateWorkshopProject(project).objects[0].position.y,-.25);
+ assert.equal(validateWorkshopProject({...project,objects:[{...project.objects[0],position:vector(0,-1,0)}]}),null);
+});
