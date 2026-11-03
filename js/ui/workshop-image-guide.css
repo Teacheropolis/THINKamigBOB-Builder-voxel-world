@@ -16,3 +16,10 @@
 .studentObjectRow button:first-child{text-align:left;overflow-wrap:anywhere;}
 #workshopGuideDialog button:focus-visible,#studentObjectDialog button:focus-visible,#studentObjectShelf button:focus-visible{outline:3px solid #6ff0ff;outline-offset:2px;}
 @media(max-width:600px){#workshopGuideDialog label,#studentObjectDialog label{grid-template-columns:105px 1fr auto;}}
+
+/* Keep the object action visible whichever Workshop tab students are using. */
+#workshopAlwaysSaveObject{display:none!important;}
+body.workshopMode:not(.starterScreenActive) #workshopAlwaysSaveObject{display:block!important;position:fixed!important;top:7px!important;right:238px!important;z-index:1500!important;box-sizing:border-box;width:190px;min-height:38px;padding:7px 10px;border:2px solid #e6c27a;border-radius:10px;background:linear-gradient(#786039,#49371d);color:#fff4db;-webkit-text-fill-color:#fff4db;font:800 14px/1.2 system-ui;box-shadow:0 2px 0 #080d12,0 0 9px #e0bc5933;cursor:pointer;}
+#workshopAlwaysSaveObject:focus-visible{outline:3px solid #79efff;outline-offset:2px;}
+@media(max-width:700px){body.workshopMode:not(.starterScreenActive) #workshopAlwaysSaveObject{right:192px!important;width:160px;font-size:12px;}}
+@media(max-width:520px){body.workshopMode:not(.starterScreenActive) #workshopAlwaysSaveObject{top:52px!important;right:8px!important;}}
