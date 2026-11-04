@@ -1,0 +1,81 @@
+#kidWorkshop{display:none;}
+body.kidWorkshopReady.workshopMode:not(.starterScreenActive) #kidWorkshop{display:block;position:fixed;inset:0;z-index:130;pointer-events:none;font:500 15px/1.4 system-ui;color:#fff1d1;}
+body.kidWorkshopReady.workshopMode #workshopDashboard,body.kidWorkshopReady.workshopMode #viewCubeBox,body.kidWorkshopReady.workshopMode #engineeringToolChest,body.kidWorkshopReady.workshopMode #workshopMeasurementAssistant,body.kidWorkshopReady.workshopMode #thinkerBobWorkshop{display:none!important;}
+#kidWorkshop [hidden]{display:none!important;}
+#kidWorkshop aside,#kidWorkshop nav,#kidSelectionTools,#kidInstruction{pointer-events:auto;box-sizing:border-box;border:1px solid #be9a58;border-radius:15px;background:linear-gradient(145deg,#23434f,#142c38);box-shadow:0 5px 22px #07172166;}
+#kidWorkbench{position:absolute;left:14px;top:76px;bottom:16px;width:264px;display:flex;flex-direction:column;padding:13px;gap:12px;}
+.kidPanelTitle{display:flex;align-items:center;gap:11px;padding-bottom:3px;}
+.kidPanelTitle>span{display:grid;place-items:center;width:38px;height:38px;background:#a07835;border-radius:11px;font-size:27px;color:#fff0bc;}
+.kidPanelTitle strong{display:block;font-size:19px;line-height:1.25;}
+.kidPanelTitle small{color:#b5d2d5;font-size:12px;}
+#kidToolTabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;}
+#kidToolPages{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding-right:3px;scrollbar-color:#be9a58 #172c36;scrollbar-width:thin;}
+#kidWorkshop h2{font:800 15px/1.3 system-ui;margin:1px 0 11px;color:#f5d28d;}
+#kidWorkshop h3{font:700 14px/1.3 system-ui;margin:13px 0 7px;color:#f5d28d;}
+#kidWorkshop p{font:500 13px/1.45 system-ui;margin:6px 0 12px;color:#d1e2df;}
+body.kidWorkshopReady #kidWorkshop button{box-sizing:border-box!important;position:static!important;float:none!important;transform:none!important;min-height:44px!important;height:auto!important;min-width:0!important;width:auto!important;max-width:none!important;padding:9px 10px!important;margin:0!important;border:1px solid #7397a0!important;border-radius:9px!important;background:#315866!important;background-image:none!important;color:#fff5de!important;-webkit-text-fill-color:#fff5de!important;font:750 14px/1.2 system-ui!important;text-shadow:none!important;letter-spacing:normal!important;box-shadow:none!important;white-space:normal!important;aspect-ratio:auto!important;cursor:pointer!important;opacity:1!important;filter:none!important;}
+body.kidWorkshopReady #kidWorkshop button:hover:not(:disabled){background:#426d78!important;border-color:#f3d08a!important;}
+body.kidWorkshopReady #kidWorkshop button[aria-pressed="true"]{background:#745b2d!important;border:2px solid #f3ce80!important;}
+body.kidWorkshopReady #kidWorkshop button[aria-pressed="true"]::after{content:none!important;}
+body.kidWorkshopReady #kidWorkshop button:disabled{opacity:.4!important;cursor:default!important;}
+#kidWorkshop button:focus-visible,#kidWorkshop summary:focus-visible{outline:3px solid #7bf2f4!important;outline-offset:2px;}
+#kidShapes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:17px;}
+#kidWorkshop #kidShapes button{font-size:15px!important;min-height:56px!important;}
+#kidHistory{display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px solid #6f7771;padding-top:11px;}
+#kidBob summary,#kidPrecision summary{cursor:pointer;font:700 13px/1.3 system-ui;color:#f3d290;padding:8px 1px;}
+#kidBob p{margin-bottom:0;}
+#kidLook{position:absolute;top:78px;left:300px;right:270px;display:flex;align-items:center;justify-content:center;gap:10px;padding:7px;}
+#kidLook>strong{font:700 12px system-ui;color:#bcd4d3;white-space:nowrap;}
+#kidWorkshop #workshopEngineeringViewControls{position:static!important;display:flex!important;flex-wrap:wrap!important;gap:5px!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;}
+#kidWorkshop #workshopEngineeringViewControls>*:not(button){display:none!important;}
+#kidWorkshop #workshopEngineeringViewControls button{min-height:38px!important;min-width:60px!important;padding:7px 9px!important;}
+#kidSelectionTools{position:absolute;left:300px;top:145px;display:flex;align-items:center;gap:8px;padding:6px 9px;}
+#kidSelectionTools>span{font:700 12px system-ui;color:#bcd4d3;}
+#kidPickButtons{display:flex;gap:6px;}
+#kidSelectionCard{position:absolute;right:16px;top:80px;width:234px;max-height:calc(100vh - 100px);overflow:auto;padding:14px;}
+#kidSelectionCard>p{font-size:12px;}
+#kidMeasures{display:grid;grid-template-columns:repeat(3,1fr);margin:13px 0 15px;gap:3px 7px;background:#0f2730;padding:10px;border-radius:10px;}
+#kidMeasures dt{font:600 11px system-ui;color:#b4d0cf;grid-row:1;}
+#kidMeasures dd{font:800 14px system-ui;margin:0;grid-row:2;color:#ffdfa1;}
+#kidWorkshop #studentObjectTransformControls{position:static!important;transform:none!important;display:block;left:auto!important;bottom:auto!important;top:auto!important;right:auto!important;width:100%!important;border:0!important;padding:0!important;background:none!important;box-shadow:none!important;}
+#kidWorkshop #studentObjectTransformControls>strong,#kidWorkshop #studentObjectTransformControls>p:first-of-type{display:none!important;}
+#kidWorkshop .studentTransformButtons{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+#kidWorkshop .studentTransformButtons button{font-size:12px!important;padding:9px 6px!important;}
+#kidWorkshop #studentTransformStatus{font-size:12px!important;}
+#kidOtherChanges{margin-top:7px;display:grid;}
+#kidSelectionEnd{border-top:1px solid #637c7e;padding-top:11px;margin-top:12px;display:grid;gap:7px;}
+#kidWorkshop #workshopDeleteButton{background:#69413a!important;border-color:#c18d6a!important;}
+#kidInstruction{position:absolute;left:300px;right:270px;bottom:18px;min-height:60px;display:flex;align-items:center;gap:10px;padding:11px 15px;color:#e0ece4;}
+#kidInstructionIcon{font-size:23px;}
+#kidToolHint{font:650 14px/1.4 system-ui;}
+.kidStep,.kidExplanation{border-left:3px solid #e4bb69;border-radius:0 9px 9px 0;background:#ffffff09;padding:11px;margin:12px 0;}
+.kidStep b,.kidExplanation b{display:block;font-size:13px;color:#f4d48f;}
+.kidStep span,.kidExplanation span{display:block;font-size:12px;line-height:1.5;margin-top:4px;color:#d1e2df;}
+#kidFiles,#kidMyObjects{display:grid;gap:8px;margin:10px 0 14px;}
+#kidWorkbench .engineering-object-tile-collection,#kidWorkbench .engineering-parts-objects-group{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;max-width:none!important;}
+#kidWorkbench #engineeringDrawerPartsObjectsContent{position:static!important;transform:none!important;display:block!important;width:auto!important;height:auto!important;max-height:none!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important;padding:0!important;}
+#kidWorkbench #engineeringDrawerPartsObjectsContent h2,#kidWorkbench .engineering-parts-objects-status{display:none!important;}
+#kidWorkbench #engineeringDrawerPartsObjectsList section:last-child:has(button:disabled){display:none!important;}
+#kidWorkbench .engineering-parts-object-tile:disabled{display:none!important;}
+#kidWorkbench .engineering-object-tile{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:5px!important;min-height:76px!important;}
+#kidWorkbench .engineering-object-tile-name{font:700 12px/1.25 system-ui!important;color:#fff4d9!important;}
+#kidWorkbench .engineering-parts-object-thumbnail{font:normal 25px system-ui!important;}
+#kidWorkbench .engineering-parts-object-detail,#kidWorkbench .engineering-object-tile-badges,#kidWorkbench .engineering-object-tile-meta,#kidWorkbench .engineering-object-tile-selected-indicator{display:none!important;}
+#kidWorkbench #engineeringDrawerSolidColors{grid-template-columns:repeat(4,1fr)!important;max-height:141px;overflow:auto;padding:3px;overscroll-behavior:contain;}
+#kidWorkbench #engineeringDrawerSolidColors button{min-height:54px!important;padding:4px!important;gap:3px!important;}
+#kidWorkbench #engineeringDrawerSolidColors .engineering-object-tile-name{font-size:10px!important;}
+#kidWorkbench .engineering-object-tile-preview{display:block!important;position:static!important;width:28px!important;height:25px!important;min-height:25px!important;border-radius:5px!important;}
+#kidGuideMount #workshopPanelPlanTrace{display:block!important;position:static!important;min-height:0!important;max-height:none!important;height:auto!important;padding:0!important;border:0!important;overflow:visible!important;background:none!important;}
+#kidGuideMount h2,#kidGuideMount #workshopGuideSaveObject{display:none!important;}
+#kidGuideMount .guideActions{display:grid!important;gap:8px!important;}
+#kidWorkbench #workshopMeasurementControls{position:static!important;width:auto!important;display:block!important;padding:0!important;}
+#kidWorkbench #workshopMeasurementKey{display:none!important;}
+@media(max-width:1050px){#kidWorkbench{width:235px;left:9px;padding:11px;}#kidLook,#kidSelectionTools,#kidInstruction{left:258px;}#kidLook,#kidInstruction{right:238px;}#kidSelectionCard{width:216px;right:9px;}#kidLook>strong{display:none;}}
+@media(max-width:800px){#kidWorkbench{width:211px;top:68px;}#kidLook,#kidSelectionTools,#kidInstruction{left:232px;}#kidLook{right:9px;justify-content:flex-start;top:70px;}#kidSelectionTools{top:131px;}#kidSelectionCard{top:192px;width:200px;max-height:calc(100vh - 286px);}#kidInstruction{right:9px;min-height:54px;bottom:10px;}#kidLook #workshopEngineeringViewControls button{min-width:48px!important;font-size:12px!important;}#kidWorkbench .kidPanelTitle strong{font-size:16px;}#kidWorkshop #kidToolTabs button{font-size:12px!important;padding:8px 5px!important;}}
+@media(max-height:650px){#kidWorkbench{gap:7px;}#kidBob{display:none;}#kidToolTabs button{min-height:38px!important;}#kidLook{top:65px;}#kidSelectionTools{top:120px;}#kidSelectionCard{top:64px;max-height:calc(100vh - 80px);}#kidInstruction{bottom:9px;min-height:48px;}#kidWorkshop .studentTransformButtons button{min-height:38px!important;}}
+#kidWorkshop #workshopViewHome{order:0;}#kidWorkshop #workshopViewTop{order:1;}#kidWorkshop #workshopViewFront{order:2;}#kidWorkshop #workshopViewRight{order:3;}
+body.kidWorkshopReady #kidWorkshop .studentTransformButtons button{font-size:13px!important;}
+
+#kidBob button{width:100%!important;margin-top:7px!important;}
+
+#kidShapes .kidTerm{display:block;font:500 10px/1.2 system-ui;color:#c4ddd8;margin-top:3px;}
